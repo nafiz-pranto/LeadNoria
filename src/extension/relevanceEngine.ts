@@ -139,11 +139,12 @@ export const BOUNDED_TAXONOMY: Record<string, BoundedCategoryTaxonomy> = {
   },
   restaurant: {
     category: 'restaurant',
-    rootTerms: ['restaurant', 'dining', 'eatery', 'bistro', 'cafe', 'food'],
+    rootTerms: ['restaurant', 'dining', 'eatery', 'bistro', 'cafe', 'food', 'grill', 'bar & grill', 'smokehouse'],
     productServiceTerms: [
       'menu', 'cuisine', 'chef', 'catering', 'takeaway', 'takeout', 'delivery',
       'breakfast', 'lunch', 'dinner', 'brunch', 'burger', 'pizza', 'pasta',
-      'steak', 'seafood', 'dessert', 'cocktails', 'wine', 'appetizers', 'buffet'
+      'steak', 'seafood', 'dessert', 'cocktails', 'wine', 'appetizers', 'buffet',
+      'bar', 'grill', 'bbq', 'ribs', 'brisket', 'beers', 'reservation', 'reservations'
     ],
     industryDescriptors: [
       'fine dining', 'casual dining', 'restaurant & bar', 'cafe & bakery', 'culinary'
@@ -249,6 +250,36 @@ export const BOUNDED_TAXONOMY: Record<string, BoundedCategoryTaxonomy> = {
     ],
     industryDescriptors: ['hvac contractor', 'heating repair', 'ac installation'],
     conflictingCategories: ['sports', 'politics', 'gaming']
+  },
+  home_services: {
+    category: 'home_services',
+    rootTerms: ['home services', 'plumbing', 'electrician', 'handyman', 'pest control', 'appliance repair'],
+    productServiceTerms: [
+      'pipe leak', 'drain cleaning', 'water heater', 'wiring', 'electrical panel',
+      'lighting installation', 'termite control', 'drywall repair', 'carpentry', 'home maintenance'
+    ],
+    industryDescriptors: ['home service contractor', 'emergency plumbing', 'residential electrician'],
+    conflictingCategories: ['sports', 'politics', 'gaming']
+  },
+  ecommerce: {
+    category: 'ecommerce',
+    rootTerms: ['ecommerce', 'online store', 'online shop', 'retail store', 'direct to consumer', 'd2c'],
+    productServiceTerms: [
+      'add to cart', 'checkout', 'free shipping', 'order tracking', 'fast delivery',
+      'storefront', 'catalog', 'shopping cart', 'apparel', 'accessories', 'retail'
+    ],
+    industryDescriptors: ['online store', 'ecommerce brand', 'direct-to-consumer store'],
+    conflictingCategories: ['politics', 'casino']
+  },
+  professional_services: {
+    category: 'professional_services',
+    rootTerms: ['professional services', 'accounting', 'legal', 'law firm', 'consulting', 'tax advisory'],
+    productServiceTerms: [
+      'cpa', 'tax filing', 'audit', 'bookkeeping', 'litigation', 'attorney',
+      'lawyer', 'business advisory', 'corporate legal', 'compliance advisory'
+    ],
+    industryDescriptors: ['certified public accountant', 'law practice', 'management consulting'],
+    conflictingCategories: ['sports', 'casino', 'gaming']
   }
 };
 
@@ -477,18 +508,18 @@ export class LeadRelevanceEngine {
    * Evaluates a single candidate ad against the research intent using the Multi-Stage Pipeline.
    */
   public static evaluateCandidate(
-    candidate: ScrapedAdCandidate,
+    candidate: ScrapedAdCandidate | CandidateEvidence | any,
     intent: ResearchIntent
   ): RelevanceEvaluation {
     const evidence: CandidateEvidence = {
-      advertiserName: candidate.pageName,
-      adText: candidate.bodyCopy,
+      advertiserName: candidate.pageName || candidate.advertiserName || '',
+      adText: candidate.bodyCopy || candidate.adText || '',
       destinationUrl: candidate.destinationUrl,
       destinationDomain: candidate.destinationDomain,
-      facebookPageName: candidate.pageName,
+      facebookPageName: candidate.facebookPageName || candidate.pageName,
       facebookPageUrl: candidate.facebookPageUrl,
       ctaText: candidate.ctaText,
-      matchedKeyword: candidate.observedKeyword
+      matchedKeyword: candidate.observedKeyword || candidate.matchedKeyword
     };
 
     return this.evaluateEvidence(evidence, intent);
@@ -1173,4 +1204,27 @@ export class LeadRelevanceEngine {
       engineVersion: RELEVANCE_ENGINE_VERSION
     };
   }
+
+  /**
+   * Evidence Waterfall + Strict Relevance v3 Evaluator
+   * Executes deterministic evidence collection, anti-inflation aggregation,
+   * and strict multi-tier decision hierarchy.
+   */
+  public static evaluateCandidateV3(
+    candidate: ScrapedAdCandidate | CandidateEvidence | any,
+    intent: ResearchIntent
+  ) {
+    const { evaluateStrictRelevanceV3 } = require('./evidenceWaterfall.ts');
+    const candEvidence: CandidateEvidence = {
+      advertiserName: candidate.pageName || candidate.advertiserName || '',
+      adText: candidate.bodyCopy || candidate.adText || '',
+      destinationUrl: candidate.destinationUrl,
+      destinationDomain: candidate.destinationDomain,
+      facebookPageUrl: candidate.facebookPageUrl,
+      ctaText: candidate.ctaText,
+      matchedKeyword: candidate.observedKeyword || candidate.matchedKeyword
+    };
+    return evaluateStrictRelevanceV3(candEvidence, intent);
+  }
 }
+

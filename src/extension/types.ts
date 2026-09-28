@@ -43,14 +43,26 @@ export type ResearchStopReason =
 
 export type RelevanceDecision = 'RELEVANT' | 'UNCERTAIN' | 'NOT_RELEVANT';
 export type RelevanceConfidence = 'HIGH' | 'MEDIUM' | 'LOW';
-export type EvidenceStrength = 'STRONG' | 'MODERATE' | 'WEAK';
+export type EvidenceStrength = 'STRONG' | 'MODERATE' | 'WEAK' | 'CONTRADICTORY';
 
 export type EvidenceType =
   | 'ENTITY_IDENTITY'
   | 'CATEGORY_MATCH'
   | 'COMMERCIAL_INTENT'
+  | 'PRODUCT_OR_SERVICE_SIGNAL'
+  | 'DESTINATION_MATCH'
+  | 'FACEBOOK_PAGE_SIGNAL'
+  | 'DOMAIN_SIGNAL'
   | 'NEGATIVE_CATEGORY'
-  | 'CONTRADICTION';
+  | 'CONTRADICTION'
+  | 'QUERY_CONTEXT'
+  | 'WEBSITE_IDENTITY'
+  | 'WEBSITE_CATEGORY'
+  | 'WEBSITE_COMMERCIAL'
+  | 'WEBSITE_DESTINATION'
+  | 'WEBSITE_NEGATIVE'
+  | 'WEBSITE_CONTACT'
+  | 'WEBSITE_LOCATION';
 
 export type EvidenceSource =
   | 'advertiser_name'
@@ -59,7 +71,11 @@ export type EvidenceSource =
   | 'destination_domain'
   | 'facebook_page'
   | 'cta_text'
-  | 'entity_aggregation';
+  | 'entity_aggregation'
+  | 'matched_query'
+  | 'product_catalog'
+  | 'cross_query_merge'
+  | 'website_verification';
 
 export interface StructuredEvidence {
   type: EvidenceType;
@@ -68,6 +84,133 @@ export interface StructuredEvidence {
   reason: string;
   matchedSignal?: string;
   reasonCode?: string;
+  value?: string;
+  explanation?: string;
+  signature?: string;
+  occurrenceCount?: number;
+}
+
+export type EvidenceCoverageLevel = 'HIGH' | 'MEDIUM' | 'LOW';
+
+export interface EvidenceCoverage {
+  applicableCategoriesPresent: number;
+  applicableCategoriesTotal: number;
+  coverageRatio: number;
+  coverageLevel: EvidenceCoverageLevel;
+  presentCategories: EvidenceType[];
+  missingCategories: EvidenceType[];
+}
+
+export interface StrictV3Decision {
+  decision: RelevanceDecision;
+  confidence: RelevanceConfidence;
+  score: number;
+  reasons: string[];
+  matchedKeywords: string[];
+  matchedTerms: string[];
+  negativeSignals: string[];
+  evidence: StructuredEvidence[];
+  conflicts: StructuredEvidence[];
+  evidenceCoverage: EvidenceCoverage;
+  uniqueEvidenceSignals: number;
+  observedEvidenceOccurrences: number;
+  explanation: string;
+  reasonCode: string;
+  strategyVersion: number;
+  engineVersion: string;
+  presetVersion?: string;
+}
+
+export type UncertainReasonCode =
+  | 'UNCERTAIN_KEYWORD_ONLY'
+  | 'UNCERTAIN_AMBIGUOUS_ENTITY'
+  | 'UNCERTAIN_MISSING_IDENTITY'
+  | 'UNCERTAIN_MISSING_CATEGORY_EVIDENCE'
+  | 'UNCERTAIN_CONFLICT_NOT_RESOLVED'
+  | 'UNCERTAIN_SHARED_MARKETPLACE'
+  | 'UNCERTAIN_LIMITED_PUBLIC_EVIDENCE';
+
+export interface UncertainEntityRecord {
+  entityId: string;
+  entityKey?: string;
+  canonicalName: string;
+  observedNames: string[];
+  advertiserName?: string;
+  matchedQueries: string[];
+  identityConfidence: IdentityConfidence;
+  evidenceItems: StructuredEvidence[];
+  evidence?: StructuredEvidence[];
+  missingEvidence: string[];
+  reasonCodes: string[];
+  primaryReasonCode: string;
+  reasonCode?: string;
+  reasons?: string[];
+  observedAdIds: string[];
+  observedDomains: string[];
+  facebookPageInfo?: {
+    pageName?: string;
+    pageUrl?: string;
+    pageId?: string;
+  };
+  timestamps: {
+    firstDiscovered: string;
+    lastEvaluated: string;
+  };
+  recordedAt?: string;
+  decision?: 'UNCERTAIN';
+  confidence?: RelevanceConfidence;
+  queryProvenance?: string[];
+  uncertainReasonCodes?: string[];
+  lastEvaluationState: {
+    score: number;
+    decision: 'UNCERTAIN';
+    confidence: RelevanceConfidence;
+    explanation?: string;
+  };
+  evidenceCoverage?: EvidenceCoverage;
+}
+
+export type CreativeSignalType =
+  | 'CTA'
+  | 'OFFER'
+  | 'DISCOUNT'
+  | 'PRICE'
+  | 'COMMERCIAL_INTENT'
+  | 'PRODUCT_TERM'
+  | 'SERVICE_TERM'
+  | 'CREATIVE_TYPE'
+  | 'LANGUAGE';
+
+export interface StructuredCreativeSignal {
+  type: CreativeSignalType;
+  rawSignal: string;
+  normalized: string;
+  occurrences: number;
+}
+
+export type AdvertiserExpansionStatus =
+  | 'NOT_ELIGIBLE'
+  | 'PENDING'
+  | 'RUNNING'
+  | 'COMPLETED'
+  | 'NO_RESULTS'
+  | 'BLOCKED'
+  | 'FAILED';
+
+export interface AdvertiserExpansionProvenance {
+  expansionType: 'ADVERTISER';
+  sourceEntityId: string;
+  sourceAdvertiserName: string;
+  expansionQuery: string;
+  query?: string;
+  timestamp: string;
+  resultCount: number;
+  newAdsDiscovered: number;
+  newAds?: number;
+  duplicateAds: number;
+  newEntitiesDiscovered: number;
+  newEntities?: number;
+  stopReason: 'SOURCE_EXHAUSTED' | 'MAX_ADS_REACHED' | 'RATE_LIMITED' | 'TIMEOUT' | 'NO_NEW_DATA' | 'ERROR' | 'COMPLETED_SUCCESSFULLY';
 }
 
 export interface RunCounters {
@@ -77,6 +220,8 @@ export interface RunCounters {
   uncertainCandidates: number;
   notRelevantCandidates: number;
   duplicatesRemoved: number;
+  duplicateAdRecordsRemoved?: number;
+  entityMergesCount?: number;
   finalUniqueLeads: number;
   // Enhanced Phase 2 bulk counters
   uniqueEntitiesObserved?: number;
@@ -87,6 +232,58 @@ export interface RunCounters {
   keywordsTotal?: number;
   finalUniqueRelevantLeads?: number;
   reasonCodes?: Record<string, number>;
+  // Prompt 5: Advertiser Expansion counters
+  advertiserExpansionsCount?: number;
+  advertiserExpansionAdsCount?: number;
+  advertiserExpansionDuplicatesCount?: number;
+}
+
+export type QueryVariantType =
+  | 'SEED'
+  | 'CATEGORY_SYNONYM'
+  | 'PRODUCT_TERM'
+  | 'SERVICE_TERM'
+  | 'COMMERCIAL_CATEGORY'
+  | 'SINGULAR_PLURAL'
+  | 'COMMON_SPELLING_VARIANT'
+  | 'LOCALE_VARIANT';
+
+export type QueryStatus =
+  | 'PENDING'
+  | 'RUNNING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'BLOCKED'
+  | 'NO_RESULTS'
+  | 'NO_NEW_ENTITIES';
+
+export interface PlannedQuery {
+  query: string;
+  seedQuery: string;
+  variantType: QueryVariantType;
+  rationale: string;
+  locale: string;
+  country: string;
+  sequence: number;
+  runId?: string;
+  status?: QueryStatus;
+  rawAds?: number;
+  normalizedAds?: number;
+  newUniqueEntities?: number;
+  duplicateEntities?: number;
+  rejectedByRelevance?: number;
+  uncertainByRelevance?: number;
+  yield?: number;
+}
+
+export interface QueryFrontierState {
+  runId: string;
+  activeQueryIndex: number;
+  queries: PlannedQuery[];
+  completedQueries: string[];
+  isSaturated?: boolean;
+  saturationReason?: string;
+  consecutiveZeroYieldCount?: number;
 }
 
 export interface KeywordFrontierState {
@@ -131,6 +328,7 @@ export interface ExtensionLead {
   adLibraryIds: string[];
   adLibraryUrl?: string;
   matchedKeywords: string[];
+  matchedQueries?: string[];
   locationCode: string;
   locationName: string;
   status: 'QUALIFIED' | 'REVIEW_REQUIRED' | 'NEEDS_DATA';
@@ -147,6 +345,44 @@ export interface ExtensionLead {
   relevanceStrategyVersion?: number;
   engineVersion?: string;
   presetVersion?: string;
+  evidenceCoverage?: EvidenceCoverage;
+  evidenceExplanation?: string;
+  uniqueEvidenceSignals?: number;
+  observedEvidenceOccurrences?: number;
+  // Entity Identity & Resolution (v1.1)
+  identityConfidence?: IdentityConfidence;
+  canonicalPageId?: string;
+  canonicalPageSlug?: string;
+  observedDomains?: string[];
+  observedUrls?: string[];
+  aliases?: string[];
+  relationshipType?: EntityRelationshipType;
+  mergeHistory?: EntityMergeRecord[];
+  // Prompt 5: Uncertain Queue, Advertiser Expansion & Creative Signals
+  evaluationStatus?: 'RELEVANT' | 'UNCERTAIN' | 'REJECTED';
+  uncertainReason?: string;
+  missingEvidence?: string[];
+  advertiserExpansionStatus?: AdvertiserExpansionStatus;
+  expansionProvenance?: AdvertiserExpansionProvenance[];
+  creativeSignals?: StructuredCreativeSignal[];
+  // Prompt 6: Website Deep Verification
+  websiteVerificationStatus?: WebsiteVerificationStatus;
+  websiteVerification?: WebsiteVerificationRecord;
+}
+
+export type IdentityConfidence = 'STRONG' | 'MODERATE' | 'WEAK' | 'UNRESOLVED' | 'AMBIGUOUS';
+export type EntityRelationshipType =
+  | 'PARENT_BRAND'
+  | 'LOCAL_BRANCH'
+  | 'INDEPENDENT_BUSINESS'
+  | 'UNRESOLVED_RELATIONSHIP';
+
+export interface EntityMergeRecord {
+  timestamp: string;
+  mergeReason: string;
+  sourceLibraryId?: string;
+  sourceQuery?: string;
+  confidence: IdentityConfidence;
 }
 
 export interface ExtensionResearchRun {
@@ -191,6 +427,9 @@ export interface ExtensionResearchRun {
   entitiesEvaluated?: number;
   lastCheckpointBatch?: number;
   frontier?: KeywordFrontierState;
+  queryFrontier?: QueryFrontierState;
+  plannedQueries?: PlannedQuery[];
+  activeQueryIndex?: number;
 }
 
 export interface StartResearchPayload {
@@ -223,6 +462,79 @@ export interface ExtensionMessage {
     | 'SCAN_AND_EXTRACT'
     | 'CANDIDATES_COLLECTED'
     | 'CHALLENGE_DETECTED'
-    | 'CONTENT_SCRIPT_READY';
+    | 'CONTENT_SCRIPT_READY'
+    | 'VERIFY_WEBSITE'
+    | 'GET_WEBSITE_VERIFICATION';
   payload?: any;
+}
+
+// ==========================================
+// Prompt 6: Website Deep Verification Engine
+// ==========================================
+
+export type WebsiteVerificationStatus =
+  | 'NOT_VERIFIED'
+  | 'VERIFYING'
+  | 'VERIFIED_BUSINESS_WEBSITE'
+  | 'LIKELY_BUSINESS_WEBSITE'
+  | 'UNCERTAIN_WEBSITE'
+  | 'NOT_A_BUSINESS_SITE'
+  | 'INVALID'
+  | 'BLOCKED'
+  | 'NO_WEBSITE';
+
+export type WebsiteIdentityMatchLevel = 'STRONG' | 'MODERATE' | 'WEAK' | 'CONTRADICTORY' | 'UNKNOWN';
+export type WebsiteCategoryMatchLevel = 'STRONG' | 'MODERATE' | 'WEAK' | 'CONTRADICTORY' | 'UNKNOWN';
+
+export type WebsiteCommercialSignalCode =
+  | 'WEBSITE_PRODUCT_SIGNAL'
+  | 'WEBSITE_SERVICE_SIGNAL'
+  | 'WEBSITE_PRICE_SIGNAL'
+  | 'WEBSITE_ECOMMERCE_SIGNAL'
+  | 'WEBSITE_BOOKING_SIGNAL'
+  | 'WEBSITE_CONTACT_SIGNAL'
+  | 'WEBSITE_LOCATION_SIGNAL'
+  | 'WEBSITE_SHOWROOM_SIGNAL'
+  | 'WEBSITE_DELIVERY_SIGNAL'
+  | 'WEBSITE_WARRANTY_SIGNAL';
+
+export type WebsiteNegativeSignalCode =
+  | 'PARKED_DOMAIN'
+  | 'DOMAIN_FOR_SALE'
+  | 'EMPTY_SITE'
+  | 'GENERIC_DIRECTORY'
+  | 'JOB_PORTAL'
+  | 'NEWS_ONLY'
+  | 'PERSONAL_BLOG'
+  | 'UNRELATED_CATEGORY'
+  | 'SOCIAL_ONLY_REDIRECT'
+  | 'MARKETPLACE_ONLY'
+  | 'BROKEN_SITE';
+
+export interface WebsiteContactSignal {
+  type: 'phone' | 'email' | 'address' | 'city' | 'country' | 'contactPage' | 'businessHours';
+  value: string;
+}
+
+export interface WebsiteVerificationRecord {
+  leadId: string;
+  canonicalName: string;
+  originalUrl: string;
+  normalizedUrl: string;
+  finalUrl: string;
+  finalOrigin: string;
+  hostname: string;
+  status: WebsiteVerificationStatus;
+  identityMatch: WebsiteIdentityMatchLevel;
+  categoryMatch: WebsiteCategoryMatchLevel;
+  commercialSignals: WebsiteCommercialSignalCode[];
+  negativeSignals: WebsiteNegativeSignalCode[];
+  evidence: StructuredEvidence[];
+  pagesVisited: string[];
+  contactSignals: WebsiteContactSignal[];
+  locationSignals: string[];
+  verifiedAt: string;
+  durationMs: number;
+  blockedReason?: string;
+  errorCode?: string;
 }

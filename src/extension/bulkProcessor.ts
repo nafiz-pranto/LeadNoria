@@ -19,6 +19,24 @@ import type {
 } from './types.ts';
 import { LeadRelevanceEngine } from './relevanceEngine.ts';
 import type { ResearchIntent } from './relevanceEngine.ts';
+import {
+  evaluateStrictRelevanceV3,
+  recordCandidateEvidenceInProfile,
+  createEntityEvidenceProfile,
+  buildUncertainRecord
+} from './evidenceWaterfall.ts';
+import {
+  EntityResolutionIndex,
+  evaluateEntityMerge,
+  mergeCandidateIntoEntity,
+  normalizeAdvertiserName as normAdvName,
+  normalizeFacebookPage,
+  normalizeDestinationDomain
+} from './entityResolver.ts';
+import { extractCreativeSignalsFromCandidate, aggregateCreativeSignals } from './creativeSignals.ts';
+import { classifyUncertainCandidate } from './uncertainQueue.ts';
+import { checkAdvertiserExpansionEligibility } from './advertiserExpander.ts';
+import type { UncertainEntityRecord } from './types.ts';
 
 export interface BatchProcessOptions {
   runId: string;
@@ -27,11 +45,15 @@ export interface BatchProcessOptions {
   currentKeyword: string;
   intent?: ResearchIntent;
   effectiveCeiling: number; // Internal safety ceiling (up to 5,000)
+  entityIndex?: EntityResolutionIndex;
+  existingUncertainMap?: Map<string, UncertainEntityRecord>;
+  alreadyExpandedEntityIds?: Set<string>;
 }
 
 export interface BatchProcessResult {
   processedAds: ScrapedAdCandidate[];
   updatedEntities: ExtensionLead[];
+  uncertainEntities: UncertainEntityRecord[];
   newEvidence: Array<{ canonicalKey: string; evidence: any }>;
   newAdIdsAdded: string[];
   newEntityKeysAdded: string[];
@@ -44,16 +66,7 @@ export interface BatchProcessResult {
  * Normalizes advertiser name to clean, canonical display form
  */
 export function normalizeAdvertiserName(rawName: string): string {
-  let name = (rawName || '').trim();
-  if (!name || name === 'Unknown Advertiser') return 'Unknown Advertiser';
-
-  // Strip trailing metadata or boilerplate
-  name = name.replace(/\s*·\s*Sponsored.*$/i, '');
-  name = name.replace(/\s*Sponsored.*$/i, '');
-  name = name.replace(/\s+page$/i, '');
-  name = name.replace(/\s*\(official\)$/i, '');
-
-  return name.trim();
+  return normAdvName(rawName);
 }
 
 /**
@@ -89,6 +102,8 @@ export async function processBatch(
 
   const processedAds: ScrapedAdCandidate[] = [];
   const updatedEntities: ExtensionLead[] = [];
+  const uncertainEntities: UncertainEntityRecord[] = [];
+  const existingUncertainMap = options.existingUncertainMap || new Map<string, UncertainEntityRecord>();
   const newEvidence: Array<{ canonicalKey: string; evidence: any }> = [];
   const newAdIdsAdded: string[] = [];
   const newEntityKeysAdded: string[] = [];
@@ -100,6 +115,8 @@ export async function processBatch(
     uncertainCandidates: currentCounters.uncertainCandidates,
     notRelevantCandidates: currentCounters.notRelevantCandidates,
     duplicatesRemoved: currentCounters.duplicatesRemoved,
+    duplicateAdRecordsRemoved: currentCounters.duplicateAdRecordsRemoved ?? 0,
+    entityMergesCount: currentCounters.entityMergesCount ?? 0,
     finalUniqueLeads: currentCounters.finalUniqueLeads,
     uniqueEntitiesObserved: currentCounters.uniqueEntitiesObserved ?? currentCounters.finalUniqueLeads,
     relevantEntities: currentCounters.relevantEntities ?? currentCounters.finalUniqueLeads,
@@ -114,10 +131,17 @@ export async function processBatch(
   let safetyLimitReached = (counters.finalUniqueRelevantLeads || counters.finalUniqueLeads) >= effectiveCeiling;
   let newUniqueRelevantLeadsCount = 0;
 
+  const entityIndex = options.entityIndex || new EntityResolutionIndex();
+  // Ensure existing leads in existingEntitiesMap are indexed
+  for (const [key, lead] of existingEntitiesMap.entries()) {
+    entityIndex.indexEntity(key, lead);
+  }
+
   for (const cand of candidates) {
     // 1. Duplicate ad protection
     if (seenAdLibraryIds.has(cand.libraryId)) {
       counters.duplicatesRemoved++;
+      counters.duplicateAdRecordsRemoved = (counters.duplicateAdRecordsRemoved || 0) + 1;
       continue;
     }
 
@@ -127,73 +151,76 @@ export async function processBatch(
     counters.normalizedCandidates++;
     processedAds.push(cand);
 
-    const cleanName = normalizeAdvertiserName(cand.pageName);
-    const entityKey = getCanonicalEntityKey(cleanName, cand.facebookPageId);
+    // 2. Identity resolution check via deterministic multi-signal hierarchy
+    const mergeDecision = evaluateEntityMerge(cand, existingEntitiesMap, entityIndex);
 
-    // 2. Check if entity already exists in this research run
-    const existingEntity = existingEntitiesMap.get(entityKey);
+    if (mergeDecision.shouldMerge) {
+      // Corroborated entity match! Merge into target entity
+      const existingEntity = existingEntitiesMap.get(mergeDecision.targetKey);
+      if (existingEntity) {
+        counters.duplicatesRemoved++;
+        counters.entityMergesCount = (counters.entityMergesCount || 0) + 1;
+        mergeCandidateIntoEntity(existingEntity, cand, mergeDecision, currentKeyword);
 
-    if (existingEntity) {
-      // Entity already observed: merge ad signals, do NOT inflate lead count!
-      counters.duplicatesRemoved++;
-      existingEntity.activeAdCount++;
-      existingEntity.adCount = (existingEntity.adCount || 0) + 1;
-      if (!existingEntity.adLibraryIds.includes(cand.libraryId)) {
-        existingEntity.adLibraryIds.push(cand.libraryId);
-      }
-      if (currentKeyword && !existingEntity.matchedKeywords.includes(currentKeyword)) {
-        existingEntity.matchedKeywords.push(currentKeyword);
-      }
-      if (!existingEntity.destinationUrl && cand.destinationUrl) {
-        existingEntity.destinationUrl = cand.destinationUrl;
-        existingEntity.destinationDomain = cand.destinationDomain;
-        existingEntity.websiteState = 'found';
-      }
-      if (!existingEntity.facebookPageUrl && cand.facebookPageUrl) {
-        existingEntity.facebookPageUrl = cand.facebookPageUrl;
-        existingEntity.facebookPageState = 'found';
-      }
-      if (!existingEntity.sampleCopy && cand.bodyCopy) {
-        existingEntity.sampleCopy = cand.bodyCopy;
-      }
-      if (!existingEntity.sampleCta && cand.ctaText) {
-        existingEntity.sampleCta = cand.ctaText;
-      }
+        // Aggregate creative signals into existing entity with anti-inflation
+        const newSignals = extractCreativeSignalsFromCandidate(cand);
+        existingEntity.creativeSignals = aggregateCreativeSignals([
+          ...(existingEntity.creativeSignals || []),
+          ...newSignals
+        ]);
 
-      // Mark entity as updated in this batch
-      if (!updatedEntities.some(e => e.id === existingEntity.id)) {
-        updatedEntities.push(existingEntity);
+        entityIndex.indexEntity(mergeDecision.targetKey, existingEntity);
+
+        if (!updatedEntities.some(e => e.id === existingEntity.id)) {
+          updatedEntities.push(existingEntity);
+        }
+        continue;
       }
-      continue;
     }
 
-    // 3. New entity observed
-    counters.uniqueEntitiesObserved = (counters.uniqueEntitiesObserved || 0) + 1;
-    seenEntityKeys.add(entityKey);
-    newEntityKeysAdded.push(entityKey);
+    // 3. New candidate entity
+    const entityKey = mergeDecision.targetKey;
+    if (!seenEntityKeys.has(entityKey)) {
+      counters.uniqueEntitiesObserved = (counters.uniqueEntitiesObserved || 0) + 1;
+      seenEntityKeys.add(entityKey);
+      newEntityKeysAdded.push(entityKey);
+    }
 
-    // 4. Strict Relevance Gate v2 Evaluation
+    // 4. Evidence Waterfall & Strict Relevance v3 Evaluation
     let evalResult: any = null;
+    let v3Result: any = null;
     if (intent) {
       evalResult = LeadRelevanceEngine.evaluateCandidate(cand, intent);
+      v3Result = evaluateStrictRelevanceV3({
+        advertiserName: cand.pageName,
+        adText: cand.bodyCopy,
+        destinationUrl: cand.destinationUrl,
+        destinationDomain: cand.destinationDomain,
+        facebookPageUrl: cand.facebookPageUrl,
+        ctaText: cand.ctaText,
+        matchedKeyword: cand.observedKeyword || currentKeyword
+      }, intent);
 
-      if (evalResult.reasonCodes && Array.isArray(evalResult.reasonCodes)) {
-        for (const code of evalResult.reasonCodes) {
-          counters.reasonCodes![code] = (counters.reasonCodes![code] || 0) + 1;
-        }
+      if (v3Result.reasonCode) {
+        counters.reasonCodes![v3Result.reasonCode] = (counters.reasonCodes![v3Result.reasonCode] || 0) + 1;
       }
 
-      if (evalResult.decision === 'NOT_RELEVANT') {
+      if (v3Result.decision === 'NOT_RELEVANT') {
         counters.notRelevantCandidates++;
         counters.notRelevantEntities = (counters.notRelevantEntities || 0) + 1;
         // Non-relevant entity is recorded for audit/stats but not added to active leads
         continue;
       }
 
-      if (evalResult.decision === 'UNCERTAIN') {
+      if (v3Result.decision === 'UNCERTAIN') {
         counters.uncertainCandidates++;
         counters.uncertainEntities = (counters.uncertainEntities || 0) + 1;
-        // Uncertain entity is excluded from qualified leads per Strict Relevance Gate v2
+        // Construct durable UncertainEntityRecord and store in internal queue
+        const existingUnc = existingUncertainMap.get(entityKey);
+        const uncRecord = classifyUncertainCandidate(cand, v3Result, intent, entityKey, existingUnc);
+        existingUncertainMap.set(entityKey, uncRecord);
+        uncertainEntities.push(uncRecord);
+        // Uncertain entity is excluded from qualified leads per Strict Relevance Gate v3
         continue;
       }
     }
@@ -209,43 +236,70 @@ export async function processBatch(
       break;
     }
 
-    // Construct unified ExtensionLead
-    const webState = cand.destinationUrl ? 'found' : 'not_found';
-    const fbState = cand.facebookPageUrl ? 'found' : 'not_found';
+    // Construct unified ExtensionLead with identity metadata and evidence coverage
+    const cleanName = normalizeAdvertiserName(cand.pageName);
+    const pageNorm = normalizeFacebookPage(cand.facebookPageUrl, cand.facebookPageId);
+    const domainNorm = normalizeDestinationDomain(cand.destinationUrl, cand.destinationDomain);
+    const webState = (domainNorm.cleanUrl || cand.destinationUrl) ? 'found' : 'not_found';
+    const fbState = (pageNorm.canonicalUrl || cand.facebookPageUrl) ? 'found' : 'not_found';
 
     const newLead: ExtensionLead = {
       id: `lead_${runId}_${entityKey}`,
       name: cleanName,
       canonicalName: cleanName,
+      canonicalPageId: pageNorm.pageId,
+      canonicalPageSlug: pageNorm.pageSlug,
       facebookPageName: cleanName,
-      facebookPageUrl: cand.facebookPageUrl,
+      facebookPageUrl: pageNorm.canonicalUrl || cand.facebookPageUrl,
       facebookPageState: fbState,
-      destinationUrl: cand.destinationUrl,
-      destinationDomain: cand.destinationDomain,
+      destinationUrl: domainNorm.cleanUrl || cand.destinationUrl,
+      destinationDomain: domainNorm.canonicalDomain || cand.destinationDomain,
+      observedDomains: domainNorm.canonicalDomain ? [domainNorm.canonicalDomain] : [],
+      observedUrls: cand.destinationUrl ? [cand.destinationUrl] : [],
+      aliases: [],
       websiteState: webState,
       adCount: 1,
       activeAdCount: 1,
       adLibraryIds: [cand.libraryId],
       adLibraryUrl: `https://www.facebook.com/ads/library/?id=${cand.libraryId}`,
       matchedKeywords: currentKeyword ? [currentKeyword] : (intent?.primaryKeywords?.slice(0, 1) || []),
+      matchedQueries: currentKeyword ? [currentKeyword] : (intent?.primaryKeywords?.slice(0, 1) || []),
       locationCode: countryCode,
       locationName: locationName,
       status: webState === 'found' ? 'QUALIFIED' : 'REVIEW_REQUIRED',
       discoveredAt: new Date().toISOString(),
       sampleCopy: cand.bodyCopy,
       sampleCta: cand.ctaText,
-      relevanceScore: evalResult?.score,
-      relevanceDecision: evalResult?.decision || 'RELEVANT',
-      relevanceConfidence: evalResult?.confidence,
-      relevanceReasons: evalResult?.reasons,
-      relevanceMatchedTerms: evalResult?.matchedTerms,
-      relevanceEvidence: evalResult?.evidence,
-      relevanceStrategyVersion: evalResult?.strategyVersion,
-      engineVersion: evalResult?.engineVersion,
-      presetVersion: evalResult?.presetVersion
+      identityConfidence: mergeDecision.confidence,
+      relationshipType: mergeDecision.relationshipType,
+      mergeHistory: [],
+      relevanceScore: v3Result?.score ?? evalResult?.score,
+      relevanceDecision: v3Result?.decision ?? evalResult?.decision ?? 'RELEVANT',
+      relevanceConfidence: v3Result?.confidence ?? evalResult?.confidence,
+      relevanceReasons: v3Result?.reasons ?? evalResult?.reasons,
+      relevanceMatchedTerms: v3Result?.matchedTerms ?? evalResult?.matchedTerms,
+      relevanceEvidence: v3Result?.evidence ?? evalResult?.evidence,
+      relevanceStrategyVersion: v3Result?.strategyVersion ?? evalResult?.strategyVersion,
+      engineVersion: v3Result?.engineVersion ?? evalResult?.engineVersion,
+      presetVersion: v3Result?.presetVersion ?? evalResult?.presetVersion,
+      evidenceCoverage: v3Result?.evidenceCoverage,
+      evidenceExplanation: v3Result?.explanation,
+      uniqueEvidenceSignals: v3Result?.uniqueEvidenceSignals,
+      observedEvidenceOccurrences: v3Result?.observedEvidenceOccurrences,
+      evaluationStatus: 'RELEVANT',
+      creativeSignals: extractCreativeSignalsFromCandidate(cand)
     };
 
+    // Check advertiser expansion eligibility
+    const expEligibility = checkAdvertiserExpansionEligibility(
+      newLead,
+      options.alreadyExpandedEntityIds || new Set<string>(),
+      counters.advertiserExpansionsCount || 0
+    );
+    newLead.advertiserExpansionStatus = expEligibility.status === 'ELIGIBLE' ? 'PENDING' : 'NOT_ELIGIBLE';
+
     existingEntitiesMap.set(entityKey, newLead);
+    entityIndex.indexEntity(entityKey, newLead);
     updatedEntities.push(newLead);
 
     if (evalResult?.evidence) {
@@ -271,6 +325,7 @@ export async function processBatch(
   return {
     processedAds,
     updatedEntities,
+    uncertainEntities,
     newEvidence,
     newAdIdsAdded,
     newEntityKeysAdded,

@@ -1,0 +1,6 @@
+{
+  "saturationRule": "Consecutive zero-yield expansion queries trigger discovery saturation",
+  "consecutiveZeroYieldThreshold": 2,
+  "testedQueriesCount": 6,
+  "frontierCompletedSuccessfully": true
+}

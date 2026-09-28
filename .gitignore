@@ -1,8 +1,10 @@
 node_modules/
 build/
-dist/
+dist/*
+!dist/leadnoria-v1.0.0.zip
 coverage/
 .DS_Store
 *.log
 .env*
 !.env.example
+test-userData/

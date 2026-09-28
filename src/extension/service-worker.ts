@@ -26,6 +26,12 @@ import {
   getLatestCheckpoint
 } from './bulkStore.ts';
 import { processBatch } from './bulkProcessor.ts';
+import {
+  planResearchQueries,
+  QueryFrontier,
+  MAX_QUERIES_PER_RESEARCH_RUN
+} from './queryPlanner.ts';
+import { verifyLeadWebsite } from './websiteVerifier.ts';
 
 console.log('[Meta Ad Library Scraper] Service Worker initializing...');
 
@@ -247,32 +253,68 @@ async function executeResearchPipeline(
   }
 
   await saveActiveRun(initialRun);
+
+  // Plan bounded, deterministic search queries
+  const plannedQueries = initialRun.plannedQueries || planResearchQueries({
+    seedKeywords: keywords,
+    countryCode,
+    runId,
+    maxQueries: MAX_QUERIES_PER_RESEARCH_RUN
+  });
+  initialRun.plannedQueries = plannedQueries;
+
+  const queryFrontier = initialRun.queryFrontier
+    ? QueryFrontier.restore(initialRun.queryFrontier)
+    : new QueryFrontier(
+        runId,
+        plannedQueries,
+        initialRun.frontier?.completedKeywords || [],
+        initialRun.activeQueryIndex ?? initialRun.activeKeywordIndex ?? 0
+      );
+  initialRun.queryFrontier = queryFrontier.serialize();
+
+  const queriesToRun = plannedQueries.map(p => p.query);
+
   const startBroadcastMsg = isAutoDiscovery
-    ? `Auto-discovery research initiated in ${payload.locationName}...`
-    : `Research initiated for ${targetLeadCount} leads in ${payload.locationName}...`;
+    ? `Auto-discovery research initiated in ${payload.locationName} (${queriesToRun.length} planned queries)...`
+    : `Research initiated for ${targetLeadCount} leads in ${payload.locationName} (${queriesToRun.length} planned queries)...`;
   broadcastProgress(initialRun, 'STARTING', startBroadcastMsg);
 
   let currentTabId: number | null = null;
-  const startKi = initialRun.activeKeywordIndex || 0;
+  const startQi = initialRun.activeQueryIndex ?? initialRun.activeKeywordIndex ?? 0;
   const completedKeywords: string[] = [...(initialRun.frontier?.completedKeywords || [])];
   let isStalled = false;
   let batchIndex = initialRun.lastCheckpointBatch || 0;
 
   try {
-    for (let ki = startKi; ki < keywords.length; ki++) {
+    for (let qi = startQi; qi < queriesToRun.length; qi++) {
       if (cancelledRuns.has(runId)) break;
       const currentLeadCount = initialRun.counters?.finalUniqueRelevantLeads ?? initialRun.counters?.finalUniqueLeads ?? existingEntitiesMap.size;
       if (currentLeadCount >= effectiveCeiling) break;
 
-      const currentKeyword = keywords[ki];
-      initialRun.activeKeywordIndex = ki;
+      // Check for discovery saturation
+      if (queryFrontier.getSaturationState().isSaturated) {
+        broadcastProgress(initialRun, 'COLLECTING', 'Discovery saturation reached (consecutive queries produced zero new unique entities). Finalizing research.');
+        break;
+      }
+
+      const currentPlannedQuery = plannedQueries[qi];
+      const currentKeyword = currentPlannedQuery.query;
+      initialRun.activeKeywordIndex = qi;
+      initialRun.activeQueryIndex = qi;
       initialRun.currentKeyword = currentKeyword;
       initialRun.keywordsCompleted = completedKeywords.length;
-      initialRun.totalKeywords = keywords.length;
+      initialRun.totalKeywords = queriesToRun.length;
       initialRun.status = 'NAVIGATING';
 
+      let queryRawAds = 0;
+      let queryNormalizedAds = 0;
+      let queryNewEntities = 0;
+      let queryDuplicateEntities = 0;
+
       const searchUrl = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=${encodeURIComponent(countryCode)}&q=${encodeURIComponent(currentKeyword)}`;
-      broadcastProgress(initialRun, 'NAVIGATING', `Opening Meta Ad Library for "${currentKeyword}" in ${countryCode}...`);
+      const queryTypeLabel = currentPlannedQuery.variantType === 'SEED' ? 'Primary Seed' : `Expansion: ${currentPlannedQuery.variantType}`;
+      broadcastProgress(initialRun, 'NAVIGATING', `[${qi + 1}/${queriesToRun.length} ${queryTypeLabel}] Opening Meta Ad Library for "${currentKeyword}" in ${countryCode}...`);
 
       if (!currentTabId) {
         const tab = await chrome.tabs.create({ url: searchUrl, active: false });
@@ -393,17 +435,23 @@ async function executeResearchPipeline(
             }
           );
 
+          queryRawAds += candidates.length;
+          queryNormalizedAds += batchResult.processedAds.length;
+          queryNewEntities += batchResult.newEntityKeysAdded.length;
+          queryDuplicateEntities += (candidates.length - batchResult.processedAds.length);
+
           // Persist batch into IndexedDB bulk store
           await saveBatch(runId, {
             batchIndex,
             ads: batchResult.processedAds,
             entities: batchResult.updatedEntities,
             evidence: batchResult.newEvidence,
+            uncertainEntities: batchResult.uncertainEntities,
             checkpoint: {
               runId,
               batchIndex,
               timestamp: new Date().toISOString(),
-              activeKeywordIndex: ki,
+              activeKeywordIndex: qi,
               currentKeyword,
               rawAdsCount: batchResult.counters.rawAds,
               normalizedCandidatesCount: batchResult.counters.normalizedCandidates,
@@ -428,11 +476,11 @@ async function executeResearchPipeline(
           initialRun.lastCheckpointBatch = batchIndex;
           initialRun.currentKeyword = currentKeyword;
           initialRun.keywordsCompleted = completedKeywords.length;
-          initialRun.totalKeywords = keywords.length;
+          initialRun.totalKeywords = queriesToRun.length;
           initialRun.entitiesEvaluated = batchResult.counters.uniqueEntitiesObserved || 0;
           initialRun.frontier = {
-            activeKeywordIndex: ki,
-            keywords,
+            activeKeywordIndex: qi,
+            keywords: queriesToRun,
             currentKeyword,
             completedKeywords: [...completedKeywords],
             seenLibraryIdsCount: seenAdLibraryIds.size,
@@ -482,6 +530,17 @@ async function executeResearchPipeline(
           await wait(2000);
         }
       }
+
+      // Record query yield metrics in frontier
+      queryFrontier.recordQueryMetrics(qi, {
+        rawAds: queryRawAds,
+        normalizedAds: queryNormalizedAds,
+        newUniqueEntities: queryNewEntities,
+        duplicateEntities: queryDuplicateEntities,
+        rejectedByRelevance: 0,
+        uncertainByRelevance: 0
+      });
+      initialRun.queryFrontier = queryFrontier.serialize();
 
       completedKeywords.push(currentKeyword);
       initialRun.keywordsCompleted = completedKeywords.length;
@@ -726,6 +785,40 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
         });
 
         sendResponse({ success: true, run: activeRun });
+      });
+      return true;
+    }
+
+    if (message.type === 'VERIFY_WEBSITE') {
+      const { leadId } = message.payload || {};
+      chrome.storage.local.get(['activeResearchRun'], async (data) => {
+        const activeRun = data.activeResearchRun as ExtensionResearchRun | undefined;
+        if (!activeRun) {
+          sendResponse({ success: false, error: 'No active research run found' });
+          return;
+        }
+
+        const targetLead = activeRun.leads.find(l => l.id === leadId);
+        if (!targetLead) {
+          sendResponse({ success: false, error: `Lead not found: ${leadId}` });
+          return;
+        }
+
+        try {
+          targetLead.websiteVerificationStatus = 'VERIFYING';
+          await saveActiveRun(activeRun);
+
+          const record = await verifyLeadWebsite(targetLead);
+          targetLead.websiteVerificationStatus = record.status;
+          targetLead.websiteVerification = record;
+
+          await saveActiveRun(activeRun);
+          sendResponse({ success: true, record, lead: targetLead });
+        } catch (err: any) {
+          targetLead.websiteVerificationStatus = 'INVALID';
+          await saveActiveRun(activeRun);
+          sendResponse({ success: false, error: err.message });
+        }
       });
       return true;
     }

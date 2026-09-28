@@ -1,6 +1,7 @@
 # LeadNoria — Installation & Quick Start Guide
 
-> **Discover. Verify. Connect.**
+> **Discover. Verify. Connect.**  
+> *Business lead research from real public signals.*
 
 A simple, beginner-friendly guide to installing and using **LeadNoria** on Google Chrome (Windows, Mac, or Linux).
 

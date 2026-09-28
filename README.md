@@ -1,6 +1,7 @@
 # LeadNoria (Chrome Extension)
 
-> **Discover. Verify. Connect.**
+> **Discover. Verify. Connect.**  
+> *Business lead research from real public signals.*
 
 A standalone **Manifest V3 Chrome Extension** that operates as a **local-only browser research tool** for the public Meta Ad Library.
 

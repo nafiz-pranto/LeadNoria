@@ -567,7 +567,14 @@ export function exportLeadsToCsv(leads: ExtensionLead[], run?: ExtensionResearch
     'Status',
     'Discovered At',
     'Sample Copy',
-    'Sample CTA'
+    'Sample CTA',
+    'Website Verified URL',
+    'Website Deep Verification Status',
+    'Website Identity Match',
+    'Website Category Match',
+    'Website Commercial Signals',
+    'Website Evidence Summary',
+    'Website Verified At'
   ];
 
   const rows = leads.map(l => [
@@ -593,7 +600,14 @@ export function exportLeadsToCsv(leads: ExtensionLead[], run?: ExtensionResearch
     sanitizeCsvField(l.status),
     sanitizeCsvField(l.discoveredAt),
     sanitizeCsvField(l.sampleCopy || ''),
-    sanitizeCsvField(l.sampleCta || '')
+    sanitizeCsvField(l.sampleCta || ''),
+    sanitizeCsvField(l.websiteVerification?.finalUrl || l.destinationUrl || ''),
+    sanitizeCsvField(l.websiteVerificationStatus || (l.websiteVerification?.status) || (l.destinationUrl ? 'NOT_VERIFIED' : 'NO_WEBSITE')),
+    sanitizeCsvField(l.websiteVerification?.identityMatch || 'UNKNOWN'),
+    sanitizeCsvField(l.websiteVerification?.categoryMatch || 'UNKNOWN'),
+    sanitizeCsvField((l.websiteVerification?.commercialSignals || []).join('; ')),
+    sanitizeCsvField((l.websiteVerification?.evidence || []).map(e => e.reason).slice(0, 3).join(' | ')),
+    sanitizeCsvField(l.websiteVerification?.verifiedAt || '')
   ]);
 
   return metaHeader + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');

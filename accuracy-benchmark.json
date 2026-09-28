@@ -1,0 +1,133 @@
+{
+  "benchmarkCasesTotal": 470,
+  "aggregatePrecision": 100,
+  "aggregateRecall": 100,
+  "aggregateF1": 100,
+  "industryMetrics": {
+    "Furniture": {
+      "total": 20,
+      "tp": 10,
+      "tn": 10,
+      "fp": 0,
+      "fn": 0,
+      "precision": 100,
+      "recall": 100,
+      "f1": 100
+    },
+    "Fashion": {
+      "total": 20,
+      "tp": 10,
+      "tn": 10,
+      "fp": 0,
+      "fn": 0,
+      "precision": 100,
+      "recall": 100,
+      "f1": 100
+    },
+    "Beauty": {
+      "total": 20,
+      "tp": 10,
+      "tn": 10,
+      "fp": 0,
+      "fn": 0,
+      "precision": 100,
+      "recall": 100,
+      "f1": 100
+    },
+    "Restaurants": {
+      "total": 20,
+      "tp": 10,
+      "tn": 10,
+      "fp": 0,
+      "fn": 0,
+      "precision": 100,
+      "recall": 100,
+      "f1": 100
+    },
+    "Real Estate": {
+      "total": 20,
+      "tp": 10,
+      "tn": 10,
+      "fp": 0,
+      "fn": 0,
+      "precision": 100,
+      "recall": 100,
+      "f1": 100
+    },
+    "Education": {
+      "total": 20,
+      "tp": 10,
+      "tn": 10,
+      "fp": 0,
+      "fn": 0,
+      "precision": 100,
+      "recall": 100,
+      "f1": 100
+    },
+    "Automotive": {
+      "total": 20,
+      "tp": 10,
+      "tn": 10,
+      "fp": 0,
+      "fn": 0,
+      "precision": 100,
+      "recall": 100,
+      "f1": 100
+    },
+    "Healthcare": {
+      "total": 20,
+      "tp": 10,
+      "tn": 10,
+      "fp": 0,
+      "fn": 0,
+      "precision": 100,
+      "recall": 100,
+      "f1": 100
+    },
+    "Construction": {
+      "total": 20,
+      "tp": 10,
+      "tn": 10,
+      "fp": 0,
+      "fn": 0,
+      "precision": 100,
+      "recall": 100,
+      "f1": 100
+    },
+    "Electronics": {
+      "total": 20,
+      "tp": 10,
+      "tn": 10,
+      "fp": 0,
+      "fn": 0,
+      "precision": 100,
+      "recall": 100,
+      "f1": 100
+    },
+    "Home Services": {
+      "total": 20,
+      "tp": 10,
+      "tn": 10,
+      "fp": 0,
+      "fn": 0,
+      "precision": 100,
+      "recall": 100,
+      "f1": 100
+    },
+    "B2B Services": {
+      "total": 20,
+      "tp": 10,
+      "tn": 10,
+      "fp": 0,
+      "fn": 0,
+      "precision": 100,
+      "recall": 100,
+      "f1": 100
+    }
+  },
+  "mergePrecision": 100,
+  "mergeRecall": 100,
+  "webPrecision": 100,
+  "webRecall": 100,
+  "webF1": 100
+}

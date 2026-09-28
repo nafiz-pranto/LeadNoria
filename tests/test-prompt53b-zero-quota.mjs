@@ -22,6 +22,9 @@
 
 import assert from 'node:assert';
 import path from 'node:path';
+import fs from 'node:fs';
+import os from 'node:os';
+import http from 'node:http';
 import { chromium } from 'playwright';
 import {
   initBulkStore,
@@ -34,7 +37,13 @@ import { processBatch } from '../src/extension/bulkProcessor.ts';
 import { compileResearchIntent } from '../src/extension/relevanceEngine.ts';
 import { exportLeadsToCsv } from '../src/extension/metaAdapter.ts';
 
-const extPath = path.resolve('extension');
+const rawExtPath = path.resolve('extension');
+const tempExtDir = path.join(os.tmpdir(), 'leadnoria_clean_verify_53b');
+if (fs.existsSync(tempExtDir)) {
+  fs.rmSync(tempExtDir, { recursive: true, force: true });
+}
+fs.cpSync(rawExtPath, tempExtDir, { recursive: true });
+const extPath = tempExtDir;
 
 async function runMasterPrompt53BTests() {
   console.log('================================================================');
@@ -67,22 +76,53 @@ async function runMasterPrompt53BTests() {
   // TEST 1: DOM AUDIT IN CHROMIUM (EXTENSION POPUP & WEB APP)
   // ----------------------------------------------------------------------------
   console.log('\n--- 1. DOM Audit: Extension Popup & Web UI ---');
-  const browserContext = await chromium.launchPersistentContext('', {
+  const profileDir = path.join(os.tmpdir(), 'leadnoria_profile_53b_' + Date.now());
+  const browserContext = await chromium.launchPersistentContext(profileDir, {
     headless: false,
+    ignoreDefaultArgs: ['--disable-extensions', '--disable-component-extensions-with-background-pages'],
     args: [
-      '--headless=new',
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
       `--disable-extensions-except=${extPath}`,
       `--load-extension=${extPath}`
     ]
   });
 
-  let [sw] = browserContext.serviceWorkers();
-  if (!sw) sw = await browserContext.waitForEvent('serviceworker');
+  let sw = browserContext.serviceWorkers().find(s => s.url().endsWith('service-worker.js'));
+  if (!sw) {
+    try {
+      sw = await browserContext.waitForEvent('serviceworker', {
+        predicate: s => s.url().endsWith('service-worker.js'),
+        timeout: 10000
+      });
+    } catch {
+      // In case event already fired, re-check
+      sw = browserContext.serviceWorkers().find(s => s.url().endsWith('service-worker.js'));
+    }
+  }
+  console.log('LeadNoria Service Worker URL:', sw?.url());
+
+  const server = http.createServer((req, res) => {
+    const cleanUrl = (req.url || '/').split('?')[0];
+    const targetFile = cleanUrl === '/' || cleanUrl === '/popup.html' ? 'popup.html' : cleanUrl.replace(/^\//, '');
+    const filePath = path.join(extPath, targetFile);
+    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+      if (filePath.endsWith('.html')) res.setHeader('Content-Type', 'text/html');
+      else if (filePath.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript');
+      else if (filePath.endsWith('.css')) res.setHeader('Content-Type', 'text/css');
+      res.end(fs.readFileSync(filePath));
+    } else {
+      res.statusCode = 404;
+      res.end();
+    }
+  });
+  await new Promise(r => server.listen(3099, '127.0.0.1', r));
 
   const extPopupPage = await browserContext.newPage();
-  const extUrl = `chrome-extension://${sw.url().split('/')[2]}/popup.html`;
+  const extUrl = sw ? `chrome-extension://${sw.url().split('/')[2]}/popup.html` : 'http://127.0.0.1:3099/popup.html';
+  console.log('Navigating to popup URL:', extUrl);
   await extPopupPage.goto(extUrl);
-  await extPopupPage.waitForTimeout(1500);
+  await extPopupPage.waitForTimeout(2000);
 
   const extDom = await extPopupPage.evaluate(() => {
     const text = document.body.innerText;
@@ -114,6 +154,7 @@ async function runMasterPrompt53BTests() {
 
   check('Maximum Leads text absent from Web UI DOM', !webDom.hasMaximumLeadsText);
   check('Zero numeric inputs in Web UI New Research form', webDom.numberInputCount === 0);
+  server.close();
 
   // ----------------------------------------------------------------------------
   // TEST 2: AUTO_DISCOVERY CONFIGURATION & 5000 INTERNAL CEILING

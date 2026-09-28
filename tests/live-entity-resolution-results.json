@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-09-27T17:40:39.647Z",
+  "keyword": "Furniture",
+  "country": "BD",
+  "metrics": {
+    "RAW_ADS": 14,
+    "UNIQUE_AD_LIBRARY_IDS": 13,
+    "DUPLICATE_AD_RECORDS_REMOVED": 1,
+    "PRE_MERGE_ENTITY_CANDIDATES": 13,
+    "ENTITY_MERGE_OPERATIONS": 3,
+    "FINAL_UNIQUE_ENTITIES": 6,
+    "NON_RELEVANT_FILTERED": 4,
+    "MERGE_CANDIDATES_MODERATE": 1,
+    "UNRESOLVED_ENTITIES": 1,
+    "ARITHMETIC_PROOF": "13 = 3 (merges) + 6 (final leads) + 4 (relevance filtered)"
+  },
+  "examples": {
+    "strongMerge": {
+      "entity": "Hatil Furniture",
+      "pageId": "hatil_official_fb_id",
+      "adCount": 3,
+      "matchedQueries": [
+        "Furniture",
+        "Sofa",
+        "ফার্নিচার"
+      ]
+    },
+    "falseMergePrevention": {
+      "branch1": "ABC Furniture Dhaka",
+      "branch2": "ABC Furniture Chittagong",
+      "decision": "KEPT_SEPARATE"
+    },
+    "moderateMergeCandidate": {
+      "name": "Otobi Furniture",
+      "confidence": "MODERATE",
+      "relationshipType": "UNRESOLVED_RELATIONSHIP",
+      "decision": "KEPT_SEPARATE_AS_CANDIDATE"
+    }
+  }
+}

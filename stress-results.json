@@ -1,0 +1,10 @@
+{
+  "recordsProcessed": 17500,
+  "throughputRecordsPerSec": 3424,
+  "durationMs": 5111,
+  "memoryDeltaMB": 12.13,
+  "duplicateStressPassed": true,
+  "orderIndependencePassed": true,
+  "persistenceRestartPassed": true,
+  "csvExportStressPassed": true
+}

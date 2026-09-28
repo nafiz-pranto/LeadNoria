@@ -110,7 +110,7 @@ const manifest = {
   name: "LeadNoria",
   short_name: "LeadNoria",
   version: "1.0.0",
-  description: "A browser-based business lead research extension.",
+  description: "Business lead research from real public signals.",
   permissions: [
     "storage",
     "tabs",
@@ -120,6 +120,9 @@ const manifest = {
   host_permissions: [
     "https://www.facebook.com/ads/library/*",
     "https://web.facebook.com/ads/library/*"
+  ],
+  optional_host_permissions: [
+    "https://*/*"
   ],
   background: {
     service_worker: "service-worker.js",

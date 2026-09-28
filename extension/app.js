@@ -4,12 +4,24 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __esm = (fn, res, err) => function __init() {
+  if (err) throw err[0];
+  try {
+    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+  } catch (e) {
+    throw err = [e], e;
+  }
+};
 var __commonJS = (cb, mod) => function __require() {
   try {
     return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
   } catch (e) {
     throw mod = 0, e;
   }
+};
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
 };
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
@@ -27,6 +39,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // node_modules/react/cjs/react.production.js
 var require_react_production = __commonJS({
@@ -14530,6 +14543,2643 @@ var require_client = __commonJS({
   }
 });
 
+// src/data/presetCatalogue.ts
+var RESEARCH_PRESETS;
+var init_presetCatalogue = __esm({
+  "src/data/presetCatalogue.ts"() {
+    RESEARCH_PRESETS = [
+      // ==========================================
+      // 1. TECHNOLOGY & SOFTWARE
+      // ==========================================
+      {
+        preset_id: "tech_saas_b2b",
+        name: "B2B SaaS Platforms",
+        industry: "Technology & Software",
+        sub_industry: "Cloud Software",
+        description: "B2B cloud software providers advertising subscription business tools.",
+        primary_keywords: ["saas", "cloud software", "business software"],
+        secondary_keywords: ["crm", "erp", "workflow automation", "enterprise software"],
+        optional_exclusions: ["free software", "pirate", "torrent"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["SaaS", "B2B Software", "Cloud Platforms", "Enterprise SaaS"]
+      },
+      {
+        preset_id: "tech_crm_platforms",
+        name: "CRM & Pipeline Software",
+        industry: "Technology & Software",
+        sub_industry: "Sales Technology",
+        description: "Customer relationship management and sales automation software vendors.",
+        primary_keywords: ["crm software", "sales pipeline software", "lead management software"],
+        secondary_keywords: ["pipeline crm", "contact manager", "deal tracking"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["CRM", "Sales CRM", "Pipeline Tool"]
+      },
+      {
+        preset_id: "tech_devops_cloud",
+        name: "DevOps & Cloud Infrastructure",
+        industry: "Technology & Software",
+        sub_industry: "Developer Tools",
+        description: "Continuous delivery, Kubernetes, cloud hosting, and infrastructure monitoring.",
+        primary_keywords: ["devops platform", "kubernetes management", "cloud infrastructure"],
+        secondary_keywords: ["ci/cd pipeline", "container orchestration", "cloud monitoring"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["DevOps", "Cloud Infra", "Kubernetes"]
+      },
+      {
+        preset_id: "tech_cybersecurity_b2b",
+        name: "Cybersecurity & Compliance",
+        industry: "Technology & Software",
+        sub_industry: "Security & Privacy",
+        description: "Enterprise endpoint protection, SOC 2 compliance automation, and threat defense.",
+        primary_keywords: ["cybersecurity solution", "soc 2 compliance", "endpoint security"],
+        secondary_keywords: ["vulnerability management", "data security platform", "zero trust"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Cybersecurity", "SOC 2", "InfoSec", "Penetration Testing"]
+      },
+      {
+        preset_id: "tech_fintech_software",
+        name: "FinTech & Billing Software",
+        industry: "Technology & Software",
+        sub_industry: "Financial Technology",
+        description: "Corporate spend management, payroll automation, and recurring billing systems.",
+        primary_keywords: ["spend management software", "payroll software", "subscription billing"],
+        secondary_keywords: ["corporate card", "invoicing software", "expense automation"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["FinTech", "Payroll SaaS", "Billing Engine"]
+      },
+      {
+        preset_id: "tech_hr_recruitment_saas",
+        name: "HR & ATS Talent Software",
+        industry: "Technology & Software",
+        sub_industry: "Human Resources",
+        description: "Applicant tracking systems, employee onboarding, and HR information systems.",
+        primary_keywords: ["applicant tracking system", "hr software", "employee onboarding platform"],
+        secondary_keywords: ["ats software", "hris", "recruitment software"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["HR Tech", "ATS", "HRIS", "Staffing Software"]
+      },
+      // ==========================================
+      // 2. HEALTHCARE & MEDICAL
+      // ==========================================
+      {
+        preset_id: "health_dental_clinics",
+        name: "Dental & Orthodontic Clinics",
+        industry: "Healthcare & Medical",
+        sub_industry: "Dental Services",
+        description: "Private dental practices advertising cosmetic dentistry, implants, and clear aligners.",
+        primary_keywords: ["dental implants", "cosmetic dentist", "clear aligners"],
+        secondary_keywords: ["emergency dentist", "teeth whitening clinic", "invisalign dentist"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Dentist", "Orthodontist", "Dental Implants"]
+      },
+      {
+        preset_id: "health_med_spa_aesthetic",
+        name: "Medical Spas & Aesthetics",
+        industry: "Healthcare & Medical",
+        sub_industry: "Aesthetic Medicine",
+        description: "Clinics offering Botox, dermal fillers, laser skin resurfacing, and body contouring.",
+        primary_keywords: ["med spa", "botox clinic", "laser hair removal"],
+        secondary_keywords: ["dermal fillers", "body contouring", "skin rejuvenation clinic"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["MedSpa", "Aesthetic Clinic", "Cosmetic Dermatology"]
+      },
+      {
+        preset_id: "health_mental_telehealth",
+        name: "Mental Health & Teletherapy",
+        industry: "Healthcare & Medical",
+        sub_industry: "Mental Health",
+        description: "Private therapy practices, online counseling, and licensed mental health clinics.",
+        primary_keywords: ["online therapy", "licensed counselor", "adhd assessment clinic"],
+        secondary_keywords: ["couples therapy", "telehealth psychiatry", "anxiety counseling"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Therapy", "Telehealth", "Counseling", "Psychiatry"]
+      },
+      {
+        preset_id: "health_veterinary_clinics",
+        name: "Veterinary Hospitals & Clinics",
+        industry: "Healthcare & Medical",
+        sub_industry: "Veterinary Medicine",
+        description: "Animal hospitals, urgent pet care, and companion animal veterinary clinics.",
+        primary_keywords: ["veterinary hospital", "animal clinic", "emergency vet"],
+        secondary_keywords: ["pet wellness exam", "vet surgery clinic", "canine care center"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Vet", "Animal Hospital", "Veterinarian"]
+      },
+      {
+        preset_id: "health_optometry_eyecare",
+        name: "Optometry & Eye Care Centers",
+        industry: "Healthcare & Medical",
+        sub_industry: "Vision Care",
+        description: "Independent optometrists, LASIK eye surgery clinics, and designer optical boutiques.",
+        primary_keywords: ["lasik eye surgery", "optometrist eye exam", "designer eyewear clinic"],
+        secondary_keywords: ["cataract surgery center", "vision correction", "prescription glasses clinic"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Eye Clinic", "LASIK", "Optometrist"]
+      },
+      // ==========================================
+      // 3. HOME SERVICES & TRADES
+      // ==========================================
+      {
+        preset_id: "home_hvac_heating_cooling",
+        name: "HVAC Installation & Repair",
+        industry: "Home Services & Trades",
+        sub_industry: "Climate Control",
+        description: "Air conditioning, heat pump replacement, and furnace repair contractors.",
+        primary_keywords: ["ac installation", "furnace replacement", "hvac repair contractor"],
+        secondary_keywords: ["heat pump installation", "air conditioning service", "emergency hvac"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["HVAC", "Air Conditioning", "Heating", "Heat Pump"]
+      },
+      {
+        preset_id: "home_roofing_contractors",
+        name: "Roofing & Siding Contractors",
+        industry: "Home Services & Trades",
+        sub_industry: "Exterior Remodeling",
+        description: "Commercial and residential roof replacement, hail damage repair, and gutter systems.",
+        primary_keywords: ["roof replacement contractor", "roof repair company", "metal roofing"],
+        secondary_keywords: ["storm damage roof inspection", "residential siding", "seamless gutters"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Roofing", "Roofers", "Siding Contractor"]
+      },
+      {
+        preset_id: "home_solar_energy",
+        name: "Solar Panel Installation & Batteries",
+        industry: "Home Services & Trades",
+        sub_industry: "Renewable Energy",
+        description: "Residential solar power systems, battery backup storage, and commercial solar EPC.",
+        primary_keywords: ["solar panel installation", "home battery backup", "commercial solar"],
+        secondary_keywords: ["residential solar financing", "solar roof quote", "clean energy savings"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Solar", "Renewable Energy", "Solar Financing", "Solar Panels"]
+      },
+      {
+        preset_id: "home_plumbing_water",
+        name: "Plumbing & Water Filtration",
+        industry: "Home Services & Trades",
+        sub_industry: "Plumbing Systems",
+        description: "Plumbing repairs, tankless water heater installation, and whole-house filtration.",
+        primary_keywords: ["emergency plumber", "water heater replacement", "whole house water filter"],
+        secondary_keywords: ["drain cleaning service", "tankless water heater", "sewer line repair"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Plumber", "Plumbing", "Water Heaters"]
+      },
+      {
+        preset_id: "home_pest_control",
+        name: "Pest & Termite Control",
+        industry: "Home Services & Trades",
+        sub_industry: "Pest Management",
+        description: "Exterminator services, termite inspections, bed bug treatments, and rodent exclusion.",
+        primary_keywords: ["pest control service", "termite inspection company", "bed bug treatment"],
+        secondary_keywords: ["commercial exterminator", "rodent control", "mosquito defense program"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Pest Control", "Exterminator", "Termite Control"]
+      },
+      // ==========================================
+      // 4. FINANCIAL SERVICES
+      // ==========================================
+      {
+        preset_id: "fin_commercial_lending",
+        name: "Commercial & Business Lending",
+        industry: "Financial Services",
+        sub_industry: "Commercial Financing",
+        description: "Equipment financing, working capital lines of credit, and SBA commercial loans.",
+        primary_keywords: ["business loan", "equipment financing", "working capital line of credit"],
+        secondary_keywords: ["sba loan broker", "commercial mortgage financing", "invoice factoring"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Business Loans", "Commercial Lending", "Equipment Lease"]
+      },
+      {
+        preset_id: "fin_wealth_management",
+        name: "Wealth Advisory & Financial Planning",
+        industry: "Financial Services",
+        sub_industry: "Wealth Advisory",
+        description: "Fiduciary financial advisors, retirement planners, and high-net-worth wealth managers.",
+        primary_keywords: ["wealth management firm", "fiduciary financial advisor", "retirement planning"],
+        secondary_keywords: ["estate planning advisory", "high net worth wealth planner", "portfolio management"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Wealth Advisor", "Financial Planner", "RIA"]
+      },
+      {
+        preset_id: "fin_tax_accounting_cpa",
+        name: "Tax Advisory & CPA Firms",
+        industry: "Financial Services",
+        sub_industry: "Tax & Accounting",
+        description: "Certified public accountants, corporate tax prep, audit, and outsourced bookkeeping.",
+        primary_keywords: ["cpa firm", "corporate tax advisory", "outsourced bookkeeping services"],
+        secondary_keywords: ["tax resolution specialist", "fractional cfo services", "business tax preparation"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["CPA", "Tax Prep", "Bookkeeping", "Accounting Firm"]
+      },
+      {
+        preset_id: "fin_business_insurance",
+        name: "Commercial & Business Insurance",
+        industry: "Financial Services",
+        sub_industry: "Commercial Insurance",
+        description: "General liability, cyber insurance, commercial auto, and workers compensation.",
+        primary_keywords: ["commercial insurance broker", "general liability insurance", "workers comp insurance"],
+        secondary_keywords: ["cyber liability insurance", "errors and omissions policy", "business owners policy"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Commercial Insurance", "Business Insurance", "BOP"]
+      },
+      // ==========================================
+      // 5. REAL ESTATE & PROPERTY
+      // ==========================================
+      {
+        preset_id: "real_commercial_brokerage",
+        name: "Commercial Real Estate Brokerages",
+        industry: "Real Estate & Property",
+        sub_industry: "Commercial Properties",
+        description: "Office, retail, and industrial leasing brokers, triple-net investment advisors.",
+        primary_keywords: ["commercial real estate broker", "industrial warehouse lease", "office space leasing"],
+        secondary_keywords: ["retail space commercial lease", "nnn investment properties", "commercial property sales"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["CRE", "Commercial Real Estate", "Warehouse Lease"]
+      },
+      {
+        preset_id: "real_property_management",
+        name: "Property Management Companies",
+        industry: "Real Estate & Property",
+        sub_industry: "Asset Management",
+        description: "Multifamily residential management, HOA management, and commercial property care.",
+        primary_keywords: ["property management company", "hoa management services", "multifamily property manager"],
+        secondary_keywords: ["rental property management", "commercial asset management", "tenant placement agency"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Property Manager", "HOA Management", "Rental Management"]
+      },
+      {
+        preset_id: "real_luxury_brokerages",
+        name: "Luxury Residential Real Estate",
+        industry: "Real Estate & Property",
+        sub_industry: "Residential Brokerage",
+        description: "High-end home brokerages, luxury estate specialists, and waterfront property realtors.",
+        primary_keywords: ["luxury real estate agent", "waterfront homes for sale", "luxury estate brokerage"],
+        secondary_keywords: ["custom home realtor", "high end listing agent", "gated community homes"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Luxury Realtor", "Real Estate Agent", "Residential Brokerage"]
+      },
+      // ==========================================
+      // 6. PROFESSIONAL & BUSINESS SERVICES
+      // ==========================================
+      {
+        preset_id: "prof_growth_marketing_agencies",
+        name: "B2B Digital Marketing Agencies",
+        industry: "Professional Services",
+        sub_industry: "Digital Marketing",
+        description: "Performance advertising, SEO agencies, conversion rate optimization, and brand studios.",
+        primary_keywords: ["b2b marketing agency", "performance marketing firm", "seo agency services"],
+        secondary_keywords: ["paid social advertising agency", "lead generation agency", "b2b content studio"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Marketing Agency", "Growth Agency", "SEO Agency", "Lead Gen Agency"]
+      },
+      {
+        preset_id: "prof_it_managed_services",
+        name: "Managed IT Services (MSP)",
+        industry: "Professional Services",
+        sub_industry: "IT Consulting",
+        description: "Outsourced IT helpdesk, network administration, cloud migrations, and MSP support.",
+        primary_keywords: ["managed it services", "msp it provider", "it support company"],
+        secondary_keywords: ["outsourced it helpdesk", "business network security", "cloud migration consultant"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["MSP", "Managed IT", "IT Helpdesk", "IT Support"]
+      },
+      {
+        preset_id: "prof_legal_corporate_law",
+        name: "Corporate & Business Law Firms",
+        industry: "Professional Services",
+        sub_industry: "Legal Services",
+        description: "M&A legal counsel, intellectual property attorneys, and corporate formation lawyers.",
+        primary_keywords: ["corporate law firm", "business litigation attorney", "intellectual property lawyer"],
+        secondary_keywords: ["m&a legal advisory", "trademark attorney", "employment law firm"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Law Firm", "Corporate Attorney", "Business Lawyer"]
+      },
+      {
+        preset_id: "prof_executive_search_staffing",
+        name: "Executive Search & Staffing Agencies",
+        industry: "Professional Services",
+        sub_industry: "Staffing & Recruiting",
+        description: "Retained executive search, technical recruitment, and healthcare staffing agencies.",
+        primary_keywords: ["executive search firm", "technical staffing agency", "recruiting agency"],
+        secondary_keywords: ["retained executive recruiter", "locum tenens healthcare staffing", "it recruitment firm"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Recruiter", "Staffing Agency", "Headhunter", "Executive Search"]
+      },
+      // ==========================================
+      // 7. MANUFACTURING & INDUSTRIAL
+      // ==========================================
+      {
+        preset_id: "mfg_contract_cnc_machining",
+        name: "Precision CNC Machining & Fabrication",
+        industry: "Manufacturing & Industrial",
+        sub_industry: "Metal Fabrication",
+        description: "Custom CNC milling, precision sheet metal fabrication, and contract manufacturing.",
+        primary_keywords: ["cnc machining services", "precision sheet metal fabrication", "custom contract manufacturing"],
+        secondary_keywords: ["5-axis cnc milling", "rapid prototyping parts", "laser cutting services"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["CNC Machining", "Fabrication", "Metal Stamping"]
+      },
+      {
+        preset_id: "mfg_industrial_automation",
+        name: "Industrial Automation & Robotics",
+        industry: "Manufacturing & Industrial",
+        sub_industry: "Factory Automation",
+        description: "PLC programming, robotic arm integration, machine vision, and SCADA systems.",
+        primary_keywords: ["industrial automation integrator", "robotics system integrator", "plc programming services"],
+        secondary_keywords: ["machine vision inspection", "automated conveyor systems", "scada engineering"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Industrial Automation", "Robotics Integrator", "PLC"]
+      },
+      {
+        preset_id: "mfg_packaging_corrugated",
+        name: "Custom Packaging & Box Manufacturers",
+        industry: "Manufacturing & Industrial",
+        sub_industry: "Packaging Solutions",
+        description: "Corrugated mailer boxes, folding cartons, luxury rigid boxes, and sustainable packaging.",
+        primary_keywords: ["custom corrugated boxes", "folding carton manufacturer", "custom printed packaging"],
+        secondary_keywords: ["rigid gift box supplier", "sustainable packaging company", "protective foam inserts"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Packaging", "Custom Boxes", "Corrugated"]
+      },
+      // ==========================================
+      // 8. LOGISTICS & TRANSPORTATION
+      // ==========================================
+      {
+        preset_id: "logistics_3pl_freight",
+        name: "Third-Party Logistics (3PL) & Freight",
+        industry: "Transportation & Logistics",
+        sub_industry: "Freight & Fulfillment",
+        description: "E-commerce fulfillment centers, freight forwarding, cold storage, and intermodal transport.",
+        primary_keywords: ["3pl fulfillment warehouse", "freight brokerage company", "intermodal transportation"],
+        secondary_keywords: ["cold chain storage warehouse", "ecommerce pick and pack", "ltl freight shipping"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["3PL", "Freight Broker", "Warehousing", "Fulfillment"]
+      },
+      {
+        preset_id: "logistics_fleet_telematics",
+        name: "Fleet Telematics & GPS Tracking",
+        industry: "Transportation & Logistics",
+        sub_industry: "Fleet Technology",
+        description: "Commercial fleet management software, ELD compliance, and dashcam safety systems.",
+        primary_keywords: ["fleet telematics software", "eld compliance system", "fleet dash cam safety"],
+        secondary_keywords: ["gps fleet tracking", "driver safety monitoring", "fuel management system"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Fleet Management", "Telematics", "GPS Tracking"]
+      },
+      // ==========================================
+      // 9. EDUCATION & TRAINING
+      // ==========================================
+      {
+        preset_id: "edu_corporate_compliance_training",
+        name: "Corporate Training & Leadership Development",
+        industry: "Education & Training",
+        sub_industry: "Corporate Education",
+        description: "Executive coaching programs, enterprise compliance e-learning, and sales bootcamps.",
+        primary_keywords: ["executive leadership coaching", "corporate compliance training", "sales training program"],
+        secondary_keywords: ["enterprise lms content", "management training workshop", "workplace diversity training"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Corporate Training", "Executive Coaching", "Leadership Training"]
+      },
+      {
+        preset_id: "edu_certifications_bootcamps",
+        name: "Professional Certifications & Bootcamps",
+        industry: "Education & Training",
+        sub_industry: "Professional Skills",
+        description: "Coding bootcamps, cybersecurity certification courses, and PMP credential prep.",
+        primary_keywords: ["coding bootcamp", "cybersecurity certification training", "pmp exam prep course"],
+        secondary_keywords: ["data analytics bootcamp", "cloud engineer certification", "tech career training"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Bootcamp", "Certification Prep", "Coding School"]
+      },
+      // ==========================================
+      // 10. RETAIL & E-COMMERCE
+      // ==========================================
+      {
+        preset_id: "retail_dtc_apparel_fashion",
+        name: "Direct-to-Consumer (DTC) Fashion Brands",
+        industry: "Retail & E-commerce",
+        sub_industry: "Apparel & Accessories",
+        description: "Independent apparel brands, sustainable activewear, and designer accessories.",
+        primary_keywords: ["sustainable activewear", "custom leather goods", "luxury streetwear brand"],
+        secondary_keywords: ["dtc apparel brand", "bamboo clothing", "minimalist watches brand"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["DTC Apparel", "Fashion Brand", "Activewear"]
+      },
+      {
+        preset_id: "retail_subscription_box",
+        name: "Subscription Commerce & Box Services",
+        industry: "Retail & E-commerce",
+        sub_industry: "Subscription Goods",
+        description: "Curated monthly subscription boxes for coffee, grooming, pet supplies, and snacks.",
+        primary_keywords: ["monthly subscription box", "curated coffee subscription", "pet supply subscription"],
+        secondary_keywords: ["grooming subscription box", "artisan snack box", "membership club delivery"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Subscription Box", "SubBox", "Subscription Club"]
+      },
+      // ==========================================
+      // 11. AUTOMOTIVE
+      // ==========================================
+      {
+        preset_id: "auto_fleet_commercial_leasing",
+        name: "Commercial Fleet Leasing & Vans",
+        industry: "Automotive",
+        sub_industry: "Commercial Fleet",
+        description: "Work truck upfitting, commercial cargo van leasing, and enterprise fleet acquisition.",
+        primary_keywords: ["commercial van leasing", "work truck upfitting", "commercial vehicle fleet sales"],
+        secondary_keywords: ["cargo van fleet financing", "box truck lease", "utility truck body builder"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Fleet Leasing", "Commercial Vans", "Work Trucks"]
+      },
+      {
+        preset_id: "auto_collision_repair_centers",
+        name: "Auto Collision & Body Repair Centers",
+        industry: "Automotive",
+        sub_industry: "Vehicle Repair",
+        description: "Certified collision repair shops, paintless dent repair, and auto body restoration.",
+        primary_keywords: ["collision repair center", "auto body shop repair", "paintless dent removal"],
+        secondary_keywords: ["certified collision center", "car paint restoration", "bumper repair service"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Auto Body", "Collision Repair", "Dent Repair"]
+      },
+      // ==========================================
+      // 12. CLEANING & FACILITIES MANAGEMENT
+      // ==========================================
+      {
+        preset_id: "clean_commercial_janitorial",
+        name: "Commercial Janitorial & Office Cleaning",
+        industry: "Cleaning & Facilities",
+        sub_industry: "Janitorial Services",
+        description: "Nightly office cleaning, commercial floor waxing, medical facility disinfection.",
+        primary_keywords: ["commercial janitorial service", "office cleaning company", "medical facility cleaning"],
+        secondary_keywords: ["commercial floor strip and wax", "post construction cleaning", "industrial cleaning contractor"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Janitorial", "Office Cleaning", "Commercial Cleaning"]
+      },
+      {
+        preset_id: "clean_disaster_restoration",
+        name: "Water & Fire Disaster Restoration",
+        industry: "Cleaning & Facilities",
+        sub_industry: "Disaster Restoration",
+        description: "Emergency water extraction, smoke and fire cleanup, and certified mold remediation.",
+        primary_keywords: ["water damage restoration company", "fire damage cleanup", "mold remediation contractor"],
+        secondary_keywords: ["emergency water extraction", "sewage backup cleanup", "structural drying service"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Restoration", "Water Damage", "Mold Remediation"]
+      },
+      // ==========================================
+      // 13. SECURITY SERVICES
+      // ==========================================
+      {
+        preset_id: "sec_commercial_surveillance_alarms",
+        name: "Commercial Surveillance & Access Control",
+        industry: "Security Services",
+        sub_industry: "Physical Security",
+        description: "Security camera installation, keycard access control systems, and commercial burglar alarms.",
+        primary_keywords: ["commercial security camera installation", "access control systems", "commercial burglar alarm"],
+        secondary_keywords: ["cctv surveillance installer", "cloud video surveillance", "keycard door lock installation"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Security Cameras", "Access Control", "Commercial Alarm"]
+      },
+      // ==========================================
+      // 14. FITNESS & WELLNESS
+      // ==========================================
+      {
+        preset_id: "fit_boutique_studios",
+        name: "Boutique Fitness & Pilates Studios",
+        industry: "Fitness & Wellness",
+        sub_industry: "Fitness Centers",
+        description: "Reformer Pilates studios, HIIT training clubs, and boutique fitness franchises.",
+        primary_keywords: ["reformer pilates studio", "boutique fitness club", "hiit group fitness"],
+        secondary_keywords: ["hot yoga studio", "strength training gym membership", "spin cycling studio"],
+        default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
+        website_required: true,
+        default_result_limit: 50,
+        version: "v2.1.0",
+        status: "ACTIVE",
+        aliases: ["Pilates", "Gym", "Fitness Studio", "HIIT"]
+      }
+    ];
+  }
+});
+
+// src/extension/evidenceWaterfall.ts
+var evidenceWaterfall_exports = {};
+__export(evidenceWaterfall_exports, {
+  RELEVANCE_ENGINE_VERSION_V3: () => RELEVANCE_ENGINE_VERSION_V3,
+  RELEVANCE_STRATEGY_VERSION_V3: () => RELEVANCE_STRATEGY_VERSION_V3,
+  buildUncertainRecord: () => buildUncertainRecord,
+  calculateEvidenceCoverage: () => calculateEvidenceCoverage,
+  collectEvidenceWaterfall: () => collectEvidenceWaterfall,
+  createEntityEvidenceProfile: () => createEntityEvidenceProfile,
+  createEvidenceSignature: () => createEvidenceSignature,
+  evaluateStrictRelevanceV3: () => evaluateStrictRelevanceV3,
+  integrateWebsiteVerificationEvidence: () => integrateWebsiteVerificationEvidence,
+  recordCandidateEvidenceInProfile: () => recordCandidateEvidenceInProfile
+});
+function createEvidenceSignature(type, source, strength, value) {
+  const normVal = (value || "").toLowerCase().trim().replace(/\s+/g, " ");
+  return `${type}::${source}::${strength}::${normVal}`;
+}
+function createEntityEvidenceProfile(entityKey, advertiserName, canonicalName) {
+  return {
+    entityKey,
+    advertiserName,
+    canonicalName: canonicalName || advertiserName,
+    uniqueEvidenceMap: /* @__PURE__ */ new Map(),
+    observedEvidenceOccurrences: 0,
+    distinctAdCopyHashes: /* @__PURE__ */ new Set(),
+    distinctAdCount: 0,
+    matchedQueries: /* @__PURE__ */ new Set(),
+    observedDomains: /* @__PURE__ */ new Set(),
+    observedPages: /* @__PURE__ */ new Set(),
+    observedDestinationUrls: /* @__PURE__ */ new Set(),
+    conflicts: [],
+    negativeSignals: []
+  };
+}
+function collectEvidenceWaterfall(evidence, intent) {
+  const evidenceList = [];
+  const conflicts = [];
+  const negativeSignals = [];
+  const normalized = normalizeEvidence(evidence);
+  const allQueryPhrases = [];
+  if (evidence.query) allQueryPhrases.push(evidence.query.toLowerCase().trim());
+  if (evidence.matchedKeyword) allQueryPhrases.push(evidence.matchedKeyword.toLowerCase().trim());
+  if (intent.primaryKeywords) {
+    for (const kw of intent.primaryKeywords) {
+      const l = kw.toLowerCase().trim();
+      if (!allQueryPhrases.includes(l)) allQueryPhrases.push(l);
+    }
+  }
+  const activeTaxonomies = [];
+  for (const [key, tax] of Object.entries(BOUNDED_TAXONOMY)) {
+    if (allQueryPhrases.some(
+      (phrase) => phrase.includes(key) || tax.rootTerms.some((rt) => phrase.includes(rt))
+    )) {
+      activeTaxonomies.push(tax);
+    }
+  }
+  if (activeTaxonomies.length === 0 && allQueryPhrases.length > 0) {
+    const dynamicRoots = [];
+    const dynamicStems = [];
+    for (const phrase of allQueryPhrases) {
+      dynamicRoots.push(phrase);
+      for (const tok of tokenizeText(phrase)) {
+        dynamicStems.push(tok);
+      }
+    }
+    activeTaxonomies.push({
+      category: allQueryPhrases[0],
+      rootTerms: Array.from(new Set(dynamicRoots)),
+      productServiceTerms: Array.from(new Set(dynamicStems)),
+      industryDescriptors: allQueryPhrases,
+      conflictingCategories: ["sports", "healthcare", "politics", "gaming", "casino"]
+    });
+  }
+  const coreQueryTokens = /* @__PURE__ */ new Set();
+  for (const phrase of allQueryPhrases) {
+    for (const t of tokenizeText(phrase)) {
+      coreQueryTokens.add(t);
+    }
+  }
+  for (const tax of activeTaxonomies) {
+    for (const rt of tax.rootTerms) {
+      for (const t of tokenizeText(rt)) {
+        coreQueryTokens.add(t);
+      }
+    }
+  }
+  const productTerms = /* @__PURE__ */ new Set();
+  for (const tax of activeTaxonomies) {
+    for (const t of tax.productServiceTerms) {
+      productTerms.add(stemToken(t));
+    }
+  }
+  if (intent.exclusions && intent.exclusions.length > 0) {
+    for (const excl of intent.exclusions) {
+      const exclLower = excl.toLowerCase();
+      if (normalized.advertiserText.includes(exclLower) || normalized.adCopyText.includes(exclLower) || normalized.normalizedDomain.includes(exclLower)) {
+        const reason = `Matched preset exclusion rule: "${excl}"`;
+        negativeSignals.push(reason);
+        conflicts.push({
+          type: "CONTRADICTION",
+          strength: "STRONG",
+          source: "advertiser_name",
+          reason,
+          matchedSignal: excl,
+          reasonCode: "REJECT_PRESET_EXCLUSION",
+          value: excl,
+          explanation: `Candidate matches explicit preset exclusion rule: ${excl}`,
+          signature: createEvidenceSignature("CONTRADICTION", "advertiser_name", "STRONG", excl)
+        });
+        break;
+      }
+    }
+  }
+  for (const negCat of NEGATIVE_CATEGORIES) {
+    const isQueryRelatedToNegCat = allQueryPhrases.some(
+      (q) => negCat.terms.some((t) => q.includes(t)) || q.includes(negCat.category) || negCat.category === "sports" && (q.includes("football") || q.includes("cricket") || q.includes("sports"))
+    );
+    if (isQueryRelatedToNegCat) continue;
+    let entityContradictionTerm;
+    for (const term of negCat.terms) {
+      if (normalized.advertiserText.includes(term) || normalized.normalizedDomain.includes(term.replace(/\s+/g, ""))) {
+        entityContradictionTerm = term;
+        break;
+      }
+    }
+    if (entityContradictionTerm) {
+      const reason = `Advertiser entity identity belongs to unrelated category (${negCat.category}): "${entityContradictionTerm}"`;
+      negativeSignals.push(reason);
+      conflicts.push({
+        type: "CONTRADICTION",
+        strength: "STRONG",
+        source: "advertiser_name",
+        reason,
+        matchedSignal: entityContradictionTerm,
+        reasonCode: "REJECT_CONTRADICTION_IDENTITY",
+        value: entityContradictionTerm,
+        explanation: `Advertiser belongs to conflicting ${negCat.category} vertical`,
+        signature: createEvidenceSignature("CONTRADICTION", "advertiser_name", "STRONG", entityContradictionTerm)
+      });
+      continue;
+    }
+    for (const term of negCat.terms) {
+      if (normalized.adCopyText.includes(term) || normalized.normalizedDomain.includes(term.replace(/\s+/g, ""))) {
+        const reason = `Unrelated ${negCat.category} signal detected in candidate ad context: "${term}"`;
+        negativeSignals.push(reason);
+        conflicts.push({
+          type: "NEGATIVE_CATEGORY",
+          strength: "STRONG",
+          source: "ad_text",
+          reason,
+          matchedSignal: term,
+          reasonCode: "REJECT_CONFLICT",
+          value: term,
+          explanation: `Context contains conflicting ${negCat.category} terms`,
+          signature: createEvidenceSignature("NEGATIVE_CATEGORY", "ad_text", "STRONG", term)
+        });
+        break;
+      }
+    }
+  }
+  let strongNameFound = false;
+  for (const phrase of allQueryPhrases) {
+    if (normalized.advertiserText.includes(phrase)) {
+      strongNameFound = true;
+      evidenceList.push({
+        type: "ENTITY_IDENTITY",
+        strength: "STRONG",
+        source: "advertiser_name",
+        reason: `Advertiser name explicitly contains target category query "${phrase}"`,
+        matchedSignal: phrase,
+        reasonCode: "SIGNAL_ENTITY_NAME_EXACT",
+        value: phrase,
+        explanation: `Business name explicitly specifies target category: ${phrase}`,
+        signature: createEvidenceSignature("ENTITY_IDENTITY", "advertiser_name", "STRONG", phrase)
+      });
+      break;
+    }
+  }
+  if (!strongNameFound) {
+    const matchedTokensInName = normalized.normalizedAdvertiserTokens.filter((t) => coreQueryTokens.has(t));
+    if (matchedTokensInName.length > 0) {
+      strongNameFound = true;
+      const val = matchedTokensInName.join(", ");
+      evidenceList.push({
+        type: "ENTITY_IDENTITY",
+        strength: "STRONG",
+        source: "advertiser_name",
+        reason: `Advertiser name contains core target keyword stem(s): ${val}`,
+        matchedSignal: val,
+        reasonCode: "SIGNAL_ENTITY_NAME_CORE",
+        value: val,
+        explanation: `Business name contains core keyword stem(s): ${val}`,
+        signature: createEvidenceSignature("ENTITY_IDENTITY", "advertiser_name", "STRONG", val)
+      });
+    } else {
+      const productTokensInName = normalized.normalizedAdvertiserTokens.filter((t) => productTerms.has(t));
+      const matchedSubstringProduct = Array.from(productTerms).filter(
+        (pt) => pt.length >= 4 && normalized.advertiserText.includes(pt)
+      );
+      const combined = Array.from(/* @__PURE__ */ new Set([...productTokensInName, ...matchedSubstringProduct]));
+      if (combined.length > 0) {
+        const val = combined.join(", ");
+        evidenceList.push({
+          type: "ENTITY_IDENTITY",
+          strength: "MODERATE",
+          source: "advertiser_name",
+          reason: `Advertiser name contains target product term(s): ${val}`,
+          matchedSignal: val,
+          reasonCode: "SIGNAL_ENTITY_NAME_PRODUCT",
+          value: val,
+          explanation: `Business name contains relevant product or service terms: ${val}`,
+          signature: createEvidenceSignature("ENTITY_IDENTITY", "advertiser_name", "MODERATE", val)
+        });
+      }
+    }
+  }
+  if (normalized.normalizedDomain) {
+    const domainHasQuery = allQueryPhrases.some(
+      (p) => normalized.normalizedDomain.includes(p.replace(/\s+/g, ""))
+    );
+    const domainHasProduct = Array.from(productTerms).some(
+      (t) => t.length >= 4 && normalized.normalizedDomain.includes(t)
+    );
+    if (domainHasQuery) {
+      evidenceList.push({
+        type: "DESTINATION_MATCH",
+        strength: "STRONG",
+        source: "destination_domain",
+        reason: `Destination domain "${normalized.normalizedDomain}" explicitly contains target query`,
+        matchedSignal: normalized.normalizedDomain,
+        reasonCode: "SIGNAL_DOMAIN_QUERY_EXACT",
+        value: normalized.normalizedDomain,
+        explanation: `Destination website domain matches target query`,
+        signature: createEvidenceSignature("DESTINATION_MATCH", "destination_domain", "STRONG", normalized.normalizedDomain)
+      });
+    } else if (domainHasProduct) {
+      evidenceList.push({
+        type: "DOMAIN_SIGNAL",
+        strength: "MODERATE",
+        source: "destination_domain",
+        reason: `Destination domain "${normalized.normalizedDomain}" contains category product term`,
+        matchedSignal: normalized.normalizedDomain,
+        reasonCode: "SIGNAL_DOMAIN_PRODUCT",
+        value: normalized.normalizedDomain,
+        explanation: `Destination website domain includes category product term`,
+        signature: createEvidenceSignature("DOMAIN_SIGNAL", "destination_domain", "MODERATE", normalized.normalizedDomain)
+      });
+    }
+  }
+  if (evidence.facebookPageUrl) {
+    const pageUrlLower = evidence.facebookPageUrl.toLowerCase();
+    const pageHasQuery = allQueryPhrases.some((p) => pageUrlLower.includes(p.replace(/\s+/g, "")));
+    if (pageHasQuery) {
+      evidenceList.push({
+        type: "FACEBOOK_PAGE_SIGNAL",
+        strength: "MODERATE",
+        source: "facebook_page",
+        reason: `Facebook Page handle/URL reinforces target category identity`,
+        matchedSignal: evidence.facebookPageUrl,
+        reasonCode: "SIGNAL_PAGE_HANDLE",
+        value: evidence.facebookPageUrl,
+        explanation: `Facebook page handle reinforces category identity`,
+        signature: createEvidenceSignature("FACEBOOK_PAGE_SIGNAL", "facebook_page", "MODERATE", evidence.facebookPageUrl)
+      });
+    }
+  }
+  let adCopyMatchedPhrase = false;
+  for (const phrase of allQueryPhrases) {
+    if (normalized.adCopyText.includes(phrase)) {
+      adCopyMatchedPhrase = true;
+      evidenceList.push({
+        type: "CATEGORY_MATCH",
+        strength: "MODERATE",
+        source: "ad_text",
+        reason: `Ad copy directly mentions target query "${phrase}"`,
+        matchedSignal: phrase,
+        reasonCode: "SIGNAL_COPY_PHRASE",
+        value: phrase,
+        explanation: `Ad copy explicitly mentions target query phrase`,
+        signature: createEvidenceSignature("CATEGORY_MATCH", "ad_text", "MODERATE", phrase)
+      });
+      break;
+    }
+  }
+  const foundProductTermsInCopy = Array.from(productTerms).filter(
+    (t) => normalized.normalizedAdTextTokens.includes(t) || t.length >= 4 && normalized.adCopyText.includes(t)
+  );
+  if (foundProductTermsInCopy.length > 0) {
+    const sampleTerms = foundProductTermsInCopy.slice(0, 5);
+    const val = sampleTerms.join(", ");
+    if (foundProductTermsInCopy.length >= 2) {
+      evidenceList.push({
+        type: "PRODUCT_OR_SERVICE_SIGNAL",
+        strength: "STRONG",
+        source: "ad_text",
+        reason: `Ad copy contains specific category product catalog: ${val}`,
+        matchedSignal: val,
+        reasonCode: "SIGNAL_COPY_PRODUCT_CATALOG",
+        value: val,
+        explanation: `Ad offers multiple distinct category products: ${val}`,
+        signature: createEvidenceSignature("PRODUCT_OR_SERVICE_SIGNAL", "ad_text", "STRONG", val)
+      });
+    } else {
+      evidenceList.push({
+        type: "PRODUCT_OR_SERVICE_SIGNAL",
+        strength: "WEAK",
+        source: "ad_text",
+        reason: `Ad copy mentions category product term: ${sampleTerms[0]}`,
+        matchedSignal: sampleTerms[0],
+        reasonCode: "SIGNAL_COPY_SINGLE_PRODUCT",
+        value: sampleTerms[0],
+        explanation: `Ad mentions category product: ${sampleTerms[0]}`,
+        signature: createEvidenceSignature("PRODUCT_OR_SERVICE_SIGNAL", "ad_text", "WEAK", sampleTerms[0])
+      });
+    }
+  } else if (!adCopyMatchedPhrase) {
+    const matchedTokensInCopy = normalized.normalizedAdTextTokens.filter((t) => coreQueryTokens.has(t));
+    if (matchedTokensInCopy.length > 0) {
+      const val = matchedTokensInCopy.join(", ");
+      evidenceList.push({
+        type: "CATEGORY_MATCH",
+        strength: "WEAK",
+        source: "ad_text",
+        reason: `Ad copy mentions keyword stem(s): ${val}`,
+        matchedSignal: val,
+        reasonCode: "SIGNAL_COPY_STEM_ONLY",
+        value: val,
+        explanation: `Ad copy only contains isolated keyword stem`,
+        signature: createEvidenceSignature("CATEGORY_MATCH", "ad_text", "WEAK", val)
+      });
+    }
+  }
+  if (normalized.normalizedUrlSlug) {
+    const slugHasProduct = Array.from(productTerms).some(
+      (t) => t.length >= 4 && normalized.normalizedUrlSlug.includes(t)
+    );
+    const slugHasQuery = Array.from(coreQueryTokens).some(
+      (t) => normalized.normalizedUrlSlug.includes(t)
+    );
+    if (slugHasProduct || slugHasQuery) {
+      evidenceList.push({
+        type: "DESTINATION_MATCH",
+        strength: "MODERATE",
+        source: "destination_url",
+        reason: `Destination URL path contains target product category context`,
+        matchedSignal: normalized.normalizedUrlSlug.substring(0, 50),
+        reasonCode: "SIGNAL_URL_SLUG_MATCH",
+        value: normalized.normalizedUrlSlug.substring(0, 50),
+        explanation: `Destination URL path contains target category terms`,
+        signature: createEvidenceSignature("DESTINATION_MATCH", "destination_url", "MODERATE", normalized.normalizedUrlSlug.substring(0, 30))
+      });
+    }
+  }
+  const ctaLower = (evidence.ctaText || "").toLowerCase().trim();
+  if (COMMERCIAL_CTA_PHRASES.has(ctaLower)) {
+    evidenceList.push({
+      type: "COMMERCIAL_INTENT",
+      strength: "MODERATE",
+      source: "cta_text",
+      reason: `Commercial action call-to-action ("${evidence.ctaText}")`,
+      matchedSignal: evidence.ctaText,
+      reasonCode: "SIGNAL_COMMERCIAL_INTENT_CTA",
+      value: evidence.ctaText,
+      explanation: `Commercial call-to-action detected: ${evidence.ctaText}`,
+      signature: createEvidenceSignature("COMMERCIAL_INTENT", "cta_text", "MODERATE", ctaLower)
+    });
+  }
+  if (COMMERCIAL_COPY_REGEX.test(normalized.adCopyText)) {
+    evidenceList.push({
+      type: "COMMERCIAL_INTENT",
+      strength: "MODERATE",
+      source: "ad_text",
+      reason: `Commercial pricing, transaction, or sale language observed in ad copy`,
+      reasonCode: "SIGNAL_COMMERCIAL_INTENT_PRICE",
+      value: "pricing_or_offer_terms",
+      explanation: `Commercial pricing, discount, or offer terms found in ad copy`,
+      signature: createEvidenceSignature("COMMERCIAL_INTENT", "ad_text", "MODERATE", "pricing_or_offer_terms")
+    });
+  }
+  if (evidence.matchedKeyword || evidence.query) {
+    const q = (evidence.matchedKeyword || evidence.query || "").trim();
+    evidenceList.push({
+      type: "QUERY_CONTEXT",
+      strength: "WEAK",
+      source: "matched_query",
+      reason: `Discovered under query "${q}"`,
+      matchedSignal: q,
+      reasonCode: "SIGNAL_QUERY_PROVENANCE",
+      value: q,
+      explanation: `Candidate surfaced by query: ${q}`,
+      signature: createEvidenceSignature("QUERY_CONTEXT", "matched_query", "WEAK", q.toLowerCase())
+    });
+  }
+  return { evidenceList, conflicts, negativeSignals };
+}
+function calculateEvidenceCoverage(evidenceItems) {
+  const APPLICABLE_CATEGORIES = [
+    "ENTITY_IDENTITY",
+    "CATEGORY_MATCH",
+    "COMMERCIAL_INTENT",
+    "PRODUCT_OR_SERVICE_SIGNAL",
+    "DESTINATION_MATCH",
+    "FACEBOOK_PAGE_SIGNAL",
+    "DOMAIN_SIGNAL"
+  ];
+  const presentCategories = Array.from(
+    new Set(evidenceItems.map((e) => e.type).filter((t) => APPLICABLE_CATEGORIES.includes(t)))
+  );
+  const missingCategories = APPLICABLE_CATEGORIES.filter((c) => !presentCategories.includes(c));
+  const applicableCategoriesPresent = presentCategories.length;
+  const applicableCategoriesTotal = APPLICABLE_CATEGORIES.length;
+  const coverageRatio = Math.round(applicableCategoriesPresent / applicableCategoriesTotal * 100) / 100;
+  let coverageLevel = "LOW";
+  if (applicableCategoriesPresent >= 4) {
+    coverageLevel = "HIGH";
+  } else if (applicableCategoriesPresent >= 2) {
+    coverageLevel = "MEDIUM";
+  }
+  return {
+    applicableCategoriesPresent,
+    applicableCategoriesTotal,
+    coverageRatio,
+    coverageLevel,
+    presentCategories,
+    missingCategories
+  };
+}
+function recordCandidateEvidenceInProfile(profile, evidence, intent) {
+  const { evidenceList, conflicts, negativeSignals } = collectEvidenceWaterfall(evidence, intent);
+  for (const c of conflicts) {
+    if (!profile.conflicts.some((ex) => ex.signature === c.signature)) {
+      profile.conflicts.push(c);
+    }
+  }
+  for (const sig of negativeSignals) {
+    if (!profile.negativeSignals.includes(sig)) {
+      profile.negativeSignals.push(sig);
+    }
+  }
+  const copyNormalized = (evidence.adText || "").toLowerCase().trim().replace(/\s+/g, " ").substring(0, 120);
+  if (copyNormalized) {
+    profile.distinctAdCopyHashes.add(copyNormalized);
+  }
+  profile.distinctAdCount++;
+  if (evidence.matchedKeyword) profile.matchedQueries.add(evidence.matchedKeyword);
+  if (evidence.query) profile.matchedQueries.add(evidence.query);
+  if (evidence.destinationDomain) profile.observedDomains.add(evidence.destinationDomain);
+  if (evidence.destinationUrl) profile.observedDestinationUrls.add(evidence.destinationUrl);
+  if (evidence.facebookPageUrl) profile.observedPages.add(evidence.facebookPageUrl);
+  for (const item of evidenceList) {
+    profile.observedEvidenceOccurrences++;
+    const sig = item.signature || createEvidenceSignature(item.type, item.source, item.strength, item.value || item.reason);
+    const existing = profile.uniqueEvidenceMap.get(sig);
+    if (existing) {
+      existing.occurrenceCount = (existing.occurrenceCount || 1) + 1;
+    } else {
+      profile.uniqueEvidenceMap.set(sig, {
+        ...item,
+        signature: sig,
+        occurrenceCount: 1
+      });
+    }
+  }
+}
+function evaluateStrictRelevanceV3(candidateOrProfile, intent) {
+  let profile;
+  if ("uniqueEvidenceMap" in candidateOrProfile) {
+    profile = candidateOrProfile;
+  } else {
+    profile = createEntityEvidenceProfile("cand", candidateOrProfile.advertiserName);
+    recordCandidateEvidenceInProfile(profile, candidateOrProfile, intent);
+  }
+  const candEvidence = {
+    advertiserName: profile.advertiserName,
+    adText: Array.from(profile.distinctAdCopyHashes).join(" "),
+    destinationDomain: Array.from(profile.observedDomains)[0],
+    destinationUrl: Array.from(profile.observedDestinationUrls)[0],
+    facebookPageUrl: Array.from(profile.observedPages)[0],
+    matchedKeyword: Array.from(profile.matchedQueries)[0]
+  };
+  const v2Eval = LeadRelevanceEngine.evaluateCandidate(candEvidence, intent);
+  const evidenceItems = Array.from(profile.uniqueEvidenceMap.values());
+  const coverage = calculateEvidenceCoverage(evidenceItems);
+  const hasHardContradiction = profile.conflicts.some(
+    (c) => (c.type === "CONTRADICTION" || c.type === "NEGATIVE_CATEGORY") && c.strength === "STRONG"
+  ) || v2Eval.conflicts.some((c) => c.type === "CONTRADICTION" && c.strength === "STRONG");
+  const strongEntity = evidenceItems.some(
+    (e) => e.type === "ENTITY_IDENTITY" && e.strength === "STRONG"
+  );
+  const moderateEntity = evidenceItems.some(
+    (e) => e.type === "ENTITY_IDENTITY" && e.strength === "MODERATE"
+  );
+  const strongCategory = evidenceItems.some(
+    (e) => (e.type === "CATEGORY_MATCH" || e.type === "PRODUCT_OR_SERVICE_SIGNAL") && e.strength === "STRONG"
+  );
+  const moderateCategory = evidenceItems.some(
+    (e) => (e.type === "CATEGORY_MATCH" || e.type === "PRODUCT_OR_SERVICE_SIGNAL") && e.strength === "MODERATE"
+  );
+  const weakCategory = evidenceItems.some(
+    (e) => e.type === "CATEGORY_MATCH" && e.strength === "WEAK"
+  );
+  const commercialIntent = evidenceItems.some(
+    (e) => e.type === "COMMERCIAL_INTENT"
+  );
+  const strongDestination = evidenceItems.some(
+    (e) => e.type === "DESTINATION_MATCH" && e.strength === "STRONG"
+  );
+  const moderateDestination = evidenceItems.some(
+    (e) => (e.type === "DESTINATION_MATCH" || e.type === "DOMAIN_SIGNAL") && e.strength === "MODERATE"
+  );
+  let decision = "UNCERTAIN";
+  let confidence = "LOW";
+  let reasonCode = "UNCERTAIN_AMBIGUOUS_ENTITY";
+  let explanation = "";
+  const reasons = [];
+  if (hasHardContradiction) {
+    decision = "NOT_RELEVANT";
+    confidence = "HIGH";
+    reasonCode = profile.conflicts[0]?.reasonCode || v2Eval.reasonCode || "REJECT_CONTRADICTION_IDENTITY";
+    const conflictDesc = profile.negativeSignals[0] || v2Eval.negativeSignals[0] || "Entity conflicts with requested category";
+    reasons.push(`Disqualified by Hard Contradiction Gate: ${conflictDesc}`);
+    explanation = `Advertiser entity conflicts with target category: ${conflictDesc}`;
+    return {
+      decision,
+      confidence,
+      score: 0.05,
+      reasons,
+      matchedKeywords: v2Eval.matchedKeywords,
+      matchedTerms: v2Eval.matchedTerms,
+      negativeSignals: profile.negativeSignals.length > 0 ? profile.negativeSignals : v2Eval.negativeSignals,
+      evidence: evidenceItems,
+      conflicts: profile.conflicts.length > 0 ? profile.conflicts : v2Eval.conflicts,
+      evidenceCoverage: coverage,
+      uniqueEvidenceSignals: evidenceItems.length,
+      observedEvidenceOccurrences: profile.observedEvidenceOccurrences,
+      explanation,
+      reasonCode,
+      strategyVersion: RELEVANCE_STRATEGY_VERSION_V3,
+      engineVersion: RELEVANCE_ENGINE_VERSION_V3,
+      presetVersion: intent.presetVersion
+    };
+  }
+  if (strongEntity && (moderateCategory || strongCategory || commercialIntent || strongDestination || moderateDestination)) {
+    decision = "RELEVANT";
+    confidence = strongCategory || commercialIntent || coverage.coverageLevel === "HIGH" ? "HIGH" : "MEDIUM";
+    reasonCode = "ACCEPT_STRONG_ENTITY_MATCH";
+    reasons.push("Advertiser is confirmed as target business entity with supporting product/commercial evidence.");
+    explanation = `Advertiser is identified as a ${intent.primaryKeywords?.[0] || "target"} business with supporting category evidence.`;
+  } else if (strongCategory && (commercialIntent || strongDestination || moderateDestination || moderateEntity)) {
+    decision = "RELEVANT";
+    confidence = commercialIntent && (strongDestination || moderateDestination) ? "HIGH" : "MEDIUM";
+    reasonCode = "ACCEPT_MULTI_SIGNAL_MATCH";
+    reasons.push("Verified product/service catalog with corroborating commercial intent.");
+    explanation = `Explicit product catalog and commercial intent confirm active business in target vertical.`;
+  } else if (moderateEntity && (moderateCategory || strongDestination || commercialIntent && weakCategory)) {
+    decision = "RELEVANT";
+    confidence = "MEDIUM";
+    reasonCode = "ACCEPT_MULTI_SIGNAL_MATCH";
+    reasons.push("Entity product terms corroborated by destination or commercial evidence.");
+    explanation = `Entity product branding corroborated by category match.`;
+  } else if (!strongEntity && !moderateEntity && !strongDestination && !moderateDestination && !strongCategory) {
+    if (weakCategory || moderateCategory) {
+      if (v2Eval.score < 0.18) {
+        decision = "NOT_RELEVANT";
+        confidence = "HIGH";
+        reasonCode = "REJECT_INSUFFICIENT_EVIDENCE";
+        reasons.push("Keyword appears in passing but entity has zero commercial or vertical corroboration.");
+        explanation = `Keyword appears in ad context, but advertiser lacks verified vertical identity.`;
+      } else {
+        decision = "UNCERTAIN";
+        confidence = "LOW";
+        reasonCode = "UNCERTAIN_KEYWORD_ONLY";
+        reasons.push("Candidate mentions keyword but lacks independent business or product catalog evidence.");
+        explanation = `Keyword mention detected, but advertiser business vertical is unverified.`;
+      }
+    } else {
+      decision = "NOT_RELEVANT";
+      confidence = "HIGH";
+      reasonCode = "REJECT_CATEGORY_MISMATCH";
+      reasons.push("Zero target category or commercial signals found.");
+      explanation = `No entity identity, category, or commercial evidence observed for requested vertical.`;
+    }
+  } else {
+    decision = "UNCERTAIN";
+    confidence = "LOW";
+    reasonCode = "UNCERTAIN_AMBIGUOUS_ENTITY";
+    reasons.push("Candidate has partial signals but missing critical category or entity verification.");
+    explanation = `Commercial advertiser detected, but vertical identity evidence is incomplete.`;
+  }
+  if (v2Eval.decision === "NOT_RELEVANT" && decision === "RELEVANT") {
+    decision = "NOT_RELEVANT";
+    confidence = v2Eval.confidence;
+    reasonCode = v2Eval.reasonCode;
+    reasons.unshift(`Strict-v2 safety lock: ${v2Eval.reasons[0] || "Score insufficient"}`);
+  }
+  const finalScore = Math.max(v2Eval.score, decision === "RELEVANT" ? 0.65 : decision === "UNCERTAIN" ? 0.35 : 0.1);
+  return {
+    decision,
+    confidence,
+    score: Math.round(finalScore * 100) / 100,
+    reasons: [...reasons, ...v2Eval.reasons],
+    matchedKeywords: v2Eval.matchedKeywords,
+    matchedTerms: v2Eval.matchedTerms,
+    negativeSignals: v2Eval.negativeSignals,
+    evidence: evidenceItems,
+    conflicts: profile.conflicts,
+    evidenceCoverage: coverage,
+    uniqueEvidenceSignals: evidenceItems.length,
+    observedEvidenceOccurrences: profile.observedEvidenceOccurrences,
+    explanation,
+    reasonCode,
+    strategyVersion: RELEVANCE_STRATEGY_VERSION_V3,
+    engineVersion: RELEVANCE_ENGINE_VERSION_V3,
+    presetVersion: intent.presetVersion
+  };
+}
+function buildUncertainRecord(entityKey, profile, v3Decision) {
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  return {
+    entityId: `uncertain_${entityKey}`,
+    entityKey,
+    canonicalName: profile.canonicalName,
+    observedNames: [profile.advertiserName, profile.canonicalName],
+    advertiserName: profile.advertiserName,
+    matchedQueries: Array.from(profile.matchedQueries),
+    identityConfidence: "WEAK",
+    evidenceItems: v3Decision.evidence,
+    evidence: v3Decision.evidence,
+    missingEvidence: v3Decision.evidenceCoverage.missingCategories.map((c) => `MISSING_${c}`),
+    reasonCodes: [v3Decision.reasonCode],
+    primaryReasonCode: v3Decision.reasonCode,
+    reasonCode: v3Decision.reasonCode,
+    uncertainReasonCodes: [v3Decision.reasonCode],
+    reasons: v3Decision.reasons,
+    observedAdIds: Array.from(profile.distinctAdCopyHashes),
+    observedDomains: Array.from(profile.observedDomains),
+    timestamps: {
+      firstDiscovered: now,
+      lastEvaluated: now
+    },
+    queryProvenance: Array.from(profile.matchedQueries),
+    evidenceCoverage: v3Decision.evidenceCoverage,
+    recordedAt: now,
+    decision: "UNCERTAIN",
+    confidence: v3Decision.confidence,
+    lastEvaluationState: {
+      score: v3Decision.score,
+      decision: "UNCERTAIN",
+      confidence: v3Decision.confidence,
+      explanation: v3Decision.explanation
+    }
+  };
+}
+function integrateWebsiteVerificationEvidence(profile, websiteRecord) {
+  for (const ev of websiteRecord.evidence) {
+    if (ev.strength === "CONTRADICTORY") {
+      profile.conflicts.push(ev);
+      profile.negativeSignals.push(ev.reason);
+    } else {
+      const sig = ev.signature || createEvidenceSignature(ev.type, ev.source, ev.strength, ev.value || ev.reason);
+      if (!profile.uniqueEvidenceMap.has(sig)) {
+        profile.uniqueEvidenceMap.set(sig, { ...ev, signature: sig });
+        profile.observedEvidenceOccurrences++;
+      }
+    }
+  }
+  if (websiteRecord.hostname) {
+    profile.observedDomains.add(websiteRecord.hostname);
+  }
+}
+var RELEVANCE_ENGINE_VERSION_V3, RELEVANCE_STRATEGY_VERSION_V3, COMMERCIAL_CTA_PHRASES, COMMERCIAL_COPY_REGEX;
+var init_evidenceWaterfall = __esm({
+  "src/extension/evidenceWaterfall.ts"() {
+    init_relevanceEngine();
+    RELEVANCE_ENGINE_VERSION_V3 = "strict-v3";
+    RELEVANCE_STRATEGY_VERSION_V3 = 3;
+    COMMERCIAL_CTA_PHRASES = /* @__PURE__ */ new Set([
+      "shop now",
+      "buy now",
+      "order now",
+      "get quote",
+      "contact us",
+      "order",
+      "book now",
+      "sign up",
+      "apply now",
+      "request quote",
+      "call now",
+      "schedule now",
+      "get offer",
+      "claim offer"
+    ]);
+    COMMERCIAL_COPY_REGEX = /(price|discount|sale|off|taka|bdt|usd|\$|€|£|warranty|deal|buy|shop|order|quote|booking|free consultation|special offer|flat \d+%|starts at|affordable)/i;
+  }
+});
+
+// src/extension/relevanceEngine.ts
+function stemToken(token) {
+  const t = token.toLowerCase().trim();
+  if (t.length <= 3) return t;
+  if (t.endsWith("ies") && t.length > 4) {
+    return t.substring(0, t.length - 3) + "y";
+  }
+  if (t.endsWith("ses") || t.endsWith("xes") || t.endsWith("zes") || t.endsWith("ches") || t.endsWith("shes")) {
+    return t.substring(0, t.length - 2);
+  }
+  if (t.endsWith("s") && !t.endsWith("ss") && !t.endsWith("us") && !t.endsWith("is")) {
+    return t.substring(0, t.length - 1);
+  }
+  return t;
+}
+function tokenizeText(text) {
+  if (!text) return [];
+  return text.toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, " ").split(/[\s-]+/).map((w) => w.trim()).filter((w) => w.length >= 2 && !STOP_WORDS.has(w)).map(stemToken);
+}
+function extractUrlTokens(urlStr) {
+  if (!urlStr) return [];
+  try {
+    const url = new URL(urlStr.startsWith("http") ? urlStr : `https://${urlStr}`);
+    const pathAndQuery = `${url.pathname} ${url.search}`.replace(/[/?&=_.-]/g, " ");
+    return tokenizeText(pathAndQuery);
+  } catch {
+    return tokenizeText(urlStr.replace(/[/?&=_.-]/g, " "));
+  }
+}
+function normalizeEvidence(evidence) {
+  const rawAdvertiser = (evidence.advertiserName || "").trim();
+  const rawAdCopy = (evidence.adText || "").trim();
+  const rawPageName = (evidence.facebookPageName || "").trim();
+  const rawCta = (evidence.ctaText || "").trim();
+  let rawDomain = (evidence.destinationDomain || "").toLowerCase().trim();
+  if (!rawDomain && evidence.destinationUrl) {
+    try {
+      const u = new URL(evidence.destinationUrl.startsWith("http") ? evidence.destinationUrl : `https://${evidence.destinationUrl}`);
+      rawDomain = u.hostname.replace(/^(www\.|m\.|l\.)/, "");
+    } catch {
+      rawDomain = "";
+    }
+  }
+  return {
+    normalizedAdvertiserTokens: tokenizeText(rawAdvertiser),
+    normalizedAdTextTokens: tokenizeText(rawAdCopy),
+    normalizedDomain: rawDomain,
+    normalizedUrlSlug: evidence.destinationUrl ? extractUrlTokens(evidence.destinationUrl).join(" ") : "",
+    normalizedPageNameTokens: tokenizeText(rawPageName),
+    normalizedCta: rawCta.toLowerCase(),
+    advertiserText: rawAdvertiser.toLowerCase(),
+    adCopyText: rawAdCopy.toLowerCase()
+  };
+}
+function compileResearchIntent(mode, keywords, presetId, locationCode = "US") {
+  const cleanKeywords = keywords.map((k) => k.trim()).filter(Boolean);
+  if (mode === "PRESET" && presetId) {
+    const preset = RESEARCH_PRESETS.find((p) => p.preset_id === presetId);
+    if (preset) {
+      return {
+        mode: "PRESET",
+        keywords: preset.primary_keywords,
+        presetId: preset.preset_id,
+        presetName: preset.name,
+        presetVersion: preset.version,
+        targetIndustry: preset.industry,
+        targetSubIndustry: preset.sub_industry,
+        primaryKeywords: preset.primary_keywords,
+        secondaryKeywords: preset.secondary_keywords,
+        exclusions: preset.optional_exclusions || [],
+        locationCode
+      };
+    }
+  }
+  return {
+    mode: "CUSTOM",
+    keywords: cleanKeywords,
+    primaryKeywords: cleanKeywords,
+    secondaryKeywords: [],
+    exclusions: [],
+    locationCode
+  };
+}
+var RELEVANCE_STRATEGY_VERSION, RELEVANCE_ENGINE_VERSION, BOUNDED_TAXONOMY, NEGATIVE_CATEGORIES, STOP_WORDS, LeadRelevanceEngine;
+var init_relevanceEngine = __esm({
+  "src/extension/relevanceEngine.ts"() {
+    init_presetCatalogue();
+    RELEVANCE_STRATEGY_VERSION = 2;
+    RELEVANCE_ENGINE_VERSION = "strict-v2";
+    BOUNDED_TAXONOMY = {
+      furniture: {
+        category: "furniture",
+        rootTerms: ["furniture", "furnishing", "furnishings", "furnish"],
+        productServiceTerms: [
+          "chair",
+          "table",
+          "desk",
+          "sofa",
+          "couch",
+          "bed",
+          "mattress",
+          "cabinet",
+          "wardrobe",
+          "dining",
+          "bench",
+          "drawer",
+          "drawers",
+          "stool",
+          "bookshelf",
+          "shelf",
+          "shelves",
+          "almirah",
+          "cupboard",
+          "recliner",
+          "credenza",
+          "workstation",
+          "seating",
+          "lounge",
+          "headboard",
+          "nightstand",
+          "dresser",
+          "vanity",
+          "sideboard",
+          "armchair",
+          "futon",
+          "loveseat",
+          "ottoman",
+          "sectional",
+          "ergonomic chair",
+          "standing desk",
+          "bedroom set"
+        ],
+        industryDescriptors: [
+          "furniture store",
+          "furniture retailer",
+          "furniture manufacturer",
+          "furniture studio",
+          "home furniture",
+          "office furniture",
+          "wood furniture",
+          "custom furniture",
+          "living room",
+          "bedroom set",
+          "dining room"
+        ],
+        conflictingCategories: ["sports", "healthcare", "politics", "gaming", "casino", "education", "news_media"]
+      },
+      restaurant: {
+        category: "restaurant",
+        rootTerms: ["restaurant", "dining", "eatery", "bistro", "cafe", "food", "grill", "bar & grill", "smokehouse"],
+        productServiceTerms: [
+          "menu",
+          "cuisine",
+          "chef",
+          "catering",
+          "takeaway",
+          "takeout",
+          "delivery",
+          "breakfast",
+          "lunch",
+          "dinner",
+          "brunch",
+          "burger",
+          "pizza",
+          "pasta",
+          "steak",
+          "seafood",
+          "dessert",
+          "cocktails",
+          "wine",
+          "appetizers",
+          "buffet",
+          "bar",
+          "grill",
+          "bbq",
+          "ribs",
+          "brisket",
+          "beers",
+          "reservation",
+          "reservations"
+        ],
+        industryDescriptors: [
+          "fine dining",
+          "casual dining",
+          "restaurant & bar",
+          "cafe & bakery",
+          "culinary"
+        ],
+        conflictingCategories: ["sports", "politics", "gaming", "casino"]
+      },
+      dental: {
+        category: "dental",
+        rootTerms: ["dentist", "dental", "orthodontist", "orthodontics"],
+        productServiceTerms: [
+          "teeth",
+          "tooth",
+          "invisalign",
+          "braces",
+          "whitening",
+          "implants",
+          "cleaning",
+          "denture",
+          "crown",
+          "veneer",
+          "extraction",
+          "cavity",
+          "oral surgery"
+        ],
+        industryDescriptors: ["dental clinic", "dental practice", "family dentistry"],
+        conflictingCategories: ["sports", "politics", "gaming", "furniture"]
+      },
+      roofing: {
+        category: "roofing",
+        rootTerms: ["roof", "roofing", "roofer"],
+        productServiceTerms: [
+          "shingles",
+          "gutters",
+          "siding",
+          "leak repair",
+          "metal roof",
+          "tile roof",
+          "flat roof",
+          "roof inspection",
+          "roof replacement",
+          "flashing",
+          "soffit"
+        ],
+        industryDescriptors: ["roofing contractor", "roofing company", "roofing specialists"],
+        conflictingCategories: ["sports", "politics", "gaming"]
+      },
+      real_estate: {
+        category: "real_estate",
+        rootTerms: ["real estate", "realty", "realtor", "property", "properties"],
+        productServiceTerms: [
+          "apartment",
+          "condo",
+          "townhouse",
+          "villa",
+          "homes for sale",
+          "open house",
+          "mortgage",
+          "brokerage",
+          "leasing",
+          "tenant",
+          "landlord",
+          "commercial space"
+        ],
+        industryDescriptors: ["real estate agency", "property group", "real estate broker"],
+        conflictingCategories: ["sports", "politics", "gaming"]
+      },
+      marketing_agency: {
+        category: "marketing_agency",
+        rootTerms: ["marketing agency", "digital marketing", "advertising agency", "media agency"],
+        productServiceTerms: [
+          "seo",
+          "ppc",
+          "lead generation",
+          "social media marketing",
+          "branding",
+          "content marketing",
+          "web design",
+          "growth marketing",
+          "performance marketing"
+        ],
+        industryDescriptors: ["creative agency", "marketing partner", "growth agency"],
+        conflictingCategories: ["sports", "politics", "gaming"]
+      },
+      clothing: {
+        category: "clothing",
+        rootTerms: ["clothing", "apparel", "fashion", "wear", "garments"],
+        productServiceTerms: [
+          "dress",
+          "shirt",
+          "pants",
+          "t-shirt",
+          "jacket",
+          "hoodie",
+          "shoes",
+          "footwear",
+          "denim",
+          "jeans",
+          "boutique",
+          "suits",
+          "outfit",
+          "swimwear"
+        ],
+        industryDescriptors: ["clothing brand", "fashion boutique", "apparel store"],
+        conflictingCategories: ["sports_team", "politics", "gaming"]
+      },
+      fitness: {
+        category: "fitness",
+        rootTerms: ["fitness", "gym", "workout", "training"],
+        productServiceTerms: [
+          "personal trainer",
+          "crossfit",
+          "bodybuilding",
+          "weightlifting",
+          "cardio",
+          "yoga",
+          "pilates",
+          "membership",
+          "strength training",
+          "coaching"
+        ],
+        industryDescriptors: ["fitness center", "health club", "gym & fitness"],
+        conflictingCategories: ["politics", "gaming", "casino"]
+      },
+      saas: {
+        category: "saas",
+        rootTerms: ["saas", "cloud software", "business software", "software platform"],
+        productServiceTerms: [
+          "crm",
+          "erp",
+          "pipeline",
+          "workflow automation",
+          "subscription",
+          "enterprise software",
+          "dashboard",
+          "analytics tool",
+          "b2b platform"
+        ],
+        industryDescriptors: ["b2b saas", "software provider", "cloud solution"],
+        conflictingCategories: ["sports", "politics", "casino"]
+      },
+      construction: {
+        category: "construction",
+        rootTerms: ["construction", "contractor", "builder", "remodeling"],
+        productServiceTerms: [
+          "renovation",
+          "drywall",
+          "masonry",
+          "excavation",
+          "framing",
+          "general contractor",
+          "commercial building",
+          "home addition",
+          "deck building",
+          "demolition"
+        ],
+        industryDescriptors: ["construction company", "building contractors"],
+        conflictingCategories: ["sports", "politics", "gaming"]
+      },
+      photography: {
+        category: "photography",
+        rootTerms: ["photography", "photographer", "photoshoot"],
+        productServiceTerms: [
+          "portrait",
+          "wedding photography",
+          "headshots",
+          "studio portrait",
+          "videography",
+          "photo session",
+          "commercial photography",
+          "event photography"
+        ],
+        industryDescriptors: ["photo studio", "photography services"],
+        conflictingCategories: ["sports_team", "politics", "gaming"]
+      },
+      hvac: {
+        category: "hvac",
+        rootTerms: ["hvac", "air conditioning", "heating", "cooling", "ventilation"],
+        productServiceTerms: [
+          "furnace",
+          "heat pump",
+          "duct",
+          "ductwork",
+          "ac repair",
+          "thermostat",
+          "compressor",
+          "refrigerant",
+          "boiler",
+          "air filter"
+        ],
+        industryDescriptors: ["hvac contractor", "heating repair", "ac installation"],
+        conflictingCategories: ["sports", "politics", "gaming"]
+      },
+      home_services: {
+        category: "home_services",
+        rootTerms: ["home services", "plumbing", "electrician", "handyman", "pest control", "appliance repair"],
+        productServiceTerms: [
+          "pipe leak",
+          "drain cleaning",
+          "water heater",
+          "wiring",
+          "electrical panel",
+          "lighting installation",
+          "termite control",
+          "drywall repair",
+          "carpentry",
+          "home maintenance"
+        ],
+        industryDescriptors: ["home service contractor", "emergency plumbing", "residential electrician"],
+        conflictingCategories: ["sports", "politics", "gaming"]
+      },
+      ecommerce: {
+        category: "ecommerce",
+        rootTerms: ["ecommerce", "online store", "online shop", "retail store", "direct to consumer", "d2c"],
+        productServiceTerms: [
+          "add to cart",
+          "checkout",
+          "free shipping",
+          "order tracking",
+          "fast delivery",
+          "storefront",
+          "catalog",
+          "shopping cart",
+          "apparel",
+          "accessories",
+          "retail"
+        ],
+        industryDescriptors: ["online store", "ecommerce brand", "direct-to-consumer store"],
+        conflictingCategories: ["politics", "casino"]
+      },
+      professional_services: {
+        category: "professional_services",
+        rootTerms: ["professional services", "accounting", "legal", "law firm", "consulting", "tax advisory"],
+        productServiceTerms: [
+          "cpa",
+          "tax filing",
+          "audit",
+          "bookkeeping",
+          "litigation",
+          "attorney",
+          "lawyer",
+          "business advisory",
+          "corporate legal",
+          "compliance advisory"
+        ],
+        industryDescriptors: ["certified public accountant", "law practice", "management consulting"],
+        conflictingCategories: ["sports", "casino", "gaming"]
+      }
+    };
+    NEGATIVE_CATEGORIES = [
+      {
+        category: "sports",
+        terms: [
+          "manchester united",
+          "premier league",
+          "football club",
+          "soccer team",
+          "cricket board",
+          "champions league",
+          "matchday",
+          "fifa",
+          "uefa",
+          "nba",
+          "nfl",
+          "sports club",
+          "women team",
+          "head coach",
+          "stadium"
+        ],
+        entityTokens: ["fc", "united", "stadium", "club", "league", "team", "cricket", "football", "fifa", "uefa"],
+        penalty: -0.65
+      },
+      {
+        category: "healthcare",
+        terms: [
+          "health support community",
+          "saved my husband",
+          "seventy-nine",
+          "cancer treatment",
+          "diabetes remedy",
+          "chronic illness",
+          "prescription drug",
+          "patient clinical",
+          "health injustice",
+          "clinical trial",
+          "disease cure",
+          "medical hospital",
+          "dental care clinic"
+        ],
+        entityTokens: ["hospital", "clinic", "medical", "pharma", "health", "doctor", "patient"],
+        penalty: -0.65
+      },
+      {
+        category: "politics",
+        terms: [
+          "political campaign",
+          "election rally",
+          "vote for",
+          "parliament member",
+          "political party",
+          "candidate for senate",
+          "citizens for governance",
+          "ballot initiative",
+          "party congress"
+        ],
+        entityTokens: ["party", "senate", "parliament", "campaign", "governance", "election", "voters"],
+        penalty: -0.65
+      },
+      {
+        category: "gaming_casino",
+        terms: [
+          "online casino",
+          "slot machine",
+          "jackpot betting",
+          "poker chips",
+          "crypto casino",
+          "betting odds",
+          "spin to win",
+          "roulette online"
+        ],
+        entityTokens: ["casino", "betting", "poker", "slots", "jackpot"],
+        penalty: -0.65
+      },
+      {
+        category: "news_media",
+        terms: [
+          "breaking news",
+          "daily news",
+          "news network",
+          "news channel",
+          "broadcasting station",
+          "journalism report",
+          "magazine online"
+        ],
+        entityTokens: ["news", "media", "journal", "broadcasting", "times", "chronicle", "gazette"],
+        penalty: -0.55
+      },
+      {
+        category: "education",
+        terms: [
+          "university admissions",
+          "undergraduate degree",
+          "campus tuition",
+          "public school district",
+          "college alumni",
+          "academic curriculum"
+        ],
+        entityTokens: ["university", "college", "school", "academy", "campus", "alumni"],
+        penalty: -0.55
+      },
+      {
+        category: "charity_ngo",
+        terms: [
+          "charity relief",
+          "humanitarian aid",
+          "donation campaign",
+          "non-profit organization",
+          "relief fund",
+          "donate now to support"
+        ],
+        entityTokens: ["charity", "foundation", "relief", "humanitarian", "donation", "ngo"],
+        penalty: -0.55
+      }
+    ];
+    STOP_WORDS = /* @__PURE__ */ new Set([
+      "a",
+      "about",
+      "above",
+      "after",
+      "again",
+      "against",
+      "all",
+      "am",
+      "an",
+      "and",
+      "any",
+      "are",
+      "aren",
+      "as",
+      "at",
+      "be",
+      "because",
+      "been",
+      "before",
+      "being",
+      "below",
+      "between",
+      "both",
+      "but",
+      "by",
+      "can",
+      "cannot",
+      "could",
+      "did",
+      "do",
+      "does",
+      "doing",
+      "down",
+      "during",
+      "each",
+      "few",
+      "for",
+      "from",
+      "further",
+      "had",
+      "has",
+      "have",
+      "having",
+      "he",
+      "her",
+      "here",
+      "hers",
+      "herself",
+      "him",
+      "himself",
+      "his",
+      "how",
+      "i",
+      "if",
+      "in",
+      "into",
+      "is",
+      "it",
+      "its",
+      "itself",
+      "just",
+      "me",
+      "more",
+      "most",
+      "my",
+      "myself",
+      "no",
+      "nor",
+      "not",
+      "now",
+      "of",
+      "off",
+      "on",
+      "once",
+      "only",
+      "or",
+      "other",
+      "ought",
+      "our",
+      "ours",
+      "ourselves",
+      "out",
+      "over",
+      "own",
+      "same",
+      "she",
+      "should",
+      "so",
+      "some",
+      "such",
+      "than",
+      "that",
+      "the",
+      "their",
+      "theirs",
+      "them",
+      "themselves",
+      "then",
+      "there",
+      "these",
+      "they",
+      "this",
+      "those",
+      "through",
+      "to",
+      "too",
+      "under",
+      "until",
+      "up",
+      "very",
+      "was",
+      "we",
+      "were",
+      "what",
+      "when",
+      "where",
+      "which",
+      "while",
+      "who",
+      "whom",
+      "why",
+      "with",
+      "would",
+      "you",
+      "your",
+      "yours",
+      "yourself",
+      "yourselves"
+    ]);
+    LeadRelevanceEngine = class _LeadRelevanceEngine {
+      static {
+        this.VERSION = RELEVANCE_STRATEGY_VERSION;
+      }
+      static {
+        this.ENGINE_VERSION = RELEVANCE_ENGINE_VERSION;
+      }
+      static {
+        this.compileResearchIntent = compileResearchIntent;
+      }
+      /**
+       * Evaluates a single candidate ad against the research intent using the Multi-Stage Pipeline.
+       */
+      static evaluateCandidate(candidate, intent) {
+        const evidence = {
+          advertiserName: candidate.pageName || candidate.advertiserName || "",
+          adText: candidate.bodyCopy || candidate.adText || "",
+          destinationUrl: candidate.destinationUrl,
+          destinationDomain: candidate.destinationDomain,
+          facebookPageName: candidate.facebookPageName || candidate.pageName,
+          facebookPageUrl: candidate.facebookPageUrl,
+          ctaText: candidate.ctaText,
+          matchedKeyword: candidate.observedKeyword || candidate.matchedKeyword
+        };
+        return this.evaluateEvidence(evidence, intent);
+      }
+      /**
+       * Evaluates structured candidate evidence against research intent.
+       * Deterministic, explainable, and bounded.
+       */
+      static evaluateEvidence(evidence, intent) {
+        const normalized = normalizeEvidence(evidence);
+        const structuredEvidence = [];
+        const conflicts = [];
+        const reasons = [];
+        const matchedKeywords = [];
+        const matchedTerms = [];
+        const negativeSignals = [];
+        const allQueryPhrases = [
+          ...intent.primaryKeywords || intent.keywords || [],
+          ...intent.secondaryKeywords || []
+        ].map((k) => k.toLowerCase().trim()).filter(Boolean);
+        const activeTaxonomies = [];
+        for (const [key, tax] of Object.entries(BOUNDED_TAXONOMY)) {
+          if (allQueryPhrases.some(
+            (phrase) => phrase.includes(key) || tax.rootTerms.some((rt) => phrase.includes(rt))
+          )) {
+            activeTaxonomies.push(tax);
+          }
+        }
+        if (activeTaxonomies.length === 0 && allQueryPhrases.length > 0) {
+          const dynamicRoots = [];
+          const dynamicStems = [];
+          for (const phrase of allQueryPhrases) {
+            dynamicRoots.push(phrase);
+            for (const tok of tokenizeText(phrase)) {
+              dynamicStems.push(tok);
+            }
+          }
+          activeTaxonomies.push({
+            category: allQueryPhrases[0],
+            rootTerms: Array.from(new Set(dynamicRoots)),
+            productServiceTerms: Array.from(new Set(dynamicStems)),
+            industryDescriptors: allQueryPhrases,
+            conflictingCategories: ["sports", "healthcare", "politics", "gaming", "casino"]
+          });
+        }
+        const coreQueryTokens = /* @__PURE__ */ new Set();
+        for (const phrase of allQueryPhrases) {
+          for (const t of tokenizeText(phrase)) {
+            coreQueryTokens.add(t);
+          }
+        }
+        for (const tax of activeTaxonomies) {
+          for (const rt of tax.rootTerms) {
+            for (const t of tokenizeText(rt)) {
+              coreQueryTokens.add(t);
+            }
+          }
+        }
+        const productTerms = /* @__PURE__ */ new Set();
+        for (const tax of activeTaxonomies) {
+          for (const t of tax.productServiceTerms) {
+            productTerms.add(stemToken(t));
+          }
+        }
+        let negativePenalty = 0;
+        if (intent.exclusions && intent.exclusions.length > 0) {
+          for (const excl of intent.exclusions) {
+            const exclLower = excl.toLowerCase();
+            if (normalized.advertiserText.includes(exclLower) || normalized.adCopyText.includes(exclLower) || normalized.normalizedDomain.includes(exclLower)) {
+              const reason = `Matched preset exclusion rule: "${excl}"`;
+              negativeSignals.push(reason);
+              conflicts.push({
+                type: "CONTRADICTION",
+                strength: "STRONG",
+                source: "advertiser_name",
+                reason,
+                matchedSignal: excl,
+                reasonCode: "REJECT_PRESET_EXCLUSION"
+              });
+              negativePenalty -= 0.55;
+              break;
+            }
+          }
+        }
+        for (const negCat of NEGATIVE_CATEGORIES) {
+          const isQueryRelatedToNegCat = allQueryPhrases.some(
+            (q) => negCat.terms.some((t) => q.includes(t)) || q.includes(negCat.category) || negCat.category === "sports" && (q.includes("football") || q.includes("cricket") || q.includes("sports"))
+          );
+          if (isQueryRelatedToNegCat) continue;
+          let entityContradictionTerm;
+          for (const term of negCat.terms) {
+            if (normalized.advertiserText.includes(term) || normalized.normalizedDomain.includes(term.replace(/\s+/g, ""))) {
+              entityContradictionTerm = term;
+              break;
+            }
+          }
+          if (entityContradictionTerm) {
+            const reason = `Advertiser entity identity belongs to unrelated category (${negCat.category}): "${entityContradictionTerm}"`;
+            negativeSignals.push(reason);
+            conflicts.push({
+              type: "CONTRADICTION",
+              strength: "STRONG",
+              source: "advertiser_name",
+              reason,
+              matchedSignal: entityContradictionTerm,
+              reasonCode: "REJECT_CONTRADICTION_IDENTITY"
+            });
+            negativePenalty += negCat.penalty;
+            continue;
+          }
+          for (const term of negCat.terms) {
+            if (normalized.adCopyText.includes(term) || normalized.normalizedDomain.includes(term.replace(/\s+/g, ""))) {
+              const reason = `Unrelated ${negCat.category} signal detected in candidate ad context: "${term}"`;
+              negativeSignals.push(reason);
+              conflicts.push({
+                type: "NEGATIVE_CATEGORY",
+                strength: "STRONG",
+                source: "ad_text",
+                reason,
+                matchedSignal: term,
+                reasonCode: "REJECT_CONFLICT"
+              });
+              negativePenalty += negCat.penalty;
+              break;
+            }
+          }
+        }
+        negativePenalty = Math.max(-0.8, negativePenalty);
+        let advertiserNameScore = 0;
+        let hasStrongEntityMatch = false;
+        let hasModerateEntityMatch = false;
+        for (const phrase of allQueryPhrases) {
+          if (normalized.advertiserText.includes(phrase)) {
+            advertiserNameScore = 0.4;
+            hasStrongEntityMatch = true;
+            matchedKeywords.push(phrase);
+            matchedTerms.push(phrase);
+            const reason = `Advertiser name explicitly contains target category query "${phrase}"`;
+            reasons.push(reason);
+            structuredEvidence.push({
+              type: "ENTITY_IDENTITY",
+              strength: "STRONG",
+              source: "advertiser_name",
+              reason,
+              matchedSignal: phrase,
+              reasonCode: "SIGNAL_ENTITY_NAME_EXACT"
+            });
+            break;
+          }
+        }
+        if (!hasStrongEntityMatch) {
+          const matchedTokensInName = normalized.normalizedAdvertiserTokens.filter((t) => coreQueryTokens.has(t));
+          if (matchedTokensInName.length > 0) {
+            advertiserNameScore = 0.3;
+            hasStrongEntityMatch = true;
+            matchedTerms.push(...matchedTokensInName);
+            const reason = `Advertiser name contains core target keyword stem(s): ${matchedTokensInName.join(", ")}`;
+            reasons.push(reason);
+            structuredEvidence.push({
+              type: "ENTITY_IDENTITY",
+              strength: "STRONG",
+              source: "advertiser_name",
+              reason,
+              matchedSignal: matchedTokensInName.join(", "),
+              reasonCode: "SIGNAL_ENTITY_NAME_CORE"
+            });
+          } else {
+            const productTokensInName = normalized.normalizedAdvertiserTokens.filter((t) => productTerms.has(t));
+            const matchedSubstringProduct = Array.from(productTerms).filter(
+              (pt) => pt.length >= 4 && normalized.advertiserText.includes(pt)
+            );
+            const combinedProductMatches = Array.from(/* @__PURE__ */ new Set([...productTokensInName, ...matchedSubstringProduct]));
+            if (combinedProductMatches.length > 0) {
+              advertiserNameScore = 0.25;
+              hasModerateEntityMatch = true;
+              matchedTerms.push(...combinedProductMatches);
+              const reason = `Advertiser name contains target product term(s): ${combinedProductMatches.join(", ")}`;
+              reasons.push(reason);
+              structuredEvidence.push({
+                type: "ENTITY_IDENTITY",
+                strength: "MODERATE",
+                source: "advertiser_name",
+                reason,
+                matchedSignal: combinedProductMatches.join(", "),
+                reasonCode: "SIGNAL_ENTITY_NAME_PRODUCT"
+              });
+            }
+          }
+        }
+        let destinationScore = 0;
+        let hasDomainCategoryMatch = false;
+        if (normalized.normalizedDomain) {
+          const domainHasQuery = allQueryPhrases.some(
+            (p) => normalized.normalizedDomain.includes(p.replace(/\s+/g, ""))
+          );
+          const domainHasProduct = Array.from(productTerms).some(
+            (t) => t.length >= 4 && normalized.normalizedDomain.includes(t)
+          );
+          if (domainHasQuery) {
+            destinationScore = 0.2;
+            hasDomainCategoryMatch = true;
+            const reason = `Destination domain "${normalized.normalizedDomain}" explicitly contains target query`;
+            reasons.push(reason);
+            structuredEvidence.push({
+              type: "ENTITY_IDENTITY",
+              strength: "STRONG",
+              source: "destination_domain",
+              reason,
+              matchedSignal: normalized.normalizedDomain,
+              reasonCode: "SIGNAL_DOMAIN_QUERY_EXACT"
+            });
+          } else if (domainHasProduct) {
+            destinationScore = 0.15;
+            hasDomainCategoryMatch = true;
+            const reason = `Destination domain "${normalized.normalizedDomain}" contains category product term`;
+            reasons.push(reason);
+            structuredEvidence.push({
+              type: "ENTITY_IDENTITY",
+              strength: "MODERATE",
+              source: "destination_domain",
+              reason,
+              matchedSignal: normalized.normalizedDomain,
+              reasonCode: "SIGNAL_DOMAIN_PRODUCT"
+            });
+          }
+        }
+        let facebookPageScore = 0;
+        if (evidence.facebookPageUrl) {
+          const pageUrlLower = evidence.facebookPageUrl.toLowerCase();
+          const pageHasQuery = allQueryPhrases.some((p) => pageUrlLower.includes(p.replace(/\s+/g, "")));
+          if (pageHasQuery) {
+            facebookPageScore = hasStrongEntityMatch ? 0.05 : 0.12;
+            const reason = `Facebook Page handle/URL reinforces target category identity`;
+            reasons.push(reason);
+            structuredEvidence.push({
+              type: "ENTITY_IDENTITY",
+              strength: "MODERATE",
+              source: "facebook_page",
+              reason,
+              matchedSignal: evidence.facebookPageUrl,
+              reasonCode: "SIGNAL_PAGE_HANDLE"
+            });
+          }
+        }
+        let adCopyScore = 0;
+        let adCopyHasPhraseMatch = false;
+        for (const phrase of allQueryPhrases) {
+          if (normalized.adCopyText.includes(phrase)) {
+            adCopyScore += 0.2;
+            adCopyHasPhraseMatch = true;
+            if (!matchedKeywords.includes(phrase)) matchedKeywords.push(phrase);
+            if (!matchedTerms.includes(phrase)) matchedTerms.push(phrase);
+            const reason = `Ad copy directly mentions target query "${phrase}"`;
+            reasons.push(reason);
+            structuredEvidence.push({
+              type: "CATEGORY_MATCH",
+              strength: "MODERATE",
+              source: "ad_text",
+              reason,
+              matchedSignal: phrase,
+              reasonCode: "SIGNAL_COPY_PHRASE"
+            });
+            break;
+          }
+        }
+        const foundProductTermsInCopy = Array.from(productTerms).filter(
+          (t) => normalized.normalizedAdTextTokens.includes(t) || t.length >= 4 && normalized.adCopyText.includes(t)
+        );
+        let hasProductCatalogEvidence = false;
+        if (foundProductTermsInCopy.length > 0) {
+          const sampleTerms = foundProductTermsInCopy.slice(0, 5);
+          matchedTerms.push(...sampleTerms);
+          if (foundProductTermsInCopy.length >= 2) {
+            hasProductCatalogEvidence = true;
+            const copyAdd = Math.min(0.35, 0.15 + (foundProductTermsInCopy.length - 1) * 0.06);
+            adCopyScore += copyAdd;
+            const reason = `Ad copy contains specific category product catalog: ${sampleTerms.join(", ")}`;
+            reasons.push(reason);
+            structuredEvidence.push({
+              type: "CATEGORY_MATCH",
+              strength: "STRONG",
+              source: "ad_text",
+              reason,
+              matchedSignal: sampleTerms.join(", "),
+              reasonCode: "SIGNAL_COPY_PRODUCT_CATALOG"
+            });
+          } else {
+            adCopyScore += 0.12;
+            const reason = `Ad copy mentions category product term: ${sampleTerms[0]}`;
+            reasons.push(reason);
+            structuredEvidence.push({
+              type: "CATEGORY_MATCH",
+              strength: "WEAK",
+              source: "ad_text",
+              reason,
+              matchedSignal: sampleTerms[0],
+              reasonCode: "SIGNAL_COPY_SINGLE_PRODUCT"
+            });
+          }
+        } else if (!adCopyHasPhraseMatch) {
+          const matchedTokensInCopy = normalized.normalizedAdTextTokens.filter((t) => coreQueryTokens.has(t));
+          if (matchedTokensInCopy.length > 0) {
+            adCopyScore += 0.1;
+            matchedTerms.push(...matchedTokensInCopy);
+            const reason = `Ad copy mentions keyword stem(s): ${matchedTokensInCopy.join(", ")}`;
+            reasons.push(reason);
+            structuredEvidence.push({
+              type: "CATEGORY_MATCH",
+              strength: "WEAK",
+              source: "ad_text",
+              reason,
+              matchedSignal: matchedTokensInCopy.join(", "),
+              reasonCode: "SIGNAL_COPY_STEM_ONLY"
+            });
+          }
+        }
+        adCopyScore = Math.min(0.4, adCopyScore);
+        let hasUrlSlugProduct = false;
+        if (normalized.normalizedUrlSlug) {
+          const slugHasProduct = Array.from(productTerms).some(
+            (t) => t.length >= 4 && normalized.normalizedUrlSlug.includes(t)
+          );
+          const slugHasQuery = Array.from(coreQueryTokens).some(
+            (t) => normalized.normalizedUrlSlug.includes(t)
+          );
+          if (slugHasProduct || slugHasQuery) {
+            hasUrlSlugProduct = true;
+            destinationScore = Math.max(destinationScore, 0.12);
+            const reason = `Destination URL path contains target product category context`;
+            reasons.push(reason);
+            structuredEvidence.push({
+              type: "CATEGORY_MATCH",
+              strength: "MODERATE",
+              source: "destination_url",
+              reason,
+              matchedSignal: normalized.normalizedUrlSlug.substring(0, 50),
+              reasonCode: "SIGNAL_URL_SLUG_MATCH"
+            });
+          }
+        }
+        let commercialScore = 0;
+        const commercialCtas = ["shop now", "buy now", "order now", "get quote", "contact us", "order"];
+        const hasCommercialCta = commercialCtas.includes(normalized.normalizedCta);
+        if (hasCommercialCta) {
+          commercialScore += 0.05;
+          structuredEvidence.push({
+            type: "COMMERCIAL_INTENT",
+            strength: "MODERATE",
+            source: "cta_text",
+            reason: `Commercial action call-to-action ("${evidence.ctaText}")`,
+            matchedSignal: evidence.ctaText,
+            reasonCode: "SIGNAL_COMMERCIAL_INTENT_CTA"
+          });
+        }
+        const hasPricingInCopy = /(price|discount|sale|off|taka|bdt|usd|\$|€|£|warranty|deal|buy|shop)/i.test(normalized.adCopyText);
+        if (hasPricingInCopy) {
+          commercialScore = Math.min(0.1, commercialScore + 0.05);
+          structuredEvidence.push({
+            type: "COMMERCIAL_INTENT",
+            strength: "MODERATE",
+            source: "ad_text",
+            reason: `Commercial pricing, transaction, or sale language observed in ad copy`,
+            reasonCode: "SIGNAL_COMMERCIAL_INTENT_PRICE"
+          });
+        }
+        const rawPositiveScore = advertiserNameScore + adCopyScore + destinationScore + facebookPageScore + commercialScore;
+        const totalScore = Math.max(0, Math.min(1, rawPositiveScore + negativePenalty));
+        let decision = "UNCERTAIN";
+        let confidence = "LOW";
+        let reasonCode = "UNCERTAIN_AMBIGUOUS_ENTITY";
+        const hasStrongConflict = conflicts.some((c) => c.type === "CONTRADICTION" && c.strength === "STRONG") || negativePenalty <= -0.3;
+        if (hasStrongConflict) {
+          decision = "NOT_RELEVANT";
+          confidence = "HIGH";
+          reasonCode = conflicts[0]?.reasonCode || "REJECT_CONFLICT";
+          reasons.unshift(`Disqualified by Hard Contradiction Gate: ${negativeSignals.join("; ")}`);
+        } else {
+          const hasOnlyWeakKeywordInCopy = !hasStrongEntityMatch && !hasModerateEntityMatch && !hasDomainCategoryMatch && !hasProductCatalogEvidence;
+          if (hasOnlyWeakKeywordInCopy) {
+            if (totalScore < 0.18) {
+              decision = "NOT_RELEVANT";
+              confidence = "HIGH";
+              reasonCode = "REJECT_INSUFFICIENT_EVIDENCE";
+              reasons.push(`Classified as NOT_RELEVANT: No entity or category evidence found.`);
+            } else {
+              decision = "UNCERTAIN";
+              confidence = "LOW";
+              reasonCode = "UNCERTAIN_KEYWORD_ONLY";
+              reasons.push(`Classified as UNCERTAIN: Mentioned keyword but lacks independent entity or product evidence.`);
+            }
+          } else {
+            const hasSupportingSignal = adCopyScore >= 0.1 || destinationScore >= 0.12 || commercialScore >= 0.05 || facebookPageScore >= 0.05 || hasProductCatalogEvidence;
+            const passesCriterion1 = hasStrongEntityMatch && hasSupportingSignal;
+            const passesCriterion2 = hasModerateEntityMatch && (adCopyScore >= 0.15 || destinationScore >= 0.12 || hasProductCatalogEvidence);
+            const passesCriterion3 = hasProductCatalogEvidence && (destinationScore >= 0.12 || hasUrlSlugProduct || hasDomainCategoryMatch || adCopyScore >= 0.25 && commercialScore >= 0.05);
+            if ((passesCriterion1 || passesCriterion2 || passesCriterion3) && totalScore >= 0.35) {
+              decision = "RELEVANT";
+              const hasMultiDimensionalCorroboration = hasStrongEntityMatch && hasSupportingSignal || hasProductCatalogEvidence && destinationScore >= 0.12 && commercialScore >= 0.05;
+              confidence = totalScore >= 0.6 || hasMultiDimensionalCorroboration ? "HIGH" : "MEDIUM";
+              reasonCode = passesCriterion1 ? "ACCEPT_STRONG_ENTITY_MATCH" : "ACCEPT_MULTI_SIGNAL_MATCH";
+              reasons.push(
+                `Qualified as RELEVANT: ${passesCriterion1 ? "Strong entity identity confirmed with supporting product/commercial evidence" : passesCriterion3 ? "Category product catalog verified with commercial corroboration" : "Entity and category evidence meet sufficiency standards"} (Confidence: ${confidence})`
+              );
+            } else if (totalScore < 0.22) {
+              decision = "NOT_RELEVANT";
+              confidence = totalScore < 0.12 ? "HIGH" : "MEDIUM";
+              reasonCode = "REJECT_CATEGORY_MISMATCH";
+              reasons.push(`Classified as NOT_RELEVANT: Insufficient category evidence (Score: ${(totalScore * 100).toFixed(0)}%)`);
+            } else {
+              decision = "UNCERTAIN";
+              confidence = "LOW";
+              reasonCode = "UNCERTAIN_AMBIGUOUS_ENTITY";
+              reasons.push(`Classified as UNCERTAIN: Evidence is ambiguous or insufficient to confirm business vertical.`);
+            }
+          }
+        }
+        if (evidence.matchedKeyword && !matchedKeywords.includes(evidence.matchedKeyword)) {
+          if (decision === "RELEVANT") {
+            matchedKeywords.push(evidence.matchedKeyword);
+          }
+        }
+        return {
+          decision,
+          confidence,
+          score: Math.round(totalScore * 100) / 100,
+          reasons,
+          matchedKeywords,
+          matchedTerms: Array.from(new Set(matchedTerms)),
+          negativeSignals,
+          evidence: structuredEvidence,
+          conflicts,
+          evidenceBreakdown: {
+            advertiserNameScore,
+            adCopyScore,
+            destinationScore,
+            facebookPageScore,
+            commercialScore,
+            negativePenalty
+          },
+          strategyVersion: RELEVANCE_STRATEGY_VERSION,
+          engineVersion: RELEVANCE_ENGINE_VERSION,
+          presetVersion: intent.presetVersion,
+          reasonCode
+        };
+      }
+      /**
+       * Entity-Level Evaluation: Evaluates multiple ad cards for an advertiser entity
+       * to produce the consolidated entity relevance decision without duplicate inflation.
+       */
+      static evaluateEntity(advertiserName, candidates, intent) {
+        if (candidates.length === 0) {
+          return this.evaluateEvidence({ advertiserName }, intent);
+        }
+        const evaluations = candidates.map((c) => this.evaluateCandidate(c, intent));
+        const allConflicts = evaluations.flatMap((e) => e.conflicts);
+        const hasEntityContradiction = allConflicts.some(
+          (c) => c.type === "CONTRADICTION" && c.strength === "STRONG"
+        );
+        const allNegativeSignals = Array.from(new Set(evaluations.flatMap((e) => e.negativeSignals)));
+        const maxNegativePenalty = Math.min(...evaluations.map((e) => e.evidenceBreakdown.negativePenalty));
+        if (hasEntityContradiction || maxNegativePenalty <= -0.3) {
+          const worstEval = evaluations.find((e) => e.evidenceBreakdown.negativePenalty <= -0.3) || evaluations[0];
+          return {
+            ...worstEval,
+            decision: "NOT_RELEVANT",
+            confidence: "HIGH",
+            negativeSignals: allNegativeSignals,
+            conflicts: allConflicts,
+            reasons: [
+              `Entity disqualified across ${candidates.length} ad(s) due to hard contradiction: ${allNegativeSignals.join("; ")}`
+            ],
+            reasonCode: "REJECT_CONTRADICTION_IDENTITY",
+            engineVersion: RELEVANCE_ENGINE_VERSION,
+            strategyVersion: RELEVANCE_STRATEGY_VERSION
+          };
+        }
+        const seenCopyHashes = /* @__PURE__ */ new Set();
+        const distinctAds = [];
+        for (const c of candidates) {
+          const copyNormalized = (c.bodyCopy || "").toLowerCase().trim().replace(/\s+/g, " ").substring(0, 100);
+          if (!seenCopyHashes.has(copyNormalized)) {
+            seenCopyHashes.add(copyNormalized);
+            distinctAds.push(c);
+          }
+        }
+        evaluations.sort((a, b) => b.score - a.score);
+        const bestEval = evaluations[0];
+        const combinedKeywords = Array.from(new Set(evaluations.flatMap((e) => e.matchedKeywords)));
+        const combinedTerms = Array.from(new Set(evaluations.flatMap((e) => e.matchedTerms)));
+        const allEvidence = Array.from(
+          new Map(evaluations.flatMap((e) => e.evidence).map((ev) => [`${ev.type}:${ev.source}:${ev.reasonCode}`, ev])).values()
+        );
+        let consolidatedScore = bestEval.score;
+        let decision = bestEval.decision;
+        let confidence = bestEval.confidence;
+        let reasonCode = bestEval.reasonCode;
+        const distinctSupportingAds = distinctAds.filter((ad) => {
+          const ev = _LeadRelevanceEngine.evaluateCandidate(ad, intent);
+          return ev.decision === "RELEVANT" || ev.evidence.some((e) => e.type === "CATEGORY_MATCH");
+        });
+        if (allNegativeSignals.length === 0 && distinctSupportingAds.length > 1) {
+          const multiCardBoost = Math.min(0.12, (distinctSupportingAds.length - 1) * 0.04);
+          consolidatedScore = Math.min(1, consolidatedScore + multiCardBoost);
+          if (decision === "UNCERTAIN" && consolidatedScore >= 0.4 && (bestEval.evidenceBreakdown.advertiserNameScore > 0 || bestEval.evidenceBreakdown.adCopyScore >= 0.25)) {
+            decision = "RELEVANT";
+            reasonCode = "ACCEPT_MULTI_SIGNAL_MATCH";
+          }
+          if (consolidatedScore >= 0.6) {
+            confidence = "HIGH";
+          }
+          allEvidence.push({
+            type: "ENTITY_IDENTITY",
+            strength: "STRONG",
+            source: "entity_aggregation",
+            reason: `Entity confirmed across ${distinctSupportingAds.length} distinct category ads`,
+            matchedSignal: `${distinctSupportingAds.length} distinct ads`,
+            reasonCode: "SIGNAL_MULTI_AD_CORROBORATION"
+          });
+        }
+        return {
+          ...bestEval,
+          decision,
+          confidence,
+          score: Math.round(consolidatedScore * 100) / 100,
+          matchedKeywords: combinedKeywords.length > 0 ? combinedKeywords : bestEval.matchedKeywords,
+          matchedTerms: combinedTerms,
+          evidence: allEvidence,
+          conflicts: allConflicts,
+          reasons: [
+            `Entity evaluated across ${candidates.length} ad card(s) (${distinctAds.length} distinct): status ${decision} (${(consolidatedScore * 100).toFixed(0)}%)`,
+            ...bestEval.reasons
+          ],
+          reasonCode,
+          strategyVersion: RELEVANCE_STRATEGY_VERSION,
+          engineVersion: RELEVANCE_ENGINE_VERSION
+        };
+      }
+      /**
+       * Evidence Waterfall + Strict Relevance v3 Evaluator
+       * Executes deterministic evidence collection, anti-inflation aggregation,
+       * and strict multi-tier decision hierarchy.
+       */
+      static evaluateCandidateV3(candidate, intent) {
+        const { evaluateStrictRelevanceV3: evaluateStrictRelevanceV32 } = (init_evidenceWaterfall(), __toCommonJS(evidenceWaterfall_exports));
+        const candEvidence = {
+          advertiserName: candidate.pageName || candidate.advertiserName || "",
+          adText: candidate.bodyCopy || candidate.adText || "",
+          destinationUrl: candidate.destinationUrl,
+          destinationDomain: candidate.destinationDomain,
+          facebookPageUrl: candidate.facebookPageUrl,
+          ctaText: candidate.ctaText,
+          matchedKeyword: candidate.observedKeyword || candidate.matchedKeyword
+        };
+        return evaluateStrictRelevanceV32(candEvidence, intent);
+      }
+    };
+  }
+});
+
 // node_modules/react/cjs/react-jsx-runtime.production.js
 var require_react_jsx_runtime_production = __commonJS({
   "node_modules/react/cjs/react-jsx-runtime.production.js"(exports) {
@@ -14832,682 +17482,8 @@ var __iconNode15 = [
 ];
 var TriangleAlert = createLucideIcon("triangle-alert", __iconNode15);
 
-// src/data/presetCatalogue.ts
-var RESEARCH_PRESETS = [
-  // ==========================================
-  // 1. TECHNOLOGY & SOFTWARE
-  // ==========================================
-  {
-    preset_id: "tech_saas_b2b",
-    name: "B2B SaaS Platforms",
-    industry: "Technology & Software",
-    sub_industry: "Cloud Software",
-    description: "B2B cloud software providers advertising subscription business tools.",
-    primary_keywords: ["saas", "cloud software", "business software"],
-    secondary_keywords: ["crm", "erp", "workflow automation", "enterprise software"],
-    optional_exclusions: ["free software", "pirate", "torrent"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["SaaS", "B2B Software", "Cloud Platforms", "Enterprise SaaS"]
-  },
-  {
-    preset_id: "tech_crm_platforms",
-    name: "CRM & Pipeline Software",
-    industry: "Technology & Software",
-    sub_industry: "Sales Technology",
-    description: "Customer relationship management and sales automation software vendors.",
-    primary_keywords: ["crm software", "sales pipeline software", "lead management software"],
-    secondary_keywords: ["pipeline crm", "contact manager", "deal tracking"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["CRM", "Sales CRM", "Pipeline Tool"]
-  },
-  {
-    preset_id: "tech_devops_cloud",
-    name: "DevOps & Cloud Infrastructure",
-    industry: "Technology & Software",
-    sub_industry: "Developer Tools",
-    description: "Continuous delivery, Kubernetes, cloud hosting, and infrastructure monitoring.",
-    primary_keywords: ["devops platform", "kubernetes management", "cloud infrastructure"],
-    secondary_keywords: ["ci/cd pipeline", "container orchestration", "cloud monitoring"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["DevOps", "Cloud Infra", "Kubernetes"]
-  },
-  {
-    preset_id: "tech_cybersecurity_b2b",
-    name: "Cybersecurity & Compliance",
-    industry: "Technology & Software",
-    sub_industry: "Security & Privacy",
-    description: "Enterprise endpoint protection, SOC 2 compliance automation, and threat defense.",
-    primary_keywords: ["cybersecurity solution", "soc 2 compliance", "endpoint security"],
-    secondary_keywords: ["vulnerability management", "data security platform", "zero trust"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Cybersecurity", "SOC 2", "InfoSec", "Penetration Testing"]
-  },
-  {
-    preset_id: "tech_fintech_software",
-    name: "FinTech & Billing Software",
-    industry: "Technology & Software",
-    sub_industry: "Financial Technology",
-    description: "Corporate spend management, payroll automation, and recurring billing systems.",
-    primary_keywords: ["spend management software", "payroll software", "subscription billing"],
-    secondary_keywords: ["corporate card", "invoicing software", "expense automation"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["FinTech", "Payroll SaaS", "Billing Engine"]
-  },
-  {
-    preset_id: "tech_hr_recruitment_saas",
-    name: "HR & ATS Talent Software",
-    industry: "Technology & Software",
-    sub_industry: "Human Resources",
-    description: "Applicant tracking systems, employee onboarding, and HR information systems.",
-    primary_keywords: ["applicant tracking system", "hr software", "employee onboarding platform"],
-    secondary_keywords: ["ats software", "hris", "recruitment software"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["HR Tech", "ATS", "HRIS", "Staffing Software"]
-  },
-  // ==========================================
-  // 2. HEALTHCARE & MEDICAL
-  // ==========================================
-  {
-    preset_id: "health_dental_clinics",
-    name: "Dental & Orthodontic Clinics",
-    industry: "Healthcare & Medical",
-    sub_industry: "Dental Services",
-    description: "Private dental practices advertising cosmetic dentistry, implants, and clear aligners.",
-    primary_keywords: ["dental implants", "cosmetic dentist", "clear aligners"],
-    secondary_keywords: ["emergency dentist", "teeth whitening clinic", "invisalign dentist"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Dentist", "Orthodontist", "Dental Implants"]
-  },
-  {
-    preset_id: "health_med_spa_aesthetic",
-    name: "Medical Spas & Aesthetics",
-    industry: "Healthcare & Medical",
-    sub_industry: "Aesthetic Medicine",
-    description: "Clinics offering Botox, dermal fillers, laser skin resurfacing, and body contouring.",
-    primary_keywords: ["med spa", "botox clinic", "laser hair removal"],
-    secondary_keywords: ["dermal fillers", "body contouring", "skin rejuvenation clinic"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["MedSpa", "Aesthetic Clinic", "Cosmetic Dermatology"]
-  },
-  {
-    preset_id: "health_mental_telehealth",
-    name: "Mental Health & Teletherapy",
-    industry: "Healthcare & Medical",
-    sub_industry: "Mental Health",
-    description: "Private therapy practices, online counseling, and licensed mental health clinics.",
-    primary_keywords: ["online therapy", "licensed counselor", "adhd assessment clinic"],
-    secondary_keywords: ["couples therapy", "telehealth psychiatry", "anxiety counseling"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Therapy", "Telehealth", "Counseling", "Psychiatry"]
-  },
-  {
-    preset_id: "health_veterinary_clinics",
-    name: "Veterinary Hospitals & Clinics",
-    industry: "Healthcare & Medical",
-    sub_industry: "Veterinary Medicine",
-    description: "Animal hospitals, urgent pet care, and companion animal veterinary clinics.",
-    primary_keywords: ["veterinary hospital", "animal clinic", "emergency vet"],
-    secondary_keywords: ["pet wellness exam", "vet surgery clinic", "canine care center"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Vet", "Animal Hospital", "Veterinarian"]
-  },
-  {
-    preset_id: "health_optometry_eyecare",
-    name: "Optometry & Eye Care Centers",
-    industry: "Healthcare & Medical",
-    sub_industry: "Vision Care",
-    description: "Independent optometrists, LASIK eye surgery clinics, and designer optical boutiques.",
-    primary_keywords: ["lasik eye surgery", "optometrist eye exam", "designer eyewear clinic"],
-    secondary_keywords: ["cataract surgery center", "vision correction", "prescription glasses clinic"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Eye Clinic", "LASIK", "Optometrist"]
-  },
-  // ==========================================
-  // 3. HOME SERVICES & TRADES
-  // ==========================================
-  {
-    preset_id: "home_hvac_heating_cooling",
-    name: "HVAC Installation & Repair",
-    industry: "Home Services & Trades",
-    sub_industry: "Climate Control",
-    description: "Air conditioning, heat pump replacement, and furnace repair contractors.",
-    primary_keywords: ["ac installation", "furnace replacement", "hvac repair contractor"],
-    secondary_keywords: ["heat pump installation", "air conditioning service", "emergency hvac"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["HVAC", "Air Conditioning", "Heating", "Heat Pump"]
-  },
-  {
-    preset_id: "home_roofing_contractors",
-    name: "Roofing & Siding Contractors",
-    industry: "Home Services & Trades",
-    sub_industry: "Exterior Remodeling",
-    description: "Commercial and residential roof replacement, hail damage repair, and gutter systems.",
-    primary_keywords: ["roof replacement contractor", "roof repair company", "metal roofing"],
-    secondary_keywords: ["storm damage roof inspection", "residential siding", "seamless gutters"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Roofing", "Roofers", "Siding Contractor"]
-  },
-  {
-    preset_id: "home_solar_energy",
-    name: "Solar Panel Installation & Batteries",
-    industry: "Home Services & Trades",
-    sub_industry: "Renewable Energy",
-    description: "Residential solar power systems, battery backup storage, and commercial solar EPC.",
-    primary_keywords: ["solar panel installation", "home battery backup", "commercial solar"],
-    secondary_keywords: ["residential solar financing", "solar roof quote", "clean energy savings"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Solar", "Renewable Energy", "Solar Financing", "Solar Panels"]
-  },
-  {
-    preset_id: "home_plumbing_water",
-    name: "Plumbing & Water Filtration",
-    industry: "Home Services & Trades",
-    sub_industry: "Plumbing Systems",
-    description: "Plumbing repairs, tankless water heater installation, and whole-house filtration.",
-    primary_keywords: ["emergency plumber", "water heater replacement", "whole house water filter"],
-    secondary_keywords: ["drain cleaning service", "tankless water heater", "sewer line repair"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Plumber", "Plumbing", "Water Heaters"]
-  },
-  {
-    preset_id: "home_pest_control",
-    name: "Pest & Termite Control",
-    industry: "Home Services & Trades",
-    sub_industry: "Pest Management",
-    description: "Exterminator services, termite inspections, bed bug treatments, and rodent exclusion.",
-    primary_keywords: ["pest control service", "termite inspection company", "bed bug treatment"],
-    secondary_keywords: ["commercial exterminator", "rodent control", "mosquito defense program"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Pest Control", "Exterminator", "Termite Control"]
-  },
-  // ==========================================
-  // 4. FINANCIAL SERVICES
-  // ==========================================
-  {
-    preset_id: "fin_commercial_lending",
-    name: "Commercial & Business Lending",
-    industry: "Financial Services",
-    sub_industry: "Commercial Financing",
-    description: "Equipment financing, working capital lines of credit, and SBA commercial loans.",
-    primary_keywords: ["business loan", "equipment financing", "working capital line of credit"],
-    secondary_keywords: ["sba loan broker", "commercial mortgage financing", "invoice factoring"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Business Loans", "Commercial Lending", "Equipment Lease"]
-  },
-  {
-    preset_id: "fin_wealth_management",
-    name: "Wealth Advisory & Financial Planning",
-    industry: "Financial Services",
-    sub_industry: "Wealth Advisory",
-    description: "Fiduciary financial advisors, retirement planners, and high-net-worth wealth managers.",
-    primary_keywords: ["wealth management firm", "fiduciary financial advisor", "retirement planning"],
-    secondary_keywords: ["estate planning advisory", "high net worth wealth planner", "portfolio management"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Wealth Advisor", "Financial Planner", "RIA"]
-  },
-  {
-    preset_id: "fin_tax_accounting_cpa",
-    name: "Tax Advisory & CPA Firms",
-    industry: "Financial Services",
-    sub_industry: "Tax & Accounting",
-    description: "Certified public accountants, corporate tax prep, audit, and outsourced bookkeeping.",
-    primary_keywords: ["cpa firm", "corporate tax advisory", "outsourced bookkeeping services"],
-    secondary_keywords: ["tax resolution specialist", "fractional cfo services", "business tax preparation"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["CPA", "Tax Prep", "Bookkeeping", "Accounting Firm"]
-  },
-  {
-    preset_id: "fin_business_insurance",
-    name: "Commercial & Business Insurance",
-    industry: "Financial Services",
-    sub_industry: "Commercial Insurance",
-    description: "General liability, cyber insurance, commercial auto, and workers compensation.",
-    primary_keywords: ["commercial insurance broker", "general liability insurance", "workers comp insurance"],
-    secondary_keywords: ["cyber liability insurance", "errors and omissions policy", "business owners policy"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Commercial Insurance", "Business Insurance", "BOP"]
-  },
-  // ==========================================
-  // 5. REAL ESTATE & PROPERTY
-  // ==========================================
-  {
-    preset_id: "real_commercial_brokerage",
-    name: "Commercial Real Estate Brokerages",
-    industry: "Real Estate & Property",
-    sub_industry: "Commercial Properties",
-    description: "Office, retail, and industrial leasing brokers, triple-net investment advisors.",
-    primary_keywords: ["commercial real estate broker", "industrial warehouse lease", "office space leasing"],
-    secondary_keywords: ["retail space commercial lease", "nnn investment properties", "commercial property sales"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["CRE", "Commercial Real Estate", "Warehouse Lease"]
-  },
-  {
-    preset_id: "real_property_management",
-    name: "Property Management Companies",
-    industry: "Real Estate & Property",
-    sub_industry: "Asset Management",
-    description: "Multifamily residential management, HOA management, and commercial property care.",
-    primary_keywords: ["property management company", "hoa management services", "multifamily property manager"],
-    secondary_keywords: ["rental property management", "commercial asset management", "tenant placement agency"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Property Manager", "HOA Management", "Rental Management"]
-  },
-  {
-    preset_id: "real_luxury_brokerages",
-    name: "Luxury Residential Real Estate",
-    industry: "Real Estate & Property",
-    sub_industry: "Residential Brokerage",
-    description: "High-end home brokerages, luxury estate specialists, and waterfront property realtors.",
-    primary_keywords: ["luxury real estate agent", "waterfront homes for sale", "luxury estate brokerage"],
-    secondary_keywords: ["custom home realtor", "high end listing agent", "gated community homes"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Luxury Realtor", "Real Estate Agent", "Residential Brokerage"]
-  },
-  // ==========================================
-  // 6. PROFESSIONAL & BUSINESS SERVICES
-  // ==========================================
-  {
-    preset_id: "prof_growth_marketing_agencies",
-    name: "B2B Digital Marketing Agencies",
-    industry: "Professional Services",
-    sub_industry: "Digital Marketing",
-    description: "Performance advertising, SEO agencies, conversion rate optimization, and brand studios.",
-    primary_keywords: ["b2b marketing agency", "performance marketing firm", "seo agency services"],
-    secondary_keywords: ["paid social advertising agency", "lead generation agency", "b2b content studio"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Marketing Agency", "Growth Agency", "SEO Agency", "Lead Gen Agency"]
-  },
-  {
-    preset_id: "prof_it_managed_services",
-    name: "Managed IT Services (MSP)",
-    industry: "Professional Services",
-    sub_industry: "IT Consulting",
-    description: "Outsourced IT helpdesk, network administration, cloud migrations, and MSP support.",
-    primary_keywords: ["managed it services", "msp it provider", "it support company"],
-    secondary_keywords: ["outsourced it helpdesk", "business network security", "cloud migration consultant"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["MSP", "Managed IT", "IT Helpdesk", "IT Support"]
-  },
-  {
-    preset_id: "prof_legal_corporate_law",
-    name: "Corporate & Business Law Firms",
-    industry: "Professional Services",
-    sub_industry: "Legal Services",
-    description: "M&A legal counsel, intellectual property attorneys, and corporate formation lawyers.",
-    primary_keywords: ["corporate law firm", "business litigation attorney", "intellectual property lawyer"],
-    secondary_keywords: ["m&a legal advisory", "trademark attorney", "employment law firm"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Law Firm", "Corporate Attorney", "Business Lawyer"]
-  },
-  {
-    preset_id: "prof_executive_search_staffing",
-    name: "Executive Search & Staffing Agencies",
-    industry: "Professional Services",
-    sub_industry: "Staffing & Recruiting",
-    description: "Retained executive search, technical recruitment, and healthcare staffing agencies.",
-    primary_keywords: ["executive search firm", "technical staffing agency", "recruiting agency"],
-    secondary_keywords: ["retained executive recruiter", "locum tenens healthcare staffing", "it recruitment firm"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Recruiter", "Staffing Agency", "Headhunter", "Executive Search"]
-  },
-  // ==========================================
-  // 7. MANUFACTURING & INDUSTRIAL
-  // ==========================================
-  {
-    preset_id: "mfg_contract_cnc_machining",
-    name: "Precision CNC Machining & Fabrication",
-    industry: "Manufacturing & Industrial",
-    sub_industry: "Metal Fabrication",
-    description: "Custom CNC milling, precision sheet metal fabrication, and contract manufacturing.",
-    primary_keywords: ["cnc machining services", "precision sheet metal fabrication", "custom contract manufacturing"],
-    secondary_keywords: ["5-axis cnc milling", "rapid prototyping parts", "laser cutting services"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["CNC Machining", "Fabrication", "Metal Stamping"]
-  },
-  {
-    preset_id: "mfg_industrial_automation",
-    name: "Industrial Automation & Robotics",
-    industry: "Manufacturing & Industrial",
-    sub_industry: "Factory Automation",
-    description: "PLC programming, robotic arm integration, machine vision, and SCADA systems.",
-    primary_keywords: ["industrial automation integrator", "robotics system integrator", "plc programming services"],
-    secondary_keywords: ["machine vision inspection", "automated conveyor systems", "scada engineering"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Industrial Automation", "Robotics Integrator", "PLC"]
-  },
-  {
-    preset_id: "mfg_packaging_corrugated",
-    name: "Custom Packaging & Box Manufacturers",
-    industry: "Manufacturing & Industrial",
-    sub_industry: "Packaging Solutions",
-    description: "Corrugated mailer boxes, folding cartons, luxury rigid boxes, and sustainable packaging.",
-    primary_keywords: ["custom corrugated boxes", "folding carton manufacturer", "custom printed packaging"],
-    secondary_keywords: ["rigid gift box supplier", "sustainable packaging company", "protective foam inserts"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Packaging", "Custom Boxes", "Corrugated"]
-  },
-  // ==========================================
-  // 8. LOGISTICS & TRANSPORTATION
-  // ==========================================
-  {
-    preset_id: "logistics_3pl_freight",
-    name: "Third-Party Logistics (3PL) & Freight",
-    industry: "Transportation & Logistics",
-    sub_industry: "Freight & Fulfillment",
-    description: "E-commerce fulfillment centers, freight forwarding, cold storage, and intermodal transport.",
-    primary_keywords: ["3pl fulfillment warehouse", "freight brokerage company", "intermodal transportation"],
-    secondary_keywords: ["cold chain storage warehouse", "ecommerce pick and pack", "ltl freight shipping"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["3PL", "Freight Broker", "Warehousing", "Fulfillment"]
-  },
-  {
-    preset_id: "logistics_fleet_telematics",
-    name: "Fleet Telematics & GPS Tracking",
-    industry: "Transportation & Logistics",
-    sub_industry: "Fleet Technology",
-    description: "Commercial fleet management software, ELD compliance, and dashcam safety systems.",
-    primary_keywords: ["fleet telematics software", "eld compliance system", "fleet dash cam safety"],
-    secondary_keywords: ["gps fleet tracking", "driver safety monitoring", "fuel management system"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Fleet Management", "Telematics", "GPS Tracking"]
-  },
-  // ==========================================
-  // 9. EDUCATION & TRAINING
-  // ==========================================
-  {
-    preset_id: "edu_corporate_compliance_training",
-    name: "Corporate Training & Leadership Development",
-    industry: "Education & Training",
-    sub_industry: "Corporate Education",
-    description: "Executive coaching programs, enterprise compliance e-learning, and sales bootcamps.",
-    primary_keywords: ["executive leadership coaching", "corporate compliance training", "sales training program"],
-    secondary_keywords: ["enterprise lms content", "management training workshop", "workplace diversity training"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Corporate Training", "Executive Coaching", "Leadership Training"]
-  },
-  {
-    preset_id: "edu_certifications_bootcamps",
-    name: "Professional Certifications & Bootcamps",
-    industry: "Education & Training",
-    sub_industry: "Professional Skills",
-    description: "Coding bootcamps, cybersecurity certification courses, and PMP credential prep.",
-    primary_keywords: ["coding bootcamp", "cybersecurity certification training", "pmp exam prep course"],
-    secondary_keywords: ["data analytics bootcamp", "cloud engineer certification", "tech career training"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Bootcamp", "Certification Prep", "Coding School"]
-  },
-  // ==========================================
-  // 10. RETAIL & E-COMMERCE
-  // ==========================================
-  {
-    preset_id: "retail_dtc_apparel_fashion",
-    name: "Direct-to-Consumer (DTC) Fashion Brands",
-    industry: "Retail & E-commerce",
-    sub_industry: "Apparel & Accessories",
-    description: "Independent apparel brands, sustainable activewear, and designer accessories.",
-    primary_keywords: ["sustainable activewear", "custom leather goods", "luxury streetwear brand"],
-    secondary_keywords: ["dtc apparel brand", "bamboo clothing", "minimalist watches brand"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["DTC Apparel", "Fashion Brand", "Activewear"]
-  },
-  {
-    preset_id: "retail_subscription_box",
-    name: "Subscription Commerce & Box Services",
-    industry: "Retail & E-commerce",
-    sub_industry: "Subscription Goods",
-    description: "Curated monthly subscription boxes for coffee, grooming, pet supplies, and snacks.",
-    primary_keywords: ["monthly subscription box", "curated coffee subscription", "pet supply subscription"],
-    secondary_keywords: ["grooming subscription box", "artisan snack box", "membership club delivery"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Subscription Box", "SubBox", "Subscription Club"]
-  },
-  // ==========================================
-  // 11. AUTOMOTIVE
-  // ==========================================
-  {
-    preset_id: "auto_fleet_commercial_leasing",
-    name: "Commercial Fleet Leasing & Vans",
-    industry: "Automotive",
-    sub_industry: "Commercial Fleet",
-    description: "Work truck upfitting, commercial cargo van leasing, and enterprise fleet acquisition.",
-    primary_keywords: ["commercial van leasing", "work truck upfitting", "commercial vehicle fleet sales"],
-    secondary_keywords: ["cargo van fleet financing", "box truck lease", "utility truck body builder"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Fleet Leasing", "Commercial Vans", "Work Trucks"]
-  },
-  {
-    preset_id: "auto_collision_repair_centers",
-    name: "Auto Collision & Body Repair Centers",
-    industry: "Automotive",
-    sub_industry: "Vehicle Repair",
-    description: "Certified collision repair shops, paintless dent repair, and auto body restoration.",
-    primary_keywords: ["collision repair center", "auto body shop repair", "paintless dent removal"],
-    secondary_keywords: ["certified collision center", "car paint restoration", "bumper repair service"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Auto Body", "Collision Repair", "Dent Repair"]
-  },
-  // ==========================================
-  // 12. CLEANING & FACILITIES MANAGEMENT
-  // ==========================================
-  {
-    preset_id: "clean_commercial_janitorial",
-    name: "Commercial Janitorial & Office Cleaning",
-    industry: "Cleaning & Facilities",
-    sub_industry: "Janitorial Services",
-    description: "Nightly office cleaning, commercial floor waxing, medical facility disinfection.",
-    primary_keywords: ["commercial janitorial service", "office cleaning company", "medical facility cleaning"],
-    secondary_keywords: ["commercial floor strip and wax", "post construction cleaning", "industrial cleaning contractor"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Janitorial", "Office Cleaning", "Commercial Cleaning"]
-  },
-  {
-    preset_id: "clean_disaster_restoration",
-    name: "Water & Fire Disaster Restoration",
-    industry: "Cleaning & Facilities",
-    sub_industry: "Disaster Restoration",
-    description: "Emergency water extraction, smoke and fire cleanup, and certified mold remediation.",
-    primary_keywords: ["water damage restoration company", "fire damage cleanup", "mold remediation contractor"],
-    secondary_keywords: ["emergency water extraction", "sewage backup cleanup", "structural drying service"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Restoration", "Water Damage", "Mold Remediation"]
-  },
-  // ==========================================
-  // 13. SECURITY SERVICES
-  // ==========================================
-  {
-    preset_id: "sec_commercial_surveillance_alarms",
-    name: "Commercial Surveillance & Access Control",
-    industry: "Security Services",
-    sub_industry: "Physical Security",
-    description: "Security camera installation, keycard access control systems, and commercial burglar alarms.",
-    primary_keywords: ["commercial security camera installation", "access control systems", "commercial burglar alarm"],
-    secondary_keywords: ["cctv surveillance installer", "cloud video surveillance", "keycard door lock installation"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Security Cameras", "Access Control", "Commercial Alarm"]
-  },
-  // ==========================================
-  // 14. FITNESS & WELLNESS
-  // ==========================================
-  {
-    preset_id: "fit_boutique_studios",
-    name: "Boutique Fitness & Pilates Studios",
-    industry: "Fitness & Wellness",
-    sub_industry: "Fitness Centers",
-    description: "Reformer Pilates studios, HIIT training clubs, and boutique fitness franchises.",
-    primary_keywords: ["reformer pilates studio", "boutique fitness club", "hiit group fitness"],
-    secondary_keywords: ["hot yoga studio", "strength training gym membership", "spin cycling studio"],
-    default_location_behavior: { defaultLocationCode: "US", allowsGlobal: true },
-    website_required: true,
-    default_result_limit: 50,
-    version: "v2.1.0",
-    status: "ACTIVE",
-    aliases: ["Pilates", "Gym", "Fitness Studio", "HIIT"]
-  }
-];
+// src/extension/ui/App.tsx
+init_presetCatalogue();
 
 // src/data/locationCatalogue.ts
 var META_AD_LIBRARY_LOCATIONS = [
@@ -15605,1178 +17581,8 @@ function getLocationByCode(code) {
   return META_AD_LIBRARY_LOCATIONS.find((loc) => loc.locationCode === upper);
 }
 
-// src/extension/relevanceEngine.ts
-var RELEVANCE_STRATEGY_VERSION = 2;
-var RELEVANCE_ENGINE_VERSION = "strict-v2";
-var BOUNDED_TAXONOMY = {
-  furniture: {
-    category: "furniture",
-    rootTerms: ["furniture", "furnishing", "furnishings", "furnish"],
-    productServiceTerms: [
-      "chair",
-      "table",
-      "desk",
-      "sofa",
-      "couch",
-      "bed",
-      "mattress",
-      "cabinet",
-      "wardrobe",
-      "dining",
-      "bench",
-      "drawer",
-      "drawers",
-      "stool",
-      "bookshelf",
-      "shelf",
-      "shelves",
-      "almirah",
-      "cupboard",
-      "recliner",
-      "credenza",
-      "workstation",
-      "seating",
-      "lounge",
-      "headboard",
-      "nightstand",
-      "dresser",
-      "vanity",
-      "sideboard",
-      "armchair",
-      "futon",
-      "loveseat",
-      "ottoman",
-      "sectional",
-      "ergonomic chair",
-      "standing desk",
-      "bedroom set"
-    ],
-    industryDescriptors: [
-      "furniture store",
-      "furniture retailer",
-      "furniture manufacturer",
-      "furniture studio",
-      "home furniture",
-      "office furniture",
-      "wood furniture",
-      "custom furniture",
-      "living room",
-      "bedroom set",
-      "dining room"
-    ],
-    conflictingCategories: ["sports", "healthcare", "politics", "gaming", "casino", "education", "news_media"]
-  },
-  restaurant: {
-    category: "restaurant",
-    rootTerms: ["restaurant", "dining", "eatery", "bistro", "cafe", "food"],
-    productServiceTerms: [
-      "menu",
-      "cuisine",
-      "chef",
-      "catering",
-      "takeaway",
-      "takeout",
-      "delivery",
-      "breakfast",
-      "lunch",
-      "dinner",
-      "brunch",
-      "burger",
-      "pizza",
-      "pasta",
-      "steak",
-      "seafood",
-      "dessert",
-      "cocktails",
-      "wine",
-      "appetizers",
-      "buffet"
-    ],
-    industryDescriptors: [
-      "fine dining",
-      "casual dining",
-      "restaurant & bar",
-      "cafe & bakery",
-      "culinary"
-    ],
-    conflictingCategories: ["sports", "politics", "gaming", "casino"]
-  },
-  dental: {
-    category: "dental",
-    rootTerms: ["dentist", "dental", "orthodontist", "orthodontics"],
-    productServiceTerms: [
-      "teeth",
-      "tooth",
-      "invisalign",
-      "braces",
-      "whitening",
-      "implants",
-      "cleaning",
-      "denture",
-      "crown",
-      "veneer",
-      "extraction",
-      "cavity",
-      "oral surgery"
-    ],
-    industryDescriptors: ["dental clinic", "dental practice", "family dentistry"],
-    conflictingCategories: ["sports", "politics", "gaming", "furniture"]
-  },
-  roofing: {
-    category: "roofing",
-    rootTerms: ["roof", "roofing", "roofer"],
-    productServiceTerms: [
-      "shingles",
-      "gutters",
-      "siding",
-      "leak repair",
-      "metal roof",
-      "tile roof",
-      "flat roof",
-      "roof inspection",
-      "roof replacement",
-      "flashing",
-      "soffit"
-    ],
-    industryDescriptors: ["roofing contractor", "roofing company", "roofing specialists"],
-    conflictingCategories: ["sports", "politics", "gaming"]
-  },
-  real_estate: {
-    category: "real_estate",
-    rootTerms: ["real estate", "realty", "realtor", "property", "properties"],
-    productServiceTerms: [
-      "apartment",
-      "condo",
-      "townhouse",
-      "villa",
-      "homes for sale",
-      "open house",
-      "mortgage",
-      "brokerage",
-      "leasing",
-      "tenant",
-      "landlord",
-      "commercial space"
-    ],
-    industryDescriptors: ["real estate agency", "property group", "real estate broker"],
-    conflictingCategories: ["sports", "politics", "gaming"]
-  },
-  marketing_agency: {
-    category: "marketing_agency",
-    rootTerms: ["marketing agency", "digital marketing", "advertising agency", "media agency"],
-    productServiceTerms: [
-      "seo",
-      "ppc",
-      "lead generation",
-      "social media marketing",
-      "branding",
-      "content marketing",
-      "web design",
-      "growth marketing",
-      "performance marketing"
-    ],
-    industryDescriptors: ["creative agency", "marketing partner", "growth agency"],
-    conflictingCategories: ["sports", "politics", "gaming"]
-  },
-  clothing: {
-    category: "clothing",
-    rootTerms: ["clothing", "apparel", "fashion", "wear", "garments"],
-    productServiceTerms: [
-      "dress",
-      "shirt",
-      "pants",
-      "t-shirt",
-      "jacket",
-      "hoodie",
-      "shoes",
-      "footwear",
-      "denim",
-      "jeans",
-      "boutique",
-      "suits",
-      "outfit",
-      "swimwear"
-    ],
-    industryDescriptors: ["clothing brand", "fashion boutique", "apparel store"],
-    conflictingCategories: ["sports_team", "politics", "gaming"]
-  },
-  fitness: {
-    category: "fitness",
-    rootTerms: ["fitness", "gym", "workout", "training"],
-    productServiceTerms: [
-      "personal trainer",
-      "crossfit",
-      "bodybuilding",
-      "weightlifting",
-      "cardio",
-      "yoga",
-      "pilates",
-      "membership",
-      "strength training",
-      "coaching"
-    ],
-    industryDescriptors: ["fitness center", "health club", "gym & fitness"],
-    conflictingCategories: ["politics", "gaming", "casino"]
-  },
-  saas: {
-    category: "saas",
-    rootTerms: ["saas", "cloud software", "business software", "software platform"],
-    productServiceTerms: [
-      "crm",
-      "erp",
-      "pipeline",
-      "workflow automation",
-      "subscription",
-      "enterprise software",
-      "dashboard",
-      "analytics tool",
-      "b2b platform"
-    ],
-    industryDescriptors: ["b2b saas", "software provider", "cloud solution"],
-    conflictingCategories: ["sports", "politics", "casino"]
-  },
-  construction: {
-    category: "construction",
-    rootTerms: ["construction", "contractor", "builder", "remodeling"],
-    productServiceTerms: [
-      "renovation",
-      "drywall",
-      "masonry",
-      "excavation",
-      "framing",
-      "general contractor",
-      "commercial building",
-      "home addition",
-      "deck building",
-      "demolition"
-    ],
-    industryDescriptors: ["construction company", "building contractors"],
-    conflictingCategories: ["sports", "politics", "gaming"]
-  },
-  photography: {
-    category: "photography",
-    rootTerms: ["photography", "photographer", "photoshoot"],
-    productServiceTerms: [
-      "portrait",
-      "wedding photography",
-      "headshots",
-      "studio portrait",
-      "videography",
-      "photo session",
-      "commercial photography",
-      "event photography"
-    ],
-    industryDescriptors: ["photo studio", "photography services"],
-    conflictingCategories: ["sports_team", "politics", "gaming"]
-  },
-  hvac: {
-    category: "hvac",
-    rootTerms: ["hvac", "air conditioning", "heating", "cooling", "ventilation"],
-    productServiceTerms: [
-      "furnace",
-      "heat pump",
-      "duct",
-      "ductwork",
-      "ac repair",
-      "thermostat",
-      "compressor",
-      "refrigerant",
-      "boiler",
-      "air filter"
-    ],
-    industryDescriptors: ["hvac contractor", "heating repair", "ac installation"],
-    conflictingCategories: ["sports", "politics", "gaming"]
-  }
-};
-var NEGATIVE_CATEGORIES = [
-  {
-    category: "sports",
-    terms: [
-      "manchester united",
-      "premier league",
-      "football club",
-      "soccer team",
-      "cricket board",
-      "champions league",
-      "matchday",
-      "fifa",
-      "uefa",
-      "nba",
-      "nfl",
-      "sports club",
-      "women team",
-      "head coach",
-      "stadium"
-    ],
-    entityTokens: ["fc", "united", "stadium", "club", "league", "team", "cricket", "football", "fifa", "uefa"],
-    penalty: -0.65
-  },
-  {
-    category: "healthcare",
-    terms: [
-      "health support community",
-      "saved my husband",
-      "seventy-nine",
-      "cancer treatment",
-      "diabetes remedy",
-      "chronic illness",
-      "prescription drug",
-      "patient clinical",
-      "health injustice",
-      "clinical trial",
-      "disease cure",
-      "medical hospital",
-      "dental care clinic"
-    ],
-    entityTokens: ["hospital", "clinic", "medical", "pharma", "health", "doctor", "patient"],
-    penalty: -0.65
-  },
-  {
-    category: "politics",
-    terms: [
-      "political campaign",
-      "election rally",
-      "vote for",
-      "parliament member",
-      "political party",
-      "candidate for senate",
-      "citizens for governance",
-      "ballot initiative",
-      "party congress"
-    ],
-    entityTokens: ["party", "senate", "parliament", "campaign", "governance", "election", "voters"],
-    penalty: -0.65
-  },
-  {
-    category: "gaming_casino",
-    terms: [
-      "online casino",
-      "slot machine",
-      "jackpot betting",
-      "poker chips",
-      "crypto casino",
-      "betting odds",
-      "spin to win",
-      "roulette online"
-    ],
-    entityTokens: ["casino", "betting", "poker", "slots", "jackpot"],
-    penalty: -0.65
-  },
-  {
-    category: "news_media",
-    terms: [
-      "breaking news",
-      "daily news",
-      "news network",
-      "news channel",
-      "broadcasting station",
-      "journalism report",
-      "magazine online"
-    ],
-    entityTokens: ["news", "media", "journal", "broadcasting", "times", "chronicle", "gazette"],
-    penalty: -0.55
-  },
-  {
-    category: "education",
-    terms: [
-      "university admissions",
-      "undergraduate degree",
-      "campus tuition",
-      "public school district",
-      "college alumni",
-      "academic curriculum"
-    ],
-    entityTokens: ["university", "college", "school", "academy", "campus", "alumni"],
-    penalty: -0.55
-  },
-  {
-    category: "charity_ngo",
-    terms: [
-      "charity relief",
-      "humanitarian aid",
-      "donation campaign",
-      "non-profit organization",
-      "relief fund",
-      "donate now to support"
-    ],
-    entityTokens: ["charity", "foundation", "relief", "humanitarian", "donation", "ngo"],
-    penalty: -0.55
-  }
-];
-var STOP_WORDS = /* @__PURE__ */ new Set([
-  "a",
-  "about",
-  "above",
-  "after",
-  "again",
-  "against",
-  "all",
-  "am",
-  "an",
-  "and",
-  "any",
-  "are",
-  "aren",
-  "as",
-  "at",
-  "be",
-  "because",
-  "been",
-  "before",
-  "being",
-  "below",
-  "between",
-  "both",
-  "but",
-  "by",
-  "can",
-  "cannot",
-  "could",
-  "did",
-  "do",
-  "does",
-  "doing",
-  "down",
-  "during",
-  "each",
-  "few",
-  "for",
-  "from",
-  "further",
-  "had",
-  "has",
-  "have",
-  "having",
-  "he",
-  "her",
-  "here",
-  "hers",
-  "herself",
-  "him",
-  "himself",
-  "his",
-  "how",
-  "i",
-  "if",
-  "in",
-  "into",
-  "is",
-  "it",
-  "its",
-  "itself",
-  "just",
-  "me",
-  "more",
-  "most",
-  "my",
-  "myself",
-  "no",
-  "nor",
-  "not",
-  "now",
-  "of",
-  "off",
-  "on",
-  "once",
-  "only",
-  "or",
-  "other",
-  "ought",
-  "our",
-  "ours",
-  "ourselves",
-  "out",
-  "over",
-  "own",
-  "same",
-  "she",
-  "should",
-  "so",
-  "some",
-  "such",
-  "than",
-  "that",
-  "the",
-  "their",
-  "theirs",
-  "them",
-  "themselves",
-  "then",
-  "there",
-  "these",
-  "they",
-  "this",
-  "those",
-  "through",
-  "to",
-  "too",
-  "under",
-  "until",
-  "up",
-  "very",
-  "was",
-  "we",
-  "were",
-  "what",
-  "when",
-  "where",
-  "which",
-  "while",
-  "who",
-  "whom",
-  "why",
-  "with",
-  "would",
-  "you",
-  "your",
-  "yours",
-  "yourself",
-  "yourselves"
-]);
-function stemToken(token) {
-  const t = token.toLowerCase().trim();
-  if (t.length <= 3) return t;
-  if (t.endsWith("ies") && t.length > 4) {
-    return t.substring(0, t.length - 3) + "y";
-  }
-  if (t.endsWith("ses") || t.endsWith("xes") || t.endsWith("zes") || t.endsWith("ches") || t.endsWith("shes")) {
-    return t.substring(0, t.length - 2);
-  }
-  if (t.endsWith("s") && !t.endsWith("ss") && !t.endsWith("us") && !t.endsWith("is")) {
-    return t.substring(0, t.length - 1);
-  }
-  return t;
-}
-function tokenizeText(text) {
-  if (!text) return [];
-  return text.toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, " ").split(/[\s-]+/).map((w) => w.trim()).filter((w) => w.length >= 2 && !STOP_WORDS.has(w)).map(stemToken);
-}
-function extractUrlTokens(urlStr) {
-  if (!urlStr) return [];
-  try {
-    const url = new URL(urlStr.startsWith("http") ? urlStr : `https://${urlStr}`);
-    const pathAndQuery = `${url.pathname} ${url.search}`.replace(/[/?&=_.-]/g, " ");
-    return tokenizeText(pathAndQuery);
-  } catch {
-    return tokenizeText(urlStr.replace(/[/?&=_.-]/g, " "));
-  }
-}
-function normalizeEvidence(evidence) {
-  const rawAdvertiser = (evidence.advertiserName || "").trim();
-  const rawAdCopy = (evidence.adText || "").trim();
-  const rawPageName = (evidence.facebookPageName || "").trim();
-  const rawCta = (evidence.ctaText || "").trim();
-  let rawDomain = (evidence.destinationDomain || "").toLowerCase().trim();
-  if (!rawDomain && evidence.destinationUrl) {
-    try {
-      const u = new URL(evidence.destinationUrl.startsWith("http") ? evidence.destinationUrl : `https://${evidence.destinationUrl}`);
-      rawDomain = u.hostname.replace(/^(www\.|m\.|l\.)/, "");
-    } catch {
-      rawDomain = "";
-    }
-  }
-  return {
-    normalizedAdvertiserTokens: tokenizeText(rawAdvertiser),
-    normalizedAdTextTokens: tokenizeText(rawAdCopy),
-    normalizedDomain: rawDomain,
-    normalizedUrlSlug: evidence.destinationUrl ? extractUrlTokens(evidence.destinationUrl).join(" ") : "",
-    normalizedPageNameTokens: tokenizeText(rawPageName),
-    normalizedCta: rawCta.toLowerCase(),
-    advertiserText: rawAdvertiser.toLowerCase(),
-    adCopyText: rawAdCopy.toLowerCase()
-  };
-}
-function compileResearchIntent(mode, keywords, presetId, locationCode = "US") {
-  const cleanKeywords = keywords.map((k) => k.trim()).filter(Boolean);
-  if (mode === "PRESET" && presetId) {
-    const preset = RESEARCH_PRESETS.find((p) => p.preset_id === presetId);
-    if (preset) {
-      return {
-        mode: "PRESET",
-        keywords: preset.primary_keywords,
-        presetId: preset.preset_id,
-        presetName: preset.name,
-        presetVersion: preset.version,
-        targetIndustry: preset.industry,
-        targetSubIndustry: preset.sub_industry,
-        primaryKeywords: preset.primary_keywords,
-        secondaryKeywords: preset.secondary_keywords,
-        exclusions: preset.optional_exclusions || [],
-        locationCode
-      };
-    }
-  }
-  return {
-    mode: "CUSTOM",
-    keywords: cleanKeywords,
-    primaryKeywords: cleanKeywords,
-    secondaryKeywords: [],
-    exclusions: [],
-    locationCode
-  };
-}
-var LeadRelevanceEngine = class _LeadRelevanceEngine {
-  static {
-    this.VERSION = RELEVANCE_STRATEGY_VERSION;
-  }
-  static {
-    this.ENGINE_VERSION = RELEVANCE_ENGINE_VERSION;
-  }
-  static {
-    this.compileResearchIntent = compileResearchIntent;
-  }
-  /**
-   * Evaluates a single candidate ad against the research intent using the Multi-Stage Pipeline.
-   */
-  static evaluateCandidate(candidate, intent) {
-    const evidence = {
-      advertiserName: candidate.pageName,
-      adText: candidate.bodyCopy,
-      destinationUrl: candidate.destinationUrl,
-      destinationDomain: candidate.destinationDomain,
-      facebookPageName: candidate.pageName,
-      facebookPageUrl: candidate.facebookPageUrl,
-      ctaText: candidate.ctaText,
-      matchedKeyword: candidate.observedKeyword
-    };
-    return this.evaluateEvidence(evidence, intent);
-  }
-  /**
-   * Evaluates structured candidate evidence against research intent.
-   * Deterministic, explainable, and bounded.
-   */
-  static evaluateEvidence(evidence, intent) {
-    const normalized = normalizeEvidence(evidence);
-    const structuredEvidence = [];
-    const conflicts = [];
-    const reasons = [];
-    const matchedKeywords = [];
-    const matchedTerms = [];
-    const negativeSignals = [];
-    const allQueryPhrases = [
-      ...intent.primaryKeywords || intent.keywords || [],
-      ...intent.secondaryKeywords || []
-    ].map((k) => k.toLowerCase().trim()).filter(Boolean);
-    const activeTaxonomies = [];
-    for (const [key, tax] of Object.entries(BOUNDED_TAXONOMY)) {
-      if (allQueryPhrases.some(
-        (phrase) => phrase.includes(key) || tax.rootTerms.some((rt) => phrase.includes(rt))
-      )) {
-        activeTaxonomies.push(tax);
-      }
-    }
-    if (activeTaxonomies.length === 0 && allQueryPhrases.length > 0) {
-      const dynamicRoots = [];
-      const dynamicStems = [];
-      for (const phrase of allQueryPhrases) {
-        dynamicRoots.push(phrase);
-        for (const tok of tokenizeText(phrase)) {
-          dynamicStems.push(tok);
-        }
-      }
-      activeTaxonomies.push({
-        category: allQueryPhrases[0],
-        rootTerms: Array.from(new Set(dynamicRoots)),
-        productServiceTerms: Array.from(new Set(dynamicStems)),
-        industryDescriptors: allQueryPhrases,
-        conflictingCategories: ["sports", "healthcare", "politics", "gaming", "casino"]
-      });
-    }
-    const coreQueryTokens = /* @__PURE__ */ new Set();
-    for (const phrase of allQueryPhrases) {
-      for (const t of tokenizeText(phrase)) {
-        coreQueryTokens.add(t);
-      }
-    }
-    for (const tax of activeTaxonomies) {
-      for (const rt of tax.rootTerms) {
-        for (const t of tokenizeText(rt)) {
-          coreQueryTokens.add(t);
-        }
-      }
-    }
-    const productTerms = /* @__PURE__ */ new Set();
-    for (const tax of activeTaxonomies) {
-      for (const t of tax.productServiceTerms) {
-        productTerms.add(stemToken(t));
-      }
-    }
-    let negativePenalty = 0;
-    if (intent.exclusions && intent.exclusions.length > 0) {
-      for (const excl of intent.exclusions) {
-        const exclLower = excl.toLowerCase();
-        if (normalized.advertiserText.includes(exclLower) || normalized.adCopyText.includes(exclLower) || normalized.normalizedDomain.includes(exclLower)) {
-          const reason = `Matched preset exclusion rule: "${excl}"`;
-          negativeSignals.push(reason);
-          conflicts.push({
-            type: "CONTRADICTION",
-            strength: "STRONG",
-            source: "advertiser_name",
-            reason,
-            matchedSignal: excl,
-            reasonCode: "REJECT_PRESET_EXCLUSION"
-          });
-          negativePenalty -= 0.55;
-          break;
-        }
-      }
-    }
-    for (const negCat of NEGATIVE_CATEGORIES) {
-      const isQueryRelatedToNegCat = allQueryPhrases.some(
-        (q) => negCat.terms.some((t) => q.includes(t)) || q.includes(negCat.category) || negCat.category === "sports" && (q.includes("football") || q.includes("cricket") || q.includes("sports"))
-      );
-      if (isQueryRelatedToNegCat) continue;
-      let entityContradictionTerm;
-      for (const term of negCat.terms) {
-        if (normalized.advertiserText.includes(term) || normalized.normalizedDomain.includes(term.replace(/\s+/g, ""))) {
-          entityContradictionTerm = term;
-          break;
-        }
-      }
-      if (entityContradictionTerm) {
-        const reason = `Advertiser entity identity belongs to unrelated category (${negCat.category}): "${entityContradictionTerm}"`;
-        negativeSignals.push(reason);
-        conflicts.push({
-          type: "CONTRADICTION",
-          strength: "STRONG",
-          source: "advertiser_name",
-          reason,
-          matchedSignal: entityContradictionTerm,
-          reasonCode: "REJECT_CONTRADICTION_IDENTITY"
-        });
-        negativePenalty += negCat.penalty;
-        continue;
-      }
-      for (const term of negCat.terms) {
-        if (normalized.adCopyText.includes(term) || normalized.normalizedDomain.includes(term.replace(/\s+/g, ""))) {
-          const reason = `Unrelated ${negCat.category} signal detected in candidate ad context: "${term}"`;
-          negativeSignals.push(reason);
-          conflicts.push({
-            type: "NEGATIVE_CATEGORY",
-            strength: "STRONG",
-            source: "ad_text",
-            reason,
-            matchedSignal: term,
-            reasonCode: "REJECT_CONFLICT"
-          });
-          negativePenalty += negCat.penalty;
-          break;
-        }
-      }
-    }
-    negativePenalty = Math.max(-0.8, negativePenalty);
-    let advertiserNameScore = 0;
-    let hasStrongEntityMatch = false;
-    let hasModerateEntityMatch = false;
-    for (const phrase of allQueryPhrases) {
-      if (normalized.advertiserText.includes(phrase)) {
-        advertiserNameScore = 0.4;
-        hasStrongEntityMatch = true;
-        matchedKeywords.push(phrase);
-        matchedTerms.push(phrase);
-        const reason = `Advertiser name explicitly contains target category query "${phrase}"`;
-        reasons.push(reason);
-        structuredEvidence.push({
-          type: "ENTITY_IDENTITY",
-          strength: "STRONG",
-          source: "advertiser_name",
-          reason,
-          matchedSignal: phrase,
-          reasonCode: "SIGNAL_ENTITY_NAME_EXACT"
-        });
-        break;
-      }
-    }
-    if (!hasStrongEntityMatch) {
-      const matchedTokensInName = normalized.normalizedAdvertiserTokens.filter((t) => coreQueryTokens.has(t));
-      if (matchedTokensInName.length > 0) {
-        advertiserNameScore = 0.3;
-        hasStrongEntityMatch = true;
-        matchedTerms.push(...matchedTokensInName);
-        const reason = `Advertiser name contains core target keyword stem(s): ${matchedTokensInName.join(", ")}`;
-        reasons.push(reason);
-        structuredEvidence.push({
-          type: "ENTITY_IDENTITY",
-          strength: "STRONG",
-          source: "advertiser_name",
-          reason,
-          matchedSignal: matchedTokensInName.join(", "),
-          reasonCode: "SIGNAL_ENTITY_NAME_CORE"
-        });
-      } else {
-        const productTokensInName = normalized.normalizedAdvertiserTokens.filter((t) => productTerms.has(t));
-        const matchedSubstringProduct = Array.from(productTerms).filter(
-          (pt) => pt.length >= 4 && normalized.advertiserText.includes(pt)
-        );
-        const combinedProductMatches = Array.from(/* @__PURE__ */ new Set([...productTokensInName, ...matchedSubstringProduct]));
-        if (combinedProductMatches.length > 0) {
-          advertiserNameScore = 0.25;
-          hasModerateEntityMatch = true;
-          matchedTerms.push(...combinedProductMatches);
-          const reason = `Advertiser name contains target product term(s): ${combinedProductMatches.join(", ")}`;
-          reasons.push(reason);
-          structuredEvidence.push({
-            type: "ENTITY_IDENTITY",
-            strength: "MODERATE",
-            source: "advertiser_name",
-            reason,
-            matchedSignal: combinedProductMatches.join(", "),
-            reasonCode: "SIGNAL_ENTITY_NAME_PRODUCT"
-          });
-        }
-      }
-    }
-    let destinationScore = 0;
-    let hasDomainCategoryMatch = false;
-    if (normalized.normalizedDomain) {
-      const domainHasQuery = allQueryPhrases.some(
-        (p) => normalized.normalizedDomain.includes(p.replace(/\s+/g, ""))
-      );
-      const domainHasProduct = Array.from(productTerms).some(
-        (t) => t.length >= 4 && normalized.normalizedDomain.includes(t)
-      );
-      if (domainHasQuery) {
-        destinationScore = 0.2;
-        hasDomainCategoryMatch = true;
-        const reason = `Destination domain "${normalized.normalizedDomain}" explicitly contains target query`;
-        reasons.push(reason);
-        structuredEvidence.push({
-          type: "ENTITY_IDENTITY",
-          strength: "STRONG",
-          source: "destination_domain",
-          reason,
-          matchedSignal: normalized.normalizedDomain,
-          reasonCode: "SIGNAL_DOMAIN_QUERY_EXACT"
-        });
-      } else if (domainHasProduct) {
-        destinationScore = 0.15;
-        hasDomainCategoryMatch = true;
-        const reason = `Destination domain "${normalized.normalizedDomain}" contains category product term`;
-        reasons.push(reason);
-        structuredEvidence.push({
-          type: "ENTITY_IDENTITY",
-          strength: "MODERATE",
-          source: "destination_domain",
-          reason,
-          matchedSignal: normalized.normalizedDomain,
-          reasonCode: "SIGNAL_DOMAIN_PRODUCT"
-        });
-      }
-    }
-    let facebookPageScore = 0;
-    if (evidence.facebookPageUrl) {
-      const pageUrlLower = evidence.facebookPageUrl.toLowerCase();
-      const pageHasQuery = allQueryPhrases.some((p) => pageUrlLower.includes(p.replace(/\s+/g, "")));
-      if (pageHasQuery) {
-        facebookPageScore = hasStrongEntityMatch ? 0.05 : 0.12;
-        const reason = `Facebook Page handle/URL reinforces target category identity`;
-        reasons.push(reason);
-        structuredEvidence.push({
-          type: "ENTITY_IDENTITY",
-          strength: "MODERATE",
-          source: "facebook_page",
-          reason,
-          matchedSignal: evidence.facebookPageUrl,
-          reasonCode: "SIGNAL_PAGE_HANDLE"
-        });
-      }
-    }
-    let adCopyScore = 0;
-    let adCopyHasPhraseMatch = false;
-    for (const phrase of allQueryPhrases) {
-      if (normalized.adCopyText.includes(phrase)) {
-        adCopyScore += 0.2;
-        adCopyHasPhraseMatch = true;
-        if (!matchedKeywords.includes(phrase)) matchedKeywords.push(phrase);
-        if (!matchedTerms.includes(phrase)) matchedTerms.push(phrase);
-        const reason = `Ad copy directly mentions target query "${phrase}"`;
-        reasons.push(reason);
-        structuredEvidence.push({
-          type: "CATEGORY_MATCH",
-          strength: "MODERATE",
-          source: "ad_text",
-          reason,
-          matchedSignal: phrase,
-          reasonCode: "SIGNAL_COPY_PHRASE"
-        });
-        break;
-      }
-    }
-    const foundProductTermsInCopy = Array.from(productTerms).filter(
-      (t) => normalized.normalizedAdTextTokens.includes(t) || t.length >= 4 && normalized.adCopyText.includes(t)
-    );
-    let hasProductCatalogEvidence = false;
-    if (foundProductTermsInCopy.length > 0) {
-      const sampleTerms = foundProductTermsInCopy.slice(0, 5);
-      matchedTerms.push(...sampleTerms);
-      if (foundProductTermsInCopy.length >= 2) {
-        hasProductCatalogEvidence = true;
-        const copyAdd = Math.min(0.35, 0.15 + (foundProductTermsInCopy.length - 1) * 0.06);
-        adCopyScore += copyAdd;
-        const reason = `Ad copy contains specific category product catalog: ${sampleTerms.join(", ")}`;
-        reasons.push(reason);
-        structuredEvidence.push({
-          type: "CATEGORY_MATCH",
-          strength: "STRONG",
-          source: "ad_text",
-          reason,
-          matchedSignal: sampleTerms.join(", "),
-          reasonCode: "SIGNAL_COPY_PRODUCT_CATALOG"
-        });
-      } else {
-        adCopyScore += 0.12;
-        const reason = `Ad copy mentions category product term: ${sampleTerms[0]}`;
-        reasons.push(reason);
-        structuredEvidence.push({
-          type: "CATEGORY_MATCH",
-          strength: "WEAK",
-          source: "ad_text",
-          reason,
-          matchedSignal: sampleTerms[0],
-          reasonCode: "SIGNAL_COPY_SINGLE_PRODUCT"
-        });
-      }
-    } else if (!adCopyHasPhraseMatch) {
-      const matchedTokensInCopy = normalized.normalizedAdTextTokens.filter((t) => coreQueryTokens.has(t));
-      if (matchedTokensInCopy.length > 0) {
-        adCopyScore += 0.1;
-        matchedTerms.push(...matchedTokensInCopy);
-        const reason = `Ad copy mentions keyword stem(s): ${matchedTokensInCopy.join(", ")}`;
-        reasons.push(reason);
-        structuredEvidence.push({
-          type: "CATEGORY_MATCH",
-          strength: "WEAK",
-          source: "ad_text",
-          reason,
-          matchedSignal: matchedTokensInCopy.join(", "),
-          reasonCode: "SIGNAL_COPY_STEM_ONLY"
-        });
-      }
-    }
-    adCopyScore = Math.min(0.4, adCopyScore);
-    let hasUrlSlugProduct = false;
-    if (normalized.normalizedUrlSlug) {
-      const slugHasProduct = Array.from(productTerms).some(
-        (t) => t.length >= 4 && normalized.normalizedUrlSlug.includes(t)
-      );
-      const slugHasQuery = Array.from(coreQueryTokens).some(
-        (t) => normalized.normalizedUrlSlug.includes(t)
-      );
-      if (slugHasProduct || slugHasQuery) {
-        hasUrlSlugProduct = true;
-        destinationScore = Math.max(destinationScore, 0.12);
-        const reason = `Destination URL path contains target product category context`;
-        reasons.push(reason);
-        structuredEvidence.push({
-          type: "CATEGORY_MATCH",
-          strength: "MODERATE",
-          source: "destination_url",
-          reason,
-          matchedSignal: normalized.normalizedUrlSlug.substring(0, 50),
-          reasonCode: "SIGNAL_URL_SLUG_MATCH"
-        });
-      }
-    }
-    let commercialScore = 0;
-    const commercialCtas = ["shop now", "buy now", "order now", "get quote", "contact us", "order"];
-    const hasCommercialCta = commercialCtas.includes(normalized.normalizedCta);
-    if (hasCommercialCta) {
-      commercialScore += 0.05;
-      structuredEvidence.push({
-        type: "COMMERCIAL_INTENT",
-        strength: "MODERATE",
-        source: "cta_text",
-        reason: `Commercial action call-to-action ("${evidence.ctaText}")`,
-        matchedSignal: evidence.ctaText,
-        reasonCode: "SIGNAL_COMMERCIAL_INTENT_CTA"
-      });
-    }
-    const hasPricingInCopy = /(price|discount|sale|off|taka|bdt|usd|\$|€|£|warranty|deal|buy|shop)/i.test(normalized.adCopyText);
-    if (hasPricingInCopy) {
-      commercialScore = Math.min(0.1, commercialScore + 0.05);
-      structuredEvidence.push({
-        type: "COMMERCIAL_INTENT",
-        strength: "MODERATE",
-        source: "ad_text",
-        reason: `Commercial pricing, transaction, or sale language observed in ad copy`,
-        reasonCode: "SIGNAL_COMMERCIAL_INTENT_PRICE"
-      });
-    }
-    const rawPositiveScore = advertiserNameScore + adCopyScore + destinationScore + facebookPageScore + commercialScore;
-    const totalScore = Math.max(0, Math.min(1, rawPositiveScore + negativePenalty));
-    let decision = "UNCERTAIN";
-    let confidence = "LOW";
-    let reasonCode = "UNCERTAIN_AMBIGUOUS_ENTITY";
-    const hasStrongConflict = conflicts.some((c) => c.type === "CONTRADICTION" && c.strength === "STRONG") || negativePenalty <= -0.3;
-    if (hasStrongConflict) {
-      decision = "NOT_RELEVANT";
-      confidence = "HIGH";
-      reasonCode = conflicts[0]?.reasonCode || "REJECT_CONFLICT";
-      reasons.unshift(`Disqualified by Hard Contradiction Gate: ${negativeSignals.join("; ")}`);
-    } else {
-      const hasOnlyWeakKeywordInCopy = !hasStrongEntityMatch && !hasModerateEntityMatch && !hasDomainCategoryMatch && !hasProductCatalogEvidence;
-      if (hasOnlyWeakKeywordInCopy) {
-        if (totalScore < 0.18) {
-          decision = "NOT_RELEVANT";
-          confidence = "HIGH";
-          reasonCode = "REJECT_INSUFFICIENT_EVIDENCE";
-          reasons.push(`Classified as NOT_RELEVANT: No entity or category evidence found.`);
-        } else {
-          decision = "UNCERTAIN";
-          confidence = "LOW";
-          reasonCode = "UNCERTAIN_KEYWORD_ONLY";
-          reasons.push(`Classified as UNCERTAIN: Mentioned keyword but lacks independent entity or product evidence.`);
-        }
-      } else {
-        const hasSupportingSignal = adCopyScore >= 0.1 || destinationScore >= 0.12 || commercialScore >= 0.05 || facebookPageScore >= 0.05 || hasProductCatalogEvidence;
-        const passesCriterion1 = hasStrongEntityMatch && hasSupportingSignal;
-        const passesCriterion2 = hasModerateEntityMatch && (adCopyScore >= 0.15 || destinationScore >= 0.12 || hasProductCatalogEvidence);
-        const passesCriterion3 = hasProductCatalogEvidence && (destinationScore >= 0.12 || hasUrlSlugProduct || hasDomainCategoryMatch || adCopyScore >= 0.25 && commercialScore >= 0.05);
-        if ((passesCriterion1 || passesCriterion2 || passesCriterion3) && totalScore >= 0.35) {
-          decision = "RELEVANT";
-          const hasMultiDimensionalCorroboration = hasStrongEntityMatch && hasSupportingSignal || hasProductCatalogEvidence && destinationScore >= 0.12 && commercialScore >= 0.05;
-          confidence = totalScore >= 0.6 || hasMultiDimensionalCorroboration ? "HIGH" : "MEDIUM";
-          reasonCode = passesCriterion1 ? "ACCEPT_STRONG_ENTITY_MATCH" : "ACCEPT_MULTI_SIGNAL_MATCH";
-          reasons.push(
-            `Qualified as RELEVANT: ${passesCriterion1 ? "Strong entity identity confirmed with supporting product/commercial evidence" : passesCriterion3 ? "Category product catalog verified with commercial corroboration" : "Entity and category evidence meet sufficiency standards"} (Confidence: ${confidence})`
-          );
-        } else if (totalScore < 0.22) {
-          decision = "NOT_RELEVANT";
-          confidence = totalScore < 0.12 ? "HIGH" : "MEDIUM";
-          reasonCode = "REJECT_CATEGORY_MISMATCH";
-          reasons.push(`Classified as NOT_RELEVANT: Insufficient category evidence (Score: ${(totalScore * 100).toFixed(0)}%)`);
-        } else {
-          decision = "UNCERTAIN";
-          confidence = "LOW";
-          reasonCode = "UNCERTAIN_AMBIGUOUS_ENTITY";
-          reasons.push(`Classified as UNCERTAIN: Evidence is ambiguous or insufficient to confirm business vertical.`);
-        }
-      }
-    }
-    if (evidence.matchedKeyword && !matchedKeywords.includes(evidence.matchedKeyword)) {
-      if (decision === "RELEVANT") {
-        matchedKeywords.push(evidence.matchedKeyword);
-      }
-    }
-    return {
-      decision,
-      confidence,
-      score: Math.round(totalScore * 100) / 100,
-      reasons,
-      matchedKeywords,
-      matchedTerms: Array.from(new Set(matchedTerms)),
-      negativeSignals,
-      evidence: structuredEvidence,
-      conflicts,
-      evidenceBreakdown: {
-        advertiserNameScore,
-        adCopyScore,
-        destinationScore,
-        facebookPageScore,
-        commercialScore,
-        negativePenalty
-      },
-      strategyVersion: RELEVANCE_STRATEGY_VERSION,
-      engineVersion: RELEVANCE_ENGINE_VERSION,
-      presetVersion: intent.presetVersion,
-      reasonCode
-    };
-  }
-  /**
-   * Entity-Level Evaluation: Evaluates multiple ad cards for an advertiser entity
-   * to produce the consolidated entity relevance decision without duplicate inflation.
-   */
-  static evaluateEntity(advertiserName, candidates, intent) {
-    if (candidates.length === 0) {
-      return this.evaluateEvidence({ advertiserName }, intent);
-    }
-    const evaluations = candidates.map((c) => this.evaluateCandidate(c, intent));
-    const allConflicts = evaluations.flatMap((e) => e.conflicts);
-    const hasEntityContradiction = allConflicts.some(
-      (c) => c.type === "CONTRADICTION" && c.strength === "STRONG"
-    );
-    const allNegativeSignals = Array.from(new Set(evaluations.flatMap((e) => e.negativeSignals)));
-    const maxNegativePenalty = Math.min(...evaluations.map((e) => e.evidenceBreakdown.negativePenalty));
-    if (hasEntityContradiction || maxNegativePenalty <= -0.3) {
-      const worstEval = evaluations.find((e) => e.evidenceBreakdown.negativePenalty <= -0.3) || evaluations[0];
-      return {
-        ...worstEval,
-        decision: "NOT_RELEVANT",
-        confidence: "HIGH",
-        negativeSignals: allNegativeSignals,
-        conflicts: allConflicts,
-        reasons: [
-          `Entity disqualified across ${candidates.length} ad(s) due to hard contradiction: ${allNegativeSignals.join("; ")}`
-        ],
-        reasonCode: "REJECT_CONTRADICTION_IDENTITY",
-        engineVersion: RELEVANCE_ENGINE_VERSION,
-        strategyVersion: RELEVANCE_STRATEGY_VERSION
-      };
-    }
-    const seenCopyHashes = /* @__PURE__ */ new Set();
-    const distinctAds = [];
-    for (const c of candidates) {
-      const copyNormalized = (c.bodyCopy || "").toLowerCase().trim().replace(/\s+/g, " ").substring(0, 100);
-      if (!seenCopyHashes.has(copyNormalized)) {
-        seenCopyHashes.add(copyNormalized);
-        distinctAds.push(c);
-      }
-    }
-    evaluations.sort((a, b) => b.score - a.score);
-    const bestEval = evaluations[0];
-    const combinedKeywords = Array.from(new Set(evaluations.flatMap((e) => e.matchedKeywords)));
-    const combinedTerms = Array.from(new Set(evaluations.flatMap((e) => e.matchedTerms)));
-    const allEvidence = Array.from(
-      new Map(evaluations.flatMap((e) => e.evidence).map((ev) => [`${ev.type}:${ev.source}:${ev.reasonCode}`, ev])).values()
-    );
-    let consolidatedScore = bestEval.score;
-    let decision = bestEval.decision;
-    let confidence = bestEval.confidence;
-    let reasonCode = bestEval.reasonCode;
-    const distinctSupportingAds = distinctAds.filter((ad) => {
-      const ev = _LeadRelevanceEngine.evaluateCandidate(ad, intent);
-      return ev.decision === "RELEVANT" || ev.evidence.some((e) => e.type === "CATEGORY_MATCH");
-    });
-    if (allNegativeSignals.length === 0 && distinctSupportingAds.length > 1) {
-      const multiCardBoost = Math.min(0.12, (distinctSupportingAds.length - 1) * 0.04);
-      consolidatedScore = Math.min(1, consolidatedScore + multiCardBoost);
-      if (decision === "UNCERTAIN" && consolidatedScore >= 0.4 && (bestEval.evidenceBreakdown.advertiserNameScore > 0 || bestEval.evidenceBreakdown.adCopyScore >= 0.25)) {
-        decision = "RELEVANT";
-        reasonCode = "ACCEPT_MULTI_SIGNAL_MATCH";
-      }
-      if (consolidatedScore >= 0.6) {
-        confidence = "HIGH";
-      }
-      allEvidence.push({
-        type: "ENTITY_IDENTITY",
-        strength: "STRONG",
-        source: "entity_aggregation",
-        reason: `Entity confirmed across ${distinctSupportingAds.length} distinct category ads`,
-        matchedSignal: `${distinctSupportingAds.length} distinct ads`,
-        reasonCode: "SIGNAL_MULTI_AD_CORROBORATION"
-      });
-    }
-    return {
-      ...bestEval,
-      decision,
-      confidence,
-      score: Math.round(consolidatedScore * 100) / 100,
-      matchedKeywords: combinedKeywords.length > 0 ? combinedKeywords : bestEval.matchedKeywords,
-      matchedTerms: combinedTerms,
-      evidence: allEvidence,
-      conflicts: allConflicts,
-      reasons: [
-        `Entity evaluated across ${candidates.length} ad card(s) (${distinctAds.length} distinct): status ${decision} (${(consolidatedScore * 100).toFixed(0)}%)`,
-        ...bestEval.reasons
-      ],
-      reasonCode,
-      strategyVersion: RELEVANCE_STRATEGY_VERSION,
-      engineVersion: RELEVANCE_ENGINE_VERSION
-    };
-  }
-};
-
 // src/extension/metaAdapter.ts
+init_relevanceEngine();
 function sanitizeCsvField(val) {
   if (val === null || val === void 0) return "";
   let str = String(val).trim();
@@ -16822,7 +17628,14 @@ function exportLeadsToCsv(leads, run) {
     "Status",
     "Discovered At",
     "Sample Copy",
-    "Sample CTA"
+    "Sample CTA",
+    "Website Verified URL",
+    "Website Deep Verification Status",
+    "Website Identity Match",
+    "Website Category Match",
+    "Website Commercial Signals",
+    "Website Evidence Summary",
+    "Website Verified At"
   ];
   const rows = leads.map((l) => [
     sanitizeCsvField(l.name),
@@ -16847,7 +17660,14 @@ function exportLeadsToCsv(leads, run) {
     sanitizeCsvField(l.status),
     sanitizeCsvField(l.discoveredAt),
     sanitizeCsvField(l.sampleCopy || ""),
-    sanitizeCsvField(l.sampleCta || "")
+    sanitizeCsvField(l.sampleCta || ""),
+    sanitizeCsvField(l.websiteVerification?.finalUrl || l.destinationUrl || ""),
+    sanitizeCsvField(l.websiteVerificationStatus || l.websiteVerification?.status || (l.destinationUrl ? "NOT_VERIFIED" : "NO_WEBSITE")),
+    sanitizeCsvField(l.websiteVerification?.identityMatch || "UNKNOWN"),
+    sanitizeCsvField(l.websiteVerification?.categoryMatch || "UNKNOWN"),
+    sanitizeCsvField((l.websiteVerification?.commercialSignals || []).join("; ")),
+    sanitizeCsvField((l.websiteVerification?.evidence || []).map((e) => e.reason).slice(0, 3).join(" | ")),
+    sanitizeCsvField(l.websiteVerification?.verifiedAt || "")
   ]);
   return metaHeader + [headers.join(","), ...rows.map((r) => r.join(","))].join("\r\n");
 }
@@ -16866,7 +17686,9 @@ var ExtensionApp = () => {
   const [selectedLead, setSelectedLead] = (0, import_react3.useState)(null);
   const [statusMessage, setStatusMessage] = (0, import_react3.useState)("");
   const [isSubmitting, setIsSubmitting] = (0, import_react3.useState)(false);
+  const [showUncertainView, setShowUncertainView] = (0, import_react3.useState)(false);
   const [currentPage, setCurrentPage] = (0, import_react3.useState)(1);
+  const [verifyingLeadId, setVerifyingLeadId] = (0, import_react3.useState)(null);
   const LEADS_PER_PAGE = 50;
   (0, import_react3.useEffect)(() => {
     loadStateFromStorage();
@@ -17051,6 +17873,57 @@ var ExtensionApp = () => {
           setIsSubmitting(false);
         }
       });
+    }
+  };
+  const handleVerifyWebsite = async (lead) => {
+    const rawUrl = lead.destinationUrl || lead.observedUrls && lead.observedUrls[0];
+    if (!rawUrl) {
+      alert("This lead has no associated website destination URL.");
+      return;
+    }
+    try {
+      setVerifyingLeadId(lead.id);
+      if (typeof chrome !== "undefined" && chrome.permissions) {
+        let origin = "";
+        try {
+          const u = new URL(rawUrl.startsWith("http") ? rawUrl : `https://${rawUrl}`);
+          origin = `${u.protocol}//${u.hostname}/*`;
+        } catch {
+          origin = "https://*/*";
+        }
+        const hasPerm = await chrome.permissions.contains({ origins: [origin] });
+        if (!hasPerm) {
+          const granted = await chrome.permissions.request({ origins: [origin] });
+          if (!granted) {
+            setStatusMessage("Website verification cancelled: Host permission not granted.");
+            setVerifyingLeadId(null);
+            return;
+          }
+        }
+      }
+      if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+        chrome.runtime.sendMessage(
+          { type: "VERIFY_WEBSITE", payload: { leadId: lead.id, runId: activeRun?.runId } },
+          (response) => {
+            setVerifyingLeadId(null);
+            if (response && response.lead) {
+              if (activeRun) {
+                const updatedLeads = activeRun.leads.map((l) => l.id === lead.id ? response.lead : l);
+                setActiveRun({ ...activeRun, leads: updatedLeads });
+              }
+              if (selectedLead?.id === lead.id) {
+                setSelectedLead(response.lead);
+              }
+              setStatusMessage(`Website verification finished: ${response.lead.websiteVerificationStatus || "Done"}`);
+            } else if (response && response.error) {
+              setStatusMessage(`Website verification failed: ${response.error}`);
+            }
+          }
+        );
+      }
+    } catch (err) {
+      setVerifyingLeadId(null);
+      setStatusMessage(`Website verification error: ${err.message}`);
     }
   };
   const isRunning = activeRun && (activeRun.status === "STARTING" || activeRun.status === "NAVIGATING" || activeRun.status === "COLLECTING" || activeRun.status === "NORMALIZING");
@@ -17360,16 +18233,16 @@ var ExtensionApp = () => {
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "grid grid-cols-3 gap-1.5 pt-1 text-center", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-1.5 bg-slate-900 rounded border border-slate-800", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-[9px] text-slate-400", children: "Unique Leads" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-[9px] text-slate-400", children: "Relevant" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-sm font-bold text-emerald-400", children: activeRun.counters?.finalUniqueRelevantLeads ?? activeRun.counters?.finalUniqueLeads ?? activeRun.leads.length })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-1.5 bg-slate-900 rounded border border-slate-800", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-[9px] text-slate-400", children: "Ads Inspected" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-sm font-bold text-blue-400", children: activeRun.totalAdsInspected })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-[9px] text-slate-400", children: "Uncertain" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-sm font-bold text-amber-400", children: activeRun.counters?.uncertainEntities ?? activeRun.counters?.uncertainCandidates ?? 0 })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-1.5 bg-slate-900 rounded border border-slate-800", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-[9px] text-slate-400", children: "Discovery Mode" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-sm font-bold text-purple-300", children: "Auto" })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-[9px] text-slate-400", children: "Rejected" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-sm font-bold text-rose-400", children: activeRun.counters?.notRelevantEntities ?? activeRun.counters?.notRelevantCandidates ?? 0 })
             ] })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between pt-1", children: [
@@ -17435,125 +18308,217 @@ var ExtensionApp = () => {
             ] })
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "space-y-1.5", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between text-[11px] font-semibold text-slate-300 px-1", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-              "Relevant Leads (",
-              activeRun.counters?.finalUniqueRelevantLeads ?? activeRun.counters?.finalUniqueLeads ?? activeRun.leads.length,
-              ")",
-              (activeRun.counters?.finalUniqueRelevantLeads ?? activeRun.counters?.finalUniqueLeads ?? activeRun.leads.length) > activeRun.leads.length && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "text-[9px] text-slate-400 font-normal ml-1", children: [
-                "(showing top ",
-                activeRun.leads.length,
-                " preview)"
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1.5 p-1 bg-slate-900/90 rounded border border-slate-700/60 text-[10px]", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+            "button",
+            {
+              type: "button",
+              onClick: () => setShowUncertainView(false),
+              className: `flex-1 py-1 px-2 rounded font-medium transition-all ${!showUncertainView ? "bg-blue-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-200"}`,
+              children: [
+                "Relevant Leads (",
+                activeRun.counters?.finalUniqueRelevantLeads ?? activeRun.counters?.finalUniqueLeads ?? activeRun.leads.length,
+                ")"
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+            "button",
+            {
+              type: "button",
+              onClick: () => setShowUncertainView(true),
+              className: `flex-1 py-1 px-2 rounded font-medium transition-all ${showUncertainView ? "bg-amber-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-200"}`,
+              children: [
+                "View Uncertain (",
+                activeRun.counters?.uncertainEntities ?? activeRun.counters?.uncertainCandidates ?? 0,
+                ")"
+              ]
+            }
+          )
+        ] }),
+        isRunning && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-2 bg-blue-950/40 border border-blue-800/40 rounded text-[10px] text-blue-300 flex items-center gap-1.5 animate-pulse", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RefreshCw, { className: "w-3 h-3 animate-spin flex-shrink-0" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Checking more public ads from verified advertisers\u2026" })
+        ] }),
+        showUncertainView ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "space-y-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-2 bg-amber-950/30 border border-amber-800/40 rounded text-[10px] text-amber-200/90", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "font-semibold text-amber-300 flex items-center gap-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TriangleAlert, { className: "w-3 h-3 text-amber-400" }),
+              "Internal Review Queue \u2014 Excluded From Final Leads"
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-[9px] text-amber-300/70 mt-0.5", children: "These candidates possess ambiguous signals or incomplete category corroboration. Excluded from exports." })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "space-y-1.5", children: activeRun.counters?.uncertainEntities === 0 && activeRun.counters?.uncertainCandidates === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "p-4 bg-slate-800/30 border border-dashed border-slate-700 rounded-lg text-center text-slate-500 text-[11px]", children: "No uncertain candidates recorded in this run." }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-3 bg-slate-800/40 border border-slate-700 rounded-lg space-y-2", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between text-xs text-slate-200 font-semibold", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Uncertain Evaluation Summary" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "px-2 py-0.5 bg-amber-950 border border-amber-800 text-amber-300 rounded text-[10px]", children: [
+                activeRun.counters?.uncertainEntities ?? activeRun.counters?.uncertainCandidates ?? 0,
+                " candidates"
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-[9px] text-slate-400 font-normal", children: activeRun.rejectedLeadsCount ? `${activeRun.rejectedLeadsCount} irrelevant excluded` : "Click lead to inspect" })
-          ] }),
-          activeRun.leads.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "p-4 bg-slate-800/30 border border-dashed border-slate-700 rounded-lg text-center text-slate-500 text-[11px]", children: isRunning ? "Actively extracting ad cards from Meta Ad Library..." : "No leads found yet. Start research above." }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-            activeRun.leads.slice((currentPage - 1) * LEADS_PER_PAGE, currentPage * LEADS_PER_PAGE).map((lead) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-              "div",
-              {
-                onClick: () => setSelectedLead(lead),
-                className: `p-2 bg-slate-800/60 hover:bg-slate-800 border rounded cursor-pointer transition-all ${selectedLead?.id === lead.id ? "border-blue-500 bg-slate-800" : "border-slate-700/60"}`,
-                children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-start justify-between gap-1", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "font-semibold text-slate-100 text-xs truncate max-w-[220px]", children: lead.name }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1", children: [
-                      lead.relevanceDecision && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "px-1.5 py-0.2 bg-emerald-950 border border-emerald-800 text-emerald-300 rounded text-[9px] font-mono whitespace-nowrap", children: [
-                        lead.relevanceDecision,
-                        " (",
-                        Math.round((lead.relevanceScore || 1) * 100),
-                        "%)"
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-[10px] text-slate-400 space-y-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+                "\u2022 ",
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-300", children: "Preserved Fields:" }),
+                " Canonical name, ad copy, observed domains, Facebook Page handle, missing evidence dimensions, reason codes."
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+                "\u2022 ",
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-300", children: "Policy:" }),
+                " Strict Relevance Gate v3 requires strong category corroboration before lead qualification."
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+                "\u2022 ",
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-300", children: "Storage:" }),
+                " Persisted durable in local IndexedDB 'uncertain_entities' store."
+              ] })
+            ] })
+          ] }) })
+        ] }) : (
+          /* RELEVANT LEADS LIST */
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "space-y-1.5", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between text-[11px] font-semibold text-slate-300 px-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+                "Relevant Leads (",
+                activeRun.counters?.finalUniqueRelevantLeads ?? activeRun.counters?.finalUniqueLeads ?? activeRun.leads.length,
+                ")",
+                (activeRun.counters?.finalUniqueRelevantLeads ?? activeRun.counters?.finalUniqueLeads ?? activeRun.leads.length) > activeRun.leads.length && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "text-[9px] text-slate-400 font-normal ml-1", children: [
+                  "(showing top ",
+                  activeRun.leads.length,
+                  " preview)"
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-[9px] text-slate-400 font-normal", children: activeRun.rejectedLeadsCount ? `${activeRun.rejectedLeadsCount} irrelevant excluded` : "Click lead to inspect" })
+            ] }),
+            activeRun.leads.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "p-4 bg-slate-800/30 border border-dashed border-slate-700 rounded-lg text-center text-slate-500 text-[11px]", children: isRunning ? "Actively extracting ad cards from Meta Ad Library..." : "No leads found yet. Start research above." }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+              activeRun.leads.slice((currentPage - 1) * LEADS_PER_PAGE, currentPage * LEADS_PER_PAGE).map((lead) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+                "div",
+                {
+                  onClick: () => setSelectedLead(lead),
+                  className: `p-2 bg-slate-800/60 hover:bg-slate-800 border rounded cursor-pointer transition-all ${selectedLead?.id === lead.id ? "border-blue-500 bg-slate-800" : "border-slate-700/60"}`,
+                  children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-start justify-between gap-1", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "font-semibold text-slate-100 text-xs truncate max-w-[220px]", children: lead.name }),
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1", children: [
+                        lead.relevanceDecision && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "px-1.5 py-0.2 bg-emerald-950 border border-emerald-800 text-emerald-300 rounded text-[9px] font-mono whitespace-nowrap", children: [
+                          lead.relevanceDecision,
+                          " (",
+                          Math.round((lead.relevanceScore || 1) * 100),
+                          "%)"
+                        ] }),
+                        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "px-1.5 py-0.2 bg-blue-950 border border-blue-800 text-blue-300 rounded text-[9px] font-mono whitespace-nowrap", children: [
+                          lead.activeAdCount,
+                          " ",
+                          lead.activeAdCount === 1 ? "ad" : "ads"
+                        ] })
+                      ] })
+                    ] }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-2 mt-1.5 text-[10px]", children: [
+                      lead.facebookPageUrl ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+                        "a",
+                        {
+                          href: lead.facebookPageUrl,
+                          target: "_blank",
+                          rel: "noreferrer",
+                          onClick: (e) => e.stopPropagation(),
+                          className: "text-blue-400 hover:text-blue-300 flex items-center gap-0.5 truncate max-w-[140px]",
+                          children: [
+                            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-2.5 h-2.5 text-emerald-400 flex-shrink-0" }),
+                            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "truncate", children: "FB Page" }),
+                            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-2.5 h-2.5" })
+                          ]
+                        }
+                      ) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "text-slate-500 flex items-center gap-0.5", children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "w-1.5 h-1.5 rounded-full bg-slate-600" }),
+                        "No Page"
                       ] }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "px-1.5 py-0.2 bg-blue-950 border border-blue-800 text-blue-300 rounded text-[9px] font-mono whitespace-nowrap", children: [
-                        lead.activeAdCount,
-                        " ",
-                        lead.activeAdCount === 1 ? "ad" : "ads"
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-600", children: "\u2022" }),
+                      lead.destinationUrl ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+                        "a",
+                        {
+                          href: lead.destinationUrl,
+                          target: "_blank",
+                          rel: "noreferrer",
+                          onClick: (e) => e.stopPropagation(),
+                          className: "text-emerald-400 hover:text-emerald-300 flex items-center gap-0.5 truncate max-w-[140px]",
+                          children: [
+                            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Globe, { className: "w-2.5 h-2.5 text-emerald-400 flex-shrink-0" }),
+                            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "truncate", children: lead.destinationDomain || "Website" }),
+                            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-2.5 h-2.5" })
+                          ]
+                        }
+                      ) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "text-slate-500 flex items-center gap-0.5", children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "w-1.5 h-1.5 rounded-full bg-slate-600" }),
+                        "No Website"
+                      ] }),
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1 ml-auto", children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: `px-1.5 py-0.2 rounded text-[8px] font-medium ${lead.websiteVerificationStatus === "VERIFIED_BUSINESS_WEBSITE" ? "bg-emerald-950 text-emerald-300 border border-emerald-800" : lead.websiteVerificationStatus === "LIKELY_BUSINESS_WEBSITE" ? "bg-blue-950 text-blue-300 border border-blue-800" : lead.websiteVerificationStatus === "UNCERTAIN_WEBSITE" ? "bg-amber-950 text-amber-300 border border-amber-800" : lead.websiteVerificationStatus === "BLOCKED" ? "bg-rose-950 text-rose-300 border border-rose-800" : lead.websiteVerificationStatus === "NOT_A_BUSINESS_SITE" ? "bg-slate-800 text-slate-400 border border-slate-700" : lead.websiteVerificationStatus === "INVALID" ? "bg-rose-950 text-rose-300 border border-rose-800" : !lead.destinationUrl && (!lead.observedUrls || lead.observedUrls.length === 0) ? "bg-slate-900 text-slate-500 border border-slate-800" : "bg-slate-900 text-slate-400 border border-slate-700"}`, children: [
+                          "Website: ",
+                          lead.websiteVerificationStatus === "VERIFIED_BUSINESS_WEBSITE" ? "Verified" : lead.websiteVerificationStatus === "LIKELY_BUSINESS_WEBSITE" ? "Likely" : lead.websiteVerificationStatus === "UNCERTAIN_WEBSITE" ? "Uncertain" : lead.websiteVerificationStatus === "BLOCKED" ? "Blocked" : lead.websiteVerificationStatus === "NOT_A_BUSINESS_SITE" ? "Not Business" : lead.websiteVerificationStatus === "INVALID" ? "Invalid" : !lead.destinationUrl && (!lead.observedUrls || lead.observedUrls.length === 0) ? "No website" : "Not Verified"
+                        ] }),
+                        (lead.destinationUrl || lead.observedUrls && lead.observedUrls.length > 0) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                          "button",
+                          {
+                            type: "button",
+                            onClick: (e) => {
+                              e.stopPropagation();
+                              if (lead.websiteVerificationStatus && lead.websiteVerificationStatus !== "NOT_VERIFIED") {
+                                setSelectedLead(lead);
+                              } else {
+                                handleVerifyWebsite(lead);
+                              }
+                            },
+                            disabled: verifyingLeadId === lead.id,
+                            className: "px-1.5 py-0.2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-[8px] font-medium flex items-center gap-0.5 transition-all",
+                            children: verifyingLeadId === lead.id ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RefreshCw, { className: "w-2 h-2 animate-spin" }) : lead.websiteVerificationStatus && lead.websiteVerificationStatus !== "NOT_VERIFIED" ? "View Evidence" : "Verify Website"
+                          }
+                        )
                       ] })
                     ] })
-                  ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-2 mt-1.5 text-[10px]", children: [
-                    lead.facebookPageUrl ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-                      "a",
-                      {
-                        href: lead.facebookPageUrl,
-                        target: "_blank",
-                        rel: "noreferrer",
-                        onClick: (e) => e.stopPropagation(),
-                        className: "text-blue-400 hover:text-blue-300 flex items-center gap-0.5 truncate max-w-[140px]",
-                        children: [
-                          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-2.5 h-2.5 text-emerald-400 flex-shrink-0" }),
-                          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "truncate", children: "FB Page" }),
-                          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-2.5 h-2.5" })
-                        ]
-                      }
-                    ) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "text-slate-500 flex items-center gap-0.5", children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "w-1.5 h-1.5 rounded-full bg-slate-600" }),
-                      "No Page"
-                    ] }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-600", children: "\u2022" }),
-                    lead.destinationUrl ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-                      "a",
-                      {
-                        href: lead.destinationUrl,
-                        target: "_blank",
-                        rel: "noreferrer",
-                        onClick: (e) => e.stopPropagation(),
-                        className: "text-emerald-400 hover:text-emerald-300 flex items-center gap-0.5 truncate max-w-[140px]",
-                        children: [
-                          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Globe, { className: "w-2.5 h-2.5 text-emerald-400 flex-shrink-0" }),
-                          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "truncate", children: lead.destinationDomain || "Website" }),
-                          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-2.5 h-2.5" })
-                        ]
-                      }
-                    ) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "text-slate-500 flex items-center gap-0.5", children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "w-1.5 h-1.5 rounded-full bg-slate-600" }),
-                      "No Website"
-                    ] })
-                  ] })
-                ]
-              },
-              lead.id
-            )),
-            activeRun.leads.length > LEADS_PER_PAGE && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between pt-2 px-1 text-[11px] text-slate-400", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-                "Showing ",
-                (currentPage - 1) * LEADS_PER_PAGE + 1,
-                "\u2013",
-                Math.min(currentPage * LEADS_PER_PAGE, activeRun.leads.length),
-                " of ",
-                activeRun.leads.length
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                  "button",
-                  {
-                    type: "button",
-                    disabled: currentPage === 1,
-                    onClick: () => setCurrentPage((p) => Math.max(1, p - 1)),
-                    className: "px-2 py-0.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 border border-slate-700 rounded text-slate-200",
-                    children: "Prev"
-                  }
-                ),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "px-1 text-slate-300 font-medium", children: [
-                  currentPage,
-                  " / ",
-                  Math.ceil(activeRun.leads.length / LEADS_PER_PAGE)
+                  ]
+                },
+                lead.id
+              )),
+              activeRun.leads.length > LEADS_PER_PAGE && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between pt-2 px-1 text-[11px] text-slate-400", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+                  "Showing ",
+                  (currentPage - 1) * LEADS_PER_PAGE + 1,
+                  "\u2013",
+                  Math.min(currentPage * LEADS_PER_PAGE, activeRun.leads.length),
+                  " of ",
+                  activeRun.leads.length
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                  "button",
-                  {
-                    type: "button",
-                    disabled: currentPage >= Math.ceil(activeRun.leads.length / LEADS_PER_PAGE),
-                    onClick: () => setCurrentPage((p) => Math.min(Math.ceil(activeRun.leads.length / LEADS_PER_PAGE), p + 1)),
-                    className: "px-2 py-0.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 border border-slate-700 rounded text-slate-200",
-                    children: "Next"
-                  }
-                )
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                    "button",
+                    {
+                      type: "button",
+                      disabled: currentPage === 1,
+                      onClick: () => setCurrentPage((p) => Math.max(1, p - 1)),
+                      className: "px-2 py-0.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 border border-slate-700 rounded text-slate-200",
+                      children: "Prev"
+                    }
+                  ),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "px-1 text-slate-300 font-medium", children: [
+                    currentPage,
+                    " / ",
+                    Math.ceil(activeRun.leads.length / LEADS_PER_PAGE)
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                    "button",
+                    {
+                      type: "button",
+                      disabled: currentPage >= Math.ceil(activeRun.leads.length / LEADS_PER_PAGE),
+                      onClick: () => setCurrentPage((p) => Math.min(Math.ceil(activeRun.leads.length / LEADS_PER_PAGE), p + 1)),
+                      className: "px-2 py-0.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 border border-slate-700 rounded text-slate-200",
+                      children: "Next"
+                    }
+                  )
+                ] })
               ] })
             ] })
           ] })
-        ] }),
+        ),
         selectedLead && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-2.5 bg-slate-950 border border-blue-700/60 rounded-lg space-y-2 mt-2", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between border-b border-slate-800 pb-1.5", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { className: "font-semibold text-white text-xs", children: selectedLead.name }),
@@ -17662,7 +18627,101 @@ var ExtensionApp = () => {
                   },
                   i
                 )) })
+              ] }),
+              selectedLead.creativeSignals && selectedLead.creativeSignals.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "space-y-1 mt-1.5 pt-1.5 border-t border-slate-800/80", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-[9px] text-slate-400 font-semibold block", children: "Observed Creative Signals:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "flex flex-wrap gap-1", children: selectedLead.creativeSignals.map((sig, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+                  "span",
+                  {
+                    className: "px-1.5 py-0.5 bg-purple-950/60 border border-purple-800/60 text-purple-300 rounded text-[8px] font-mono",
+                    title: `Raw: "${sig.rawSignal}" (${sig.occurrences}x)`,
+                    children: [
+                      sig.type,
+                      ": ",
+                      sig.normalized,
+                      " ",
+                      sig.occurrences > 1 ? `(${sig.occurrences}x)` : ""
+                    ]
+                  },
+                  i
+                )) })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "mt-1.5 pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[9px]", children: [
+                selectedLead.matchedQueries && selectedLead.matchedQueries.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-slate-400", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-500", children: "Queries: " }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-blue-300", children: selectedLead.matchedQueries.join(", ") })
+                ] }),
+                selectedLead.advertiserExpansionStatus && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-slate-400", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-500", children: "Expansion: " }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `px-1 py-0.2 rounded font-mono ${selectedLead.advertiserExpansionStatus === "COMPLETED" ? "text-emerald-400" : selectedLead.advertiserExpansionStatus === "PENDING" ? "text-blue-400" : "text-slate-500"}`, children: selectedLead.advertiserExpansionStatus })
+                ] })
               ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "mt-2 pt-2 border-t border-slate-800 space-y-1.5", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1.5", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Globe, { className: "w-3 h-3 text-emerald-400" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-300 font-semibold text-[10px]", children: "Website Deep Verification" })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1.5", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `px-2 py-0.5 rounded text-[8px] font-semibold uppercase ${selectedLead.websiteVerificationStatus === "VERIFIED_BUSINESS_WEBSITE" ? "bg-emerald-950 text-emerald-300 border border-emerald-800" : selectedLead.websiteVerificationStatus === "LIKELY_BUSINESS_WEBSITE" ? "bg-blue-950 text-blue-300 border border-blue-800" : selectedLead.websiteVerificationStatus === "UNCERTAIN_WEBSITE" ? "bg-amber-950 text-amber-300 border border-amber-800" : selectedLead.websiteVerificationStatus === "BLOCKED" ? "bg-rose-950 text-rose-300 border border-rose-800" : selectedLead.websiteVerificationStatus === "NOT_A_BUSINESS_SITE" ? "bg-slate-800 text-slate-400 border border-slate-700" : selectedLead.websiteVerificationStatus === "INVALID" ? "bg-rose-950 text-rose-300 border border-rose-800" : !selectedLead.destinationUrl && (!selectedLead.observedUrls || selectedLead.observedUrls.length === 0) ? "bg-slate-900 text-slate-500 border border-slate-800" : "bg-slate-800 text-slate-300 border border-slate-700"}`, children: selectedLead.websiteVerificationStatus || "NOT_VERIFIED" }),
+                  (selectedLead.destinationUrl || selectedLead.observedUrls && selectedLead.observedUrls.length > 0) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                    "button",
+                    {
+                      type: "button",
+                      disabled: verifyingLeadId === selectedLead.id,
+                      onClick: () => handleVerifyWebsite(selectedLead),
+                      className: "px-2 py-0.5 bg-blue-700 hover:bg-blue-600 text-white rounded text-[8px] font-medium flex items-center gap-1",
+                      children: verifyingLeadId === selectedLead.id ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RefreshCw, { className: "w-2.5 h-2.5 animate-spin" }) : selectedLead.websiteVerification ? "Re-verify" : "Verify Website"
+                    }
+                  )
+                ] })
+              ] }),
+              selectedLead.websiteVerification ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "bg-slate-900/90 p-2 rounded border border-slate-800 space-y-1.5 text-[9px]", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between text-slate-400", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+                    "Verified Domain: ",
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-200 font-mono", children: selectedLead.websiteVerification.hostname })
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+                    "Duration: ",
+                    selectedLead.websiteVerification.durationMs,
+                    "ms"
+                  ] })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "grid grid-cols-2 gap-2 text-slate-300", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+                    "Identity Match: ",
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "font-semibold text-emerald-400", children: selectedLead.websiteVerification.identityMatch })
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+                    "Category Match: ",
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "font-semibold text-blue-400", children: selectedLead.websiteVerification.categoryMatch })
+                  ] })
+                ] }),
+                selectedLead.websiteVerification.commercialSignals.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "space-y-0.5", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-500 block", children: "Commercial Signals:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "flex flex-wrap gap-1", children: selectedLead.websiteVerification.commercialSignals.map((sig, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "px-1.5 py-0.2 bg-emerald-950/80 border border-emerald-800 text-emerald-300 rounded text-[8px]", children: sig.replace("WEBSITE_", "").replace("_SIGNAL", "") }, i)) })
+                ] }),
+                selectedLead.websiteVerification.contactSignals.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "space-y-0.5", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-500 block", children: "Public Contact Signals:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-slate-300 space-y-0.5", children: selectedLead.websiteVerification.contactSignals.map((cs, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1 text-[9px]", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "text-blue-400 uppercase font-mono text-[8px]", children: [
+                      cs.type,
+                      ":"
+                    ] }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "font-mono text-slate-200", children: cs.value })
+                  ] }, i)) })
+                ] }),
+                selectedLead.websiteVerification.pagesVisited.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-slate-500 text-[8px]", children: [
+                  "Pages inspected: ",
+                  selectedLead.websiteVerification.pagesVisited.length
+                ] }),
+                selectedLead.websiteVerification.blockedReason && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-rose-400 text-[8px]", children: [
+                  "Blocked Reason: ",
+                  selectedLead.websiteVerification.blockedReason
+                ] })
+              ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-[9px] text-slate-400 italic", children: selectedLead.destinationUrl ? 'Website not yet deeply verified. Click "Verify Website" to inspect public pages.' : "No website destination URL discovered for this lead." })
             ] })
           ] })
         ] })

@@ -40,7 +40,9 @@ export const ExtensionApp: React.FC = () => {
   const [selectedLead, setSelectedLead] = useState<ExtensionLead | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [showUncertainView, setShowUncertainView] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [verifyingLeadId, setVerifyingLeadId] = useState<string | null>(null);
   const LEADS_PER_PAGE = 50;
 
   // Poll or sync state with chrome.storage.local on mount
@@ -250,6 +252,63 @@ export const ExtensionApp: React.FC = () => {
           setIsSubmitting(false);
         }
       });
+    }
+  };
+
+  const handleVerifyWebsite = async (lead: ExtensionLead) => {
+    const rawUrl = lead.destinationUrl || (lead.observedUrls && lead.observedUrls[0]);
+    if (!rawUrl) {
+      alert('This lead has no associated website destination URL.');
+      return;
+    }
+
+    try {
+      setVerifyingLeadId(lead.id);
+      // In browser environment, request user permission for origin if chrome.permissions is available
+      if (typeof chrome !== 'undefined' && chrome.permissions) {
+        let origin = '';
+        try {
+          const u = new URL(rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`);
+          origin = `${u.protocol}//${u.hostname}/*`;
+        } catch {
+          origin = 'https://*/*';
+        }
+
+        const hasPerm = await chrome.permissions.contains({ origins: [origin] });
+        if (!hasPerm) {
+          const granted = await chrome.permissions.request({ origins: [origin] });
+          if (!granted) {
+            setStatusMessage('Website verification cancelled: Host permission not granted.');
+            setVerifyingLeadId(null);
+            return;
+          }
+        }
+      }
+
+      // Send verification message to service worker
+      if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+        chrome.runtime.sendMessage(
+          { type: 'VERIFY_WEBSITE', payload: { leadId: lead.id, runId: activeRun?.runId } },
+          (response) => {
+            setVerifyingLeadId(null);
+            if (response && response.lead) {
+              if (activeRun) {
+                const updatedLeads = activeRun.leads.map(l => l.id === lead.id ? response.lead : l);
+                setActiveRun({ ...activeRun, leads: updatedLeads });
+              }
+              if (selectedLead?.id === lead.id) {
+                setSelectedLead(response.lead);
+              }
+              setStatusMessage(`Website verification finished: ${response.lead.websiteVerificationStatus || 'Done'}`);
+            } else if (response && response.error) {
+              setStatusMessage(`Website verification failed: ${response.error}`);
+            }
+          }
+        );
+      }
+    } catch (err: any) {
+      setVerifyingLeadId(null);
+      setStatusMessage(`Website verification error: ${err.message}`);
     }
   };
 
@@ -586,21 +645,25 @@ export const ExtensionApp: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Progress stats */}
+                  {/* Progress stats: Relevant / Uncertain / Rejected */}
                   <div className="grid grid-cols-3 gap-1.5 pt-1 text-center">
                     <div className="p-1.5 bg-slate-900 rounded border border-slate-800">
-                      <div className="text-[9px] text-slate-400">Unique Leads</div>
+                      <div className="text-[9px] text-slate-400">Relevant</div>
                       <div className="text-sm font-bold text-emerald-400">
                         {activeRun.counters?.finalUniqueRelevantLeads ?? activeRun.counters?.finalUniqueLeads ?? activeRun.leads.length}
                       </div>
                     </div>
                     <div className="p-1.5 bg-slate-900 rounded border border-slate-800">
-                      <div className="text-[9px] text-slate-400">Ads Inspected</div>
-                      <div className="text-sm font-bold text-blue-400">{activeRun.totalAdsInspected}</div>
+                      <div className="text-[9px] text-slate-400">Uncertain</div>
+                      <div className="text-sm font-bold text-amber-400">
+                        {activeRun.counters?.uncertainEntities ?? activeRun.counters?.uncertainCandidates ?? 0}
+                      </div>
                     </div>
                     <div className="p-1.5 bg-slate-900 rounded border border-slate-800">
-                      <div className="text-[9px] text-slate-400">Discovery Mode</div>
-                      <div className="text-sm font-bold text-purple-300">Auto</div>
+                      <div className="text-[9px] text-slate-400">Rejected</div>
+                      <div className="text-sm font-bold text-rose-400">
+                        {activeRun.counters?.notRelevantEntities ?? activeRun.counters?.notRelevantCandidates ?? 0}
+                      </div>
                     </div>
                   </div>
 
@@ -662,8 +725,78 @@ export const ExtensionApp: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Leads List */}
-                <div className="space-y-1.5">
+                {/* View Mode Selector: Relevant Leads vs Uncertain Queue */}
+                <div className="flex items-center gap-1.5 p-1 bg-slate-900/90 rounded border border-slate-700/60 text-[10px]">
+                  <button
+                    type="button"
+                    onClick={() => setShowUncertainView(false)}
+                    className={`flex-1 py-1 px-2 rounded font-medium transition-all ${
+                      !showUncertainView
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Relevant Leads ({activeRun.counters?.finalUniqueRelevantLeads ?? activeRun.counters?.finalUniqueLeads ?? activeRun.leads.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowUncertainView(true)}
+                    className={`flex-1 py-1 px-2 rounded font-medium transition-all ${
+                      showUncertainView
+                        ? 'bg-amber-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    View Uncertain ({activeRun.counters?.uncertainEntities ?? activeRun.counters?.uncertainCandidates ?? 0})
+                  </button>
+                </div>
+
+                {/* Expansion progress indication */}
+                {isRunning && (
+                  <div className="p-2 bg-blue-950/40 border border-blue-800/40 rounded text-[10px] text-blue-300 flex items-center gap-1.5 animate-pulse">
+                    <RefreshCw className="w-3 h-3 animate-spin flex-shrink-0" />
+                    <span>Checking more public ads from verified advertisers…</span>
+                  </div>
+                )}
+
+                {/* UNCERTAIN QUEUE VIEW */}
+                {showUncertainView ? (
+                  <div className="space-y-2">
+                    <div className="p-2 bg-amber-950/30 border border-amber-800/40 rounded text-[10px] text-amber-200/90">
+                      <div className="font-semibold text-amber-300 flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3 text-amber-400" />
+                        Internal Review Queue — Excluded From Final Leads
+                      </div>
+                      <div className="text-[9px] text-amber-300/70 mt-0.5">
+                        These candidates possess ambiguous signals or incomplete category corroboration. Excluded from exports.
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      {activeRun.counters?.uncertainEntities === 0 && activeRun.counters?.uncertainCandidates === 0 ? (
+                        <div className="p-4 bg-slate-800/30 border border-dashed border-slate-700 rounded-lg text-center text-slate-500 text-[11px]">
+                          No uncertain candidates recorded in this run.
+                        </div>
+                      ) : (
+                        <div className="p-3 bg-slate-800/40 border border-slate-700 rounded-lg space-y-2">
+                          <div className="flex items-center justify-between text-xs text-slate-200 font-semibold">
+                            <span>Uncertain Evaluation Summary</span>
+                            <span className="px-2 py-0.5 bg-amber-950 border border-amber-800 text-amber-300 rounded text-[10px]">
+                              {activeRun.counters?.uncertainEntities ?? activeRun.counters?.uncertainCandidates ?? 0} candidates
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-slate-400 space-y-1">
+                            <div>• <span className="text-slate-300">Preserved Fields:</span> Canonical name, ad copy, observed domains, Facebook Page handle, missing evidence dimensions, reason codes.</div>
+                            <div>• <span className="text-slate-300">Policy:</span> Strict Relevance Gate v3 requires strong category corroboration before lead qualification.</div>
+                            <div>• <span className="text-slate-300">Storage:</span> Persisted durable in local IndexedDB 'uncertain_entities' store.</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  /* RELEVANT LEADS LIST */
+                  <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-[11px] font-semibold text-slate-300 px-1">
                     <span>
                       Relevant Leads ({activeRun.counters?.finalUniqueRelevantLeads ?? activeRun.counters?.finalUniqueLeads ?? activeRun.leads.length})
@@ -749,6 +882,54 @@ export const ExtensionApp: React.FC = () => {
                               No Website
                             </span>
                           )}
+
+                          {/* Website Verification Compact Badge & Action */}
+                          <div className="flex items-center gap-1 ml-auto">
+                            <span className={`px-1.5 py-0.2 rounded text-[8px] font-medium ${
+                              lead.websiteVerificationStatus === 'VERIFIED_BUSINESS_WEBSITE' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' :
+                              lead.websiteVerificationStatus === 'LIKELY_BUSINESS_WEBSITE' ? 'bg-blue-950 text-blue-300 border border-blue-800' :
+                              lead.websiteVerificationStatus === 'UNCERTAIN_WEBSITE' ? 'bg-amber-950 text-amber-300 border border-amber-800' :
+                              lead.websiteVerificationStatus === 'BLOCKED' ? 'bg-rose-950 text-rose-300 border border-rose-800' :
+                              lead.websiteVerificationStatus === 'NOT_A_BUSINESS_SITE' ? 'bg-slate-800 text-slate-400 border border-slate-700' :
+                              lead.websiteVerificationStatus === 'INVALID' ? 'bg-rose-950 text-rose-300 border border-rose-800' :
+                              (!lead.destinationUrl && (!lead.observedUrls || lead.observedUrls.length === 0)) ? 'bg-slate-900 text-slate-500 border border-slate-800' :
+                              'bg-slate-900 text-slate-400 border border-slate-700'
+                            }`}>
+                              Website: {
+                                lead.websiteVerificationStatus === 'VERIFIED_BUSINESS_WEBSITE' ? 'Verified' :
+                                lead.websiteVerificationStatus === 'LIKELY_BUSINESS_WEBSITE' ? 'Likely' :
+                                lead.websiteVerificationStatus === 'UNCERTAIN_WEBSITE' ? 'Uncertain' :
+                                lead.websiteVerificationStatus === 'BLOCKED' ? 'Blocked' :
+                                lead.websiteVerificationStatus === 'NOT_A_BUSINESS_SITE' ? 'Not Business' :
+                                lead.websiteVerificationStatus === 'INVALID' ? 'Invalid' :
+                                (!lead.destinationUrl && (!lead.observedUrls || lead.observedUrls.length === 0)) ? 'No website' :
+                                'Not Verified'
+                              }
+                            </span>
+                            {(lead.destinationUrl || (lead.observedUrls && lead.observedUrls.length > 0)) && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (lead.websiteVerificationStatus && lead.websiteVerificationStatus !== 'NOT_VERIFIED') {
+                                    setSelectedLead(lead);
+                                  } else {
+                                    handleVerifyWebsite(lead);
+                                  }
+                                }}
+                                disabled={verifyingLeadId === lead.id}
+                                className="px-1.5 py-0.2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-[8px] font-medium flex items-center gap-0.5 transition-all"
+                              >
+                                {verifyingLeadId === lead.id ? (
+                                  <RefreshCw className="w-2 h-2 animate-spin" />
+                                ) : lead.websiteVerificationStatus && lead.websiteVerificationStatus !== 'NOT_VERIFIED' ? (
+                                  'View Evidence'
+                                ) : (
+                                  'Verify Website'
+                                )}
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -783,8 +964,9 @@ export const ExtensionApp: React.FC = () => {
                       </div>
                     )}
                   </>
-                  )}
-                </div>
+                )}
+              </div>
+            )}
 
                 {/* Lead Inspection Modal / Drawer */}
                 {selectedLead && (
@@ -918,8 +1100,145 @@ export const ExtensionApp: React.FC = () => {
                               </div>
                             </div>
                           )}
+
+                          {/* Creative Signals Section (Prompt 5) */}
+                          {selectedLead.creativeSignals && selectedLead.creativeSignals.length > 0 && (
+                            <div className="space-y-1 mt-1.5 pt-1.5 border-t border-slate-800/80">
+                              <span className="text-[9px] text-slate-400 font-semibold block">Observed Creative Signals:</span>
+                              <div className="flex flex-wrap gap-1">
+                                {selectedLead.creativeSignals.map((sig, i) => (
+                                  <span
+                                    key={i}
+                                    className="px-1.5 py-0.5 bg-purple-950/60 border border-purple-800/60 text-purple-300 rounded text-[8px] font-mono"
+                                    title={`Raw: "${sig.rawSignal}" (${sig.occurrences}x)`}
+                                  >
+                                    {sig.type}: {sig.normalized} {sig.occurrences > 1 ? `(${sig.occurrences}x)` : ''}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Matched Queries & Expansion Status */}
+                          <div className="mt-1.5 pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[9px]">
+                            {selectedLead.matchedQueries && selectedLead.matchedQueries.length > 0 && (
+                              <div className="text-slate-400">
+                                <span className="text-slate-500">Queries: </span>
+                                <span className="text-blue-300">{selectedLead.matchedQueries.join(', ')}</span>
+                              </div>
+                            )}
+                            {selectedLead.advertiserExpansionStatus && (
+                              <div className="text-slate-400">
+                                <span className="text-slate-500">Expansion: </span>
+                                <span className={`px-1 py-0.2 rounded font-mono ${
+                                  selectedLead.advertiserExpansionStatus === 'COMPLETED' ? 'text-emerald-400' :
+                                  selectedLead.advertiserExpansionStatus === 'PENDING' ? 'text-blue-400' :
+                                  'text-slate-500'
+                                }`}>
+                                  {selectedLead.advertiserExpansionStatus}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
+
+                      {/* Website Deep Verification Dossier (Prompt 6) */}
+                      <div className="mt-2 pt-2 border-t border-slate-800 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <Globe className="w-3 h-3 text-emerald-400" />
+                            <span className="text-slate-300 font-semibold text-[10px]">Website Deep Verification</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className={`px-2 py-0.5 rounded text-[8px] font-semibold uppercase ${
+                              selectedLead.websiteVerificationStatus === 'VERIFIED_BUSINESS_WEBSITE' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' :
+                              selectedLead.websiteVerificationStatus === 'LIKELY_BUSINESS_WEBSITE' ? 'bg-blue-950 text-blue-300 border border-blue-800' :
+                              selectedLead.websiteVerificationStatus === 'UNCERTAIN_WEBSITE' ? 'bg-amber-950 text-amber-300 border border-amber-800' :
+                              selectedLead.websiteVerificationStatus === 'BLOCKED' ? 'bg-rose-950 text-rose-300 border border-rose-800' :
+                              selectedLead.websiteVerificationStatus === 'NOT_A_BUSINESS_SITE' ? 'bg-slate-800 text-slate-400 border border-slate-700' :
+                              selectedLead.websiteVerificationStatus === 'INVALID' ? 'bg-rose-950 text-rose-300 border border-rose-800' :
+                              (!selectedLead.destinationUrl && (!selectedLead.observedUrls || selectedLead.observedUrls.length === 0)) ? 'bg-slate-900 text-slate-500 border border-slate-800' :
+                              'bg-slate-800 text-slate-300 border border-slate-700'
+                            }`}>
+                              {selectedLead.websiteVerificationStatus || 'NOT_VERIFIED'}
+                            </span>
+                            {(selectedLead.destinationUrl || (selectedLead.observedUrls && selectedLead.observedUrls.length > 0)) && (
+                              <button
+                                type="button"
+                                disabled={verifyingLeadId === selectedLead.id}
+                                onClick={() => handleVerifyWebsite(selectedLead)}
+                                className="px-2 py-0.5 bg-blue-700 hover:bg-blue-600 text-white rounded text-[8px] font-medium flex items-center gap-1"
+                              >
+                                {verifyingLeadId === selectedLead.id ? (
+                                  <RefreshCw className="w-2.5 h-2.5 animate-spin" />
+                                ) : selectedLead.websiteVerification ? (
+                                  'Re-verify'
+                                ) : (
+                                  'Verify Website'
+                                )}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {selectedLead.websiteVerification ? (
+                          <div className="bg-slate-900/90 p-2 rounded border border-slate-800 space-y-1.5 text-[9px]">
+                            <div className="flex items-center justify-between text-slate-400">
+                              <span>Verified Domain: <span className="text-slate-200 font-mono">{selectedLead.websiteVerification.hostname}</span></span>
+                              <span>Duration: {selectedLead.websiteVerification.durationMs}ms</span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-slate-300">
+                              <div>Identity Match: <span className="font-semibold text-emerald-400">{selectedLead.websiteVerification.identityMatch}</span></div>
+                              <div>Category Match: <span className="font-semibold text-blue-400">{selectedLead.websiteVerification.categoryMatch}</span></div>
+                            </div>
+
+                            {selectedLead.websiteVerification.commercialSignals.length > 0 && (
+                              <div className="space-y-0.5">
+                                <span className="text-slate-500 block">Commercial Signals:</span>
+                                <div className="flex flex-wrap gap-1">
+                                  {selectedLead.websiteVerification.commercialSignals.map((sig, i) => (
+                                    <span key={i} className="px-1.5 py-0.2 bg-emerald-950/80 border border-emerald-800 text-emerald-300 rounded text-[8px]">
+                                      {sig.replace('WEBSITE_', '').replace('_SIGNAL', '')}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {selectedLead.websiteVerification.contactSignals.length > 0 && (
+                              <div className="space-y-0.5">
+                                <span className="text-slate-500 block">Public Contact Signals:</span>
+                                <div className="text-slate-300 space-y-0.5">
+                                  {selectedLead.websiteVerification.contactSignals.map((cs, i) => (
+                                    <div key={i} className="flex items-center gap-1 text-[9px]">
+                                      <span className="text-blue-400 uppercase font-mono text-[8px]">{cs.type}:</span>
+                                      <span className="font-mono text-slate-200">{cs.value}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {selectedLead.websiteVerification.pagesVisited.length > 0 && (
+                              <div className="text-slate-500 text-[8px]">
+                                Pages inspected: {selectedLead.websiteVerification.pagesVisited.length}
+                              </div>
+                            )}
+
+                            {selectedLead.websiteVerification.blockedReason && (
+                              <div className="text-rose-400 text-[8px]">
+                                Blocked Reason: {selectedLead.websiteVerification.blockedReason}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-[9px] text-slate-400 italic">
+                            {selectedLead.destinationUrl ? 'Website not yet deeply verified. Click "Verify Website" to inspect public pages.' : 'No website destination URL discovered for this lead.'}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}

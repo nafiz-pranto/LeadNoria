@@ -13,16 +13,24 @@
  * - dedupIndex: lookup entries for seen ad IDs and entity keys
  */
 
-import type { ExtensionLead, ExtensionResearchRun, ScrapedAdCandidate } from './types.ts';
+import type {
+  ExtensionLead,
+  ExtensionResearchRun,
+  ScrapedAdCandidate,
+  UncertainEntityRecord,
+  AdvertiserExpansionProvenance
+} from './types.ts';
 
 const DB_NAME = 'leadnoria-research';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 export interface BulkBatchPayload {
   batchIndex: number;
   ads: ScrapedAdCandidate[];
   entities: ExtensionLead[];
   evidence?: Array<{ canonicalKey: string; evidence: any }>;
+  uncertainEntities?: UncertainEntityRecord[];
+  advertiserExpansions?: AdvertiserExpansionProvenance[];
   checkpoint: {
     runId: string;
     batchIndex: number;
@@ -47,6 +55,7 @@ export interface StorageStats {
   totalAds: number;
   totalEntities: number;
   totalRelevantLeads: number;
+  totalUncertainEntities?: number;
   totalCheckpoints: number;
   estimatedBytes: number;
 }
@@ -56,6 +65,8 @@ class MemoryStoreFallback {
   runs = new Map<string, ExtensionResearchRun>();
   ads = new Map<string, ScrapedAdCandidate & { runId: string }>(); // key: `${runId}_${libraryId}`
   entities = new Map<string, ExtensionLead & { runId: string; canonicalKey: string }>(); // key: `${runId}_${canonicalKey}`
+  uncertainEntities = new Map<string, UncertainEntityRecord & { runId: string }>(); // key: `${runId}_${entityId}`
+  advertiserExpansions = new Map<string, AdvertiserExpansionProvenance[]>(); // key: runId
   evidence = new Map<string, any>(); // key: `${runId}_${canonicalKey}`
   checkpoints = new Map<string, any>(); // key: `${runId}_${batchIndex}`
   dedupAds = new Map<string, Set<string>>(); // runId -> Set<libraryId>
@@ -87,6 +98,18 @@ class MemoryStoreFallback {
       entSet.add(canonicalKey);
     }
 
+    if (payload.uncertainEntities) {
+      for (const unc of payload.uncertainEntities) {
+        this.uncertainEntities.set(`${runId}_${unc.entityId}`, { ...unc, runId });
+      }
+    }
+
+    if (payload.advertiserExpansions) {
+      const list = this.advertiserExpansions.get(runId) || [];
+      list.push(...payload.advertiserExpansions);
+      this.advertiserExpansions.set(runId, list);
+    }
+
     if (payload.evidence) {
       for (const ev of payload.evidence) {
         this.evidence.set(`${runId}_${ev.canonicalKey}`, ev.evidence);
@@ -100,12 +123,26 @@ class MemoryStoreFallback {
     const results: ExtensionLead[] = [];
     for (const [key, ent] of this.entities.entries()) {
       if (key.startsWith(`${runId}_`)) {
-        if (!ent.relevanceDecision || ent.relevanceDecision === 'RELEVANT') {
+        if ((!ent.relevanceDecision || ent.relevanceDecision === 'RELEVANT') && ent.evaluationStatus !== 'UNCERTAIN' && ent.evaluationStatus !== 'REJECTED') {
           results.push(JSON.parse(JSON.stringify(ent)));
         }
       }
     }
     return results;
+  }
+
+  async getAllUncertainEntities(runId: string): Promise<UncertainEntityRecord[]> {
+    const list: UncertainEntityRecord[] = [];
+    for (const [key, unc] of this.uncertainEntities.entries()) {
+      if (key.startsWith(`${runId}_`)) {
+        list.push(JSON.parse(JSON.stringify(unc)));
+      }
+    }
+    return list;
+  }
+
+  async getAllAdvertiserExpansions(runId: string): Promise<AdvertiserExpansionProvenance[]> {
+    return JSON.parse(JSON.stringify(this.advertiserExpansions.get(runId) || []));
   }
 
   async getEntity(runId: string, canonicalKey: string): Promise<ExtensionLead | null> {
@@ -243,6 +280,18 @@ function openDB(): Promise<IDBDatabase> {
         const dedupStore = db.createObjectStore('dedupIndex', { keyPath: ['runId', 'idType', 'idVal'] });
         dedupStore.createIndex('by_run', 'runId', { unique: false });
       }
+
+      // 7. uncertain_entities store (Prompt 5)
+      if (!db.objectStoreNames.contains('uncertain_entities')) {
+        const uncStore = db.createObjectStore('uncertain_entities', { keyPath: ['runId', 'entityId'] });
+        uncStore.createIndex('by_run', 'runId', { unique: false });
+      }
+
+      // 8. advertiser_expansions store (Prompt 5)
+      if (!db.objectStoreNames.contains('advertiser_expansions')) {
+        const expStore = db.createObjectStore('advertiser_expansions', { keyPath: ['runId', 'sourceEntityId'] });
+        expStore.createIndex('by_run', 'runId', { unique: false });
+      }
     };
 
     request.onsuccess = () => resolve(request.result);
@@ -305,7 +354,11 @@ export async function saveBatch(runId: string, payload: BulkBatchPayload): Promi
   try {
     const db = await openDB();
     await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(['ads', 'entities', 'evidence', 'checkpoints', 'dedupIndex'], 'readwrite');
+      const storeNames = ['ads', 'entities', 'evidence', 'checkpoints', 'dedupIndex'];
+      if (db.objectStoreNames.contains('uncertain_entities')) storeNames.push('uncertain_entities');
+      if (db.objectStoreNames.contains('advertiser_expansions')) storeNames.push('advertiser_expansions');
+
+      const tx = db.transaction(storeNames, 'readwrite');
 
       const adStore = tx.objectStore('ads');
       const entStore = tx.objectStore('entities');
@@ -333,7 +386,23 @@ export async function saveBatch(runId: string, payload: BulkBatchPayload): Promi
         }
       }
 
-      // 4. Persist batch checkpoint
+      // 4. Persist uncertain entities if provided
+      if (payload.uncertainEntities && db.objectStoreNames.contains('uncertain_entities')) {
+        const uncStore = tx.objectStore('uncertain_entities');
+        for (const unc of payload.uncertainEntities) {
+          uncStore.put({ ...unc, runId });
+        }
+      }
+
+      // 5. Persist advertiser expansions if provided
+      if (payload.advertiserExpansions && db.objectStoreNames.contains('advertiser_expansions')) {
+        const expStore = tx.objectStore('advertiser_expansions');
+        for (const exp of payload.advertiserExpansions) {
+          expStore.put({ ...exp, runId });
+        }
+      }
+
+      // 6. Persist batch checkpoint
       cpStore.put({ ...payload.checkpoint, runId, batchIndex: payload.batchIndex });
 
       tx.oncomplete = () => {
@@ -368,8 +437,12 @@ export async function getAllRelevantLeads(runId: string): Promise<ExtensionLead[
 
       request.onsuccess = () => {
         db.close();
-        const records = (request.result || []) as Array<ExtensionLead & { relevanceDecision?: string }>;
-        const relevant = records.filter(r => !r.relevanceDecision || r.relevanceDecision === 'RELEVANT');
+        const records = (request.result || []) as Array<ExtensionLead & { relevanceDecision?: string; evaluationStatus?: string }>;
+        const relevant = records.filter(r =>
+          (!r.relevanceDecision || r.relevanceDecision === 'RELEVANT') &&
+          r.evaluationStatus !== 'UNCERTAIN' &&
+          r.evaluationStatus !== 'REJECTED'
+        );
         resolve(relevant);
       };
 
@@ -380,6 +453,78 @@ export async function getAllRelevantLeads(runId: string): Promise<ExtensionLead[
     });
   } catch {
     return memoryFallback.getAllRelevantLeads(runId);
+  }
+}
+
+/**
+ * Retrieves all uncertain entities stored for a research run
+ */
+export async function getAllUncertainEntities(runId: string): Promise<UncertainEntityRecord[]> {
+  if (!hasIndexedDB()) {
+    return memoryFallback.getAllUncertainEntities(runId);
+  }
+
+  try {
+    const db = await openDB();
+    if (!db.objectStoreNames.contains('uncertain_entities')) {
+      db.close();
+      return memoryFallback.getAllUncertainEntities(runId);
+    }
+
+    return await new Promise<UncertainEntityRecord[]>((resolve, reject) => {
+      const tx = db.transaction('uncertain_entities', 'readonly');
+      const store = tx.objectStore('uncertain_entities');
+      const index = store.index('by_run');
+      const request = index.getAll(runId);
+
+      request.onsuccess = () => {
+        db.close();
+        resolve((request.result || []) as UncertainEntityRecord[]);
+      };
+
+      request.onerror = () => {
+        db.close();
+        reject(request.error);
+      };
+    });
+  } catch {
+    return memoryFallback.getAllUncertainEntities(runId);
+  }
+}
+
+/**
+ * Retrieves all advertiser expansion provenance records for a run
+ */
+export async function getAllAdvertiserExpansions(runId: string): Promise<AdvertiserExpansionProvenance[]> {
+  if (!hasIndexedDB()) {
+    return memoryFallback.getAllAdvertiserExpansions(runId);
+  }
+
+  try {
+    const db = await openDB();
+    if (!db.objectStoreNames.contains('advertiser_expansions')) {
+      db.close();
+      return memoryFallback.getAllAdvertiserExpansions(runId);
+    }
+
+    return await new Promise<AdvertiserExpansionProvenance[]>((resolve, reject) => {
+      const tx = db.transaction('advertiser_expansions', 'readonly');
+      const store = tx.objectStore('advertiser_expansions');
+      const index = store.index('by_run');
+      const request = index.getAll(runId);
+
+      request.onsuccess = () => {
+        db.close();
+        resolve((request.result || []) as AdvertiserExpansionProvenance[]);
+      };
+
+      request.onerror = () => {
+        db.close();
+        reject(request.error);
+      };
+    });
+  } catch {
+    return memoryFallback.getAllAdvertiserExpansions(runId);
   }
 }
 
