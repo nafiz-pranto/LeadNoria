@@ -19915,7 +19915,7 @@ var ExtensionApp = () => {
       });
     }
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "w-full max-w-[800px] h-full min-h-[600px] max-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans overflow-hidden select-none", children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "w-full max-w-[800px] h-full min-h-[600px] max-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans select-none", children: [
     /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
       Header,
       {
@@ -19925,7 +19925,7 @@ var ExtensionApp = () => {
         isRunning: isJobRunning(activeRun?.status)
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("main", { className: "flex-1 overflow-y-auto p-3 flex flex-col gap-3", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("main", { className: "flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 flex flex-col gap-3", children: [
       recoveryInfo && activeTab !== "RUN_STATUS" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
         RecoveryBanner,
         {

@@ -1,10 +1,18 @@
 # LeadNoria Production Release Checksums (SHA-256)
-# Generated: 2026-09-30T17:15:00Z
-# Build: LeadNoria v1.1.0 Post-Release Full-System Audit Build
+# Generated: 2026-10-01T00:07:34Z
+# Build: LeadNoria v1.1.0 — Scroll Layout Fix (BUG-FIX: Research screen vertical scrolling)
 
-c17610fc1b22773cfe8ed282f6ddf40be31d0a38488999dff27bd3831e985e94  dist/leadnoria-v1.1.0.zip
-c17610fc1b22773cfe8ed282f6ddf40be31d0a38488999dff27bd3831e985e94  extension.zip
+96f95e56a1b23ff9a686f1f2669ba7bafbcee92012d90d4ac553c77fb41d1b67  dist/leadnoria-v1.1.0.zip
+96f95e56a1b23ff9a686f1f2669ba7bafbcee92012d90d4ac553c77fb41d1b67  extension.zip
 6d7bc75317b20ee83f1209a91297f1610b5e4c1ff10f16c9db66a4a5ace4510f  extension/manifest.json
+
+# Changes from previous v1.1.0 build:
+# - Fixed Research screen vertical scrolling (popup + side panel)
+# - Removed overflow-hidden from outer App.tsx div (root cause)
+# - Added min-h-0 and overflow-x-hidden to <main> scroll container
+# - Fixed HTML template to replace bare overflow:hidden with overflow-x/y:hidden on body
+# - Added #root { display:flex; flex-direction:column; overflow:hidden } to HTML template
+# - 27 new scroll regression tests (all passing)
 
 # Historical Frozen Baseline (Preserved Untouched)
 bbb3d9f16e1efde29e77af0bf2ffb5e30f20f9b50ad5c0fb89f578aa52931d5b  dist/leadnoria-v1.0.0.zip

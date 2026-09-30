@@ -521,7 +521,7 @@ export const ExtensionApp: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-[800px] h-full min-h-[600px] max-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans overflow-hidden select-none">
+    <div className="w-full max-w-[800px] h-full min-h-[600px] max-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans select-none">
       {/* Global Navigation Header */}
       <Header
         activeTab={activeTab}
@@ -531,7 +531,7 @@ export const ExtensionApp: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
+      <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 flex flex-col gap-3">
         {/* Checkpoint Recovery Notification */}
         {recoveryInfo && activeTab !== 'RUN_STATUS' && (
           <RecoveryBanner
