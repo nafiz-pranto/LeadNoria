@@ -1,0 +1,193 @@
+{
+  "fixtureId": "15-google-website-mixed-lineage",
+  "description": "Candidate business name is Google-derived; contact phone is website-derived",
+  "candidate": {
+    "candidateId": "cand-15",
+    "runId": "run-p6-test",
+    "source": "GOOGLE_MAPS",
+    "sourceIdentifier": {
+      "sourceType": "GOOGLE_MAPS",
+      "sourceRecordId": "cand-15",
+      "sourceRecordType": "GENERIC_SOURCE_ID",
+      "sourceContext": "GOOGLE_CONSUMER_WEB",
+      "originalValue": "cand-15",
+      "normalizedValue": "cand-15",
+      "provenance": "MIXED",
+      "policyStatus": "POLICY_GATED"
+    },
+    "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+    "overallPolicyStatus": "POLICY_GATED",
+    "overallPersistenceStatus": "NOT_PERSISTABLE",
+    "overallExportStatus": "NOT_EXPORTABLE",
+    "overallProvenance": "MIXED",
+    "sourceContributions": [
+      {
+        "source": "GOOGLE_MAPS",
+        "provenance": "MIXED",
+        "fieldName": "entity",
+        "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+        "restrictionBasis": "GOOGLE_CONSUMER_WEB_RESTRICTED",
+        "isRestricted": true,
+        "policyStatus": "POLICY_GATED",
+        "persistenceStatus": "NOT_PERSISTABLE",
+        "exportStatus": "NOT_EXPORTABLE"
+      }
+    ],
+    "businessName": {
+      "value": {
+        "displayName": "Austin Roofing Specialists",
+        "normalizedName": "austin roofing specialists",
+        "comparisonName": "austinroofingspecialists",
+        "detectedScript": "LATIN"
+      },
+      "fieldName": "businessName",
+      "provenance": "MIXED",
+      "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+      "source": "GOOGLE_MAPS",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_GATED",
+      "persistenceStatus": "NOT_PERSISTABLE",
+      "exportStatus": "NOT_EXPORTABLE"
+    },
+    "websiteUrl": {
+      "value": {
+        "originalUrl": "https://austinroofingspec.com",
+        "normalizedUrl": "https://austinroofingspec.com",
+        "canonicalDomain": "austinroofingspec.com",
+        "canonicalOrigin": "https://example.com",
+        "protocol": "https:",
+        "hostname": "example.com",
+        "pathname": "/",
+        "hasMeaningfulSubdomain": false,
+        "preservedParams": {},
+        "isCredentialBearing": false,
+        "isValid": true
+      },
+      "fieldName": "websiteUrl",
+      "provenance": "MIXED",
+      "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+      "source": "GOOGLE_MAPS",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_GATED",
+      "persistenceStatus": "NOT_PERSISTABLE",
+      "exportStatus": "NOT_EXPORTABLE"
+    },
+    "phones": [
+      {
+        "value": {
+          "rawPhone": "+15125559876",
+          "e164Format": "+15125559876",
+          "countryCode": "US",
+          "countryInference": "COUNTRY_EXPLICIT",
+          "phoneState": "PHONE_NORMALIZED",
+          "isValid": true
+        },
+        "fieldName": "phone",
+        "provenance": "WEBSITE_DERIVED",
+        "acquisitionContext": "WEBSITE_DIRECT",
+        "source": "USER_PROVIDED_DOMAIN",
+        "capturedAt": "2026-09-29T12:00:00.000Z",
+        "confidence": "STRONG",
+        "policyStatus": "POLICY_GATED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "emails": [],
+    "categories": [
+      {
+        "value": {
+          "sourceCategory": "Roofing",
+          "normalizedCategory": "roofing",
+          "categoryConfidence": "STRONG"
+        },
+        "fieldName": "category",
+        "provenance": "MIXED",
+        "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+        "source": "GOOGLE_MAPS",
+        "capturedAt": "2026-09-29T12:00:00.000Z",
+        "confidence": "STRONG",
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "socialUrls": [],
+    "normalizationAudit": {
+      "normalizedAt": "2026-09-29T12:00:00.000Z",
+      "engineVersion": "1.1.0",
+      "errors": [],
+      "warnings": [],
+      "isSanitized": true
+    }
+  },
+  "evidence": {
+    "websiteUrl": "https://austinroofingspec.com",
+    "normalizedUrl": "https://austinroofingspec.com",
+    "canonicalOrigin": "https://austinroofingspec.com",
+    "canonicalDomain": "austinroofingspec.com",
+    "verificationState": "WEBSITE_VERIFIED_BUSINESS_SITE",
+    "httpStatus": 200,
+    "redirectChain": [
+      "https://austinroofingspec.com"
+    ],
+    "pagesVisited": [
+      "https://austinroofingspec.com"
+    ],
+    "sameOrigin": true,
+    "businessNameEvidence": {
+      "matched": true,
+      "score": 0.95,
+      "evidenceSnippet": "Matched business name on homepage"
+    },
+    "addressEvidence": {
+      "matched": false,
+      "localityMatched": true
+    },
+    "phoneEvidence": {
+      "matched": true,
+      "matchedPhone": "+15125559876"
+    },
+    "emailEvidence": {
+      "matched": false
+    },
+    "brandEvidence": {
+      "matched": false
+    },
+    "serviceEvidence": {
+      "matched": false,
+      "keywords": []
+    },
+    "aboutEvidence": {
+      "matched": false
+    },
+    "contactEvidence": {
+      "matched": false,
+      "formPresent": false
+    },
+    "parkingEvidence": {
+      "isParked": false
+    },
+    "nonBusinessEvidence": {
+      "isNonBusiness": false
+    },
+    "capturedAt": "2026-09-29T12:00:00.000Z",
+    "policyStatus": "TARGET_SITE_RULES_APPLY",
+    "sourceContributions": [
+      {
+        "source": "USER_PROVIDED_DOMAIN",
+        "provenance": "WEBSITE_DERIVED",
+        "fieldName": "websiteEvidence",
+        "acquisitionContext": "WEBSITE_DIRECT",
+        "restrictionBasis": "TARGET_SITE_RULES",
+        "isRestricted": false,
+        "policyStatus": "TARGET_SITE_RULES_APPLY",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "derivedFrom": []
+  }
+}

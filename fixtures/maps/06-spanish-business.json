@@ -1,0 +1,22 @@
+{
+  "fixtureId": "06-spanish-business",
+  "description": "Spanish business with ñ, accents and S.L. suffix",
+  "candidate": {
+    "sourceId": "ChIJ_es_madrid_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Diseño de Muebles & Decoración Castellana S.L.",
+    "category": "Tienda de muebles",
+    "address": "Calle de Serrano 88, 28006 Madrid, España",
+    "street": "Calle de Serrano 88",
+    "locality": "Madrid",
+    "region": "Madrid",
+    "postalCode": "28006",
+    "country": "España",
+    "countryCode": "ES",
+    "latitude": 40.431215,
+    "longitude": -3.687412,
+    "phone": "+34 91 555 4321",
+    "website": "https://castellana-muebles.es",
+    "businessStatus": "OPEN"
+  }
+}

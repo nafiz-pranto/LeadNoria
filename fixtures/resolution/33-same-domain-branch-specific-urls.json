@@ -1,0 +1,26 @@
+{
+  "fixtureId": "33-same-domain-branch-specific-urls",
+  "description": "Same corporate domain with branch-specific URLs (/chicago vs /miami)",
+  "expectedRelationship": "SAME_PARENT_BRAND_DIFFERENT_BRANCH",
+  "expectedEntityCount": 2,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_url_chicago",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Apex Law Group (Chicago Office)",
+      "street": "200 N Michigan Ave",
+      "locality": "Chicago",
+      "countryCode": "US",
+      "website": "https://apexlawgroup.com/chicago"
+    },
+    {
+      "sourceId": "ChIJ_url_miami",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Apex Law Group (Miami Office)",
+      "street": "800 Brickell Ave",
+      "locality": "Miami",
+      "countryCode": "US",
+      "website": "https://apexlawgroup.com/miami"
+    }
+  ]
+}

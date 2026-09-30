@@ -1,0 +1,10 @@
+{
+  "fixtureId": "26-unknown-hours",
+  "description": "Candidate with no opening hours metadata",
+  "candidate": {
+    "sourceId": "ChIJ_hours_unknown_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "24/7 Remote Support Tech",
+    "openingHours": null
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "fixtureId": "32-google-derived-restricted-lineage",
+  "description": "Candidate derived from Google consumer web UI with restricted lineage",
+  "candidate": {
+    "sourceId": "ChIJ_restricted_web_01",
+    "source": "GOOGLE_MAPS",
+    "provenance": "GOOGLE_DERIVED",
+    "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+    "restrictionBasis": "GOOGLE_CONSUMER_WEB_RESTRICTED",
+    "businessName": "Austin Consumer Web Listing",
+    "phone": "+1 512-555-0199"
+  }
+}

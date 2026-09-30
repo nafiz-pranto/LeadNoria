@@ -1,0 +1,13 @@
+{
+  "fixtureId": "31-google-source-id",
+  "description": "Google Place ID with place reference metadata",
+  "candidate": {
+    "sourceId": "ChIJN1t_tDeuEmsRUsoyG83frY4",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Google Sydney Office",
+    "placeReference": {
+      "placeId": "ChIJN1t_tDeuEmsRUsoyG83frY4",
+      "plusCode": "4RRH+48 Pyrmont NSW, Australia"
+    }
+  }
+}

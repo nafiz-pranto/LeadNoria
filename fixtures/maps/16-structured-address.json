@@ -1,0 +1,16 @@
+{
+  "fixtureId": "16-structured-address",
+  "description": "Fully structured address with street, locality, region, postalCode, country",
+  "candidate": {
+    "sourceId": "ChIJ_struct_addr_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Lone Star Dental Lab",
+    "address": "2500 Bee Cave Rd, Bldg 1, Suite 100, Austin, TX 78746, USA",
+    "street": "2500 Bee Cave Rd, Bldg 1, Suite 100",
+    "locality": "Austin",
+    "region": "TX",
+    "postalCode": "78746",
+    "country": "USA",
+    "countryCode": "US"
+  }
+}

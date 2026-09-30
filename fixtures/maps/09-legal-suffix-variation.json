@@ -1,0 +1,11 @@
+{
+  "fixtureId": "09-legal-suffix-variation",
+  "description": "Name with legal suffix that is separated for comparison but kept in display",
+  "candidate": {
+    "sourceId": "ChIJ_legal_suffix_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Precision Health Systems Incorporated",
+    "category": "Medical Center",
+    "countryCode": "US"
+  }
+}

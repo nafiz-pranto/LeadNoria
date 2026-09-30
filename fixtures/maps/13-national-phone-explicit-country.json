@@ -1,0 +1,11 @@
+{
+  "fixtureId": "13-national-phone-explicit-country",
+  "description": "National formatted phone with explicit country context",
+  "candidate": {
+    "sourceId": "ChIJ_phone_nat_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Austin Family Practice",
+    "phone": "(512) 555-0188",
+    "countryCode": "US"
+  }
+}

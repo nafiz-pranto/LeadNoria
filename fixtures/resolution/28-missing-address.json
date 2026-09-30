@@ -1,0 +1,22 @@
+{
+  "fixtureId": "28-missing-address",
+  "description": "Two candidates missing physical address but matching on phone and domain",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_noaddr_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Direct Dispatch Logistics",
+      "phone": "+1 888-555-0144",
+      "website": "https://directdispatch.com"
+    },
+    {
+      "sourceId": "ChIJ_noaddr_02",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Direct Dispatch Logistics",
+      "phone": "+1 888-555-0144",
+      "website": "https://directdispatch.com"
+    }
+  ]
+}

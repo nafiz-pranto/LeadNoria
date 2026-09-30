@@ -1,0 +1,28 @@
+{
+  "fixtureId": "05-same-name-same-address",
+  "description": "Exact matching business name and exact street address without phone/domain",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_addr_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Crown Heights Bakery",
+      "street": "750 Franklin Ave",
+      "locality": "Brooklyn",
+      "region": "NY",
+      "postalCode": "11238",
+      "countryCode": "US"
+    },
+    {
+      "sourceId": "ChIJ_addr_02",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Crown Heights Bakery",
+      "street": "750 Franklin Ave",
+      "locality": "Brooklyn",
+      "region": "NY",
+      "postalCode": "11238",
+      "countryCode": "US"
+    }
+  ]
+}

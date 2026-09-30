@@ -1,0 +1,173 @@
+{
+  "fixtureId": "14-user-provided-domain",
+  "description": "User manually supplied domain input -> independent website crawl",
+  "candidate": {
+    "candidateId": "cand-14",
+    "runId": "run-p6-test",
+    "source": "USER_PROVIDED_DOMAIN",
+    "sourceIdentifier": {
+      "sourceType": "USER_PROVIDED_DOMAIN",
+      "sourceRecordId": "cand-14",
+      "sourceRecordType": "GENERIC_SOURCE_ID",
+      "sourceContext": "USER_INPUT",
+      "originalValue": "cand-14",
+      "normalizedValue": "cand-14",
+      "provenance": "USER_PROVIDED",
+      "policyStatus": "NOT_APPLICABLE"
+    },
+    "acquisitionContext": "USER_INPUT",
+    "overallPolicyStatus": "NOT_APPLICABLE",
+    "overallPersistenceStatus": "USER_PROVIDED",
+    "overallExportStatus": "USER_APPROVED",
+    "overallProvenance": "USER_PROVIDED",
+    "sourceContributions": [
+      {
+        "source": "USER_PROVIDED_DOMAIN",
+        "provenance": "USER_PROVIDED",
+        "fieldName": "entity",
+        "acquisitionContext": "USER_INPUT",
+        "restrictionBasis": "NONE",
+        "isRestricted": false,
+        "policyStatus": "NOT_APPLICABLE",
+        "persistenceStatus": "USER_PROVIDED",
+        "exportStatus": "USER_APPROVED"
+      }
+    ],
+    "businessName": {
+      "value": {
+        "displayName": "Direct Dental Care",
+        "normalizedName": "direct dental care",
+        "comparisonName": "directdentalcare",
+        "detectedScript": "LATIN"
+      },
+      "fieldName": "businessName",
+      "provenance": "USER_PROVIDED",
+      "acquisitionContext": "USER_INPUT",
+      "source": "USER_PROVIDED_DOMAIN",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "NOT_APPLICABLE",
+      "persistenceStatus": "USER_PROVIDED",
+      "exportStatus": "USER_APPROVED"
+    },
+    "websiteUrl": {
+      "value": {
+        "originalUrl": "https://directdentalcare.com",
+        "normalizedUrl": "https://directdentalcare.com",
+        "canonicalDomain": "directdentalcare.com",
+        "canonicalOrigin": "https://example.com",
+        "protocol": "https:",
+        "hostname": "example.com",
+        "pathname": "/",
+        "hasMeaningfulSubdomain": false,
+        "preservedParams": {},
+        "isCredentialBearing": false,
+        "isValid": true
+      },
+      "fieldName": "websiteUrl",
+      "provenance": "USER_PROVIDED",
+      "acquisitionContext": "USER_INPUT",
+      "source": "USER_PROVIDED_DOMAIN",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "NOT_APPLICABLE",
+      "persistenceStatus": "USER_PROVIDED",
+      "exportStatus": "USER_APPROVED"
+    },
+    "phones": [],
+    "emails": [],
+    "categories": [
+      {
+        "value": {
+          "sourceCategory": "Dental Clinic",
+          "normalizedCategory": "dental clinic",
+          "categoryConfidence": "STRONG"
+        },
+        "fieldName": "category",
+        "provenance": "USER_PROVIDED",
+        "acquisitionContext": "USER_INPUT",
+        "source": "USER_PROVIDED_DOMAIN",
+        "capturedAt": "2026-09-29T12:00:00.000Z",
+        "confidence": "STRONG",
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "socialUrls": [],
+    "normalizationAudit": {
+      "normalizedAt": "2026-09-29T12:00:00.000Z",
+      "engineVersion": "1.1.0",
+      "errors": [],
+      "warnings": [],
+      "isSanitized": true
+    }
+  },
+  "evidence": {
+    "websiteUrl": "https://directdentalcare.com",
+    "normalizedUrl": "https://directdentalcare.com",
+    "canonicalOrigin": "https://directdentalcare.com",
+    "canonicalDomain": "directdentalcare.com",
+    "verificationState": "WEBSITE_VERIFIED_BUSINESS_SITE",
+    "httpStatus": 200,
+    "redirectChain": [
+      "https://directdentalcare.com"
+    ],
+    "pagesVisited": [
+      "https://directdentalcare.com"
+    ],
+    "sameOrigin": true,
+    "businessNameEvidence": {
+      "matched": true,
+      "score": 0.95,
+      "evidenceSnippet": "Matched business name on homepage"
+    },
+    "addressEvidence": {
+      "matched": false,
+      "localityMatched": true
+    },
+    "phoneEvidence": {
+      "matched": true,
+      "matchedPhone": "+18005550144"
+    },
+    "emailEvidence": {
+      "matched": false
+    },
+    "brandEvidence": {
+      "matched": false
+    },
+    "serviceEvidence": {
+      "matched": false,
+      "keywords": []
+    },
+    "aboutEvidence": {
+      "matched": false
+    },
+    "contactEvidence": {
+      "matched": false,
+      "formPresent": false
+    },
+    "parkingEvidence": {
+      "isParked": false
+    },
+    "nonBusinessEvidence": {
+      "isNonBusiness": false
+    },
+    "capturedAt": "2026-09-29T12:00:00.000Z",
+    "policyStatus": "TARGET_SITE_RULES_APPLY",
+    "sourceContributions": [
+      {
+        "source": "USER_PROVIDED_DOMAIN",
+        "provenance": "WEBSITE_DERIVED",
+        "fieldName": "websiteEvidence",
+        "acquisitionContext": "WEBSITE_DIRECT",
+        "restrictionBasis": "TARGET_SITE_RULES",
+        "isRestricted": false,
+        "policyStatus": "TARGET_SITE_RULES_APPLY",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "derivedFrom": []
+  }
+}

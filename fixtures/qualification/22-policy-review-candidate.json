@@ -1,0 +1,172 @@
+{
+  "fixtureId": "22-policy-review-candidate",
+  "description": "Candidate carries ambiguous or unreviewed Google API contribution requiring compliance audit",
+  "candidate": {
+    "candidateId": "cand-22",
+    "runId": "run-p6-test",
+    "source": "GOOGLE_MAPS",
+    "sourceIdentifier": {
+      "sourceType": "GOOGLE_MAPS",
+      "sourceRecordId": "cand-22",
+      "sourceRecordType": "GENERIC_SOURCE_ID",
+      "sourceContext": "GOOGLE_PLATFORM_API",
+      "originalValue": "cand-22",
+      "normalizedValue": "cand-22",
+      "provenance": "GOOGLE_API_DERIVED",
+      "policyStatus": "POLICY_REVIEW_REQUIRED"
+    },
+    "acquisitionContext": "GOOGLE_PLATFORM_API",
+    "overallPolicyStatus": "POLICY_REVIEW_REQUIRED",
+    "overallPersistenceStatus": "PERSISTENCE_GATED",
+    "overallExportStatus": "EXPORT_GATED",
+    "overallProvenance": "GOOGLE_API_DERIVED",
+    "sourceContributions": [
+      {
+        "source": "GOOGLE_MAPS",
+        "provenance": "GOOGLE_API_DERIVED",
+        "fieldName": "entity",
+        "acquisitionContext": "GOOGLE_PLATFORM_API",
+        "restrictionBasis": "GOOGLE_API_SERVICE_SPECIFIC",
+        "isRestricted": false,
+        "policyStatus": "POLICY_REVIEW_REQUIRED",
+        "persistenceStatus": "PERSISTENCE_GATED",
+        "exportStatus": "EXPORT_GATED"
+      }
+    ],
+    "businessName": {
+      "value": {
+        "displayName": "Commercial HVAC Pro",
+        "normalizedName": "commercial hvac pro",
+        "comparisonName": "commercialhvacpro",
+        "detectedScript": "LATIN"
+      },
+      "fieldName": "businessName",
+      "provenance": "GOOGLE_API_DERIVED",
+      "acquisitionContext": "GOOGLE_PLATFORM_API",
+      "source": "GOOGLE_MAPS",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_REVIEW_REQUIRED",
+      "persistenceStatus": "PERSISTENCE_GATED",
+      "exportStatus": "EXPORT_GATED"
+    },
+    "websiteUrl": {
+      "value": {
+        "originalUrl": "https://commercialhvac.com",
+        "normalizedUrl": "https://commercialhvac.com",
+        "canonicalDomain": "commercialhvac.com",
+        "canonicalOrigin": "https://example.com",
+        "protocol": "https:",
+        "hostname": "example.com",
+        "pathname": "/",
+        "hasMeaningfulSubdomain": false,
+        "preservedParams": {},
+        "isCredentialBearing": false,
+        "isValid": true
+      },
+      "fieldName": "websiteUrl",
+      "provenance": "GOOGLE_API_DERIVED",
+      "acquisitionContext": "GOOGLE_PLATFORM_API",
+      "source": "GOOGLE_MAPS",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_REVIEW_REQUIRED",
+      "persistenceStatus": "PERSISTENCE_GATED",
+      "exportStatus": "EXPORT_GATED"
+    },
+    "phones": [],
+    "emails": [],
+    "categories": [
+      {
+        "value": {
+          "sourceCategory": "HVAC Services",
+          "normalizedCategory": "hvac services",
+          "categoryConfidence": "STRONG"
+        },
+        "fieldName": "category",
+        "provenance": "GOOGLE_API_DERIVED",
+        "acquisitionContext": "GOOGLE_PLATFORM_API",
+        "source": "GOOGLE_MAPS",
+        "capturedAt": "2026-09-29T12:00:00.000Z",
+        "confidence": "STRONG",
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "socialUrls": [],
+    "normalizationAudit": {
+      "normalizedAt": "2026-09-29T12:00:00.000Z",
+      "engineVersion": "1.1.0",
+      "errors": [],
+      "warnings": [],
+      "isSanitized": true
+    }
+  },
+  "evidence": {
+    "websiteUrl": "https://commercialhvac.com",
+    "normalizedUrl": "https://commercialhvac.com",
+    "canonicalOrigin": "https://commercialhvac.com",
+    "canonicalDomain": "commercialhvac.com",
+    "verificationState": "WEBSITE_VERIFIED_BUSINESS_SITE",
+    "httpStatus": 200,
+    "redirectChain": [
+      "https://commercialhvac.com"
+    ],
+    "pagesVisited": [
+      "https://commercialhvac.com"
+    ],
+    "sameOrigin": true,
+    "businessNameEvidence": {
+      "matched": true,
+      "score": 0.95,
+      "evidenceSnippet": "Matched business name on homepage"
+    },
+    "addressEvidence": {
+      "matched": false,
+      "localityMatched": true
+    },
+    "phoneEvidence": {
+      "matched": false
+    },
+    "emailEvidence": {
+      "matched": false
+    },
+    "brandEvidence": {
+      "matched": true
+    },
+    "serviceEvidence": {
+      "matched": false,
+      "keywords": []
+    },
+    "aboutEvidence": {
+      "matched": false
+    },
+    "contactEvidence": {
+      "matched": false,
+      "formPresent": false
+    },
+    "parkingEvidence": {
+      "isParked": false
+    },
+    "nonBusinessEvidence": {
+      "isNonBusiness": false
+    },
+    "capturedAt": "2026-09-29T12:00:00.000Z",
+    "policyStatus": "TARGET_SITE_RULES_APPLY",
+    "sourceContributions": [
+      {
+        "source": "USER_PROVIDED_DOMAIN",
+        "provenance": "WEBSITE_DERIVED",
+        "fieldName": "websiteEvidence",
+        "acquisitionContext": "WEBSITE_DIRECT",
+        "restrictionBasis": "TARGET_SITE_RULES",
+        "isRestricted": false,
+        "policyStatus": "TARGET_SITE_RULES_APPLY",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "derivedFrom": []
+  }
+}

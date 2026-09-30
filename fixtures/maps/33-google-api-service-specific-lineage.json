@@ -1,0 +1,13 @@
+{
+  "fixtureId": "33-google-api-service-specific-lineage",
+  "description": "Candidate from official Places API requiring policy review",
+  "candidate": {
+    "sourceId": "ChIJ_places_api_01",
+    "source": "GOOGLE_MAPS",
+    "provenance": "GOOGLE_API_DERIVED",
+    "acquisitionContext": "GOOGLE_PLATFORM_API",
+    "restrictionBasis": "GOOGLE_API_SERVICE_SPECIFIC",
+    "businessName": "Places API Enterprise Dental",
+    "phone": "+1 512-555-0177"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "fixtureId": "07-mixed-script-business",
+  "description": "Mixed Bengali and English business name",
+  "candidate": {
+    "sourceId": "ChIJ_mixed_script_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Apex ডেন্টাল কেয়ার (Apex Dental Care)",
+    "category": "Dental Clinic",
+    "address": "Gulshan 2, Dhaka, Bangladesh",
+    "locality": "Dhaka",
+    "countryCode": "BD",
+    "phone": "+880 2 9885500"
+  }
+}

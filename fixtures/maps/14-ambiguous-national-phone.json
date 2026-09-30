@@ -1,0 +1,10 @@
+{
+  "fixtureId": "14-ambiguous-national-phone",
+  "description": "National phone without country context (flagged as PHONE_AMBIGUOUS)",
+  "candidate": {
+    "sourceId": "ChIJ_phone_amb_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Mystery Plumbing Service",
+    "phone": "01711223344"
+  }
+}

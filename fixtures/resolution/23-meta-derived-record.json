@@ -1,0 +1,24 @@
+{
+  "fixtureId": "23-meta-derived-record",
+  "description": "Meta candidate resolving cleanly with META_DERIVED lineage",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "meta_page_998877",
+      "source": "META_ADS",
+      "acquisitionContext": "META_PUBLIC_UI",
+      "provenance": "META_DERIVED",
+      "businessName": "Social Brand Marketing",
+      "website": "https://socialbrand.io"
+    },
+    {
+      "sourceId": "meta_page_998877",
+      "source": "META_ADS",
+      "acquisitionContext": "META_PUBLIC_UI",
+      "provenance": "META_DERIVED",
+      "businessName": "Social Brand Marketing LLC",
+      "website": "https://socialbrand.io"
+    }
+  ]
+}

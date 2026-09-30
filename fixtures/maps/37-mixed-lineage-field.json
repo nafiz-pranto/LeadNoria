@@ -1,0 +1,37 @@
+{
+  "fixtureId": "37-mixed-lineage-field",
+  "description": "Candidate with multi-source contributions",
+  "candidate": {
+    "sourceId": "mixed_entity_9988",
+    "source": "GOOGLE_MAPS",
+    "provenance": "MIXED",
+    "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+    "restrictionBasis": "GOOGLE_CONSUMER_WEB_RESTRICTED",
+    "businessName": "Google Name + Web Phone Clinic",
+    "phone": "+1 512-555-0155",
+    "sourceContributions": [
+      {
+        "source": "GOOGLE_MAPS",
+        "provenance": "GOOGLE_DERIVED",
+        "fieldName": "businessName",
+        "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+        "restrictionBasis": "GOOGLE_CONSUMER_WEB_RESTRICTED",
+        "isRestricted": true,
+        "policyStatus": "POLICY_GATED",
+        "persistenceStatus": "NOT_PERSISTABLE",
+        "exportStatus": "NOT_EXPORTABLE"
+      },
+      {
+        "source": "USER_PROVIDED_DOMAIN",
+        "provenance": "WEBSITE_DERIVED",
+        "fieldName": "phone",
+        "acquisitionContext": "WEBSITE_DIRECT",
+        "restrictionBasis": "TARGET_SITE_RULES",
+        "isRestricted": false,
+        "policyStatus": "TARGET_SITE_RULES_APPLY",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ]
+  }
+}

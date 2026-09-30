@@ -1,0 +1,22 @@
+{
+  "fixtureId": "18-same-business-expanded-queries",
+  "description": "Same business discovered from two different query expansions (\"roofing contractor\" vs \"siding repair\")",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_expand_roofing",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Apex Roofing & Restoration",
+      "phone": "+1 512-555-0144",
+      "website": "https://apexrestoration.com"
+    },
+    {
+      "sourceId": "ChIJ_expand_siding",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Apex Roofing & Restoration",
+      "phone": "+1 512-555-0144",
+      "website": "https://apexrestoration.com"
+    }
+  ]
+}

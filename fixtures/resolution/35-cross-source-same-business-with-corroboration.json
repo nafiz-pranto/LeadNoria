@@ -1,0 +1,30 @@
+{
+  "fixtureId": "35-cross-source-same-business-with-corroboration",
+  "description": "Google candidate and Meta candidate sharing exact domain, phone, and name -> merged into single entity with cross-source contributions",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_cross_google",
+      "source": "GOOGLE_MAPS",
+      "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+      "restrictionBasis": "GOOGLE_CONSUMER_WEB_RESTRICTED",
+      "businessName": "Artisan Oak Living",
+      "locality": "Austin",
+      "countryCode": "US",
+      "phone": "+1 512-555-0100",
+      "website": "https://artisanoakliving.com"
+    },
+    {
+      "sourceId": "meta_page_10203040",
+      "source": "META_ADS",
+      "acquisitionContext": "META_PUBLIC_UI",
+      "provenance": "META_DERIVED",
+      "businessName": "Artisan Oak Living LLC",
+      "locality": "Austin",
+      "countryCode": "US",
+      "phone": "+1 512-555-0100",
+      "website": "https://artisanoakliving.com"
+    }
+  ]
+}

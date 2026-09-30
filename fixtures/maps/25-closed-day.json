@@ -1,0 +1,22 @@
+{
+  "fixtureId": "25-closed-day",
+  "description": "Business with explicit closed days",
+  "candidate": {
+    "sourceId": "ChIJ_hours_closed_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Sunday Rest Dental Clinic",
+    "openingHours": {
+      "periods": [
+        {
+          "day": 1,
+          "openTime": "09:00",
+          "closeTime": "17:00"
+        }
+      ],
+      "weekdayText": [
+        "Sunday: Closed",
+        "Monday: 9:00 AM – 5:00 PM"
+      ]
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "fixtureId": "01-exact-duplicate",
+  "description": "Exact duplicate candidate records with identical source ID, name, address, phone, and domain",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_exact_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Artisan Oak Living LLC",
+      "category": "Furniture Store",
+      "address": "100 Congress Ave, Austin, TX 78701",
+      "street": "100 Congress Ave",
+      "locality": "Austin",
+      "region": "TX",
+      "postalCode": "78701",
+      "countryCode": "US",
+      "phone": "+1 512-555-0100",
+      "website": "https://artisanoakliving.com"
+    },
+    {
+      "sourceId": "ChIJ_exact_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Artisan Oak Living LLC",
+      "category": "Furniture Store",
+      "address": "100 Congress Ave, Austin, TX 78701",
+      "street": "100 Congress Ave",
+      "locality": "Austin",
+      "region": "TX",
+      "postalCode": "78701",
+      "countryCode": "US",
+      "phone": "+1 512-555-0100",
+      "website": "https://artisanoakliving.com"
+    }
+  ]
+}

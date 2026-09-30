@@ -1,0 +1,11 @@
+{
+  "fixtureId": "27-numeric-rating",
+  "description": "Valid numeric rating and review count",
+  "candidate": {
+    "sourceId": "ChIJ_rating_valid_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Highly Rated Roofer",
+    "rating": 4.9,
+    "reviewCount": 382
+  }
+}

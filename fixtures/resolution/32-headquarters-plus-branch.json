@@ -1,0 +1,26 @@
+{
+  "fixtureId": "32-headquarters-plus-branch",
+  "description": "Corporate headquarters vs regional branch office -> branch relationship, not same entity",
+  "expectedRelationship": "SAME_PARENT_BRAND_DIFFERENT_BRANCH",
+  "expectedEntityCount": 2,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_hq_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "LeadNoria Global (Head Office)",
+      "street": "Tower 1, Corporate Park",
+      "locality": "Dhaka",
+      "countryCode": "BD",
+      "website": "https://leadnoria.com"
+    },
+    {
+      "sourceId": "ChIJ_branch_02",
+      "source": "GOOGLE_MAPS",
+      "businessName": "LeadNoria Global (Regional Branch Office)",
+      "street": "Plaza 4, Commercial Area",
+      "locality": "Chittagong",
+      "countryCode": "BD",
+      "website": "https://leadnoria.com"
+    }
+  ]
+}

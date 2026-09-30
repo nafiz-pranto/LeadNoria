@@ -1,0 +1,26 @@
+{
+  "fixtureId": "04-legal-suffix-variation",
+  "description": "Legal suffix variation (\"Limited\" vs \"Ltd.\" vs \"Private Limited\")",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_suffix_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Apex Technologies Limited",
+      "locality": "London",
+      "countryCode": "GB",
+      "phone": "+44 20 7946 0991",
+      "website": "https://apextech.co.uk"
+    },
+    {
+      "sourceId": "ChIJ_suffix_02",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Apex Technologies Ltd.",
+      "locality": "London",
+      "countryCode": "GB",
+      "phone": "+44 20 7946 0991",
+      "website": "https://apextech.co.uk"
+    }
+  ]
+}

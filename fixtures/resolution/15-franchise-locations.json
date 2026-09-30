@@ -1,0 +1,26 @@
+{
+  "fixtureId": "15-franchise-locations",
+  "description": "Corporate franchise brand locations at different addresses -> branch relation, not single physical entity",
+  "expectedRelationship": "SAME_PARENT_BRAND_DIFFERENT_BRANCH",
+  "expectedEntityCount": 2,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_subway_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Subway - Store #1024",
+      "street": "100 Main St",
+      "locality": "Seattle",
+      "countryCode": "US",
+      "website": "https://subway.com"
+    },
+    {
+      "sourceId": "ChIJ_subway_02",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Subway - Store #5502",
+      "street": "450 Pike St",
+      "locality": "Seattle",
+      "countryCode": "US",
+      "website": "https://subway.com"
+    }
+  ]
+}

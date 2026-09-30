@@ -1,0 +1,10 @@
+{
+  "fixtureId": "38-unknown-category",
+  "description": "Candidate with omitted category field",
+  "candidate": {
+    "sourceId": "ChIJ_no_category_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Mysterious Enterprise Co",
+    "category": null
+  }
+}

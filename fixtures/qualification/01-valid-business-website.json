@@ -1,0 +1,235 @@
+{
+  "fixtureId": "01-valid-business-website",
+  "description": "Valid business website with matching name, phone, email, and positive HTTP 200",
+  "candidate": {
+    "candidateId": "cand-01",
+    "runId": "run-p6-test",
+    "source": "META_AD_LIBRARY",
+    "sourceIdentifier": {
+      "sourceType": "META_AD_LIBRARY",
+      "sourceRecordId": "cand-01",
+      "sourceRecordType": "GENERIC_SOURCE_ID",
+      "sourceContext": "META_AD_LIBRARY",
+      "originalValue": "cand-01",
+      "normalizedValue": "cand-01",
+      "provenance": "META_DERIVED",
+      "policyStatus": "POLICY_APPROVED"
+    },
+    "acquisitionContext": "META_AD_LIBRARY",
+    "overallPolicyStatus": "POLICY_APPROVED",
+    "overallPersistenceStatus": "PERSISTABLE",
+    "overallExportStatus": "EXPORTABLE",
+    "overallProvenance": "META_DERIVED",
+    "sourceContributions": [
+      {
+        "source": "META_AD_LIBRARY",
+        "provenance": "META_DERIVED",
+        "fieldName": "entity",
+        "acquisitionContext": "META_AD_LIBRARY",
+        "restrictionBasis": "NONE",
+        "isRestricted": false,
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "businessName": {
+      "value": {
+        "displayName": "Apex Dental Studio",
+        "normalizedName": "apex dental studio",
+        "comparisonName": "apexdentalstudio",
+        "detectedScript": "LATIN"
+      },
+      "fieldName": "businessName",
+      "provenance": "META_DERIVED",
+      "acquisitionContext": "META_AD_LIBRARY",
+      "source": "META_AD_LIBRARY",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_APPROVED",
+      "persistenceStatus": "PERSISTABLE",
+      "exportStatus": "EXPORTABLE"
+    },
+    "websiteUrl": {
+      "value": {
+        "originalUrl": "https://www.apexdental.com",
+        "normalizedUrl": "https://www.apexdental.com",
+        "canonicalDomain": "apexdental.com",
+        "canonicalOrigin": "https://example.com",
+        "protocol": "https:",
+        "hostname": "example.com",
+        "pathname": "/",
+        "hasMeaningfulSubdomain": false,
+        "preservedParams": {},
+        "isCredentialBearing": false,
+        "isValid": true
+      },
+      "fieldName": "websiteUrl",
+      "provenance": "META_DERIVED",
+      "acquisitionContext": "META_AD_LIBRARY",
+      "source": "META_AD_LIBRARY",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_APPROVED",
+      "persistenceStatus": "PERSISTABLE",
+      "exportStatus": "EXPORTABLE"
+    },
+    "phones": [
+      {
+        "value": {
+          "rawPhone": "+15125550199",
+          "e164Format": "+15125550199",
+          "countryCode": "US",
+          "countryInference": "COUNTRY_EXPLICIT",
+          "phoneState": "PHONE_NORMALIZED",
+          "isValid": true
+        },
+        "fieldName": "phone",
+        "provenance": "META_DERIVED",
+        "acquisitionContext": "META_AD_LIBRARY",
+        "source": "META_AD_LIBRARY",
+        "capturedAt": "2026-09-29T12:00:00.000Z",
+        "confidence": "STRONG",
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "emails": [
+      {
+        "value": {
+          "rawEmail": "info@apexdental.com",
+          "normalizedEmail": "info@apexdental.com",
+          "localPart": "info",
+          "domainPart": "apexdental.com",
+          "isValid": true
+        },
+        "fieldName": "email",
+        "provenance": "META_DERIVED",
+        "acquisitionContext": "META_AD_LIBRARY",
+        "source": "META_AD_LIBRARY",
+        "capturedAt": "2026-09-29T12:00:00.000Z",
+        "confidence": "STRONG",
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "address": {
+      "value": {
+        "displayAddress": "Austin, USA",
+        "normalizedAddress": "austin, usa",
+        "locality": "Austin",
+        "country": "USA",
+        "countryCode": "US"
+      },
+      "fieldName": "address",
+      "provenance": "META_DERIVED",
+      "acquisitionContext": "META_AD_LIBRARY",
+      "source": "META_AD_LIBRARY",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_APPROVED",
+      "persistenceStatus": "PERSISTABLE",
+      "exportStatus": "EXPORTABLE"
+    },
+    "categories": [
+      {
+        "value": {
+          "sourceCategory": "Dental Clinic",
+          "normalizedCategory": "dental clinic",
+          "categoryConfidence": "STRONG"
+        },
+        "fieldName": "category",
+        "provenance": "META_DERIVED",
+        "acquisitionContext": "META_AD_LIBRARY",
+        "source": "META_AD_LIBRARY",
+        "capturedAt": "2026-09-29T12:00:00.000Z",
+        "confidence": "STRONG",
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "socialUrls": [],
+    "normalizationAudit": {
+      "normalizedAt": "2026-09-29T12:00:00.000Z",
+      "engineVersion": "1.1.0",
+      "errors": [],
+      "warnings": [],
+      "isSanitized": true
+    }
+  },
+  "evidence": {
+    "websiteUrl": "https://www.apexdental.com",
+    "normalizedUrl": "https://www.apexdental.com",
+    "canonicalOrigin": "https://apexdental.com",
+    "canonicalDomain": "apexdental.com",
+    "verificationState": "WEBSITE_VERIFIED_BUSINESS_SITE",
+    "httpStatus": 200,
+    "redirectChain": [
+      "https://www.apexdental.com"
+    ],
+    "pagesVisited": [
+      "https://www.apexdental.com"
+    ],
+    "sameOrigin": true,
+    "businessNameEvidence": {
+      "matched": true,
+      "score": 0.98,
+      "evidenceSnippet": "Matched business name on homepage"
+    },
+    "addressEvidence": {
+      "matched": false,
+      "localityMatched": true
+    },
+    "phoneEvidence": {
+      "matched": true,
+      "matchedPhone": "+15125550199"
+    },
+    "emailEvidence": {
+      "matched": true,
+      "matchedEmail": "info@apexdental.com"
+    },
+    "brandEvidence": {
+      "matched": true
+    },
+    "serviceEvidence": {
+      "matched": true,
+      "keywords": [
+        "cosmetic dentistry",
+        "family dentist",
+        "implants"
+      ]
+    },
+    "aboutEvidence": {
+      "matched": false
+    },
+    "contactEvidence": {
+      "matched": false,
+      "formPresent": false
+    },
+    "parkingEvidence": {
+      "isParked": false
+    },
+    "nonBusinessEvidence": {
+      "isNonBusiness": false
+    },
+    "capturedAt": "2026-09-29T12:00:00.000Z",
+    "policyStatus": "TARGET_SITE_RULES_APPLY",
+    "sourceContributions": [
+      {
+        "source": "USER_PROVIDED_DOMAIN",
+        "provenance": "WEBSITE_DERIVED",
+        "fieldName": "websiteEvidence",
+        "acquisitionContext": "WEBSITE_DIRECT",
+        "restrictionBasis": "TARGET_SITE_RULES",
+        "isRestricted": false,
+        "policyStatus": "TARGET_SITE_RULES_APPLY",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "derivedFrom": []
+  }
+}

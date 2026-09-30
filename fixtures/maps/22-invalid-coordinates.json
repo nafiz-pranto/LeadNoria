@@ -1,0 +1,11 @@
+{
+  "fixtureId": "22-invalid-coordinates",
+  "description": "Out of range latitude (>90)",
+  "candidate": {
+    "sourceId": "ChIJ_coords_invalid_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Impossible Geolocation Clinic",
+    "latitude": 145.267,
+    "longitude": -97.743
+  }
+}

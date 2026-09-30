@@ -1,0 +1,22 @@
+{
+  "fixtureId": "04-german-business",
+  "description": "German business with umlauts and GmbH suffix",
+  "candidate": {
+    "sourceId": "ChIJ_de_munich_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Müller & Söhne Sanitärtechnik GmbH",
+    "category": "Klempner",
+    "address": "Leopoldstraße 45, 80802 München, Deutschland",
+    "street": "Leopoldstraße 45",
+    "locality": "München",
+    "region": "Bayern",
+    "postalCode": "80802",
+    "country": "Deutschland",
+    "countryCode": "DE",
+    "latitude": 48.158312,
+    "longitude": 11.584729,
+    "phone": "+49 89 5556677",
+    "website": "https://mueller-sanitaer.de",
+    "businessStatus": "OPEN"
+  }
+}

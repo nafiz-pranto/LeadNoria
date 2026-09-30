@@ -109,7 +109,7 @@ const manifest = {
   manifest_version: 3,
   name: "LeadNoria",
   short_name: "LeadNoria",
-  version: "1.0.0",
+  version: "1.1.0",
   description: "Business lead research from real public signals.",
   permissions: [
     "storage",
@@ -157,7 +157,7 @@ fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, nu
 console.log('[build-extension] Written manifest.json');
 
 // 3. Write HTML entrypoints (sidepanel.html and popup.html)
-const htmlTemplate = `<!DOCTYPE html>
+const createHtml = (isSidepanel = false) => `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -172,8 +172,9 @@ const htmlTemplate = `<!DOCTYPE html>
       color: #f8fafc;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       overflow: hidden;
-      width: 440px;
-      height: 600px;
+      width: ${isSidepanel ? '100%' : '440px'};
+      height: ${isSidepanel ? '100vh' : '600px'};
+      ${isSidepanel ? 'min-width: 360px;' : ''}
     }
   </style>
 </head>
@@ -183,9 +184,9 @@ const htmlTemplate = `<!DOCTYPE html>
 </body>
 </html>`;
 
-fs.writeFileSync(path.join(outDir, 'sidepanel.html'), htmlTemplate);
-fs.writeFileSync(path.join(outDir, 'popup.html'), htmlTemplate);
-console.log('[build-extension] Written sidepanel.html and popup.html');
+fs.writeFileSync(path.join(outDir, 'sidepanel.html'), createHtml(true));
+fs.writeFileSync(path.join(outDir, 'popup.html'), createHtml(false));
+console.log('[build-extension] Written sidepanel.html (responsive) and popup.html (fixed 440x600)');
 
 // 4. Bundle Service Worker (ESM)
 await esbuild.build({
@@ -284,10 +285,16 @@ function createZipArchive(sourceDir, zipPath) {
 const releaseZipPath1 = path.join(rootDir, 'extension.zip');
 const releaseZipPath2 = path.join(rootDir, 'dist/meta-ad-library-lead-scraper-v1.0.0.zip');
 const releaseZipPath3 = path.join(rootDir, 'dist/leadnoria-v1.0.0.zip');
+const releaseZipPath4 = path.join(rootDir, 'dist/leadnoria-v1.1.0.zip');
 
 await createZipArchive(outDir, releaseZipPath1);
 await createZipArchive(outDir, releaseZipPath2);
-await createZipArchive(outDir, releaseZipPath3);
+await createZipArchive(outDir, releaseZipPath4);
+if (!fs.existsSync(releaseZipPath3)) {
+  await createZipArchive(outDir, releaseZipPath3);
+} else {
+  console.log('[build-extension] Preserved frozen V1.0 release archive: dist/leadnoria-v1.0.0.zip');
+}
 
 console.log('[build-extension] Extension build completed successfully in ./extension');
-console.log('[build-extension] Release distribution packages ready in ./extension.zip, ./dist/leadnoria-v1.0.0.zip, and ./dist/meta-ad-library-lead-scraper-v1.0.0.zip');
+console.log('[build-extension] Release distribution packages ready in ./extension.zip, ./dist/leadnoria-v1.0.0.zip, ./dist/leadnoria-v1.1.0.zip, and ./dist/meta-ad-library-lead-scraper-v1.0.0.zip');

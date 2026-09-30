@@ -1,0 +1,190 @@
+{
+  "fixtureId": "19-requirement-with",
+  "description": "Candidate verified for WITH requirement mode",
+  "candidate": {
+    "candidateId": "cand-19",
+    "runId": "run-p6-test",
+    "source": "META_AD_LIBRARY",
+    "sourceIdentifier": {
+      "sourceType": "META_AD_LIBRARY",
+      "sourceRecordId": "cand-19",
+      "sourceRecordType": "GENERIC_SOURCE_ID",
+      "sourceContext": "META_AD_LIBRARY",
+      "originalValue": "cand-19",
+      "normalizedValue": "cand-19",
+      "provenance": "META_DERIVED",
+      "policyStatus": "POLICY_APPROVED"
+    },
+    "acquisitionContext": "META_AD_LIBRARY",
+    "overallPolicyStatus": "POLICY_APPROVED",
+    "overallPersistenceStatus": "PERSISTABLE",
+    "overallExportStatus": "EXPORTABLE",
+    "overallProvenance": "META_DERIVED",
+    "sourceContributions": [
+      {
+        "source": "META_AD_LIBRARY",
+        "provenance": "META_DERIVED",
+        "fieldName": "entity",
+        "acquisitionContext": "META_AD_LIBRARY",
+        "restrictionBasis": "NONE",
+        "isRestricted": false,
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "businessName": {
+      "value": {
+        "displayName": "Precision Dental Group",
+        "normalizedName": "precision dental group",
+        "comparisonName": "precisiondentalgroup",
+        "detectedScript": "LATIN"
+      },
+      "fieldName": "businessName",
+      "provenance": "META_DERIVED",
+      "acquisitionContext": "META_AD_LIBRARY",
+      "source": "META_AD_LIBRARY",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_APPROVED",
+      "persistenceStatus": "PERSISTABLE",
+      "exportStatus": "EXPORTABLE"
+    },
+    "websiteUrl": {
+      "value": {
+        "originalUrl": "https://precisiondental.com",
+        "normalizedUrl": "https://precisiondental.com",
+        "canonicalDomain": "precisiondental.com",
+        "canonicalOrigin": "https://example.com",
+        "protocol": "https:",
+        "hostname": "example.com",
+        "pathname": "/",
+        "hasMeaningfulSubdomain": false,
+        "preservedParams": {},
+        "isCredentialBearing": false,
+        "isValid": true
+      },
+      "fieldName": "websiteUrl",
+      "provenance": "META_DERIVED",
+      "acquisitionContext": "META_AD_LIBRARY",
+      "source": "META_AD_LIBRARY",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_APPROVED",
+      "persistenceStatus": "PERSISTABLE",
+      "exportStatus": "EXPORTABLE"
+    },
+    "phones": [],
+    "emails": [],
+    "address": {
+      "value": {
+        "displayAddress": "Austin, USA",
+        "normalizedAddress": "austin, usa",
+        "locality": "Austin",
+        "country": "USA",
+        "countryCode": "US"
+      },
+      "fieldName": "address",
+      "provenance": "META_DERIVED",
+      "acquisitionContext": "META_AD_LIBRARY",
+      "source": "META_AD_LIBRARY",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_APPROVED",
+      "persistenceStatus": "PERSISTABLE",
+      "exportStatus": "EXPORTABLE"
+    },
+    "categories": [
+      {
+        "value": {
+          "sourceCategory": "Dental Clinic",
+          "normalizedCategory": "dental clinic",
+          "categoryConfidence": "STRONG"
+        },
+        "fieldName": "category",
+        "provenance": "META_DERIVED",
+        "acquisitionContext": "META_AD_LIBRARY",
+        "source": "META_AD_LIBRARY",
+        "capturedAt": "2026-09-29T12:00:00.000Z",
+        "confidence": "STRONG",
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "socialUrls": [],
+    "normalizationAudit": {
+      "normalizedAt": "2026-09-29T12:00:00.000Z",
+      "engineVersion": "1.1.0",
+      "errors": [],
+      "warnings": [],
+      "isSanitized": true
+    }
+  },
+  "evidence": {
+    "websiteUrl": "https://precisiondental.com",
+    "normalizedUrl": "https://precisiondental.com",
+    "canonicalOrigin": "https://precisiondental.com",
+    "canonicalDomain": "precisiondental.com",
+    "verificationState": "WEBSITE_VERIFIED_BUSINESS_SITE",
+    "httpStatus": 200,
+    "redirectChain": [
+      "https://precisiondental.com"
+    ],
+    "pagesVisited": [
+      "https://precisiondental.com"
+    ],
+    "sameOrigin": true,
+    "businessNameEvidence": {
+      "matched": true,
+      "score": 0.95,
+      "evidenceSnippet": "Matched business name on homepage"
+    },
+    "addressEvidence": {
+      "matched": false,
+      "localityMatched": true
+    },
+    "phoneEvidence": {
+      "matched": false
+    },
+    "emailEvidence": {
+      "matched": false
+    },
+    "brandEvidence": {
+      "matched": true
+    },
+    "serviceEvidence": {
+      "matched": false,
+      "keywords": []
+    },
+    "aboutEvidence": {
+      "matched": false
+    },
+    "contactEvidence": {
+      "matched": false,
+      "formPresent": false
+    },
+    "parkingEvidence": {
+      "isParked": false
+    },
+    "nonBusinessEvidence": {
+      "isNonBusiness": false
+    },
+    "capturedAt": "2026-09-29T12:00:00.000Z",
+    "policyStatus": "TARGET_SITE_RULES_APPLY",
+    "sourceContributions": [
+      {
+        "source": "USER_PROVIDED_DOMAIN",
+        "provenance": "WEBSITE_DERIVED",
+        "fieldName": "websiteEvidence",
+        "acquisitionContext": "WEBSITE_DIRECT",
+        "restrictionBasis": "TARGET_SITE_RULES",
+        "isRestricted": false,
+        "policyStatus": "TARGET_SITE_RULES_APPLY",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "derivedFrom": []
+  }
+}

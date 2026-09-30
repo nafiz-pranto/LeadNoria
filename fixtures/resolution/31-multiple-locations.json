@@ -1,0 +1,35 @@
+{
+  "fixtureId": "31-multiple-locations",
+  "description": "Enterprise retail chain with 3 distinct branch locations in same city",
+  "expectedRelationship": "SAME_PARENT_BRAND_DIFFERENT_BRANCH",
+  "expectedEntityCount": 3,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_loc_north",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Apex Footwear (North Branch)",
+      "street": "100 Northway Rd",
+      "locality": "Austin",
+      "countryCode": "US",
+      "website": "https://apexfootwear.com"
+    },
+    {
+      "sourceId": "ChIJ_loc_south",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Apex Footwear (South Branch)",
+      "street": "450 South Lamar",
+      "locality": "Austin",
+      "countryCode": "US",
+      "website": "https://apexfootwear.com"
+    },
+    {
+      "sourceId": "ChIJ_loc_downtown",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Apex Footwear (Downtown Showroom)",
+      "street": "800 Congress Ave",
+      "locality": "Austin",
+      "countryCode": "US",
+      "website": "https://apexfootwear.com"
+    }
+  ]
+}

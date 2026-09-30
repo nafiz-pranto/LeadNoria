@@ -1,0 +1,19 @@
+{
+  "fixtureId": "03-arabic-business",
+  "description": "Arabic script business in Dubai UAE",
+  "candidate": {
+    "sourceId": "ChIJ_ar_dubai_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "عيادة دبي التخصصية لطب الأسنان",
+    "category": "عيادة أسنان",
+    "address": "شارع الشيخ زايد، دبي، الإمارات العربية المتحدة",
+    "locality": "دبي",
+    "country": "الإمارات العربية المتحدة",
+    "countryCode": "AE",
+    "latitude": 25.204849,
+    "longitude": 55.270783,
+    "phone": "+971 4 555 1234",
+    "website": "https://dubaidentalclinic.ae",
+    "businessStatus": "OPERATIONAL"
+  }
+}

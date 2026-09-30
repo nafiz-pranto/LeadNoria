@@ -1,0 +1,194 @@
+{
+  "fixtureId": "10-multilingual-content-site",
+  "description": "Business website with multi-script Bengali and English dental service copy",
+  "candidate": {
+    "candidateId": "cand-10",
+    "runId": "run-p6-test",
+    "source": "META_AD_LIBRARY",
+    "sourceIdentifier": {
+      "sourceType": "META_AD_LIBRARY",
+      "sourceRecordId": "cand-10",
+      "sourceRecordType": "GENERIC_SOURCE_ID",
+      "sourceContext": "META_AD_LIBRARY",
+      "originalValue": "cand-10",
+      "normalizedValue": "cand-10",
+      "provenance": "META_DERIVED",
+      "policyStatus": "POLICY_APPROVED"
+    },
+    "acquisitionContext": "META_AD_LIBRARY",
+    "overallPolicyStatus": "POLICY_APPROVED",
+    "overallPersistenceStatus": "PERSISTABLE",
+    "overallExportStatus": "EXPORTABLE",
+    "overallProvenance": "META_DERIVED",
+    "sourceContributions": [
+      {
+        "source": "META_AD_LIBRARY",
+        "provenance": "META_DERIVED",
+        "fieldName": "entity",
+        "acquisitionContext": "META_AD_LIBRARY",
+        "restrictionBasis": "NONE",
+        "isRestricted": false,
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "businessName": {
+      "value": {
+        "displayName": "ঢাকা ডেন্টাল কেয়ার",
+        "normalizedName": "ঢাকা ডেন্টাল কেয়ার",
+        "comparisonName": "",
+        "detectedScript": "BENGALI"
+      },
+      "fieldName": "businessName",
+      "provenance": "META_DERIVED",
+      "acquisitionContext": "META_AD_LIBRARY",
+      "source": "META_AD_LIBRARY",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_APPROVED",
+      "persistenceStatus": "PERSISTABLE",
+      "exportStatus": "EXPORTABLE"
+    },
+    "websiteUrl": {
+      "value": {
+        "originalUrl": "https://dhakadentalcare.bd",
+        "normalizedUrl": "https://dhakadentalcare.bd",
+        "canonicalDomain": "dhakadentalcare.bd",
+        "canonicalOrigin": "https://example.com",
+        "protocol": "https:",
+        "hostname": "example.com",
+        "pathname": "/",
+        "hasMeaningfulSubdomain": false,
+        "preservedParams": {},
+        "isCredentialBearing": false,
+        "isValid": true
+      },
+      "fieldName": "websiteUrl",
+      "provenance": "META_DERIVED",
+      "acquisitionContext": "META_AD_LIBRARY",
+      "source": "META_AD_LIBRARY",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_APPROVED",
+      "persistenceStatus": "PERSISTABLE",
+      "exportStatus": "EXPORTABLE"
+    },
+    "phones": [],
+    "emails": [],
+    "address": {
+      "value": {
+        "displayAddress": "Dhaka, Bangladesh",
+        "normalizedAddress": "dhaka, bangladesh",
+        "locality": "Dhaka",
+        "country": "Bangladesh",
+        "countryCode": "BD"
+      },
+      "fieldName": "address",
+      "provenance": "META_DERIVED",
+      "acquisitionContext": "META_AD_LIBRARY",
+      "source": "META_AD_LIBRARY",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_APPROVED",
+      "persistenceStatus": "PERSISTABLE",
+      "exportStatus": "EXPORTABLE"
+    },
+    "categories": [
+      {
+        "value": {
+          "sourceCategory": "Dental Care",
+          "normalizedCategory": "dental care",
+          "categoryConfidence": "STRONG"
+        },
+        "fieldName": "category",
+        "provenance": "META_DERIVED",
+        "acquisitionContext": "META_AD_LIBRARY",
+        "source": "META_AD_LIBRARY",
+        "capturedAt": "2026-09-29T12:00:00.000Z",
+        "confidence": "STRONG",
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "socialUrls": [],
+    "normalizationAudit": {
+      "normalizedAt": "2026-09-29T12:00:00.000Z",
+      "engineVersion": "1.1.0",
+      "errors": [],
+      "warnings": [],
+      "isSanitized": true
+    }
+  },
+  "evidence": {
+    "websiteUrl": "https://dhakadentalcare.bd",
+    "normalizedUrl": "https://dhakadentalcare.bd",
+    "canonicalOrigin": "https://dhakadentalcare.bd",
+    "canonicalDomain": "dhakadentalcare.bd",
+    "verificationState": "WEBSITE_VERIFIED_BUSINESS_SITE",
+    "httpStatus": 200,
+    "redirectChain": [
+      "https://dhakadentalcare.bd"
+    ],
+    "pagesVisited": [
+      "https://dhakadentalcare.bd"
+    ],
+    "sameOrigin": true,
+    "businessNameEvidence": {
+      "matched": true,
+      "score": 0.95,
+      "evidenceSnippet": "ঢাকা ডেন্টাল কেয়ার - আন্তর্জাতিক মানের চিকিৎসা"
+    },
+    "addressEvidence": {
+      "matched": false,
+      "localityMatched": true
+    },
+    "phoneEvidence": {
+      "matched": false
+    },
+    "emailEvidence": {
+      "matched": false
+    },
+    "brandEvidence": {
+      "matched": false
+    },
+    "serviceEvidence": {
+      "matched": true,
+      "keywords": [
+        "দাঁতের চিকিৎসা",
+        "ডেন্টাল ক্লিনিক",
+        "dental implants"
+      ]
+    },
+    "aboutEvidence": {
+      "matched": false
+    },
+    "contactEvidence": {
+      "matched": false,
+      "formPresent": false
+    },
+    "parkingEvidence": {
+      "isParked": false
+    },
+    "nonBusinessEvidence": {
+      "isNonBusiness": false
+    },
+    "capturedAt": "2026-09-29T12:00:00.000Z",
+    "policyStatus": "TARGET_SITE_RULES_APPLY",
+    "sourceContributions": [
+      {
+        "source": "USER_PROVIDED_DOMAIN",
+        "provenance": "WEBSITE_DERIVED",
+        "fieldName": "websiteEvidence",
+        "acquisitionContext": "WEBSITE_DIRECT",
+        "restrictionBasis": "TARGET_SITE_RULES",
+        "isRestricted": false,
+        "policyStatus": "TARGET_SITE_RULES_APPLY",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "derivedFrom": []
+  }
+}

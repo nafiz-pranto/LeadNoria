@@ -1,0 +1,20 @@
+{
+  "fixtureId": "07-same-name-same-domain",
+  "description": "Same business name and exact canonical non-generic domain",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_dom_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Summit Dental Care",
+      "website": "https://summitdentalcare.com/services"
+    },
+    {
+      "sourceId": "ChIJ_dom_02",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Summit Dental Care",
+      "website": "https://www.summitdentalcare.com/?ref=gmb"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "fixtureId": "02-bengali-business",
+  "description": "Bengali script business with Unicode characters",
+  "candidate": {
+    "sourceId": "ChIJ_bn_dhaka_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "ঢাকা ডেন্টাল কেয়ার অ্যান্ড ইমপ্লান্ট সেন্টার",
+    "category": "দাঁতের ডাক্তার",
+    "address": "১২/এ, মিরপুর রোড, ধানমন্ডি, ঢাকা ১২০৫",
+    "locality": "ঢাকা",
+    "postalCode": "১২০৫",
+    "country": "বাংলাদেশ",
+    "countryCode": "BD",
+    "latitude": 23.746465,
+    "longitude": 90.376015,
+    "phone": "+880 1711-555999",
+    "website": "https://dhakadental.com.bd",
+    "businessStatus": "OPEN"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "fixtureId": "10-functional-website-params",
+  "description": "Website URL with functional parameters preserved",
+  "candidate": {
+    "sourceId": "ChIJ_func_params_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Bengal Home Living",
+    "website": "https://bengalhomeliving.com/?store=gulshan&branch=2&lang=bn&mode=catalog"
+  }
+}

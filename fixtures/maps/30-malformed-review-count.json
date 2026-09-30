@@ -1,0 +1,11 @@
+{
+  "fixtureId": "30-malformed-review-count",
+  "description": "Malformed review count string (\"hundreds\")",
+  "candidate": {
+    "sourceId": "ChIJ_review_malformed_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Ambiguous Reviews Store",
+    "rating": 4.5,
+    "reviewCount": "hundreds"
+  }
+}

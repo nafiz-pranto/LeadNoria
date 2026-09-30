@@ -1,0 +1,80 @@
+{
+  "product": "LeadNoria",
+  "tagline": "Discover. Verify. Connect.",
+  "descriptor": "Business lead research from real public signals.",
+  "version": "1.1.0",
+  "releaseCandidate": "Post-Release Full-System Audit Verified Build",
+  "releaseArtifact": {
+    "path": "dist/leadnoria-v1.1.0.zip",
+    "byteSize": 705111,
+    "sha256": "c17610fc1b22773cfe8ed282f6ddf40be31d0a38488999dff27bd3831e985e94",
+    "fileCount": 16,
+    "manifestSha256": "6d7bc75317b20ee83f1209a91297f1610b5e4c1ff10f16c9db66a4a5ace4510f"
+  },
+  "historicalFrozenBaseline": {
+    "path": "dist/leadnoria-v1.0.0.zip",
+    "byteSize": 677071,
+    "sha256": "bbb3d9f16e1efde29e77af0bf2ffb5e30f20f9b50ad5c0fb89f578aa52931d5b",
+    "status": "UNTOUCHED_AND_VERIFIED"
+  },
+  "buildCommand": "node scripts/build-extension.mjs",
+  "typecheckCommand": "node node_modules/typescript/bin/tsc --noEmit",
+  "testAccounting": {
+    "totalHistoricalAndCurrentTests": 1270,
+    "totalPassed": 1270,
+    "totalFailed": 0,
+    "totalSkipped": 0,
+    "postFreezeVerificationTests": 19,
+    "historicalRegressionTests": 1031,
+    "phase18AuditTests": 157,
+    "postReleaseFullAuditTests": 63
+  },
+  "runtimeEnvironment": {
+    "nodeVersion": "v22.14.0",
+    "packageManagerVersion": "npm 10.9.2",
+    "typescriptVersion": "5.8.3",
+    "browserEngine": "Microsoft Edge / Chromium 154.0.4258.37",
+    "operatingSystem": "Microsoft Windows NT 10.0.19045.0 (Windows 10 Pro / Enterprise x64, Build 19045.5487)",
+    "buildMode": "production"
+  },
+  "manifestPermissions": {
+    "manifestVersion": 3,
+    "permissions": ["storage", "tabs", "scripting", "sidePanel"],
+    "hostPermissions": [
+      "https://www.facebook.com/ads/library/*",
+      "https://web.facebook.com/ads/library/*"
+    ],
+    "optionalHostPermissions": [
+      "https://*/*"
+    ]
+  },
+  "sourceCapabilities": {
+    "META": {
+      "status": "AVAILABLE",
+      "mode": "LIVE_AND_FIXTURE",
+      "scope": "Meta Public Ad Library only"
+    },
+    "GOOGLE_MAPS": {
+      "status": "CONTRACT_ONLY",
+      "mode": "DRY_RUN",
+      "liveScraping": "STRICTLY_PROHIBITED",
+      "note": "Contract planning and dry-run geographic units only"
+    },
+    "WEBSITE": {
+      "status": "AVAILABLE",
+      "mode": "USER_DIRECTED_VERIFICATION",
+      "scope": "Target domain public signals only"
+    },
+    "USER_PROVIDED": {
+      "status": "AVAILABLE",
+      "mode": "MANUAL_INPUT",
+      "scope": "Direct seed input"
+    }
+  },
+  "knownLimitations": [
+    "Google Maps extraction remains strictly CONTRACT_ONLY (no live scraping).",
+    "Public source signal availability depends on target entity public footprint.",
+    "Website verification requires explicit user domain initiation.",
+    "Storage operates within default browser local quota (bounded by checkpoint pruning to 10 latest checkpoints)."
+  ]
+}

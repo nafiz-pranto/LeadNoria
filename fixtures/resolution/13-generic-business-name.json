@@ -1,0 +1,22 @@
+{
+  "fixtureId": "13-generic-business-name",
+  "description": "Generic business names (\"Dental Clinic\") without corroborating phone or domain -> unresolved / separate",
+  "expectedRelationship": "UNRESOLVED",
+  "expectedEntityCount": 2,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_generic_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Dental Clinic",
+      "locality": "Miami",
+      "countryCode": "US"
+    },
+    {
+      "sourceId": "ChIJ_generic_02",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Dental Clinic",
+      "locality": "Miami",
+      "countryCode": "US"
+    }
+  ]
+}

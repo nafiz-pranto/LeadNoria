@@ -1,0 +1,10 @@
+# LeadNoria Production Release Checksums (SHA-256)
+# Generated: 2026-09-30T17:15:00Z
+# Build: LeadNoria v1.1.0 Post-Release Full-System Audit Build
+
+c17610fc1b22773cfe8ed282f6ddf40be31d0a38488999dff27bd3831e985e94  dist/leadnoria-v1.1.0.zip
+c17610fc1b22773cfe8ed282f6ddf40be31d0a38488999dff27bd3831e985e94  extension.zip
+6d7bc75317b20ee83f1209a91297f1610b5e4c1ff10f16c9db66a4a5ace4510f  extension/manifest.json
+
+# Historical Frozen Baseline (Preserved Untouched)
+bbb3d9f16e1efde29e77af0bf2ffb5e30f20f9b50ad5c0fb89f578aa52931d5b  dist/leadnoria-v1.0.0.zip

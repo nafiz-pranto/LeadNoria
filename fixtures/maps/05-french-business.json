@@ -1,0 +1,22 @@
+{
+  "fixtureId": "05-french-business",
+  "description": "French business with accents and SARL suffix",
+  "candidate": {
+    "sourceId": "ChIJ_fr_paris_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Ébénisterie d’Art & Rénovation SARL",
+    "category": "Fabricant de meubles",
+    "address": "15 Rue de Bretagne, 75003 Paris, France",
+    "street": "15 Rue de Bretagne",
+    "locality": "Paris",
+    "region": "Île-de-France",
+    "postalCode": "75003",
+    "country": "France",
+    "countryCode": "FR",
+    "latitude": 48.862725,
+    "longitude": 2.363014,
+    "phone": "+33 1 42 68 55 00",
+    "website": "https://ebenisterie-art.fr",
+    "businessStatus": "OPERATIONAL"
+  }
+}

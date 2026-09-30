@@ -1,0 +1,24 @@
+{
+  "fixtureId": "24-website-derived-record",
+  "description": "Independent website crawl candidate with WEBSITE_DERIVED provenance",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "web_crawl_artisanoak",
+      "source": "WEBSITE_SCRAPE",
+      "provenance": "WEBSITE_DERIVED",
+      "businessName": "Artisan Oak Handcrafted",
+      "phone": "+1 512-555-0100",
+      "website": "https://artisanoakliving.com"
+    },
+    {
+      "sourceId": "web_crawl_artisanoak_2",
+      "source": "WEBSITE_SCRAPE",
+      "provenance": "WEBSITE_DERIVED",
+      "businessName": "Artisan Oak Handcrafted",
+      "phone": "+1 512-555-0100",
+      "website": "https://artisanoakliving.com"
+    }
+  ]
+}

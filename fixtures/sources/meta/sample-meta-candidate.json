@@ -1,0 +1,15 @@
+{
+  "description": "Synthetic Meta Ad Library candidate fixture for Phase 5 extraction testing",
+  "source": "META_AD_LIBRARY",
+  "candidate": {
+    "adLibraryId": "1049281729481029",
+    "pageId": "918273645",
+    "advertiserName": "Apex Dental Studio · Sponsored",
+    "adText": "Comprehensive family and cosmetic dentistry in Austin, Texas.",
+    "destinationUrl": "https://www.apexdental.com/?utm_source=facebook&utm_campaign=dental_2026&fbclid=IwAR234",
+    "pageProfileUrl": "https://www.facebook.com/apexdentalstudio",
+    "category": "Dental Clinic",
+    "location": "Austin, Texas",
+    "countryCode": "US"
+  }
+}

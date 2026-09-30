@@ -1,0 +1,11 @@
+{
+  "fixtureId": "20-missing-country",
+  "description": "Address without country or countryCode",
+  "candidate": {
+    "sourceId": "ChIJ_no_country_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Main Street Bakery",
+    "address": "100 Main Street",
+    "street": "100 Main Street"
+  }
+}

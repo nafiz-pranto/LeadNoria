@@ -1,0 +1,172 @@
+{
+  "fixtureId": "08-wrong-business-site",
+  "description": "Website resolves but belongs to completely unrelated company",
+  "candidate": {
+    "candidateId": "cand-08",
+    "runId": "run-p6-test",
+    "source": "META_AD_LIBRARY",
+    "sourceIdentifier": {
+      "sourceType": "META_AD_LIBRARY",
+      "sourceRecordId": "cand-08",
+      "sourceRecordType": "GENERIC_SOURCE_ID",
+      "sourceContext": "META_AD_LIBRARY",
+      "originalValue": "cand-08",
+      "normalizedValue": "cand-08",
+      "provenance": "META_DERIVED",
+      "policyStatus": "POLICY_APPROVED"
+    },
+    "acquisitionContext": "META_AD_LIBRARY",
+    "overallPolicyStatus": "POLICY_APPROVED",
+    "overallPersistenceStatus": "PERSISTABLE",
+    "overallExportStatus": "EXPORTABLE",
+    "overallProvenance": "META_DERIVED",
+    "sourceContributions": [
+      {
+        "source": "META_AD_LIBRARY",
+        "provenance": "META_DERIVED",
+        "fieldName": "entity",
+        "acquisitionContext": "META_AD_LIBRARY",
+        "restrictionBasis": "NONE",
+        "isRestricted": false,
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "businessName": {
+      "value": {
+        "displayName": "Apex Dental Studio",
+        "normalizedName": "apex dental studio",
+        "comparisonName": "apexdentalstudio",
+        "detectedScript": "LATIN"
+      },
+      "fieldName": "businessName",
+      "provenance": "META_DERIVED",
+      "acquisitionContext": "META_AD_LIBRARY",
+      "source": "META_AD_LIBRARY",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_APPROVED",
+      "persistenceStatus": "PERSISTABLE",
+      "exportStatus": "EXPORTABLE"
+    },
+    "websiteUrl": {
+      "value": {
+        "originalUrl": "https://www.davesplumbingaustin.com",
+        "normalizedUrl": "https://www.davesplumbingaustin.com",
+        "canonicalDomain": "davesplumbingaustin.com",
+        "canonicalOrigin": "https://example.com",
+        "protocol": "https:",
+        "hostname": "example.com",
+        "pathname": "/",
+        "hasMeaningfulSubdomain": false,
+        "preservedParams": {},
+        "isCredentialBearing": false,
+        "isValid": true
+      },
+      "fieldName": "websiteUrl",
+      "provenance": "META_DERIVED",
+      "acquisitionContext": "META_AD_LIBRARY",
+      "source": "META_AD_LIBRARY",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_APPROVED",
+      "persistenceStatus": "PERSISTABLE",
+      "exportStatus": "EXPORTABLE"
+    },
+    "phones": [],
+    "emails": [],
+    "categories": [
+      {
+        "value": {
+          "sourceCategory": "Dental Clinic",
+          "normalizedCategory": "dental clinic",
+          "categoryConfidence": "STRONG"
+        },
+        "fieldName": "category",
+        "provenance": "META_DERIVED",
+        "acquisitionContext": "META_AD_LIBRARY",
+        "source": "META_AD_LIBRARY",
+        "capturedAt": "2026-09-29T12:00:00.000Z",
+        "confidence": "STRONG",
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "socialUrls": [],
+    "normalizationAudit": {
+      "normalizedAt": "2026-09-29T12:00:00.000Z",
+      "engineVersion": "1.1.0",
+      "errors": [],
+      "warnings": [],
+      "isSanitized": true
+    }
+  },
+  "evidence": {
+    "websiteUrl": "https://www.davesplumbingaustin.com",
+    "normalizedUrl": "https://www.davesplumbingaustin.com",
+    "canonicalOrigin": "https://davesplumbingaustin.com",
+    "canonicalDomain": "davesplumbingaustin.com",
+    "verificationState": "WEBSITE_NON_BUSINESS",
+    "httpStatus": 200,
+    "redirectChain": [
+      "https://www.davesplumbingaustin.com"
+    ],
+    "pagesVisited": [
+      "https://www.davesplumbingaustin.com"
+    ],
+    "sameOrigin": true,
+    "businessNameEvidence": {
+      "matched": false,
+      "score": 0.05
+    },
+    "addressEvidence": {
+      "matched": false,
+      "localityMatched": true
+    },
+    "phoneEvidence": {
+      "matched": false
+    },
+    "emailEvidence": {
+      "matched": false
+    },
+    "brandEvidence": {
+      "matched": false
+    },
+    "serviceEvidence": {
+      "matched": false,
+      "keywords": []
+    },
+    "aboutEvidence": {
+      "matched": false
+    },
+    "contactEvidence": {
+      "matched": false,
+      "formPresent": false
+    },
+    "parkingEvidence": {
+      "isParked": false
+    },
+    "nonBusinessEvidence": {
+      "isNonBusiness": true,
+      "reason": "Content is exclusively plumbing contractor, contradictory to dental candidate."
+    },
+    "capturedAt": "2026-09-29T12:00:00.000Z",
+    "policyStatus": "TARGET_SITE_RULES_APPLY",
+    "sourceContributions": [
+      {
+        "source": "USER_PROVIDED_DOMAIN",
+        "provenance": "WEBSITE_DERIVED",
+        "fieldName": "websiteEvidence",
+        "acquisitionContext": "WEBSITE_DIRECT",
+        "restrictionBasis": "TARGET_SITE_RULES",
+        "isRestricted": false,
+        "policyStatus": "TARGET_SITE_RULES_APPLY",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "derivedFrom": []
+  }
+}

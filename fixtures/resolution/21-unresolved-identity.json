@@ -1,0 +1,15 @@
+{
+  "fixtureId": "21-unresolved-identity",
+  "description": "Single isolated candidate with incomplete evidence -> UNRESOLVED single entity",
+  "expectedRelationship": "UNRESOLVED",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_unres_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Local Corner Workshop",
+      "locality": "Austin",
+      "countryCode": "US"
+    }
+  ]
+}

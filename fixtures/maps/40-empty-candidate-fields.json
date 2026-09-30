@@ -1,0 +1,9 @@
+{
+  "fixtureId": "40-empty-candidate-fields",
+  "description": "Candidate with bare minimum fields (id and name only)",
+  "candidate": {
+    "sourceId": "ChIJ_bare_min_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Minimalist Studio"
+  }
+}

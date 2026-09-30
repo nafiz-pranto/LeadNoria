@@ -1,0 +1,25 @@
+{
+  "fixtureId": "25-mixed-provenance-entity",
+  "description": "Google candidate merged with Website candidate -> MIXED provenance with Google restrictions preserved",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_mixed_g",
+      "source": "GOOGLE_MAPS",
+      "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+      "restrictionBasis": "GOOGLE_CONSUMER_WEB_RESTRICTED",
+      "businessName": "Heritage Woodcraft",
+      "phone": "+1 512-555-0999",
+      "website": "https://heritagewoodcraft.com"
+    },
+    {
+      "sourceId": "web_mixed_w",
+      "source": "WEBSITE_SCRAPE",
+      "provenance": "WEBSITE_DERIVED",
+      "businessName": "Heritage Woodcraft",
+      "phone": "+1 512-555-0999",
+      "website": "https://heritagewoodcraft.com"
+    }
+  ]
+}

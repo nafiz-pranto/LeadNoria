@@ -1,0 +1,24 @@
+{
+  "fixtureId": "22-google-derived-restricted-record",
+  "description": "Google consumer-web candidate must retain restriction basis and NOT_PERSISTABLE / NOT_EXPORTABLE in entity summary",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_restr_01",
+      "source": "GOOGLE_MAPS",
+      "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+      "restrictionBasis": "GOOGLE_CONSUMER_WEB_RESTRICTED",
+      "businessName": "Restricted Maps Plumbing",
+      "website": "https://restrictedplumbing.com"
+    },
+    {
+      "sourceId": "ChIJ_restr_01",
+      "source": "GOOGLE_MAPS",
+      "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+      "restrictionBasis": "GOOGLE_CONSUMER_WEB_RESTRICTED",
+      "businessName": "Restricted Maps Plumbing",
+      "website": "https://restrictedplumbing.com"
+    }
+  ]
+}

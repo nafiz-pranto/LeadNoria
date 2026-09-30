@@ -1,0 +1,59 @@
+{
+  "description": "International multi-lingual synthetic fixtures for Phase 5 extraction testing",
+  "candidates": [
+    {
+      "language": "English",
+      "businessName": "Highland Dental Practice Ltd.",
+      "websiteUrl": "https://www.highlanddental.co.uk",
+      "phone": "+44 141 555 0123",
+      "address": "45 Buchanan Street, Glasgow, G1 3HL, United Kingdom",
+      "category": "Dental Clinic",
+      "countryCode": "GB"
+    },
+    {
+      "language": "Bengali",
+      "businessName": "পদ্মা ডেন্টাল কেয়ার (অফিসিয়াল)",
+      "websiteUrl": "https://www.padmadental.com.bd/?utm_campaign=dhaka",
+      "phone": "+880 1711 000000",
+      "address": "১২ মিরপুর রোড, ধানমন্ডি, ঢাকা ১২০৫, বাংলাদেশ",
+      "category": "দাঁতের ডাক্তার",
+      "countryCode": "BD"
+    },
+    {
+      "language": "Arabic",
+      "businessName": "مستشفى النور التخصصي",
+      "websiteUrl": "https://alnoor-hospital.ae/ar/",
+      "phone": "+971 4 555 1234",
+      "address": "شارع الشيخ زايد، دبي، الإمارات العربية المتحدة",
+      "category": "مستشفى",
+      "countryCode": "AE"
+    },
+    {
+      "language": "German",
+      "businessName": "Münchner Sanitär & Heizungstechnik GmbH",
+      "websiteUrl": "https://www.muenchner-sanitaer.de/kontakt.html",
+      "phone": "+49 89 12345678",
+      "address": "Leopoldstraße 150, 80804 München, Deutschland",
+      "category": "Klempner",
+      "countryCode": "DE"
+    },
+    {
+      "language": "French",
+      "businessName": "Boulangerie Patisserie Saint-Honoré S.A.",
+      "websiteUrl": "https://www.pain-honore.fr",
+      "phone": "+33 1 42 68 55 00",
+      "address": "12 Rue du Faubourg Saint-Honoré, 75008 Paris, France",
+      "category": "Boulangerie",
+      "countryCode": "FR"
+    },
+    {
+      "language": "Spanish",
+      "businessName": "Clínica Dental Sol & Salud S.L.",
+      "websiteUrl": "https://www.solysalud-dental.es/servicios?ref=es_search",
+      "phone": "+34 91 555 4321",
+      "address": "Calle de Alcalá 42, 28014 Madrid, España",
+      "category": "Dentista",
+      "countryCode": "ES"
+    }
+  ]
+}

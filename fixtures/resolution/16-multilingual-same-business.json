@@ -1,0 +1,26 @@
+{
+  "fixtureId": "16-multilingual-same-business",
+  "description": "Bengali script and English name with same phone and street address -> merged",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_multi_bn",
+      "source": "GOOGLE_MAPS",
+      "businessName": "হাল ফ্যাশন লিমিটেড",
+      "street": "House 12, Road 4",
+      "locality": "Dhaka",
+      "countryCode": "BD",
+      "phone": "+880 1711-888999"
+    },
+    {
+      "sourceId": "ChIJ_multi_en",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Haal Fashion Ltd",
+      "street": "House 12, Road 4",
+      "locality": "Dhaka",
+      "countryCode": "BD",
+      "phone": "+880 1711-888999"
+    }
+  ]
+}

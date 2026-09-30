@@ -1,0 +1,26 @@
+{
+  "fixtureId": "26-google-api-service-specific",
+  "description": "Google API Places candidate retaining GOOGLE_API_SERVICE_SPECIFIC and POLICY_REVIEW_REQUIRED",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_api_places_01",
+      "source": "GOOGLE_MAPS",
+      "acquisitionContext": "GOOGLE_PLATFORM_API",
+      "provenance": "GOOGLE_API_DERIVED",
+      "restrictionBasis": "GOOGLE_API_SERVICE_SPECIFIC",
+      "businessName": "Enterprise Cloud Systems",
+      "website": "https://enterprisecloud.com"
+    },
+    {
+      "sourceId": "ChIJ_api_places_01",
+      "source": "GOOGLE_MAPS",
+      "acquisitionContext": "GOOGLE_PLATFORM_API",
+      "provenance": "GOOGLE_API_DERIVED",
+      "restrictionBasis": "GOOGLE_API_SERVICE_SPECIFIC",
+      "businessName": "Enterprise Cloud Systems Inc",
+      "website": "https://enterprisecloud.com"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "description": "Sample user-provided domain candidate fixture for Phase 5 extraction testing",
+  "source": "USER_PROVIDED_DOMAIN",
+  "candidate": {
+    "domainOrUrl": "https://manchester-roofers.co.uk",
+    "businessName": "Manchester Roofers Ltd",
+    "countryCode": "GB"
+  }
+}

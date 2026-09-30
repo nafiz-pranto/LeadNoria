@@ -1,0 +1,26 @@
+{
+  "fixtureId": "09-same-brand-different-city",
+  "description": "Same parent brand in two distinct cities (Berlin vs Hamburg) -> branch relationship, not same entity",
+  "expectedRelationship": "SAME_PARENT_BRAND_DIFFERENT_BRANCH",
+  "expectedEntityCount": 2,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_city_berlin",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Müller & Söhne Schreinerei GmbH",
+      "street": "Hauptstraße 12",
+      "locality": "Berlin",
+      "countryCode": "DE",
+      "website": "https://mueller-schreinerei.de"
+    },
+    {
+      "sourceId": "ChIJ_city_hamburg",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Müller & Söhne Schreinerei GmbH",
+      "street": "Mönckebergstraße 45",
+      "locality": "Hamburg",
+      "countryCode": "DE",
+      "website": "https://mueller-schreinerei.de"
+    }
+  ]
+}

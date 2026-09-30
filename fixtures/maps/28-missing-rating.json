@@ -1,0 +1,11 @@
+{
+  "fixtureId": "28-missing-rating",
+  "description": "New business with missing rating and 0 reviews",
+  "candidate": {
+    "sourceId": "ChIJ_rating_missing_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Brand New Dental Practice",
+    "rating": null,
+    "reviewCount": 0
+  }
+}

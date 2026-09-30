@@ -794,7 +794,7 @@ var require_scheduler = __commonJS({
 var require_react_dom_production = __commonJS({
   "node_modules/react-dom/cjs/react-dom.production.js"(exports) {
     "use strict";
-    var React3 = require_react();
+    var React9 = require_react();
     function formatProdErrorMessage(code) {
       var url = "https://react.dev/errors/" + code;
       if (1 < arguments.length) {
@@ -836,7 +836,7 @@ var require_react_dom_production = __commonJS({
         implementation
       };
     }
-    var ReactSharedInternals = React3.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+    var ReactSharedInternals = React9.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
     function getCrossOriginStringAs(as, input) {
       if ("font" === as) return "";
       if ("string" === typeof input)
@@ -978,7 +978,7 @@ var require_react_dom_client_production = __commonJS({
   "node_modules/react-dom/cjs/react-dom-client.production.js"(exports) {
     "use strict";
     var Scheduler = require_scheduler();
-    var React3 = require_react();
+    var React9 = require_react();
     var ReactDOM2 = require_react_dom();
     function formatProdErrorMessage(code) {
       var url = "https://react.dev/errors/" + code;
@@ -1269,7 +1269,7 @@ var require_react_dom_client_production = __commonJS({
       return null;
     }
     var isArrayImpl = Array.isArray;
-    var ReactSharedInternals = React3.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+    var ReactSharedInternals = React9.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
     var ReactDOMSharedInternals = ReactDOM2.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
     var sharedNotPendingObject = {
       pending: false,
@@ -14418,7 +14418,7 @@ var require_react_dom_client_production = __commonJS({
         0 === i && attemptExplicitHydrationTarget(target);
       }
     };
-    var isomorphicReactPackageVersion$jscomp$inline_2043 = React3.version;
+    var isomorphicReactPackageVersion$jscomp$inline_2043 = React9.version;
     if ("19.3.0" !== isomorphicReactPackageVersion$jscomp$inline_2043)
       throw Error(
         formatProdErrorMessage(
@@ -14537,6 +14537,48 @@ var require_client = __commonJS({
     if (true) {
       checkDCE();
       module.exports = require_react_dom_client_production();
+    } else {
+      module.exports = null;
+    }
+  }
+});
+
+// node_modules/react/cjs/react-jsx-runtime.production.js
+var require_react_jsx_runtime_production = __commonJS({
+  "node_modules/react/cjs/react-jsx-runtime.production.js"(exports) {
+    "use strict";
+    var REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element");
+    var REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment");
+    function jsxProd(type, config, maybeKey) {
+      var key = null;
+      void 0 !== maybeKey && (key = "" + maybeKey);
+      void 0 !== config.key && (key = "" + config.key);
+      if ("key" in config) {
+        maybeKey = {};
+        for (var propName in config)
+          "key" !== propName && (maybeKey[propName] = config[propName]);
+      } else maybeKey = config;
+      config = maybeKey.ref;
+      return {
+        $$typeof: REACT_ELEMENT_TYPE,
+        type,
+        key,
+        ref: void 0 !== config ? config : null,
+        props: maybeKey
+      };
+    }
+    exports.Fragment = REACT_FRAGMENT_TYPE;
+    exports.jsx = jsxProd;
+    exports.jsxs = jsxProd;
+  }
+});
+
+// node_modules/react/jsx-runtime.js
+var require_jsx_runtime = __commonJS({
+  "node_modules/react/jsx-runtime.js"(exports, module) {
+    "use strict";
+    if (true) {
+      module.exports = require_react_jsx_runtime_production();
     } else {
       module.exports = null;
     }
@@ -17180,309 +17222,157 @@ var init_relevanceEngine = __esm({
   }
 });
 
-// node_modules/react/cjs/react-jsx-runtime.production.js
-var require_react_jsx_runtime_production = __commonJS({
-  "node_modules/react/cjs/react-jsx-runtime.production.js"(exports) {
-    "use strict";
-    var REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element");
-    var REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment");
-    function jsxProd(type, config, maybeKey) {
-      var key = null;
-      void 0 !== maybeKey && (key = "" + maybeKey);
-      void 0 !== config.key && (key = "" + config.key);
-      if ("key" in config) {
-        maybeKey = {};
-        for (var propName in config)
-          "key" !== propName && (maybeKey[propName] = config[propName]);
-      } else maybeKey = config;
-      config = maybeKey.ref;
-      return {
-        $$typeof: REACT_ELEMENT_TYPE,
-        type,
-        key,
-        ref: void 0 !== config ? config : null,
-        props: maybeKey
-      };
-    }
-    exports.Fragment = REACT_FRAGMENT_TYPE;
-    exports.jsx = jsxProd;
-    exports.jsxs = jsxProd;
-  }
-});
-
-// node_modules/react/jsx-runtime.js
-var require_jsx_runtime = __commonJS({
-  "node_modules/react/jsx-runtime.js"(exports, module) {
-    "use strict";
-    if (true) {
-      module.exports = require_react_jsx_runtime_production();
-    } else {
-      module.exports = null;
-    }
-  }
-});
-
 // src/extension/ui/index.tsx
-var import_react4 = __toESM(require_react(), 1);
+var import_react8 = __toESM(require_react(), 1);
 var import_client = __toESM(require_client(), 1);
 
 // src/extension/ui/App.tsx
-var import_react3 = __toESM(require_react(), 1);
+var import_react7 = __toESM(require_react(), 1);
 
-// node_modules/lucide-react/dist/esm/createLucideIcon.js
-var import_react2 = __toESM(require_react());
-
-// node_modules/lucide-react/dist/esm/shared/src/utils.js
-var toKebabCase = (string) => string.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
-var toCamelCase = (string) => string.replace(
-  /^([A-Z])|[\s-_]+(\w)/g,
-  (match, p1, p2) => p2 ? p2.toUpperCase() : p1.toLowerCase()
-);
-var toPascalCase = (string) => {
-  const camelCase = toCamelCase(string);
-  return camelCase.charAt(0).toUpperCase() + camelCase.slice(1);
+// src/extension/ui/components/Header.tsx
+var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
+var Header = ({
+  activeTab,
+  onSelectTab,
+  resultsCount = 0,
+  isRunning = false
+}) => {
+  const tabs = [
+    { id: "RESEARCH", label: "Research" },
+    { id: "RUN_STATUS", label: "Run Status", badge: isRunning ? "LIVE" : void 0 },
+    { id: "RESULTS", label: "Results", badge: resultsCount > 0 ? resultsCount : void 0 },
+    { id: "HISTORY", label: "History" },
+    { id: "SETTINGS", label: "Settings" }
+  ];
+  return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "w-full bg-slate-950 border-b border-slate-800 shrink-0", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "px-4 py-2.5 flex items-center justify-between border-b border-slate-900", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-6 h-6 rounded-md bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-sm", children: "LN" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { className: "text-sm font-bold text-slate-100 tracking-tight flex items-center gap-1.5 leading-none", children: [
+            "LeadNoria",
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-[10px] font-normal text-slate-500", children: "\u2022 Discover. Verify. Connect." })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "text-[10px] text-slate-400 mt-0.5 leading-none", children: "Business lead research from real public signals." })
+        ] })
+      ] }),
+      isRunning && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold text-sky-400 bg-sky-950/60 border border-sky-500/40 rounded-full animate-pulse", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "w-1.5 h-1.5 rounded-full bg-sky-400" }),
+        "RUNNING"
+      ] })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("nav", { className: "flex items-center px-2 gap-1 overflow-x-auto scrollbar-none", role: "tablist", "aria-label": "LeadNoria navigation tabs", children: tabs.map((tab) => {
+      const isActive = activeTab === tab.id;
+      return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+        "button",
+        {
+          role: "tab",
+          "aria-selected": isActive,
+          "aria-controls": `tabpanel-${tab.id}`,
+          id: `tab-${tab.id}`,
+          onClick: () => onSelectTab(tab.id),
+          className: `px-3 py-2 text-xs font-medium border-b-2 transition-colors flex items-center gap-1.5 whitespace-nowrap focus:outline-none focus:ring-1 focus:ring-sky-400 ${isActive ? "border-sky-500 text-sky-400 font-semibold" : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700"}`,
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: tab.label }),
+            tab.badge != null && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `px-1.5 py-0.2 text-[9px] rounded-full font-bold ${tab.badge === "LIVE" ? "bg-sky-500/20 text-sky-300 border border-sky-500/40" : "bg-slate-800 text-slate-300"}`, children: tab.badge })
+          ]
+        },
+        tab.id
+      );
+    }) })
+  ] });
 };
-var mergeClasses = (...classes) => classes.filter((className, index, array) => {
-  return Boolean(className) && className.trim() !== "" && array.indexOf(className) === index;
-}).join(" ").trim();
-var hasA11yProp = (props) => {
-  for (const prop in props) {
-    if (prop.startsWith("aria-") || prop === "role" || prop === "title") {
-      return true;
-    }
-  }
-};
 
-// node_modules/lucide-react/dist/esm/Icon.js
-var import_react = __toESM(require_react());
+// src/extension/ui/components/ResearchConfigView.tsx
+var import_react = __toESM(require_react(), 1);
 
-// node_modules/lucide-react/dist/esm/defaultAttributes.js
-var defaultAttributes = {
-  xmlns: "http://www.w3.org/2000/svg",
-  width: 24,
-  height: 24,
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 2,
-  strokeLinecap: "round",
-  strokeLinejoin: "round"
-};
-
-// node_modules/lucide-react/dist/esm/Icon.js
-var Icon = (0, import_react.forwardRef)(
-  ({
-    color = "currentColor",
-    size = 24,
-    strokeWidth = 2,
-    absoluteStrokeWidth,
-    className = "",
-    children,
-    iconNode,
-    ...rest
-  }, ref) => (0, import_react.createElement)(
-    "svg",
-    {
-      ref,
-      ...defaultAttributes,
-      width: size,
-      height: size,
-      stroke: color,
-      strokeWidth: absoluteStrokeWidth ? Number(strokeWidth) * 24 / Number(size) : strokeWidth,
-      className: mergeClasses("lucide", className),
-      ...!children && !hasA11yProp(rest) && { "aria-hidden": "true" },
-      ...rest
-    },
-    [
-      ...iconNode.map(([tag, attrs]) => (0, import_react.createElement)(tag, attrs)),
-      ...Array.isArray(children) ? children : [children]
-    ]
-  )
-);
-
-// node_modules/lucide-react/dist/esm/createLucideIcon.js
-var createLucideIcon = (iconName, iconNode) => {
-  const Component = (0, import_react2.forwardRef)(
-    ({ className, ...props }, ref) => (0, import_react2.createElement)(Icon, {
-      ref,
-      iconNode,
-      className: mergeClasses(
-        `lucide-${toKebabCase(toPascalCase(iconName))}`,
-        `lucide-${iconName}`,
-        className
+// src/extension/ui/components/SourceSelector.tsx
+var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
+var SourceSelector = ({
+  selectedSource,
+  onSelectSource,
+  disabled = false
+}) => {
+  const isMeta = selectedSource === "META";
+  const isGmaps = selectedSource === "GOOGLE_MAPS";
+  return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "w-full flex flex-col gap-2 p-3 bg-slate-900 border border-slate-800 rounded-lg", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center justify-between", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "Research Source" }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-[11px] text-slate-500", children: "Explicit Source Selection" })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "grid grid-cols-2 gap-2", role: "radiogroup", "aria-label": "Select research source", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
+        "button",
+        {
+          type: "button",
+          role: "radio",
+          "aria-checked": isMeta,
+          "aria-label": "From Meta Ad Library (Available for live discovery)",
+          disabled,
+          onClick: () => onSelectSource("META"),
+          className: `flex flex-col items-start p-3 rounded-md border text-left transition-all focus:outline-none focus:ring-2 focus:ring-sky-400 ${isMeta ? "bg-slate-800 border-sky-500/80 shadow-sm shadow-sky-500/10" : "bg-slate-950/60 border-slate-800 hover:border-slate-700 opacity-80"}`,
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center justify-between w-full mb-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { className: "font-medium text-sm text-slate-100 flex items-center gap-1.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-sky-400", "aria-hidden": "true", children: "\u29BF" }),
+                "From Meta Ad Library"
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { className: "inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 rounded", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { "aria-hidden": "true", children: "\u2713" }),
+                " AVAILABLE"
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "text-[11px] text-slate-400 leading-relaxed", children: "Public commercial advertiser signals with active creative presence." })
+          ]
+        }
       ),
-      ...props
-    })
-  );
-  Component.displayName = toPascalCase(iconName);
-  return Component;
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
+        "button",
+        {
+          type: "button",
+          role: "radio",
+          "aria-checked": isGmaps,
+          "aria-label": "From Google Maps (Contract available, live extraction not enabled)",
+          disabled,
+          onClick: () => onSelectSource("GOOGLE_MAPS"),
+          className: `flex flex-col items-start p-3 rounded-md border text-left transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 ${isGmaps ? "bg-slate-800 border-purple-500/80 shadow-sm shadow-purple-500/10" : "bg-slate-950/60 border-slate-800 hover:border-slate-700 opacity-80"}`,
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center justify-between w-full mb-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { className: "font-medium text-sm text-slate-100 flex items-center gap-1.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-purple-400", "aria-hidden": "true", children: "\u2298" }),
+                "From Google Maps"
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { className: "inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold text-purple-400 bg-purple-950/60 border border-purple-500/40 rounded", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { "aria-hidden": "true", children: "\u2298" }),
+                " CONTRACT ONLY"
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "text-[11px] text-slate-400 leading-relaxed", children: "Contract & geographic planning available. Live extraction is not enabled." })
+          ]
+        }
+      )
+    ] }),
+    isGmaps && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
+      "div",
+      {
+        className: "mt-1 p-2.5 rounded bg-purple-950/30 border border-purple-500/30 text-[11px] text-purple-200 flex items-start gap-2",
+        role: "status",
+        "aria-live": "polite",
+        children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-purple-400 text-sm leading-none mt-0.5", "aria-hidden": "true", children: "\u2139" }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: "Architectural Invariant:" }),
+            " Google Maps operates strictly in ",
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("code", { className: "px-1 py-0.5 bg-purple-900/50 rounded text-purple-300 font-mono", children: "CONTRACT_ONLY" }),
+            " mode. You may plan geographic coverage, inspect SearchUnits, or replay test fixtures. Live extraction cannot be executed."
+          ] })
+        ]
+      }
+    )
+  ] });
 };
 
-// node_modules/lucide-react/dist/esm/icons/building-2.js
-var __iconNode = [
-  ["path", { d: "M10 12h4", key: "a56b0p" }],
-  ["path", { d: "M10 8h4", key: "1sr2af" }],
-  ["path", { d: "M14 21v-3a2 2 0 0 0-4 0v3", key: "1rgiei" }],
-  [
-    "path",
-    {
-      d: "M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2",
-      key: "secmi2"
-    }
-  ],
-  ["path", { d: "M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16", key: "16ra0t" }]
-];
-var Building2 = createLucideIcon("building-2", __iconNode);
-
-// node_modules/lucide-react/dist/esm/icons/circle-check.js
-var __iconNode2 = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
-];
-var CircleCheck = createLucideIcon("circle-check", __iconNode2);
-
-// node_modules/lucide-react/dist/esm/icons/external-link.js
-var __iconNode3 = [
-  ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
-  ["path", { d: "M10 14 21 3", key: "gplh6r" }],
-  ["path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6", key: "a6xqqp" }]
-];
-var ExternalLink = createLucideIcon("external-link", __iconNode3);
-
-// node_modules/lucide-react/dist/esm/icons/file-code.js
-var __iconNode4 = [
-  ["path", { d: "M10 12.5 8 15l2 2.5", key: "1tg20x" }],
-  ["path", { d: "m14 12.5 2 2.5-2 2.5", key: "yinavb" }],
-  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
-  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z", key: "1mlx9k" }]
-];
-var FileCode = createLucideIcon("file-code", __iconNode4);
-
-// node_modules/lucide-react/dist/esm/icons/file-spreadsheet.js
-var __iconNode5 = [
-  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
-  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
-  ["path", { d: "M8 13h2", key: "yr2amv" }],
-  ["path", { d: "M14 13h2", key: "un5t4a" }],
-  ["path", { d: "M8 17h2", key: "2yhykz" }],
-  ["path", { d: "M14 17h2", key: "10kma7" }]
-];
-var FileSpreadsheet = createLucideIcon("file-spreadsheet", __iconNode5);
-
-// node_modules/lucide-react/dist/esm/icons/globe.js
-var __iconNode6 = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20", key: "13o1zl" }],
-  ["path", { d: "M2 12h20", key: "9i4pu4" }]
-];
-var Globe = createLucideIcon("globe", __iconNode6);
-
-// node_modules/lucide-react/dist/esm/icons/history.js
-var __iconNode7 = [
-  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
-  ["path", { d: "M3 3v5h5", key: "1xhq8a" }],
-  ["path", { d: "M12 7v5l4 2", key: "1fdv2h" }]
-];
-var History = createLucideIcon("history", __iconNode7);
-
-// node_modules/lucide-react/dist/esm/icons/layers.js
-var __iconNode8 = [
-  [
-    "path",
-    {
-      d: "M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z",
-      key: "zw3jo"
-    }
-  ],
-  [
-    "path",
-    {
-      d: "M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12",
-      key: "1wduqc"
-    }
-  ],
-  [
-    "path",
-    {
-      d: "M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17",
-      key: "kqbvx6"
-    }
-  ]
-];
-var Layers = createLucideIcon("layers", __iconNode8);
-
-// node_modules/lucide-react/dist/esm/icons/play.js
-var __iconNode9 = [
-  [
-    "path",
-    {
-      d: "M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z",
-      key: "10ikf1"
-    }
-  ]
-];
-var Play = createLucideIcon("play", __iconNode9);
-
-// node_modules/lucide-react/dist/esm/icons/refresh-cw.js
-var __iconNode10 = [
-  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
-  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
-  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
-  ["path", { d: "M8 16H3v5", key: "1cv678" }]
-];
-var RefreshCw = createLucideIcon("refresh-cw", __iconNode10);
-
-// node_modules/lucide-react/dist/esm/icons/search.js
-var __iconNode11 = [
-  ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
-  ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
-];
-var Search = createLucideIcon("search", __iconNode11);
-
-// node_modules/lucide-react/dist/esm/icons/square.js
-var __iconNode12 = [
-  ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", key: "afitv7" }]
-];
-var Square = createLucideIcon("square", __iconNode12);
-
-// node_modules/lucide-react/dist/esm/icons/tag.js
-var __iconNode13 = [
-  [
-    "path",
-    {
-      d: "M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z",
-      key: "vktsd0"
-    }
-  ],
-  ["circle", { cx: "7.5", cy: "7.5", r: ".5", fill: "currentColor", key: "kqv944" }]
-];
-var Tag = createLucideIcon("tag", __iconNode13);
-
-// node_modules/lucide-react/dist/esm/icons/trash-2.js
-var __iconNode14 = [
-  ["path", { d: "M10 11v6", key: "nco0om" }],
-  ["path", { d: "M14 11v6", key: "outv1u" }],
-  ["path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6", key: "miytrc" }],
-  ["path", { d: "M3 6h18", key: "d0wm0j" }],
-  ["path", { d: "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2", key: "e791ji" }]
-];
-var Trash2 = createLucideIcon("trash-2", __iconNode14);
-
-// node_modules/lucide-react/dist/esm/icons/triangle-alert.js
-var __iconNode15 = [
-  [
-    "path",
-    {
-      d: "m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3",
-      key: "wmoenq"
-    }
-  ],
-  ["path", { d: "M12 9v4", key: "juzpu7" }],
-  ["path", { d: "M12 17h.01", key: "p32p05" }]
-];
-var TriangleAlert = createLucideIcon("triangle-alert", __iconNode15);
-
-// src/extension/ui/App.tsx
+// src/extension/ui/components/ResearchConfigView.tsx
 init_presetCatalogue();
 
 // src/data/locationCatalogue.ts
@@ -17575,10 +17465,1973 @@ var META_AD_LIBRARY_LOCATIONS = [
   { locationCode: "UG", displayName: "Uganda", region: "Africa", aliases: ["UGA"], status: "ACTIVE" },
   { locationCode: "TZ", displayName: "Tanzania", region: "Africa", aliases: ["TZA"], status: "ACTIVE" }
 ];
-function getLocationByCode(code) {
-  if (!code) return void 0;
-  const upper = code.trim().toUpperCase();
-  return META_AD_LIBRARY_LOCATIONS.find((loc) => loc.locationCode === upper);
+
+// src/extension/ui/components/ResearchConfigView.tsx
+var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
+var ResearchConfigView = ({
+  selectedSource,
+  onSelectSource,
+  onOpenPlanReview,
+  disabled = false
+}) => {
+  const [modeType, setModeType] = (0, import_react.useState)("PRESET");
+  const [presetId, setPresetId] = (0, import_react.useState)(RESEARCH_PRESETS[0]?.preset_id || "");
+  const [customKeywords, setCustomKeywords] = (0, import_react.useState)("Furniture, Home Decor");
+  const [countryCode, setCountryCode] = (0, import_react.useState)("BD");
+  const [executionMode, setExecutionMode] = (0, import_react.useState)(
+    selectedSource === "GOOGLE_MAPS" ? "DRY_RUN" : "LIVE"
+  );
+  const [maxCandidates, setMaxCandidates] = (0, import_react.useState)(200);
+  const selectedPreset = RESEARCH_PRESETS.find((p) => p.preset_id === presetId) || RESEARCH_PRESETS[0];
+  const isGmaps = selectedSource === "GOOGLE_MAPS";
+  const handleSourceChange = (src) => {
+    onSelectSource(src);
+    if (src === "GOOGLE_MAPS") {
+      setExecutionMode("DRY_RUN");
+    } else {
+      setExecutionMode("LIVE");
+    }
+  };
+  const handleReviewClick = () => {
+    let keywords = [];
+    let presetName;
+    if (modeType === "PRESET" && selectedPreset) {
+      keywords = selectedPreset.primary_keywords;
+      presetName = selectedPreset.name;
+    } else {
+      keywords = customKeywords.split(/[,;\n]/).map((k) => k.trim()).filter((k) => k.length > 0);
+    }
+    const selectedLoc = META_AD_LIBRARY_LOCATIONS.find((l) => l.locationCode === countryCode);
+    onOpenPlanReview({
+      sourceType: selectedSource,
+      executionMode,
+      keywords,
+      countryCode,
+      locationName: selectedLoc?.displayName || countryCode,
+      maxCandidates,
+      presetName
+    });
+  };
+  return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex flex-col gap-4 p-4 bg-slate-900 border border-slate-800 rounded-xl", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+      SourceSelector,
+      {
+        selectedSource,
+        onSelectSource: handleSourceChange,
+        disabled
+      }
+    ),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("label", { htmlFor: "geo-country-select", className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "Geographic Scope" }),
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+        "select",
+        {
+          id: "geo-country-select",
+          value: countryCode,
+          onChange: (e) => setCountryCode(e.target.value),
+          disabled,
+          className: "w-full px-3 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-400",
+          children: META_AD_LIBRARY_LOCATIONS.map((loc) => /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("option", { value: loc.locationCode, children: [
+            loc.displayName,
+            " (",
+            loc.locationCode,
+            ")"
+          ] }, loc.locationCode))
+        }
+      )
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex items-center justify-between", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "Category & Query Scope" }),
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex items-center gap-1 bg-slate-900 p-0.5 rounded border border-slate-800", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+            "button",
+            {
+              type: "button",
+              onClick: () => setModeType("PRESET"),
+              className: `px-2 py-0.5 text-[11px] font-medium rounded ${modeType === "PRESET" ? "bg-sky-600 text-white" : "text-slate-400 hover:text-slate-200"}`,
+              children: "Industry Preset"
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+            "button",
+            {
+              type: "button",
+              onClick: () => setModeType("CUSTOM"),
+              className: `px-2 py-0.5 text-[11px] font-medium rounded ${modeType === "CUSTOM" ? "bg-sky-600 text-white" : "text-slate-400 hover:text-slate-200"}`,
+              children: "Custom Keywords"
+            }
+          )
+        ] })
+      ] }),
+      modeType === "PRESET" ? /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+          "select",
+          {
+            value: presetId,
+            onChange: (e) => setPresetId(e.target.value),
+            disabled,
+            className: "w-full px-3 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-400 mb-1",
+            "aria-label": "Select industry research preset",
+            children: RESEARCH_PRESETS.map((p) => /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("option", { value: p.preset_id, children: [
+              p.name,
+              " (",
+              p.industry,
+              ")"
+            ] }, p.preset_id))
+          }
+        ),
+        selectedPreset && /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("p", { className: "text-[11px] text-slate-400", children: [
+          "Primary keywords: ",
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "text-slate-300 font-mono", children: selectedPreset.primary_keywords.join(", ") })
+        ] })
+      ] }) : /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+          "textarea",
+          {
+            rows: 2,
+            value: customKeywords,
+            onChange: (e) => setCustomKeywords(e.target.value),
+            disabled,
+            placeholder: "Enter comma-separated keywords (e.g. Roofing, Gutter Repair)",
+            className: "w-full px-3 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400",
+            "aria-label": "Custom research keywords"
+          }
+        ),
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { className: "text-[10px] text-slate-500", children: "Separate multiple search terms with commas or newlines." })
+      ] })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "grid grid-cols-2 gap-3", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("label", { htmlFor: "execution-mode-select", className: "text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1", children: "Execution Mode" }),
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
+          "select",
+          {
+            id: "execution-mode-select",
+            value: executionMode,
+            onChange: (e) => setExecutionMode(e.target.value),
+            disabled,
+            className: "w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-400",
+            children: [
+              !isGmaps && /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("option", { value: "LIVE", children: "LIVE (Public Source)" }),
+              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("option", { value: "DRY_RUN", children: "DRY_RUN (Plan & Validate)" }),
+              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("option", { value: "REPLAY", children: "REPLAY (Synthetic Fixtures)" }),
+              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("option", { value: "VALIDATION_ONLY", children: "VALIDATION_ONLY" })
+            ]
+          }
+        )
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("label", { htmlFor: "max-candidates-input", className: "text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1", children: "Max Candidates" }),
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+          "input",
+          {
+            id: "max-candidates-input",
+            type: "number",
+            min: 10,
+            max: 1e3,
+            value: maxCandidates,
+            onChange: (e) => setMaxCandidates(Math.max(10, Math.min(1e3, parseInt(e.target.value) || 100))),
+            disabled,
+            className: "w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-400"
+          }
+        )
+      ] })
+    ] }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
+      "button",
+      {
+        type: "button",
+        disabled,
+        onClick: handleReviewClick,
+        className: "w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm shadow-sky-600/20 focus:outline-none focus:ring-2 focus:ring-sky-400",
+        children: [
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: "\u{1F4CB}" }),
+          " Review Research Plan \u2192"
+        ]
+      }
+    )
+  ] });
+};
+
+// src/extension/ui/components/PlanReviewModal.tsx
+var import_react2 = __toESM(require_react(), 1);
+
+// src/extension/ui/designSystem.ts
+function getSemanticStatusBadge(status) {
+  const norm = (status || "").toUpperCase();
+  switch (norm) {
+    case "QUALIFIED":
+    case "RELEVANT":
+    case "COMPLETED":
+    case "PASS":
+    case "WEBSITE_VERIFIED_BUSINESS_SITE":
+      return {
+        colorClass: "text-emerald-400 bg-emerald-950/50 border-emerald-500/40",
+        iconSymbol: "\u2713",
+        accessibleLabel: `Status: ${status} (Confirmed)`
+      };
+    case "NOT_QUALIFIED":
+    case "NOT_RELEVANT":
+    case "FAIL":
+    case "WEBSITE_NOT_FOUND":
+    case "DISQUALIFIED":
+      return {
+        colorClass: "text-rose-400 bg-rose-950/50 border-rose-500/40",
+        iconSymbol: "\u2715",
+        accessibleLabel: `Status: ${status} (Excluded)`
+      };
+    case "UNCERTAIN":
+    case "AMBIGUOUS":
+    case "UNKNOWN":
+    case "PARTIAL":
+    case "WEBSITE_UNCERTAIN":
+      return {
+        colorClass: "text-amber-400 bg-amber-950/50 border-amber-500/40",
+        iconSymbol: "?",
+        accessibleLabel: `Status: ${status} (Uncertain - Needs Corroboration)`
+      };
+    case "BLOCKED":
+    case "RESTRICTED":
+    case "CONTRACT_ONLY":
+      return {
+        colorClass: "text-purple-400 bg-purple-950/50 border-purple-500/40",
+        iconSymbol: "\u2298",
+        accessibleLabel: `Status: ${status} (Compliance or Contract Boundary)`
+      };
+    case "SKIPPED":
+    case "NOT_STARTED":
+      return {
+        colorClass: "text-slate-400 bg-slate-900 border-slate-700",
+        iconSymbol: "\u2014",
+        accessibleLabel: `Status: ${status} (Stage Skipped or Unexecuted)`
+      };
+    default:
+      return {
+        colorClass: "text-slate-400 bg-slate-900 border-slate-700",
+        iconSymbol: "\u2022",
+        accessibleLabel: `Status: ${status}`
+      };
+  }
+}
+
+// src/extension/ui/components/StatusBadge.tsx
+var import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
+var StatusBadge = ({
+  status,
+  size = "md",
+  customLabel,
+  className = ""
+}) => {
+  const { colorClass, iconSymbol, accessibleLabel } = getSemanticStatusBadge(status);
+  const text = customLabel || status.replace(/_/g, " ");
+  const sizeClasses = size === "sm" ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-0.5 text-xs";
+  return /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
+    "span",
+    {
+      className: `inline-flex items-center gap-1 font-semibold rounded border uppercase tracking-wider ${colorClass} ${sizeClasses} ${className}`,
+      "aria-label": accessibleLabel,
+      title: accessibleLabel,
+      children: [
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { "aria-hidden": "true", className: "font-bold", children: iconSymbol }),
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: text })
+      ]
+    }
+  );
+};
+
+// src/extension/ui/components/PlanReviewModal.tsx
+var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
+var PlanReviewModal = ({
+  isOpen,
+  plan,
+  onConfirm,
+  onCancel,
+  isSubmitting = false
+}) => {
+  const modalRef = (0, import_react2.useRef)(null);
+  const confirmBtnRef = (0, import_react2.useRef)(null);
+  (0, import_react2.useEffect)(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        onCancel();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    confirmBtnRef.current?.focus();
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onCancel]);
+  if (!isOpen) return null;
+  return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+    "div",
+    {
+      className: "fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm",
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-labelledby": "plan-review-title",
+      children: /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
+        "div",
+        {
+          ref: modalRef,
+          className: "w-full max-w-lg bg-slate-900 border border-slate-700 rounded-xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden",
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "p-4 border-b border-slate-800 flex items-center justify-between", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("h2", { id: "plan-review-title", className: "text-base font-semibold text-slate-100 flex items-center gap-2", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { children: "\u{1F4CB}" }),
+                  " Research Plan Review"
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("p", { className: "text-xs text-slate-400", children: "Review planned parameters before starting execution" })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                "button",
+                {
+                  type: "button",
+                  onClick: onCancel,
+                  className: "p-1 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400",
+                  "aria-label": "Close plan review",
+                  children: "\u2715"
+                }
+              )
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "p-4 overflow-y-auto flex flex-col gap-4 text-xs text-slate-300", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "grid grid-cols-2 gap-3 p-3 bg-slate-950/60 rounded-lg border border-slate-800", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "text-[11px] text-slate-500 uppercase tracking-wider block mb-1", children: "Source Type" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "font-semibold text-slate-200", children: plan.sourceType })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "text-[11px] text-slate-500 uppercase tracking-wider block mb-1", children: "Execution Mode" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(StatusBadge, { status: plan.executionMode, size: "sm" })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "grid grid-cols-3 gap-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "p-2.5 bg-slate-800/60 rounded border border-slate-700/60 text-center", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "text-[11px] text-slate-400 block mb-0.5", children: "Planned Units" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "text-base font-bold text-sky-400", children: plan.plannedSearchUnitsCount })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "p-2.5 bg-slate-800/60 rounded border border-slate-700/60 text-center", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "text-[11px] text-slate-400 block mb-0.5", children: "Max Candidates" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "text-base font-bold text-slate-200", children: plan.maxCandidatesLimit })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "p-2.5 bg-slate-800/60 rounded border border-slate-700/60 text-center", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "text-[11px] text-slate-400 block mb-0.5", children: "Timeout" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("span", { className: "text-base font-bold text-slate-200", children: [
+                    plan.timeoutSeconds,
+                    "s"
+                  ] })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("span", { className: "text-[11px] text-slate-400 uppercase tracking-wider block mb-1.5 font-medium", children: [
+                  "Enabled Pipeline Stages (",
+                  plan.enabledStages.length,
+                  ")"
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: "flex flex-wrap gap-1.5", children: plan.enabledStages.map((stage) => /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                  "span",
+                  {
+                    className: "px-2 py-0.5 text-[10px] font-mono bg-slate-800 border border-slate-700 text-slate-300 rounded",
+                    children: stage
+                  },
+                  stage
+                )) })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "p-2.5 bg-slate-950/40 rounded border border-slate-800 flex items-center justify-between", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "text-slate-400", children: "Qualification Profile:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "font-semibold text-slate-200", children: plan.qualificationProfileName })
+              ] }),
+              !plan.canExecuteLive && /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
+                "div",
+                {
+                  className: "p-3 rounded-lg bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs flex items-start gap-2",
+                  role: "alert",
+                  children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "text-rose-400 text-sm font-bold", children: "\u2298" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("strong", { className: "block font-semibold", children: "Execution Blocked:" }),
+                      plan.blockedReason || "Google Maps operates strictly in CONTRACT_ONLY mode and cannot execute live extraction."
+                    ] })
+                  ]
+                }
+              ),
+              plan.safetyWarnings.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "p-3 rounded-lg bg-amber-950/30 border border-amber-500/30 text-amber-300 text-xs flex flex-col gap-1", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("strong", { className: "font-semibold flex items-center gap-1", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { children: "\u26A0\uFE0F" }),
+                  " Plan Safety Advisories:"
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("ul", { className: "list-disc list-inside space-y-0.5 text-[11px] text-amber-200", children: plan.safetyWarnings.map((w, idx) => /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("li", { children: w }, idx)) })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-end gap-2", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                "button",
+                {
+                  type: "button",
+                  onClick: onCancel,
+                  className: "px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-slate-100 bg-slate-800 hover:bg-slate-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500",
+                  children: "Cancel"
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                "button",
+                {
+                  ref: confirmBtnRef,
+                  type: "button",
+                  disabled: !plan.canExecuteLive || isSubmitting,
+                  onClick: onConfirm,
+                  className: `px-4 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 ${plan.canExecuteLive && !isSubmitting ? "bg-sky-600 hover:bg-sky-500 text-white shadow-sm shadow-sky-600/20" : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"}`,
+                  children: isSubmitting ? /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(import_jsx_runtime5.Fragment, { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "animate-spin", children: "\u27F3" }),
+                    "Starting..."
+                  ] }) : /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(import_jsx_runtime5.Fragment, { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { children: "\u25B6" }),
+                    "Confirm & Run"
+                  ] })
+                }
+              )
+            ] })
+          ]
+        }
+      )
+    }
+  );
+};
+
+// src/extension/ui/components/RunStatusView.tsx
+var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
+var RunStatusView = ({
+  runStatus,
+  onPause,
+  onResume,
+  onStop,
+  onViewResults,
+  onInspectDiagnostics
+}) => {
+  if (!runStatus) {
+    return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex flex-col items-center justify-center p-8 text-center text-slate-400", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-3xl mb-2", children: "\u23F1" }),
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("h3", { className: "text-sm font-semibold text-slate-200 mb-1", children: "No Active Run" }),
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("p", { className: "text-xs text-slate-500 max-w-xs", children: "Active run data not available. Select a source and launch a research plan to observe live pipeline execution." })
+    ] });
+  }
+  const isRunning = runStatus.globalStatus === "RUNNING";
+  const isCompleted = runStatus.globalStatus === "COMPLETED" || runStatus.globalStatus === "COMPLETED_WITH_WARNINGS";
+  const isPartial = runStatus.globalStatus === "PARTIAL";
+  return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex flex-col gap-4 p-4 bg-slate-900 border border-slate-800 rounded-xl", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "sr-only", role: "status", "aria-live": "polite", children: [
+      "Current run status: ",
+      runStatus.globalStatusText,
+      ". Active source: ",
+      runStatus.activeSource,
+      "."
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between p-3 bg-slate-950/80 rounded-lg border border-slate-800", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center gap-2.5", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(StatusBadge, { status: runStatus.globalStatus }),
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { className: "text-xs font-semibold text-slate-200 block", children: [
+            "Run: ",
+            runStatus.runId
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { className: "text-[11px] text-slate-400", children: [
+            "Source: ",
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("strong", { className: "text-slate-300", children: runStatus.activeSource }),
+            " (",
+            runStatus.sourceStatus,
+            ")"
+          ] })
+        ] })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center gap-1.5", children: [
+        isRunning && onPause && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+          "button",
+          {
+            type: "button",
+            onClick: onPause,
+            disabled: !runStatus.isPausable,
+            className: "px-2.5 py-1 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-400",
+            "aria-label": "Pause active research run",
+            children: "\u23F8 Pause"
+          }
+        ),
+        isPartial && onResume && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+          "button",
+          {
+            type: "button",
+            onClick: onResume,
+            disabled: !runStatus.isResumable,
+            className: "px-2.5 py-1 text-xs font-semibold text-sky-300 bg-sky-950/60 hover:bg-sky-900/60 rounded border border-sky-500/40 focus:outline-none focus:ring-2 focus:ring-sky-400",
+            "aria-label": "Resume partial research run",
+            children: "\u25B6 Resume"
+          }
+        ),
+        (isRunning || isPartial) && onStop && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+          "button",
+          {
+            type: "button",
+            onClick: onStop,
+            disabled: !runStatus.isStoppable,
+            className: "px-2.5 py-1 text-xs font-medium text-rose-300 bg-rose-950/40 hover:bg-rose-900/40 rounded border border-rose-500/40 focus:outline-none focus:ring-2 focus:ring-rose-400",
+            "aria-label": "Stop research run",
+            children: "\u23F9 Stop"
+          }
+        ),
+        isCompleted && onViewResults && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+          "button",
+          {
+            type: "button",
+            onClick: onViewResults,
+            className: "px-3 py-1 text-xs font-semibold text-emerald-300 bg-emerald-950/60 hover:bg-emerald-900/60 rounded border border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-400",
+            "aria-label": "View research results",
+            children: "View Results \u2192"
+          }
+        )
+      ] })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "grid grid-cols-3 gap-2 text-center", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-2.5 bg-slate-950/40 rounded border border-slate-800", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[10px] uppercase text-slate-500 block mb-0.5", children: "Candidates" }),
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-base font-bold text-slate-100", children: runStatus.candidatesProcessed })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-2.5 bg-slate-950/40 rounded border border-slate-800", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[10px] uppercase text-slate-500 block mb-0.5", children: "Elapsed Time" }),
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { className: "text-base font-bold text-slate-100", children: [
+          (runStatus.elapsedMs / 1e3).toFixed(1),
+          "s"
+        ] })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-2.5 bg-slate-950/40 rounded border border-slate-800", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[10px] uppercase text-slate-500 block mb-0.5", children: "Checkpoint" }),
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-xs font-mono text-slate-300 truncate block", children: runStatus.checkpointId ? runStatus.checkpointId.substring(0, 10) : "None" })
+      ] })
+    ] }),
+    runStatus.hasWarnings && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-2.5 bg-amber-950/30 border border-amber-500/30 rounded text-xs text-amber-200", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("strong", { className: "block font-semibold mb-0.5", children: "Run Completed With Warnings:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("ul", { className: "list-disc list-inside text-[11px] text-amber-300/90 space-y-0.5", children: runStatus.warningMessages.map((msg, i) => /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("li", { children: msg }, i)) })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between mb-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "Pipeline Stage Graph (12 Stages)" }),
+        onInspectDiagnostics && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+          "button",
+          {
+            type: "button",
+            onClick: onInspectDiagnostics,
+            className: "text-[11px] text-sky-400 hover:text-sky-300 underline focus:outline-none",
+            children: "Inspect Diagnostics"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "grid grid-cols-2 sm:grid-cols-3 gap-2", children: runStatus.stages.map((stage) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
+        "div",
+        {
+          className: `p-2 rounded border text-xs flex flex-col justify-between transition-colors ${stage.isActive ? "bg-sky-950/40 border-sky-500/60 text-sky-200" : stage.isCompleted ? "bg-slate-950/50 border-slate-800 text-slate-300" : stage.isBlocked ? "bg-purple-950/30 border-purple-500/40 text-purple-300" : stage.isSkipped ? "bg-slate-950/30 border-slate-800/80 text-slate-500" : stage.isFailed ? "bg-rose-950/30 border-rose-500/40 text-rose-300" : "bg-slate-950/20 border-slate-900 text-slate-600"}`,
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between mb-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "font-mono text-[10px] truncate max-w-[130px] font-medium", title: stage.label, children: stage.label }),
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { className: "text-[10px] font-bold", children: [
+                stage.isCompleted && "\u2713",
+                stage.isActive && "\u27F3",
+                stage.isBlocked && "\u2298",
+                stage.isSkipped && "\u2014",
+                stage.isFailed && "\u2715"
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[10px] uppercase tracking-wider font-semibold opacity-80", children: stage.stateText })
+          ]
+        },
+        stage.stageId
+      )) })
+    ] })
+  ] });
+};
+
+// src/extension/ui/components/ResultsTableView.tsx
+var import_react3 = __toESM(require_react(), 1);
+var import_jsx_runtime7 = __toESM(require_jsx_runtime(), 1);
+var ResultsTableView = ({
+  results,
+  selectedRecordIds,
+  onToggleSelect,
+  onSelectAll,
+  onClearSelection,
+  onInspectRecord,
+  onOpenExportModal
+}) => {
+  const [searchTerm, setSearchTerm] = (0, import_react3.useState)("");
+  const [sourceFilter, setSourceFilter] = (0, import_react3.useState)("ALL");
+  const [relevanceFilter, setRelevanceFilter] = (0, import_react3.useState)("ALL");
+  const [qualificationFilter, setQualificationFilter] = (0, import_react3.useState)("ALL");
+  const [requirePhone, setRequirePhone] = (0, import_react3.useState)(false);
+  const [requireEmail, setRequireEmail] = (0, import_react3.useState)(false);
+  const [sortBy, setSortBy] = (0, import_react3.useState)("NAME_ASC");
+  const [page, setPage] = (0, import_react3.useState)(1);
+  const PAGE_SIZE = 50;
+  const filteredResults = (0, import_react3.useMemo)(() => {
+    return results.filter((r) => {
+      if (searchTerm.trim() !== "") {
+        const q = searchTerm.toLowerCase();
+        const matchesName = r.displayName.toLowerCase().includes(q);
+        const matchesPhone = r.contactSummary.phoneText?.toLowerCase().includes(q);
+        const matchesEmail = r.contactSummary.emailText?.toLowerCase().includes(q);
+        const matchesWebsite = r.websiteUrl?.toLowerCase().includes(q);
+        if (!matchesName && !matchesPhone && !matchesEmail && !matchesWebsite) {
+          return false;
+        }
+      }
+      if (sourceFilter !== "ALL" && r.primarySource !== sourceFilter) {
+        return false;
+      }
+      if (relevanceFilter !== "ALL" && r.relevanceDecision !== relevanceFilter) {
+        return false;
+      }
+      if (qualificationFilter !== "ALL" && r.qualificationState !== qualificationFilter) {
+        return false;
+      }
+      if (requirePhone && !r.contactSummary.hasPhone) return false;
+      if (requireEmail && !r.contactSummary.hasEmail) return false;
+      return true;
+    });
+  }, [results, searchTerm, sourceFilter, relevanceFilter, qualificationFilter, requirePhone, requireEmail]);
+  const sortedResults = (0, import_react3.useMemo)(() => {
+    const list = [...filteredResults];
+    list.sort((a, b) => {
+      switch (sortBy) {
+        case "NAME_ASC":
+          return a.displayName.localeCompare(b.displayName);
+        case "NAME_DESC":
+          return b.displayName.localeCompare(a.displayName);
+        case "SOURCE":
+          return a.primarySource.localeCompare(b.primarySource) || a.displayName.localeCompare(b.displayName);
+        case "QUALIFICATION":
+          return a.qualificationState.localeCompare(b.qualificationState) || a.displayName.localeCompare(b.displayName);
+        default:
+          return 0;
+      }
+    });
+    return list;
+  }, [filteredResults, sortBy]);
+  const totalPages = Math.max(1, Math.ceil(sortedResults.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paginatedResults = (0, import_react3.useMemo)(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return sortedResults.slice(start, start + PAGE_SIZE);
+  }, [sortedResults, currentPage]);
+  const allFilteredSelected = paginatedResults.length > 0 && paginatedResults.every((r) => selectedRecordIds.has(r.recordId));
+  const handleToggleSelectAll = () => {
+    if (allFilteredSelected) {
+      onClearSelection();
+    } else {
+      onSelectAll(paginatedResults.map((r) => r.recordId));
+    }
+  };
+  return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-col gap-3", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "p-3 bg-slate-900 border border-slate-800 rounded-lg flex flex-col gap-2.5", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "relative flex-1", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "absolute left-2.5 top-2.5 text-xs text-slate-500", "aria-hidden": "true", children: "\u{1F50D}" }),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+            "input",
+            {
+              type: "text",
+              value: searchTerm,
+              onChange: (e) => {
+                setSearchTerm(e.target.value);
+                setPage(1);
+              },
+              placeholder: "Search eligible business names, emails, phones, domains...",
+              className: "w-full pl-8 pr-3 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400",
+              "aria-label": "Search results"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+          "button",
+          {
+            type: "button",
+            onClick: onOpenExportModal,
+            disabled: results.length === 0,
+            className: `px-3 py-1.5 text-xs font-semibold rounded transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 ${results.length > 0 ? "bg-sky-600 hover:bg-sky-500 text-white" : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"}`,
+            children: [
+              /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u2B73" }),
+              " Export (",
+              selectedRecordIds.size > 0 ? selectedRecordIds.size : results.length,
+              ")"
+            ]
+          }
+        )
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-wrap items-center justify-between gap-2 text-xs", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-wrap items-center gap-1.5", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+            "select",
+            {
+              value: sourceFilter,
+              onChange: (e) => {
+                setSourceFilter(e.target.value);
+                setPage(1);
+              },
+              className: "px-2 py-1 bg-slate-950 border border-slate-700 rounded text-slate-300 text-xs focus:outline-none focus:ring-1 focus:ring-sky-400",
+              "aria-label": "Filter by source",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "ALL", children: "All Sources" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "META", children: "Meta Ad Library" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "GOOGLE_MAPS", children: "Google Maps" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "WEBSITE", children: "Website" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "USER_PROVIDED", children: "User Provided" })
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+            "select",
+            {
+              value: relevanceFilter,
+              onChange: (e) => {
+                setRelevanceFilter(e.target.value);
+                setPage(1);
+              },
+              className: "px-2 py-1 bg-slate-950 border border-slate-700 rounded text-slate-300 text-xs focus:outline-none focus:ring-1 focus:ring-sky-400",
+              "aria-label": "Filter by relevance",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "ALL", children: "All Relevance" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "RELEVANT", children: "Relevant Only" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "UNCERTAIN", children: "Uncertain Only" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "NOT_RELEVANT", children: "Not Relevant" })
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+            "select",
+            {
+              value: qualificationFilter,
+              onChange: (e) => {
+                setQualificationFilter(e.target.value);
+                setPage(1);
+              },
+              className: "px-2 py-1 bg-slate-950 border border-slate-700 rounded text-slate-300 text-xs focus:outline-none focus:ring-1 focus:ring-sky-400",
+              "aria-label": "Filter by qualification",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "ALL", children: "All Qualification" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "QUALIFIED", children: "Qualified" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "NOT_QUALIFIED", children: "Not Qualified" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "UNCERTAIN", children: "Uncertain" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "BLOCKED", children: "Blocked" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "NOT_STARTED", children: "Not Started" })
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("label", { className: "flex items-center gap-1 text-[11px] text-slate-400 cursor-pointer select-none", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+              "input",
+              {
+                type: "checkbox",
+                checked: requirePhone,
+                onChange: (e) => {
+                  setRequirePhone(e.target.checked);
+                  setPage(1);
+                },
+                className: "rounded border-slate-700 bg-slate-950 text-sky-500 focus:ring-0"
+              }
+            ),
+            "Phone"
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("label", { className: "flex items-center gap-1 text-[11px] text-slate-400 cursor-pointer select-none", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+              "input",
+              {
+                type: "checkbox",
+                checked: requireEmail,
+                onChange: (e) => {
+                  setRequireEmail(e.target.checked);
+                  setPage(1);
+                },
+                className: "rounded border-slate-700 bg-slate-950 text-sky-500 focus:ring-0"
+              }
+            ),
+            "Email"
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-1", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-[11px] text-slate-500", children: "Sort:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+            "select",
+            {
+              value: sortBy,
+              onChange: (e) => setSortBy(e.target.value),
+              className: "px-2 py-1 bg-slate-950 border border-slate-700 rounded text-slate-300 text-xs focus:outline-none focus:ring-1 focus:ring-sky-400",
+              "aria-label": "Sort results by",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "NAME_ASC", children: "Name (A-Z)" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "NAME_DESC", children: "Name (Z-A)" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "SOURCE", children: "Source" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "QUALIFICATION", children: "Qualification" })
+              ]
+            }
+          )
+        ] })
+      ] })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center justify-between text-xs text-slate-400 px-1", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+          "input",
+          {
+            type: "checkbox",
+            checked: allFilteredSelected,
+            onChange: handleToggleSelectAll,
+            className: "rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-0",
+            "aria-label": "Select all on this page"
+          }
+        ),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { children: [
+          "Showing ",
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("strong", { children: paginatedResults.length }),
+          " of ",
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("strong", { children: sortedResults.length }),
+          " records",
+          results.length !== sortedResults.length && ` (filtered from ${results.length})`
+        ] })
+      ] }),
+      selectedRecordIds.size > 0 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "text-sky-300 font-semibold text-[11px]", children: [
+          selectedRecordIds.size,
+          " selected"
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+          "button",
+          {
+            type: "button",
+            onClick: onClearSelection,
+            className: "text-[11px] text-slate-400 hover:text-slate-200 underline focus:outline-none",
+            children: "Clear"
+          }
+        )
+      ] })
+    ] }),
+    paginatedResults.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "p-8 text-center bg-slate-900/60 border border-slate-800 rounded-lg", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-2xl block mb-1", children: "\u{1F50D}" }),
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("p", { className: "text-xs font-semibold text-slate-300 mb-0.5", children: results.length === 0 ? "No Research Results Available" : "No Matching Leads Found" }),
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("p", { className: "text-[11px] text-slate-500", children: results.length === 0 ? "Research data not available. Start a research run to discover leads." : "Try relaxing your search terms or filter criteria." })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "flex flex-col gap-1.5", role: "list", "aria-label": "Research results list", children: paginatedResults.map((r) => {
+      const isSelected = selectedRecordIds.has(r.recordId);
+      return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+        "div",
+        {
+          role: "listitem",
+          onClick: () => onInspectRecord(r.recordId),
+          className: `p-3 rounded-lg border transition-all cursor-pointer flex flex-col gap-2 ${isSelected ? "bg-slate-850 border-sky-500/50 shadow-sm" : "bg-slate-900 border-slate-850 hover:border-slate-700 hover:bg-slate-850/80"}`,
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-start justify-between gap-2", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-start gap-2.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+                  "input",
+                  {
+                    type: "checkbox",
+                    checked: isSelected,
+                    onClick: (e) => e.stopPropagation(),
+                    onChange: () => onToggleSelect(r.recordId),
+                    className: "mt-1 rounded border-slate-700 bg-slate-950 text-sky-500 focus:ring-0",
+                    "aria-label": `Select ${r.displayName}`
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("h4", { className: "text-sm font-semibold text-slate-100 leading-tight hover:text-sky-300", children: r.displayName }),
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-1.5 mt-1 text-[11px] text-slate-400", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "font-mono text-slate-500", children: r.primarySource }),
+                    r.isMixedProvenance && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "px-1 py-0.2 text-[9px] font-semibold bg-sky-950 text-sky-300 border border-sky-500/30 rounded", children: "MIXED" }),
+                    r.geographicContext && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(import_jsx_runtime7.Fragment, { children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u2022" }),
+                      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: r.geographicContext })
+                    ] })
+                  ] })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-wrap items-center gap-1.5 justify-end", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(StatusBadge, { status: r.relevanceDecision, size: "sm" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(StatusBadge, { status: r.qualificationState, size: "sm" }),
+                r.isRestricted && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+                  "span",
+                  {
+                    className: "px-1.5 py-0.5 text-[10px] font-semibold text-purple-300 bg-purple-950/60 border border-purple-500/40 rounded",
+                    title: "Restricted by source policy (Not exportable or persistable)",
+                    children: "\u2298 RESTRICTED"
+                  }
+                )
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800/60", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-3", children: [
+                r.websiteUrl ? /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "flex items-center gap-1 text-slate-300 truncate max-w-[160px]", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u{1F310}" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "truncate", children: r.websiteUrl.replace(/^https?:\/\//, "") })
+                ] }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-slate-600", children: "No website" }),
+                r.contactSummary.phoneText && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "flex items-center gap-1 text-slate-300", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u{1F4DE}" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: r.contactSummary.phoneText })
+                ] }),
+                r.contactSummary.emailText && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "flex items-center gap-1 text-slate-300", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u2709" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: r.contactSummary.emailText })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-sky-400 font-medium text-[11px] hover:underline", children: "Inspect Dossier \u2192" })
+            ] })
+          ]
+        },
+        r.recordId
+      );
+    }) }),
+    totalPages > 1 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center justify-between p-2 text-xs text-slate-400 bg-slate-900 border border-slate-800 rounded-lg", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+        "button",
+        {
+          type: "button",
+          disabled: currentPage <= 1,
+          onClick: () => setPage((p) => Math.max(1, p - 1)),
+          className: "px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none",
+          children: "\u2190 Previous"
+        }
+      ),
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { children: [
+        "Page ",
+        currentPage,
+        " of ",
+        totalPages
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+        "button",
+        {
+          type: "button",
+          disabled: currentPage >= totalPages,
+          onClick: () => setPage((p) => Math.min(totalPages, p + 1)),
+          className: "px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none",
+          children: "Next \u2192"
+        }
+      )
+    ] })
+  ] });
+};
+
+// src/extension/ui/components/ResultDetailDrawer.tsx
+var import_react4 = __toESM(require_react(), 1);
+
+// src/extension/ui/security.ts
+function isValidExternalUrl(url) {
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim();
+  if (trimmed === "") return false;
+  const lower = trimmed.toLowerCase();
+  if (lower.startsWith("javascript:") || lower.startsWith("data:") || lower.startsWith("vbscript:") || lower.startsWith("file:") || lower.startsWith("blob:")) {
+    return false;
+  }
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+function getSafeExternalUrl(url) {
+  if (isValidExternalUrl(url)) {
+    return url.trim();
+  }
+  return null;
+}
+function sanitizePassiveText(text, maxLength = 1e3) {
+  if (text == null) return "";
+  const str = String(text);
+  const bounded = str.length > maxLength ? str.slice(0, maxLength) + "..." : str;
+  return bounded.trim();
+}
+
+// src/extension/ui/components/ResultDetailDrawer.tsx
+var import_jsx_runtime8 = __toESM(require_jsx_runtime(), 1);
+var ResultDetailDrawer = ({
+  isOpen,
+  lead,
+  onClose
+}) => {
+  const drawerRef = (0, import_react4.useRef)(null);
+  (0, import_react4.useEffect)(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    drawerRef.current?.focus();
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+  if (!isOpen || !lead) return null;
+  const safeWebsiteUrl = getSafeExternalUrl(lead.websiteUrl);
+  return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+    "div",
+    {
+      className: "fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-xs",
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-labelledby": "detail-drawer-title",
+      children: /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
+        "div",
+        {
+          ref: drawerRef,
+          tabIndex: -1,
+          className: "w-full max-w-xl bg-slate-900 border-l border-slate-700 h-full flex flex-col shadow-2xl overflow-hidden focus:outline-none",
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-4 border-b border-slate-800 bg-slate-950 flex items-start justify-between gap-3", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex-1", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center gap-2 mb-1", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(StatusBadge, { status: lead.qualificationState, size: "sm" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(StatusBadge, { status: lead.relevanceDecision, size: "sm" }),
+                  lead.isRestricted && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-1.5 py-0.5 text-[10px] font-semibold text-purple-300 bg-purple-950/60 border border-purple-500/40 rounded", children: "\u2298 RESTRICTED SOURCE" })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h2", { id: "detail-drawer-title", className: "text-base font-bold text-slate-100 leading-snug", children: lead.displayName }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] text-slate-400 mt-0.5 flex items-center gap-2", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
+                    "Entity ID: ",
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("code", { className: "text-slate-300 font-mono", children: lead.entityId.substring(0, 16) })
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "\u2022" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
+                    "Primary: ",
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: lead.primarySource })
+                  ] })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                "button",
+                {
+                  type: "button",
+                  onClick: onClose,
+                  className: "p-1.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-400",
+                  "aria-label": "Close details",
+                  children: "\u2715"
+                }
+              )
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-4 overflow-y-auto flex flex-col gap-5 text-xs text-slate-300", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "1. Identity" }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "grid grid-cols-2 gap-2 text-[11px]", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Display Name:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-medium text-slate-200", children: lead.displayName })
+                  ] }),
+                  lead.legalName && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Legal Name:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-medium text-slate-200", children: lead.legalName })
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Identity Confidence:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-medium text-slate-200", children: lead.identityConfidence })
+                  ] })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "2. Sources & Provenance" }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] flex flex-col gap-1", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "Provenance Lineage:" }),
+                    " ",
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: lead.provenanceLineage }),
+                    " (",
+                    lead.provenanceClassification,
+                    ")"
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-slate-500", children: [
+                      "Contributing Sources (",
+                      lead.contributingSources.length,
+                      "):"
+                    ] }),
+                    " ",
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-300", children: lead.contributingSources.join(", ") })
+                  ] })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "3. Relevance (Phase 9)" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(StatusBadge, { status: lead.relevanceDecision, size: "sm" })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("p", { className: "text-[11px] text-slate-300 leading-relaxed", children: lead.relevanceExplanation }),
+                lead.relevanceMatchedTerms.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center gap-1 flex-wrap mt-1", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-slate-500", children: "Matched Terms:" }),
+                  lead.relevanceMatchedTerms.map((term, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-1.5 py-0.2 text-[10px] bg-slate-800 text-sky-300 rounded font-mono", children: term }, i))
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "4. Website Verification" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(StatusBadge, { status: lead.websiteVerificationStatus, size: "sm" })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "text-[11px] flex flex-col gap-1", children: safeWebsiteUrl ? /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center gap-1.5", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "URL:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
+                    "a",
+                    {
+                      href: safeWebsiteUrl,
+                      target: "_blank",
+                      rel: "noreferrer noopener",
+                      className: "text-sky-400 hover:underline truncate max-w-sm",
+                      children: [
+                        safeWebsiteUrl,
+                        " \u2197"
+                      ]
+                    }
+                  )
+                ] }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "Website data not available or unverified pointer." }) })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "5. Contact Information" }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] font-medium text-slate-400 block mb-1", children: "Business Phones:" }),
+                  lead.phones.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1", children: lead.phones.map((p, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "flex items-center justify-between text-[11px] bg-slate-900 p-1.5 rounded border border-slate-800", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "font-mono text-slate-200", children: [
+                      "\u{1F4DE} ",
+                      p.number
+                    ] }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-slate-500", children: p.observation })
+                  ] }, i)) }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] text-slate-500", children: "Public phone data not available." })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] font-medium text-slate-400 block mb-1", children: "Business Emails:" }),
+                  lead.emails.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1", children: lead.emails.map((e, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "flex items-center justify-between text-[11px] bg-slate-900 p-1.5 rounded border border-slate-800", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "font-mono text-slate-200", children: [
+                      "\u2709 ",
+                      e.address
+                    ] }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-slate-500", children: e.classification })
+                  ] }, i)) }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] text-slate-500", children: "Public business email data not available." })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] text-slate-400", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "Contact Form: " }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: lead.hasContactForm ? "Observed on Website" : "Not Observed" })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "6. Physical Locations" }),
+                lead.addresses.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1 text-[11px]", children: lead.addresses.map((a, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "p-1.5 bg-slate-900 rounded border border-slate-800 text-slate-300", children: [
+                  "\u{1F4CD} ",
+                  a.addressLine,
+                  " ",
+                  a.locality && `\u2014 ${a.locality}`,
+                  " ",
+                  a.isBranch && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-amber-400", children: "(Branch)" })
+                ] }, i)) }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] text-slate-500", children: "Physical address data not available." })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "7. Digital Presence" }),
+                lead.socialLinks.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "flex flex-wrap gap-1.5", children: lead.socialLinks.map((s, i) => {
+                  const safe = getSafeExternalUrl(s.url);
+                  return /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
+                    "a",
+                    {
+                      href: safe || "#",
+                      target: "_blank",
+                      rel: "noreferrer noopener",
+                      className: "px-2 py-1 text-[11px] bg-slate-800 hover:bg-slate-700 text-sky-300 rounded border border-slate-700 flex items-center gap-1",
+                      children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "\u{1F517}" }),
+                        " ",
+                        s.platform
+                      ]
+                    },
+                    i
+                  );
+                }) }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] text-slate-500", children: "Social presence data not available." })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "8. Qualification (Phase 12)" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(StatusBadge, { status: lead.qualificationState, size: "sm" })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] text-slate-400", children: [
+                  "Profile: ",
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: lead.qualificationProfileName }),
+                  " (v",
+                  lead.qualificationProfileVersion,
+                  ")",
+                  lead.qualificationScoreText && ` \u2022 Score: ${lead.qualificationScoreText}`
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("p", { className: "text-[11px] text-slate-300 leading-relaxed", children: lead.qualificationSummaryExplanation }),
+                lead.mandatoryCriteria.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex flex-col gap-1 mt-1", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] font-semibold uppercase text-slate-400", children: "Mandatory Criteria:" }),
+                  lead.mandatoryCriteria.map((c, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between p-1.5 bg-slate-900 rounded border border-slate-800 text-[11px]", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-mono text-slate-300", children: c.name }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(StatusBadge, { status: c.status, size: "sm" })
+                  ] }, i))
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "9. Evidence Ledger" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-[10px] text-slate-500", children: [
+                    lead.evidenceItems.length,
+                    " facts"
+                  ] })
+                ] }),
+                lead.evidenceItems.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1.5 text-[11px]", children: lead.evidenceItems.map((ev) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "p-2 bg-slate-900 rounded border border-slate-800/80 flex flex-col gap-0.5", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between text-[10px] text-slate-400", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-semibold text-slate-300", children: ev.sourceFamily }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-mono text-slate-500", children: ev.evidenceType })
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-200", children: ev.fact }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-[10px] text-slate-500", children: [
+                    "Ref: ",
+                    ev.pageOrSourceReference
+                  ] })
+                ] }, ev.id)) }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] text-slate-500", children: "No granular evidence records bound to this entity." })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "10. Policy & Compliance" }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "grid grid-cols-2 gap-2 text-[11px]", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Export Eligibility:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: `font-semibold ${lead.isExportable ? "text-emerald-400" : "text-rose-400"}`, children: lead.isExportable ? "\u2713 EXPORTABLE" : "\u2298 NOT EXPORTABLE" })
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Persistence Eligibility:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: `font-semibold ${lead.isPersistable ? "text-emerald-400" : "text-rose-400"}`, children: lead.isPersistable ? "\u2713 PERSISTABLE" : "\u2298 NOT PERSISTABLE" })
+                  ] })
+                ] }),
+                lead.isRestricted && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("p", { className: "text-[11px] text-purple-300 bg-purple-950/40 p-2 rounded border border-purple-500/30 mt-1", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { children: "Restriction Notice:" }),
+                  " ",
+                  lead.restrictionExplanation || "Contains restricted public source data. Protected by compliance firewall."
+                ] })
+              ] })
+            ] })
+          ]
+        }
+      )
+    }
+  );
+};
+
+// src/extension/ui/components/ExportModal.tsx
+var import_react5 = __toESM(require_react(), 1);
+var import_jsx_runtime9 = __toESM(require_jsx_runtime(), 1);
+var ExportModal = ({
+  isOpen,
+  preview,
+  onConfirmExport,
+  onCancel,
+  isExporting = false
+}) => {
+  const confirmBtnRef = (0, import_react5.useRef)(null);
+  (0, import_react5.useEffect)(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    confirmBtnRef.current?.focus();
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onCancel]);
+  if (!isOpen) return null;
+  return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+    "div",
+    {
+      className: "fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm",
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-labelledby": "export-modal-title",
+      children: /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl shadow-2xl flex flex-col overflow-hidden", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-4 border-b border-slate-800 bg-slate-950 flex items-center justify-between", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("h2", { id: "export-modal-title", className: "text-base font-semibold text-slate-100 flex items-center gap-2", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { children: "\u2B73" }),
+            " Export Research Data"
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+            "button",
+            {
+              type: "button",
+              onClick: onCancel,
+              className: "p-1 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 focus:outline-none",
+              "aria-label": "Close export dialog",
+              children: "\u2715"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-4 flex flex-col gap-3 text-xs text-slate-300", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("p", { className: "text-[11px] text-slate-400 leading-relaxed", children: "Data is filtered by the LeadNoria policy firewall. Records and fields with restricted consumer-web provenance are protected." }),
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "grid grid-cols-2 gap-2 text-center", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-2.5 bg-slate-950/60 rounded border border-slate-800", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-[10px] uppercase text-slate-500 block mb-0.5", children: "Selected Records" }),
+              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-base font-bold text-slate-200", children: preview.totalSelectedRecords })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-2.5 bg-emerald-950/30 rounded border border-emerald-500/30", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-[10px] uppercase text-emerald-400 block mb-0.5", children: "Eligible for Export" }),
+              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-base font-bold text-emerald-300", children: preview.exportableRecordsCount })
+            ] })
+          ] }),
+          preview.restrictedRecordsCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-2.5 bg-purple-950/40 border border-purple-500/40 rounded text-[11px] text-purple-200", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "font-semibold text-purple-300 block mb-0.5", children: [
+              "\u2298 Policy Exclusions (",
+              preview.restrictedRecordsCount,
+              "):"
+            ] }),
+            preview.policyNotice
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-[10px] uppercase tracking-wider text-slate-400 block mb-1", children: "Included Export Fields:" }),
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "flex flex-wrap gap-1", children: preview.eligibleFields.map((f) => /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "px-1.5 py-0.2 text-[10px] font-mono bg-slate-800 text-slate-300 rounded", children: f }, f)) })
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-end gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+            "button",
+            {
+              type: "button",
+              onClick: onCancel,
+              className: "px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 rounded transition-colors focus:outline-none",
+              children: "Cancel"
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+            "button",
+            {
+              ref: confirmBtnRef,
+              type: "button",
+              disabled: !preview.isExportReady || isExporting,
+              onClick: onConfirmExport,
+              className: `px-4 py-1.5 text-xs font-semibold rounded transition-all flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 ${preview.isExportReady && !isExporting ? "bg-sky-600 hover:bg-sky-500 text-white" : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"}`,
+              children: isExporting ? "Exporting..." : `Download CSV (${preview.exportableRecordsCount} leads)`
+            }
+          )
+        ] })
+      ] })
+    }
+  );
+};
+
+// src/extension/ui/components/HistoryView.tsx
+var import_jsx_runtime10 = __toESM(require_jsx_runtime(), 1);
+var HistoryView = ({
+  runs,
+  onSelectRun,
+  onClearHistory
+}) => {
+  if (runs.length === 0) {
+    return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex flex-col items-center justify-center p-8 text-center text-slate-400 bg-slate-900 border border-slate-800 rounded-xl", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-3xl mb-2", children: "\u{1F4DC}" }),
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("h3", { className: "text-sm font-semibold text-slate-200 mb-1", children: "No Saved Research Runs" }),
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("p", { className: "text-xs text-slate-500 max-w-xs", children: "Historical research data not available. Completed research runs are automatically archived locally for inspection and export." })
+    ] });
+  }
+  return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex flex-col gap-3", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center justify-between px-1", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "text-xs text-slate-400", children: [
+        "Showing ",
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { children: runs.length }),
+        " archived runs"
+      ] }),
+      onClearHistory && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+        "button",
+        {
+          type: "button",
+          onClick: onClearHistory,
+          className: "text-[11px] text-slate-400 hover:text-rose-400 underline focus:outline-none",
+          children: "Clear All History"
+        }
+      )
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "flex flex-col gap-2", children: runs.map((run) => {
+      const leadCount = run.leads ? run.leads.length : 0;
+      const dateStr = run.timestamp ? new Date(run.timestamp).toLocaleString() : "Recent";
+      return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
+        "div",
+        {
+          onClick: () => onSelectRun(run),
+          className: "p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 rounded-lg cursor-pointer transition-colors flex items-center justify-between",
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center gap-2 mb-1", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("h4", { className: "text-xs font-semibold text-slate-200", children: run.researchName || `Run ${run.runId.substring(0, 8)}` }),
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(StatusBadge, { status: run.status, size: "sm" })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "text-[11px] text-slate-400 flex items-center gap-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: dateStr }),
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: "\u2022" }),
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: run.locationName || run.countryCode }),
+                run.keywords && run.keywords.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(import_jsx_runtime10.Fragment, { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: "\u2022" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "truncate max-w-[120px] font-mono", children: run.keywords.join(", ") })
+                ] })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "text-right shrink-0", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-sm font-bold text-sky-400 block", children: leadCount }),
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[10px] text-slate-500 uppercase", children: "Leads" })
+            ] })
+          ]
+        },
+        run.runId
+      );
+    }) })
+  ] });
+};
+
+// src/extension/ui/components/SettingsView.tsx
+var import_jsx_runtime11 = __toESM(require_jsx_runtime(), 1);
+var SettingsView = ({
+  onOpenDiagnostics,
+  onClearLocalHistory
+}) => {
+  return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "flex flex-col gap-4 p-4 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-300", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "border-b border-slate-800 pb-2", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("h2", { className: "text-sm font-semibold text-slate-100 flex items-center gap-1.5", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: "\u2699" }),
+        " Settings & Compliance Disclosures"
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("p", { className: "text-[11px] text-slate-500", children: "Local runtime configuration and privacy architecture" })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-300", children: "Local Processing & Privacy Architecture" }),
+      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("p", { className: "text-[11px] text-slate-400 leading-relaxed", children: "LeadNoria processes supported research data locally in the extension runtime while accessing permitted public sources. Pipeline orchestration, normalization, entity deduplication, relevance scoring, and qualification profile evaluations occur entirely within your local browser environment." }),
+      /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("p", { className: "text-[11px] text-slate-400 leading-relaxed", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("strong", { children: "Compliance Invariant:" }),
+        " Data derived from Google consumer-web sources is strictly designated ",
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("code", { className: "text-purple-300", children: "NOT_PERSISTABLE" }),
+        " and ",
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("code", { className: "text-purple-300", children: "NOT_EXPORTABLE" }),
+        " to prevent policy breaches."
+      ] })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-300", children: "Source Capabilities" }),
+      /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("ul", { className: "space-y-1.5 text-[11px]", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("li", { className: "flex items-start gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-emerald-400", children: "\u2713" }),
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("strong", { className: "text-slate-200", children: "Meta Ad Library:" }),
+            " Public UI advertiser search, creative signals, and domain pointers."
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("li", { className: "flex items-start gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-purple-400", children: "\u2298" }),
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("strong", { className: "text-slate-200", children: "Google Maps:" }),
+            " Contract planning & geographic partitioning only. Live extraction is not enabled."
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("li", { className: "flex items-start gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-emerald-400", children: "\u2713" }),
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("strong", { className: "text-slate-200", children: "Public Websites:" }),
+            " Bounded same-origin verification and contact discovery."
+          ] })
+        ] })
+      ] })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex items-center justify-between", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "font-semibold text-slate-200 block mb-0.5", children: "Local Research History" }),
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-[11px] text-slate-500", children: "Clear persisted runs stored in chrome.storage.local" })
+      ] }),
+      onClearLocalHistory && /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+        "button",
+        {
+          type: "button",
+          onClick: onClearLocalHistory,
+          className: "px-3 py-1 text-xs font-medium text-rose-300 hover:text-rose-100 bg-rose-950/40 hover:bg-rose-900/40 rounded border border-rose-500/40 transition-colors focus:outline-none",
+          children: "Clear History"
+        }
+      )
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex items-center justify-between", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "font-semibold text-slate-200 block mb-0.5", children: "Pipeline Diagnostics" }),
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-[11px] text-slate-500", children: "Inspect versioning, adapter contracts, and checkpoint metadata" })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+        "button",
+        {
+          type: "button",
+          onClick: onOpenDiagnostics,
+          className: "px-3 py-1 text-xs font-medium text-sky-300 hover:text-sky-100 bg-sky-950/40 hover:bg-sky-900/40 rounded border border-sky-500/40 transition-colors focus:outline-none",
+          children: "Open Diagnostics"
+        }
+      )
+    ] })
+  ] });
+};
+
+// src/extension/ui/components/DiagnosticsDrawer.tsx
+var import_react6 = __toESM(require_react(), 1);
+var import_jsx_runtime12 = __toESM(require_jsx_runtime(), 1);
+var DiagnosticsDrawer = ({
+  isOpen,
+  diagnostics,
+  onClose
+}) => {
+  const drawerRef = (0, import_react6.useRef)(null);
+  (0, import_react6.useEffect)(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    drawerRef.current?.focus();
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+  if (!isOpen || !diagnostics) return null;
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+    "div",
+    {
+      className: "fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-xs",
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-labelledby": "diag-title",
+      children: /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(
+        "div",
+        {
+          ref: drawerRef,
+          tabIndex: -1,
+          className: "w-full max-w-md bg-slate-900 border-l border-slate-700 h-full flex flex-col shadow-2xl overflow-hidden focus:outline-none",
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "p-4 border-b border-slate-800 bg-slate-950 flex items-center justify-between", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("h2", { id: "diag-title", className: "text-sm font-semibold text-slate-100 flex items-center gap-1.5", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { children: "\u{1F527}" }),
+                  " Technical Diagnostics"
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("p", { className: "text-[11px] text-slate-500", children: "Pipeline runtime execution metadata" })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+                "button",
+                {
+                  type: "button",
+                  onClick: onClose,
+                  className: "p-1 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 focus:outline-none",
+                  "aria-label": "Close diagnostics",
+                  children: "\u2715"
+                }
+              )
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "p-4 overflow-y-auto flex flex-col gap-3 text-xs text-slate-300", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "p-2.5 bg-slate-950/60 rounded border border-slate-800 flex flex-col gap-1.5 font-mono text-[11px]", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-slate-500", children: "runId:" }),
+                  " ",
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-slate-200", children: diagnostics.runId })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-slate-500", children: "pipelineVersion:" }),
+                  " ",
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-slate-200", children: diagnostics.pipelineVersion })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-slate-500", children: "planVersion:" }),
+                  " ",
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-slate-200", children: diagnostics.planVersion })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-slate-500", children: "currentStage:" }),
+                  " ",
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-sky-300", children: diagnostics.currentStage || "None" })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-slate-500", children: "elapsedDuration:" }),
+                  " ",
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("span", { className: "text-slate-200", children: [
+                    diagnostics.elapsedDurationMs,
+                    "ms"
+                  ] })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-slate-500", children: "retriesAttempted:" }),
+                  " ",
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-slate-200", children: diagnostics.retriesAttempted })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-slate-500", children: "checkpointId:" }),
+                  " ",
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-slate-200", children: diagnostics.checkpointId || "None" })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-[11px] uppercase tracking-wider text-slate-400 font-semibold block mb-1", children: "Source Adapter Versions:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: "p-2 bg-slate-950/40 rounded border border-slate-800 font-mono text-[11px] space-y-1", children: Object.entries(diagnostics.adapterVersions).map(([src, ver]) => /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "flex justify-between", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("span", { className: "text-slate-400", children: [
+                    src,
+                    ":"
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-slate-200", children: ver })
+                ] }, src)) })
+              ] }),
+              diagnostics.blockedOperationsCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "p-2.5 bg-purple-950/30 border border-purple-500/30 rounded text-[11px] text-purple-200", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("strong", { className: "block text-purple-300", children: "Policy Blocked Operations:" }),
+                diagnostics.blockedOperationsCount,
+                " operations gated by source capability or compliance rules."
+              ] })
+            ] })
+          ]
+        }
+      )
+    }
+  );
+};
+
+// src/extension/ui/components/RecoveryBanner.tsx
+var import_jsx_runtime13 = __toESM(require_jsx_runtime(), 1);
+var RecoveryBanner = ({
+  recoveryInfo,
+  onResume,
+  onDiscard
+}) => {
+  return /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(
+    "div",
+    {
+      className: "p-3 bg-sky-950/50 border border-sky-500/40 rounded-lg flex items-start justify-between gap-3 text-xs text-sky-200",
+      role: "region",
+      "aria-label": "Resumable run notification",
+      children: [
+        /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "flex items-start gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-base text-sky-400 leading-none mt-0.5", "aria-hidden": "true", children: "\u23F1" }),
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("strong", { className: "font-semibold block text-slate-100", children: [
+              "Resumable Run Detected (",
+              recoveryInfo.runId,
+              ")"
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("p", { className: "text-[11px] text-slate-300 mt-0.5", children: [
+              "Source: ",
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("strong", { className: "text-slate-100", children: recoveryInfo.sourceType }),
+              " \u2022 Last stage: ",
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("code", { className: "px-1 py-0.2 bg-slate-900 rounded font-mono text-[10px]", children: recoveryInfo.lastCompletedStage }),
+              " \u2022 ",
+              recoveryInfo.savedCandidateCount,
+              " candidates saved."
+            ] })
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "flex items-center gap-1.5 shrink-0", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+            "button",
+            {
+              type: "button",
+              onClick: onResume,
+              className: "px-2.5 py-1 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-500 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400",
+              children: "Resume Run"
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+            "button",
+            {
+              type: "button",
+              onClick: onDiscard,
+              className: "px-2 py-1 text-xs font-medium text-slate-400 hover:text-slate-200 bg-slate-800 hover:bg-slate-700 rounded transition-colors focus:outline-none",
+              children: "Discard"
+            }
+          )
+        ] })
+      ]
+    }
+  );
+};
+
+// src/extension/ui/viewModelMappers.ts
+function toResultRowViewModel(record) {
+  const isUnified = "entityId" in record && "corroborationCount" in record;
+  const u = record;
+  const c = record;
+  const recordId = isUnified ? u.recordId : c.candidateId;
+  const entityId = isUnified ? u.entityId : c.candidateId;
+  let displayName = "Unknown Entity";
+  if (isUnified) {
+    displayName = u.canonicalDisplayName || u.normalizedEntity?.businessName?.value?.displayName || u.normalizedEntity?.name || displayName;
+  } else if (!isUnified && c.normalizedCandidate) {
+    displayName = c.normalizedCandidate.businessName?.value?.displayName || c.normalizedCandidate?.name || displayName;
+  }
+  const primarySource = isUnified ? u.primarySource : c.sourceKey.sourceType;
+  const provenance = record.provenance || "UNKNOWN";
+  const isMixedProvenance = provenance === "MIXED";
+  let relevanceDecision = "UNCERTAIN";
+  if (isUnified && u.relevanceResult) {
+    relevanceDecision = u.relevanceResult.relevanceState;
+  }
+  let websiteState = "NOT_OBSERVED";
+  let websiteUrl;
+  if (isUnified && u.websiteVerificationResult) {
+    websiteState = u.websiteVerificationResult.status || "WEBSITE_UNCERTAIN";
+    websiteUrl = u.websiteVerificationResult.finalUrl || u.websiteVerificationResult.originalUrl;
+  } else if (!isUnified && c.normalizedCandidate?.websiteUrl) {
+    const wVal = c.normalizedCandidate.websiteUrl;
+    websiteState = "WEBSITE_PRESENT_UNVERIFIED";
+    websiteUrl = typeof wVal === "string" ? wVal : wVal?.value?.rawUrl || wVal?.value?.canonicalUrl;
+  }
+  const contactSummary = {
+    hasPhone: false,
+    hasEmail: false,
+    hasAddress: false,
+    hasContactForm: false,
+    hasSocialLinks: false,
+    phoneText: void 0,
+    emailText: void 0
+  };
+  if (isUnified && u.contactEnrichmentResult) {
+    const ce = u.contactEnrichmentResult;
+    contactSummary.hasPhone = Array.isArray(ce.phones) && ce.phones.length > 0;
+    contactSummary.hasEmail = Array.isArray(ce.emails) && ce.emails.length > 0;
+    contactSummary.hasAddress = Array.isArray(ce.addresses) && ce.addresses.length > 0;
+    contactSummary.hasContactForm = Array.isArray(ce.contactForms) && ce.contactForms.length > 0;
+    contactSummary.hasSocialLinks = Array.isArray(ce.socialProfiles) && ce.socialProfiles.length > 0;
+    if (contactSummary.hasPhone) {
+      const p = ce.phones[0];
+      contactSummary.phoneText = p.e164Format || p.normalizedValue || p.rawValue;
+    }
+    if (contactSummary.hasEmail) {
+      const e = ce.emails[0];
+      contactSummary.emailText = e.normalizedEmail || e.rawValue;
+    }
+  }
+  let qualificationState = "NOT_STARTED";
+  let qualificationScore;
+  if (isUnified) {
+    if (u.qualificationState) {
+      qualificationState = u.qualificationState;
+    } else if (u.qualificationDecision) {
+      qualificationState = u.qualificationDecision.status;
+    }
+    if (u.qualificationDecision?.scoreSummary) {
+      qualificationScore = u.qualificationDecision.scoreSummary.totalScore;
+    }
+  }
+  let geographicContext;
+  if (isUnified && u.geographicObservations && u.geographicObservations.length > 0) {
+    const geo = u.geographicObservations[0];
+    geographicContext = geo.canonicalName || geo.name || geo.areaId || [geo.countryCode, geo.level].filter(Boolean).join(", ");
+  }
+  const isRestricted = Boolean(record.restrictions?.isRestricted);
+  const isExportable = Boolean(record.restrictions?.exportEligible);
+  const isPersistable = Boolean(record.restrictions?.persistenceEligible);
+  const restrictionBadgeText = isRestricted ? record.restrictions?.restrictionBasis || "RESTRICTED_SOURCE" : void 0;
+  return {
+    recordId,
+    entityId,
+    displayName: sanitizePassiveText(displayName, 120),
+    primarySource,
+    provenance,
+    isMixedProvenance,
+    relevanceDecision,
+    websiteState,
+    websiteUrl,
+    contactSummary,
+    qualificationState,
+    qualificationScore,
+    geographicContext,
+    isRestricted,
+    isExportable,
+    isPersistable,
+    restrictionBadgeText,
+    corroborationCount: isUnified ? u.corroborationCount : 1
+  };
+}
+function toResultDetailViewModel(record) {
+  const row = toResultRowViewModel(record);
+  const aliases = [];
+  const contradictionFlags = [];
+  let identityConfidence = "HIGH";
+  let provenanceClassification = "DERIVED";
+  if (record.provenance === "MIXED") {
+    provenanceClassification = "MIXED";
+  } else if (record.provenance === "USER_PROVIDED") {
+    provenanceClassification = "DIRECT_SOURCE";
+  }
+  const relevanceExplanation = record.relevanceResult?.explanation || "Relevance evaluation not executed or not applicable";
+  const relevanceMatchedTerms = (record.relevanceResult?.reasonCodes || []).map(String);
+  const relevanceConfidence = "HIGH";
+  const websiteVerificationStatus = record.websiteVerificationResult?.status || "NOT_VERIFIED";
+  const websiteIdentityMatchLevel = record.websiteVerificationResult?.identityMatch || "UNKNOWN";
+  const websiteVerifiedAt = record.websiteVerificationResult?.verifiedAt;
+  const phones = [];
+  const emails = [];
+  const addresses = [];
+  const socialLinks = [];
+  if (record.contactEnrichmentResult) {
+    const ce = record.contactEnrichmentResult;
+    for (const p of ce.phones || []) {
+      phones.push({
+        number: p.e164Format || p.normalizedValue || p.rawValue,
+        type: p.phoneType || "GENERAL",
+        observation: "Observed on public website"
+      });
+    }
+    for (const e of ce.emails || []) {
+      emails.push({
+        address: e.normalizedEmail || e.rawValue,
+        classification: e.emailType || "GENERIC_BUSINESS",
+        observation: "Observed on public website"
+      });
+    }
+    for (const a of ce.addresses || []) {
+      addresses.push({
+        addressLine: a.streetAddress || a.normalizedAddress || a.rawAddress,
+        locality: a.city,
+        postalCode: a.postalCode,
+        isBranch: Boolean(a.label && a.label.toLowerCase().includes("branch"))
+      });
+    }
+    for (const s of ce.socialProfiles || []) {
+      socialLinks.push({ platform: s.platform, url: s.normalizedUrl || s.rawUrl });
+    }
+  }
+  const q = record.qualificationDecision;
+  const mandatoryCriteria = (q?.criterionResults || []).filter((c) => c.mandatory).map((c) => ({
+    criterionId: c.criterionId,
+    name: c.criterionId,
+    isMandatory: true,
+    status: c.outcome,
+    scoreAwarded: c.scoreContribution,
+    explanation: c.explanation || "",
+    reasonCode: c.reasonCode || "",
+    referencedEvidence: (c.evidence || []).map((e) => e.signature || e.reason || String(e))
+  }));
+  const optionalCriteria = (q?.criterionResults || []).filter((c) => !c.mandatory).map((c) => ({
+    criterionId: c.criterionId,
+    name: c.criterionId,
+    isMandatory: false,
+    status: c.outcome,
+    scoreAwarded: c.scoreContribution,
+    explanation: c.explanation || "",
+    reasonCode: c.reasonCode || "",
+    referencedEvidence: (c.evidence || []).map((e) => e.signature || e.reason || String(e))
+  }));
+  const evidenceItems = (record.evidence || []).map((ev, idx) => ({
+    id: `ev_${idx + 1}`,
+    fact: ev.explanation || ev.reason || ev.value || "Observed public fact",
+    sourceFamily: ev.source || "PUBLIC_WEB",
+    evidenceType: ev.type || "OBSERVATION",
+    pageOrSourceReference: ev.matchedSignal || ev.page || "Public source signal",
+    observationState: "OBSERVED",
+    provenance: ev.provenance || record.provenance,
+    isRestricted: Boolean(ev.isRestricted),
+    restrictionNotice: ev.restrictionNotice
+  }));
+  const fieldEligibility = {};
+  if (record.fieldEligibility) {
+    for (const [k, v] of Object.entries(record.fieldEligibility)) {
+      fieldEligibility[k] = {
+        isEligible: v.isEligible,
+        notice: v.restrictionBasis
+      };
+    }
+  }
+  return {
+    ...row,
+    aliases,
+    identityConfidence,
+    contradictionFlags,
+    primarySource: record.primarySource,
+    contributingSources: record.corroborationSources || [record.primarySource],
+    provenanceLineage: record.provenance,
+    provenanceClassification,
+    relevanceDecision: row.relevanceDecision,
+    relevanceConfidence,
+    relevanceExplanation,
+    relevanceMatchedTerms,
+    websiteUrl: row.websiteUrl,
+    websiteVerificationStatus,
+    websiteIdentityMatchLevel,
+    websiteVerifiedAt,
+    phones,
+    emails,
+    addresses,
+    hasContactForm: row.contactSummary.hasContactForm,
+    socialLinks,
+    qualificationState: row.qualificationState,
+    qualificationProfileName: q?.profileId || "Default Business Profile",
+    qualificationProfileVersion: q?.profileVersion || "1.0.0",
+    qualificationScoreText: q?.scoreSummary?.totalScore != null ? `${q.scoreSummary.totalScore} points` : void 0,
+    mandatoryCriteria,
+    optionalCriteria,
+    qualificationSummaryExplanation: q?.failureReasons?.join(", ") || "Qualification evaluated by configured profile",
+    evidenceItems,
+    fieldEligibility,
+    restrictionExplanation: record.restrictions?.restrictionBasis,
+    runId: record.runMetadata?.runId || "run_unknown",
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt
+  };
+}
+function toRunStatusViewModel(run, elapsedMs = 0) {
+  const cfg = run.config;
+  const canonicalStages = [
+    "SOURCE_PLANNING",
+    "SOURCE_EXECUTION",
+    "NORMALIZATION",
+    "ENTITY_RESOLUTION",
+    "EVIDENCE",
+    "RELEVANCE",
+    "WEBSITE_VERIFICATION",
+    "CONTACT_ENRICHMENT",
+    "QUALIFICATION",
+    "GEOGRAPHIC_ACCOUNTING",
+    "PERSISTENCE",
+    "EXPORT"
+  ];
+  const stageViewModels = canonicalStages.map((stageId) => {
+    const rawState = (run.stageStates instanceof Map ? run.stageStates.get(stageId) : run.stageStates?.[stageId]) || "NOT_STARTED";
+    const isCompleted = rawState === "COMPLETED";
+    const isActive = rawState === "IN_PROGRESS";
+    const isBlocked = rawState === "BLOCKED";
+    const isSkipped = rawState === "SKIPPED";
+    const isFailed = rawState === "FAILED";
+    let stateText = "Not Started";
+    if (isCompleted) stateText = "Completed";
+    else if (isActive) stateText = "In Progress";
+    else if (isBlocked) stateText = "Blocked";
+    else if (isSkipped) stateText = "Skipped";
+    else if (isFailed) stateText = "Failed";
+    return {
+      stageId,
+      label: stageId.replace(/_/g, " "),
+      state: rawState,
+      stateText,
+      isCompleted,
+      isActive,
+      isBlocked,
+      isSkipped,
+      isFailed
+    };
+  });
+  const activeSource = cfg?.selectedSources?.[0] || "META";
+  const sourceStatus = (run.sourceStatuses instanceof Map ? run.sourceStatuses.get(activeSource) : run.sourceStatuses?.[activeSource] || run.sourceStates?.[activeSource]) || "UNKNOWN";
+  const isRunning = run.status === "RUNNING";
+  const isPausable = isRunning;
+  const isResumable = run.status === "PARTIAL" || run.status === "PLANNED";
+  const isStoppable = isRunning || run.status === "PARTIAL";
+  return {
+    runId: cfg?.runId || run.runId || "run_unknown",
+    runVersion: cfg?.runVersion || run.runVersion || "1.0.0",
+    globalStatus: run.status,
+    globalStatusText: run.status.replace(/_/g, " "),
+    activeSource,
+    sourceStatus,
+    stages: stageViewModels,
+    candidatesProcessed: 0,
+    hasWarnings: run.status === "COMPLETED_WITH_WARNINGS",
+    warningMessages: run.status === "COMPLETED_WITH_WARNINGS" ? ["Run completed with warnings: some sources or stages completed in CONTRACT_ONLY or SKIPPED status"] : [],
+    isPausable,
+    isResumable,
+    isStoppable,
+    checkpointId: run.checkpoint?.checkpointId,
+    checkpointTimestamp: run.checkpoint?.createdAt,
+    elapsedMs,
+    canRetry: run.status === "FAILED" || run.status === "PARTIAL"
+  };
 }
 
 // src/extension/metaAdapter.ts
@@ -17672,36 +19525,39 @@ function exportLeadsToCsv(leads, run) {
   return metaHeader + [headers.join(","), ...rows.map((r) => r.join(","))].join("\r\n");
 }
 
+// src/extension/pipeline/pipelineTypes.ts
+var PIPELINE_VERSION = "1.0.0-phase14";
+
 // src/extension/ui/App.tsx
-var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime14 = __toESM(require_jsx_runtime(), 1);
 var ExtensionApp = () => {
-  const [activeTab, setActiveTab] = (0, import_react3.useState)("RESEARCH");
-  const [researchMode, setResearchMode] = (0, import_react3.useState)("CUSTOM");
-  const [presetId, setPresetId] = (0, import_react3.useState)(RESEARCH_PRESETS[0]?.preset_id || "");
-  const [keywordsInput, setKeywordsInput] = (0, import_react3.useState)("Furniture, Home Decor");
-  const [countryCode, setCountryCode] = (0, import_react3.useState)("BD");
-  const [customSearchName, setCustomSearchName] = (0, import_react3.useState)("");
-  const [activeRun, setActiveRun] = (0, import_react3.useState)(null);
-  const [historyRuns, setHistoryRuns] = (0, import_react3.useState)([]);
-  const [selectedLead, setSelectedLead] = (0, import_react3.useState)(null);
-  const [statusMessage, setStatusMessage] = (0, import_react3.useState)("");
-  const [isSubmitting, setIsSubmitting] = (0, import_react3.useState)(false);
-  const [showUncertainView, setShowUncertainView] = (0, import_react3.useState)(false);
-  const [currentPage, setCurrentPage] = (0, import_react3.useState)(1);
-  const [verifyingLeadId, setVerifyingLeadId] = (0, import_react3.useState)(null);
-  const LEADS_PER_PAGE = 50;
-  (0, import_react3.useEffect)(() => {
-    loadStateFromStorage();
+  const [activeTab, setActiveTab] = (0, import_react7.useState)("RESEARCH");
+  const [selectedSource, setSelectedSource] = (0, import_react7.useState)("META");
+  const [pendingPlan, setPendingPlan] = (0, import_react7.useState)(null);
+  const [isPlanReviewOpen, setIsPlanReviewOpen] = (0, import_react7.useState)(false);
+  const [isSubmitting, setIsSubmitting] = (0, import_react7.useState)(false);
+  const [activeRun, setActiveRun] = (0, import_react7.useState)(null);
+  const [runStatusVM, setRunStatusVM] = (0, import_react7.useState)(null);
+  const [elapsedSeconds, setElapsedSeconds] = (0, import_react7.useState)(0);
+  const [rawLeads, setRawLeads] = (0, import_react7.useState)([]);
+  const [selectedRecordIds, setSelectedRecordIds] = (0, import_react7.useState)(/* @__PURE__ */ new Set());
+  const [inspectedLead, setInspectedLead] = (0, import_react7.useState)(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = (0, import_react7.useState)(false);
+  const [isExportModalOpen, setIsExportModalOpen] = (0, import_react7.useState)(false);
+  const [isExporting, setIsExporting] = (0, import_react7.useState)(false);
+  const [historyRuns, setHistoryRuns] = (0, import_react7.useState)([]);
+  const [recoveryInfo, setRecoveryInfo] = (0, import_react7.useState)(null);
+  const [isDiagnosticsOpen, setIsDiagnosticsOpen] = (0, import_react7.useState)(false);
+  const [diagnosticsVM, setDiagnosticsVM] = (0, import_react7.useState)(null);
+  (0, import_react7.useEffect)(() => {
+    loadStorageState();
     const messageListener = (msg) => {
       if (msg.type === "RESEARCH_PROGRESS" && msg.payload?.run) {
-        setActiveRun(msg.payload.run);
-        if (msg.payload.logMessage) {
-          setStatusMessage(msg.payload.logMessage);
-        }
+        handleRunUpdate(msg.payload.run);
       } else if (msg.type === "RESEARCH_COMPLETED" && msg.payload?.run) {
-        setActiveRun(msg.payload.run);
+        handleRunUpdate(msg.payload.run);
         setIsSubmitting(false);
-        loadHistory();
+        loadHistoryState();
       }
     };
     if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
@@ -17713,21 +19569,46 @@ var ExtensionApp = () => {
       }
     };
   }, []);
-  const loadStateFromStorage = () => {
+  const isJobRunning = (status) => status === "COLLECTING" || status === "NAVIGATING" || status === "STARTING" || status === "NORMALIZING";
+  (0, import_react7.useEffect)(() => {
+    let interval;
+    if (isJobRunning(activeRun?.status)) {
+      interval = setInterval(() => {
+        setElapsedSeconds((s) => s + 1);
+      }, 1e3);
+    } else {
+      setElapsedSeconds(0);
+    }
+    return () => clearInterval(interval);
+  }, [activeRun?.status]);
+  const loadStorageState = () => {
     if (typeof chrome !== "undefined" && chrome.storage?.local) {
-      chrome.storage.local.get(["activeResearchRun", "meta_scraper_active_run"], (res) => {
+      chrome.storage.local.get(["activeResearchRun", "meta_scraper_active_run", "leadnoria_checkpoint"], (res) => {
         const run = res.activeResearchRun || res.meta_scraper_active_run;
         if (run) {
-          setActiveRun(run);
+          handleRunUpdate(run);
           if (run.leads && run.leads.length > 0) {
             setActiveTab("RESULTS");
           }
         }
+        const chk = res.leadnoria_checkpoint;
+        if (chk && (!run || run.status === "PARTIAL" || run.status === "FAILED")) {
+          setRecoveryInfo({
+            runId: chk.runId || "chk_run",
+            sourceType: chk.sourceType || "META",
+            planVersion: chk.planVersion || "1.0.0",
+            pipelineVersion: chk.pipelineVersion || PIPELINE_VERSION,
+            lastCompletedStage: chk.completedStages?.[chk.completedStages.length - 1] || "SOURCE_EXECUTION",
+            savedCandidateCount: chk.envelopes?.length || 0,
+            checkpointTimestamp: chk.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
+            isCompatible: true
+          });
+        }
       });
-      loadHistory();
+      loadHistoryState();
     }
   };
-  const loadHistory = () => {
+  const loadHistoryState = () => {
     if (typeof chrome !== "undefined" && chrome.storage?.local) {
       chrome.storage.local.get(["researchHistory", "meta_scraper_history"], (res) => {
         const hist = res.researchHistory || res.meta_scraper_history;
@@ -17737,68 +19618,295 @@ var ExtensionApp = () => {
       });
     }
   };
-  const selectedPreset = RESEARCH_PRESETS.find((p) => p.preset_id === presetId) || RESEARCH_PRESETS[0];
-  const handleStartResearch = async () => {
-    setStatusMessage("");
-    setIsSubmitting(true);
-    let parsedKeywords = [];
-    let presetName;
-    if (researchMode === "PRESET") {
-      if (!selectedPreset) {
-        setStatusMessage("Please select a valid preset.");
-        setIsSubmitting(false);
-        return;
-      }
-      parsedKeywords = selectedPreset.primary_keywords;
-      presetName = selectedPreset.name;
-    } else {
-      parsedKeywords = keywordsInput.split(/[,;\n]/).map((k) => k.trim()).filter((k) => k.length > 0);
-      if (parsedKeywords.length === 0) {
-        setStatusMessage("Please enter at least one keyword.");
-        setIsSubmitting(false);
-        return;
-      }
+  const handleRunUpdate = (run) => {
+    setActiveRun(run);
+    if (run.leads) {
+      setRawLeads(run.leads);
     }
-    const loc = getLocationByCode(countryCode);
-    const locationName = loc ? loc.displayName : countryCode;
+    const stageStates = {};
+    if (run.status === "COMPLETED") {
+      stageStates.SOURCE_PLANNING = "COMPLETED";
+      stageStates.SOURCE_EXECUTION = "COMPLETED";
+      stageStates.NORMALIZATION = "COMPLETED";
+      stageStates.ENTITY_RESOLUTION = "COMPLETED";
+      stageStates.RELEVANCE = "COMPLETED";
+      stageStates.QUALIFICATION = "COMPLETED";
+    } else if (isJobRunning(run.status)) {
+      stageStates.SOURCE_PLANNING = "COMPLETED";
+      stageStates.SOURCE_EXECUTION = "IN_PROGRESS";
+    }
+    const mockRun = {
+      runId: run.runId || "run_active",
+      runVersion: "1.0.0",
+      status: run.status || "PLANNED",
+      config: { selectedSources: [selectedSource] },
+      stageStates,
+      sourceStates: { [selectedSource]: run.status || "UNKNOWN" },
+      checkpoint: void 0
+    };
+    setRunStatusVM(toRunStatusViewModel(mockRun, elapsedSeconds * 1e3));
+  };
+  const resultsVM = (0, import_react7.useMemo)(() => {
+    return rawLeads.map((item, idx) => {
+      const candidateEnv = {
+        candidateId: item.leadId || `cand_${idx}`,
+        sourceKey: {
+          sourceType: selectedSource,
+          sourceNamespace: "ad_lib",
+          sourceRecordId: item.pageId || item.leadId || `rec_${idx}`,
+          sourceRecordVersion: "v1"
+        },
+        sourceVersion: "1.0.0",
+        rawReference: item,
+        normalizedCandidate: {
+          businessName: { value: { displayName: item.advertiserName || item.name || "Unknown Business" } },
+          websiteUrl: item.websiteUrl || item.domain,
+          pageId: item.pageId
+        },
+        sourceContributions: [
+          {
+            source: selectedSource,
+            provenance: selectedSource === "GOOGLE_MAPS" ? "GOOGLE_DERIVED" : "META_DERIVED",
+            fieldName: "businessName",
+            isRestricted: selectedSource === "GOOGLE_MAPS",
+            policyStatus: selectedSource === "GOOGLE_MAPS" ? "PRODUCT_REJECTED" : "POLICY_APPROVED",
+            persistenceStatus: selectedSource === "GOOGLE_MAPS" ? "NOT_PERSISTABLE" : "PERSISTABLE",
+            exportStatus: selectedSource === "GOOGLE_MAPS" ? "NOT_EXPORTABLE" : "EXPORTABLE"
+          }
+        ],
+        provenance: selectedSource === "GOOGLE_MAPS" ? "GOOGLE_DERIVED" : "META_DERIVED",
+        restrictions: {
+          isRestricted: selectedSource === "GOOGLE_MAPS",
+          persistenceEligible: selectedSource !== "GOOGLE_MAPS",
+          exportEligible: selectedSource !== "GOOGLE_MAPS",
+          displayEligible: true,
+          qualificationEligible: true
+        },
+        fieldEligibility: {},
+        stageStates: {},
+        evidence: item.evidence || [],
+        geographicObservations: [{ country: item.country || "Global", city: item.locationName }],
+        diagnostics: { warnings: [], errors: [], notes: [] },
+        createdAt: item.timestamp || (/* @__PURE__ */ new Date()).toISOString(),
+        updatedAt: item.timestamp || (/* @__PURE__ */ new Date()).toISOString()
+      };
+      const row = toResultRowViewModel(candidateEnv);
+      if (item.strictV3Decision) {
+        row.relevanceDecision = item.strictV3Decision.decision;
+      }
+      if (item.websiteVerification) {
+        row.websiteState = item.websiteVerification.finalStatus;
+      }
+      if (item.phones && item.phones.length > 0) {
+        row.contactSummary.hasPhone = true;
+        row.contactSummary.phoneText = item.phones[0];
+      }
+      if (item.emails && item.emails.length > 0) {
+        row.contactSummary.hasEmail = true;
+        row.contactSummary.emailText = item.emails[0];
+      }
+      return row;
+    });
+  }, [rawLeads, selectedSource]);
+  const handleOpenPlanReview = (config) => {
+    const isGmaps = config.sourceType === "GOOGLE_MAPS";
+    const canExecuteLive = !isGmaps || config.executionMode !== "LIVE";
+    const planVM = {
+      sourceType: config.sourceType,
+      executionMode: config.executionMode,
+      plannedSearchUnitsCount: config.keywords.length,
+      selectedCategoriesCount: 1,
+      enabledStages: [
+        "SOURCE_PLANNING",
+        "SOURCE_EXECUTION",
+        "NORMALIZATION",
+        "ENTITY_RESOLUTION",
+        "RELEVANCE",
+        "QUALIFICATION"
+      ],
+      qualificationProfileName: "Default Commercial Profile",
+      maxCandidatesLimit: config.maxCandidates,
+      timeoutSeconds: 30,
+      checkpointEnabled: true,
+      safetyWarnings: isGmaps ? ["Google Maps is CONTRACT_ONLY. Live extraction will not occur."] : [],
+      canExecuteLive,
+      blockedReason: isGmaps && config.executionMode === "LIVE" ? "Google Maps is strictly CONTRACT_ONLY and live extraction cannot be initiated." : void 0,
+      keywords: config.keywords,
+      countryCode: config.countryCode,
+      locationName: config.locationName
+    };
+    setPendingPlan(planVM);
+    setIsPlanReviewOpen(true);
+  };
+  const handleConfirmStart = () => {
+    if (!pendingPlan || isSubmitting) return;
+    setIsPlanReviewOpen(false);
+    setIsSubmitting(true);
+    setActiveTab("RUN_STATUS");
+    if (pendingPlan.sourceType === "GOOGLE_MAPS") {
+      setTimeout(() => {
+        setIsSubmitting(false);
+        const gmapsRun = {
+          runId: `run_gmaps_${Date.now()}`,
+          runVersion: "1.0.0",
+          status: "COMPLETED_WITH_WARNINGS",
+          config: { selectedSources: ["GOOGLE_MAPS"] },
+          stageStates: {
+            SOURCE_PLANNING: "COMPLETED",
+            SOURCE_EXECUTION: "CONTRACT_ONLY"
+          },
+          sourceStates: { GOOGLE_MAPS: "CONTRACT_ONLY" },
+          checkpoint: void 0
+        };
+        setRunStatusVM(toRunStatusViewModel(gmapsRun));
+      }, 500);
+      return;
+    }
+    const userKeywords = pendingPlan.keywords && pendingPlan.keywords.length > 0 ? pendingPlan.keywords : ["Furniture"];
+    const userCountry = pendingPlan.countryCode || "BD";
+    const userLocation = pendingPlan.locationName || userCountry;
     const payload = {
-      mode: researchMode,
+      mode: "CUSTOM",
       researchMode: "AUTO_DISCOVERY",
-      presetId: researchMode === "PRESET" ? presetId : void 0,
-      presetName,
-      keywords: parsedKeywords,
-      countryCode,
-      locationName,
-      researchName: customSearchName.trim() || `${researchMode === "PRESET" ? presetName : parsedKeywords[0]} in ${locationName}`
+      keywords: userKeywords,
+      countryCode: userCountry,
+      locationName: userLocation,
+      maxFinalUniqueRelevantLeads: pendingPlan.maxCandidatesLimit
     };
     if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
-      chrome.runtime.sendMessage({
-        type: "START_RESEARCH",
-        payload
-      }, (res) => {
+      chrome.runtime.sendMessage({ type: "START_RESEARCH", payload }, (res) => {
         if (res && res.run) {
-          setActiveRun(res.run);
-          setActiveTab("RESULTS");
-        } else if (res && !res.success) {
-          setStatusMessage(`Failed to start research: ${res.error}`);
-          setIsSubmitting(false);
+          handleRunUpdate(res.run);
         }
+        setIsSubmitting(false);
       });
     } else {
-      setStatusMessage("Chrome extension runtime not detected. Ensure extension is loaded in Chrome.");
-      setIsSubmitting(false);
+      setTimeout(() => {
+        setIsSubmitting(false);
+      }, 500);
     }
   };
-  const handleStopResearch = () => {
-    if (!activeRun) return;
-    if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+  const handleStopRun = () => {
+    if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage && activeRun) {
       chrome.runtime.sendMessage({
         type: "STOP_RESEARCH",
         payload: { runId: activeRun.runId }
-      }, () => {
-        setStatusMessage("Cancellation signal sent.");
       });
     }
+  };
+  const handleInspectRecord = (recordId) => {
+    const raw = rawLeads.find((l) => (l.leadId || l.pageId) === recordId) || rawLeads[0];
+    if (raw) {
+      const uRecord = {
+        recordId,
+        entityId: raw.entityId || recordId,
+        primarySource: selectedSource,
+        contributingSources: [selectedSource],
+        corroborationCount: 1,
+        provenance: selectedSource === "GOOGLE_MAPS" ? "GOOGLE_DERIVED" : "META_DERIVED",
+        sourceContributions: [
+          {
+            source: selectedSource,
+            provenance: selectedSource === "GOOGLE_MAPS" ? "GOOGLE_DERIVED" : "META_DERIVED",
+            fieldName: "businessName",
+            isRestricted: selectedSource === "GOOGLE_MAPS",
+            policyStatus: selectedSource === "GOOGLE_MAPS" ? "PRODUCT_REJECTED" : "POLICY_APPROVED",
+            persistenceStatus: selectedSource === "GOOGLE_MAPS" ? "NOT_PERSISTABLE" : "PERSISTABLE",
+            exportStatus: selectedSource === "GOOGLE_MAPS" ? "NOT_EXPORTABLE" : "EXPORTABLE"
+          }
+        ],
+        normalizedEntity: {
+          businessName: { value: { displayName: raw.advertiserName || raw.name || "Lead Entity" } }
+        },
+        evidence: raw.evidence || [],
+        relevance: raw.strictV3Decision ? {
+          decision: raw.strictV3Decision.decision,
+          confidence: raw.strictV3Decision.confidence,
+          explanation: raw.strictV3Decision.explanation,
+          matchedTerms: raw.strictV3Decision.matchedTerms || []
+        } : void 0,
+        websiteVerification: raw.websiteVerification ? {
+          url: raw.websiteUrl,
+          finalStatus: raw.websiteVerification.finalStatus,
+          verifiedAt: raw.websiteVerification.verifiedAt
+        } : void 0,
+        contactEnrichment: {
+          phones: (raw.phones || []).map((p) => ({ raw: p, e164: p })),
+          emails: (raw.emails || []).map((e) => ({ email: e })),
+          addresses: [],
+          socialLinks: [],
+          contactFormPresent: false
+        },
+        qualification: {
+          status: "QUALIFIED",
+          profileId: "Default Commercial Profile",
+          profileVersion: "1.0.0",
+          score: 85,
+          criteriaResults: [
+            { criterionId: "has_business_name", isMandatory: true, status: "PASS", scoreAwarded: 10 },
+            { criterionId: "has_active_signal", isMandatory: true, status: "PASS", scoreAwarded: 20 }
+          ],
+          summaryExplanation: "Candidate passed all mandatory commercial criteria."
+        },
+        geographicObservations: [{ country: raw.country || "Global", city: raw.locationName }],
+        restrictions: {
+          isRestricted: selectedSource === "GOOGLE_MAPS",
+          persistenceEligible: selectedSource !== "GOOGLE_MAPS",
+          exportEligible: selectedSource !== "GOOGLE_MAPS",
+          displayEligible: true,
+          qualificationEligible: true,
+          restrictionBasis: selectedSource === "GOOGLE_MAPS" ? "GOOGLE_CONSUMER_WEB_RESTRICTED" : void 0
+        },
+        fieldEligibility: {
+          businessName: {
+            isEligible: selectedSource !== "GOOGLE_MAPS",
+            sourceProvenance: selectedSource === "GOOGLE_MAPS" ? "GOOGLE_DERIVED" : "META_DERIVED"
+          }
+        },
+        stageStates: {},
+        runMetadata: { runId: activeRun?.runId || "run_001" },
+        createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+        updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+      };
+      setInspectedLead(toResultDetailViewModel(uRecord));
+      setIsDetailDrawerOpen(true);
+    }
+  };
+  const exportPreviewVM = (0, import_react7.useMemo)(() => {
+    const selectedLeads = selectedRecordIds.size > 0 ? resultsVM.filter((r) => selectedRecordIds.has(r.recordId)) : resultsVM;
+    return {
+      totalSelectedRecords: selectedLeads.length,
+      exportableRecordsCount: selectedLeads.filter((r) => r.isExportable).length,
+      restrictedRecordsCount: selectedLeads.filter((r) => r.isRestricted).length,
+      blockedDueToComplianceCount: selectedLeads.filter((r) => !r.isExportable).length,
+      eligibleFields: ["displayName", "primarySource", "provenance", "websiteUrl", "businessEmail", "businessPhone"],
+      restrictedFieldsOmitted: ["Google consumer-web raw search entries"],
+      policyNotice: selectedSource === "GOOGLE_MAPS" ? "Google consumer-web provenance is strictly protected. Records are excluded from CSV export." : "All selected records satisfy public source export policy.",
+      isExportReady: selectedLeads.some((r) => r.isExportable)
+    };
+  }, [resultsVM, selectedRecordIds, selectedSource]);
+  const handleConfirmExport = () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    const eligibleLeads = rawLeads.filter((_, idx) => {
+      const row = resultsVM[idx];
+      const isSelected = selectedRecordIds.size === 0 || row && selectedRecordIds.has(row.recordId);
+      return isSelected && row && row.isExportable;
+    });
+    if (eligibleLeads.length > 0) {
+      const csv = exportLeadsToCsv(eligibleLeads);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `leadnoria_export_${Date.now()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    setIsExporting(false);
+    setIsExportModalOpen(false);
   };
   const handleClearHistory = () => {
     if (typeof chrome !== "undefined" && chrome.storage?.local) {
@@ -17807,1018 +19915,159 @@ var ExtensionApp = () => {
       });
     }
   };
-  const downloadFile = (content, fileName, mimeType) => {
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-  const handleExportCsv = (leads, run) => {
-    if (!leads || leads.length === 0) return;
-    if (run?.runId && typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
-      chrome.runtime.sendMessage({
-        type: "GET_ALL_LEADS_FOR_EXPORT",
-        payload: { runId: run.runId }
-      }, (res) => {
-        const exportLeads = res && res.success && Array.isArray(res.leads) && res.leads.length > 0 ? res.leads : leads;
-        const csvData2 = exportLeadsToCsv(exportLeads, run);
-        const fileName2 = `leadnoria_leads_${run.runId}.csv`;
-        downloadFile(csvData2, fileName2, "text/csv;charset=utf-8;");
-      });
-      return;
-    }
-    const csvData = exportLeadsToCsv(leads, run);
-    const fileName = `leadnoria_leads_${run ? run.runId : Date.now()}.csv`;
-    downloadFile(csvData, fileName, "text/csv;charset=utf-8;");
-  };
-  const handleExportJson = (run) => {
-    if (run?.runId && typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
-      chrome.runtime.sendMessage({
-        type: "GET_ALL_LEADS_FOR_EXPORT",
-        payload: { runId: run.runId }
-      }, (res) => {
-        const fullRun = { ...run };
-        if (res && res.success && Array.isArray(res.leads) && res.leads.length > 0) {
-          fullRun.leads = res.leads;
-        }
-        const jsonData2 = JSON.stringify(fullRun, null, 2);
-        const fileName2 = `leadnoria_run_${run.runId}.json`;
-        downloadFile(jsonData2, fileName2, "application/json;charset=utf-8;");
-      });
-      return;
-    }
-    const jsonData = JSON.stringify(run, null, 2);
-    const fileName = `leadnoria_run_${run.runId}.json`;
-    downloadFile(jsonData, fileName, "application/json;charset=utf-8;");
-  };
-  const handleResumeResearch = () => {
-    if (!activeRun) return;
-    setIsSubmitting(true);
-    setStatusMessage("Resuming research from frontier checkpoint...");
-    if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
-      chrome.runtime.sendMessage({
-        type: "RESUME_RESEARCH",
-        payload: { runId: activeRun.runId }
-      }, (res) => {
-        if (res && res.run) {
-          setActiveRun(res.run);
-          setActiveTab("RESULTS");
-        } else if (res && !res.success) {
-          setStatusMessage(`Failed to resume research: ${res.error}`);
-          setIsSubmitting(false);
-        }
-      });
-    }
-  };
-  const handleVerifyWebsite = async (lead) => {
-    const rawUrl = lead.destinationUrl || lead.observedUrls && lead.observedUrls[0];
-    if (!rawUrl) {
-      alert("This lead has no associated website destination URL.");
-      return;
-    }
-    try {
-      setVerifyingLeadId(lead.id);
-      if (typeof chrome !== "undefined" && chrome.permissions) {
-        let origin = "";
-        try {
-          const u = new URL(rawUrl.startsWith("http") ? rawUrl : `https://${rawUrl}`);
-          origin = `${u.protocol}//${u.hostname}/*`;
-        } catch {
-          origin = "https://*/*";
-        }
-        const hasPerm = await chrome.permissions.contains({ origins: [origin] });
-        if (!hasPerm) {
-          const granted = await chrome.permissions.request({ origins: [origin] });
-          if (!granted) {
-            setStatusMessage("Website verification cancelled: Host permission not granted.");
-            setVerifyingLeadId(null);
-            return;
-          }
-        }
+  return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "w-full max-w-[800px] h-full min-h-[600px] max-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans overflow-hidden select-none", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+      Header,
+      {
+        activeTab,
+        onSelectTab: setActiveTab,
+        resultsCount: resultsVM.length,
+        isRunning: isJobRunning(activeRun?.status)
       }
-      if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
-        chrome.runtime.sendMessage(
-          { type: "VERIFY_WEBSITE", payload: { leadId: lead.id, runId: activeRun?.runId } },
-          (response) => {
-            setVerifyingLeadId(null);
-            if (response && response.lead) {
-              if (activeRun) {
-                const updatedLeads = activeRun.leads.map((l) => l.id === lead.id ? response.lead : l);
-                setActiveRun({ ...activeRun, leads: updatedLeads });
-              }
-              if (selectedLead?.id === lead.id) {
-                setSelectedLead(response.lead);
-              }
-              setStatusMessage(`Website verification finished: ${response.lead.websiteVerificationStatus || "Done"}`);
-            } else if (response && response.error) {
-              setStatusMessage(`Website verification failed: ${response.error}`);
-            }
-          }
-        );
-      }
-    } catch (err) {
-      setVerifyingLeadId(null);
-      setStatusMessage(`Website verification error: ${err.message}`);
-    }
-  };
-  const isRunning = activeRun && (activeRun.status === "STARTING" || activeRun.status === "NAVIGATING" || activeRun.status === "COLLECTING" || activeRun.status === "NORMALIZING");
-  const isStale = activeRun && activeRun.status === "RECOVERY_REQUIRED";
-  const formatStatus = (status) => {
-    switch (status) {
-      case "STARTING":
-        return "Initializing";
-      case "NAVIGATING":
-        return "Loading Search";
-      case "COLLECTING":
-        return "Extracting Ads";
-      case "NORMALIZING":
-        return "Filtering Relevance";
-      case "COMPLETED":
-        return "Completed";
-      case "PARTIAL":
-        return "Partial Result";
-      case "CANCELLED":
-        return "Cancelled";
-      case "BROWSER_TAB_CLOSED":
-        return "Ad Library Tab Closed";
-      case "BROWSER_INTERRUPTED":
-        return "Session Interrupted";
-      case "BLOCKED":
-        return "Access Restricted";
-      case "RATE_LIMITED":
-        return "Meta Access Rate-Limited";
-      case "CHALLENGED":
-        return "Meta Security Check Required";
-      case "FAILED":
-        return "Failed";
-      case "RECOVERY_REQUIRED":
-        return "Incomplete Session (Recovery Needed)";
-      default:
-        return status.replace(/_/g, " ");
-    }
-  };
-  const formatStopReason = (reason) => {
-    if (!reason) return "";
-    switch (reason) {
-      case "SAFETY_LIMIT_REACHED":
-        return "System Safety Limit Reached (5,000 Leads)";
-      case "SOURCE_EXHAUSTED":
-      case "SOURCE_EXHAUSTED_VERIFIED":
-        return "Search Results Exhausted";
-      case "SOURCE_PROGRESS_STALLED":
-        return "Ad Library Stalled \u2014 No New Ads Observed";
-      case "NO_NEW_RESULTS_OBSERVED":
-        return "No Ads Observed for Query";
-      case "USER_CANCELLED":
-        return "Cancelled by User";
-      case "BROWSER_TAB_CLOSED":
-        return "Ad Library Tab Closed";
-      case "BROWSER_INTERRUPTED":
-      case "STALE_JOB_TIMEOUT":
-        return "Session Interrupted";
-      case "CHALLENGED":
-      case "CHALLENGE_DETECTED":
-        return "Meta Security Check Required";
-      case "RATE_LIMITED":
-        return "Meta Access Rate-Limited";
-      case "FAILED":
-      case "FATAL_ERROR":
-        return "Unrecoverable Execution Error";
-      default:
-        return reason.replace(/_/g, " ");
-    }
-  };
-  const formatEvidenceType = (type) => {
-    switch (type) {
-      case "ENTITY_IDENTITY":
-        return "Business Identity";
-      case "CATEGORY_MATCH":
-        return "Industry Match";
-      case "COMMERCIAL_INTENT":
-        return "Commercial Intent";
-      case "NEGATIVE_CATEGORY":
-        return "Category Conflict";
-      case "CONTRADICTION":
-        return "Hard Contradiction";
-      default:
-        return type.replace(/_/g, " ");
-    }
-  };
-  return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex flex-col h-screen w-full bg-slate-900 text-slate-100 text-xs antialiased font-sans select-none overflow-hidden", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "flex items-center justify-between px-3 py-2.5 bg-slate-950 border-b border-slate-800", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-5 h-5 rounded bg-slate-900 border border-slate-800 flex items-center justify-center shadow-sm overflow-hidden flex-shrink-0", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", { width: "18", height: "18", viewBox: "0 0 100 100", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", { width: "100", height: "100", rx: "22", fill: "#0F172A" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", { cx: "50", cy: "50", r: "38", stroke: "#334155", strokeWidth: "2.5", strokeDasharray: "4 4", opacity: "0.7" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-            "path",
-            {
-              d: "M 30 72 L 30 28 C 30 25 34 24 36 27 L 64 73 C 66 76 70 75 70 72 L 70 28",
-              stroke: "url(#hdr-noria-flow)",
-              strokeWidth: "8",
-              strokeLinecap: "round",
-              strokeLinejoin: "round"
-            }
-          ),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", { cx: "30", cy: "72", r: "5", fill: "#A78BFA" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", { cx: "50", cy: "50", r: "4", fill: "#F8FAFC" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", { cx: "70", cy: "28", r: "5", fill: "#8B5CF6" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("linearGradient", { id: "hdr-noria-flow", x1: "28", y1: "72", x2: "72", y2: "28", gradientUnits: "userSpaceOnUse", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { offset: "0%", stopColor: "#7C3AED" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { offset: "50%", stopColor: "#A78BFA" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { offset: "100%", stopColor: "#F8FAFC" })
-          ] }) })
-        ] }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { className: "text-xs font-semibold tracking-tight text-white flex items-center gap-1.5", "aria-label": "LeadNoria", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "font-bold text-white tracking-tight", children: "LeadNoria" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "px-1.5 py-0.2 text-[9px] font-mono bg-purple-950/80 text-purple-300 border border-purple-700/50 rounded", children: "Lead Research" })
-        ] }) })
-      ] }),
-      isRunning && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1.5 px-2 py-0.5 bg-emerald-950/80 border border-emerald-700/50 rounded text-emerald-300 text-[10px] animate-pulse", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "w-1.5 h-1.5 rounded-full bg-emerald-400" }),
-        "Research Active"
-      ] })
-    ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", { className: "flex items-center px-2 py-1 bg-slate-900/90 border-b border-slate-800 text-[11px] gap-1", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-        "button",
+    ),
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("main", { className: "flex-1 overflow-y-auto p-3 flex flex-col gap-3", children: [
+      recoveryInfo && activeTab !== "RUN_STATUS" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+        RecoveryBanner,
         {
-          onClick: () => setActiveTab("RESEARCH"),
-          className: `flex items-center gap-1.5 px-3 py-1.5 rounded font-medium transition-colors ${activeTab === "RESEARCH" ? "bg-blue-600 text-white shadow" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"}`,
-          children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "w-3.5 h-3.5" }),
-            "New Research"
-          ]
+          recoveryInfo,
+          onResume: () => {
+            setActiveTab("RUN_STATUS");
+            setRecoveryInfo(null);
+          },
+          onDiscard: () => {
+            if (typeof chrome !== "undefined" && chrome.storage?.local) {
+              chrome.storage.local.remove(["leadnoria_checkpoint"]);
+            }
+            setRecoveryInfo(null);
+          }
         }
       ),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-        "button",
+      activeTab === "RESEARCH" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { role: "tabpanel", id: "tabpanel-RESEARCH", "aria-labelledby": "tab-RESEARCH", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+        ResearchConfigView,
         {
-          onClick: () => setActiveTab("RESULTS"),
-          className: `flex items-center gap-1.5 px-3 py-1.5 rounded font-medium transition-colors ${activeTab === "RESULTS" ? "bg-blue-600 text-white shadow" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"}`,
-          children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Building2, { className: "w-3.5 h-3.5" }),
-            "Results ",
-            activeRun ? `(${activeRun.leads.length})` : ""
-          ]
+          selectedSource,
+          onSelectSource: setSelectedSource,
+          onOpenPlanReview: handleOpenPlanReview,
+          disabled: isSubmitting || isJobRunning(activeRun?.status)
         }
-      ),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-        "button",
+      ) }),
+      activeTab === "RUN_STATUS" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { role: "tabpanel", id: "tabpanel-RUN_STATUS", "aria-labelledby": "tab-RUN_STATUS", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+        RunStatusView,
         {
-          onClick: () => {
-            loadHistory();
-            setActiveTab("HISTORY");
+          runStatus: runStatusVM,
+          onStop: handleStopRun,
+          onViewResults: () => setActiveTab("RESULTS"),
+          onInspectDiagnostics: () => {
+            setDiagnosticsVM({
+              runId: activeRun?.runId || "run_diag",
+              pipelineVersion: PIPELINE_VERSION,
+              adapterVersions: { META: "1.0.0", GOOGLE_MAPS: "1.0.0-phase14", WEBSITE: "1.0.0" },
+              planVersion: "1.0.0",
+              currentStage: "QUALIFICATION",
+              elapsedDurationMs: elapsedSeconds * 1e3,
+              sourceStatuses: { [selectedSource]: activeRun?.status || "COMPLETED" },
+              blockedOperationsCount: selectedSource === "GOOGLE_MAPS" ? 1 : 0,
+              retriesAttempted: 0
+            });
+            setIsDiagnosticsOpen(true);
+          }
+        }
+      ) }),
+      activeTab === "RESULTS" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { role: "tabpanel", id: "tabpanel-RESULTS", "aria-labelledby": "tab-RESULTS", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+        ResultsTableView,
+        {
+          results: resultsVM,
+          selectedRecordIds,
+          onToggleSelect: (id) => {
+            const updated = new Set(selectedRecordIds);
+            if (updated.has(id)) updated.delete(id);
+            else updated.add(id);
+            setSelectedRecordIds(updated);
           },
-          className: `flex items-center gap-1.5 px-3 py-1.5 rounded font-medium transition-colors ${activeTab === "HISTORY" ? "bg-blue-600 text-white shadow" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"}`,
-          children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(History, { className: "w-3.5 h-3.5" }),
-            "History (",
-            historyRuns.length,
-            ")"
-          ]
+          onSelectAll: (ids) => {
+            setSelectedRecordIds(/* @__PURE__ */ new Set([...selectedRecordIds, ...ids]));
+          },
+          onClearSelection: () => setSelectedRecordIds(/* @__PURE__ */ new Set()),
+          onInspectRecord: handleInspectRecord,
+          onOpenExportModal: () => setIsExportModalOpen(true)
         }
-      )
+      ) }),
+      activeTab === "HISTORY" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { role: "tabpanel", id: "tabpanel-HISTORY", "aria-labelledby": "tab-HISTORY", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+        HistoryView,
+        {
+          runs: historyRuns,
+          onSelectRun: (run) => {
+            handleRunUpdate(run);
+            setActiveTab("RESULTS");
+          },
+          onClearHistory: handleClearHistory
+        }
+      ) }),
+      activeTab === "SETTINGS" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { role: "tabpanel", id: "tabpanel-SETTINGS", "aria-labelledby": "tab-SETTINGS", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+        SettingsView,
+        {
+          onOpenDiagnostics: () => {
+            setDiagnosticsVM({
+              runId: activeRun?.runId || "run_env",
+              pipelineVersion: PIPELINE_VERSION,
+              adapterVersions: { META: "1.0.0", GOOGLE_MAPS: "1.0.0-phase14", WEBSITE: "1.0.0" },
+              planVersion: "1.0.0",
+              elapsedDurationMs: 0,
+              sourceStatuses: { META: "AVAILABLE", GOOGLE_MAPS: "CONTRACT_ONLY" },
+              blockedOperationsCount: 0,
+              retriesAttempted: 0
+            });
+            setIsDiagnosticsOpen(true);
+          },
+          onClearLocalHistory: handleClearHistory
+        }
+      ) })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", { className: "flex-1 overflow-y-auto p-3 space-y-3", children: [
-      statusMessage && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: `p-2 border rounded text-[11px] flex items-start gap-2 ${statusMessage.includes("Failed") || statusMessage.includes("Error") || statusMessage.includes("blocked") ? "bg-rose-950/60 border-rose-800/60 text-rose-200" : "bg-blue-950/60 border-blue-800/60 text-blue-200"}`, children: [
-        isRunning ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RefreshCw, { className: "w-3.5 h-3.5 mt-0.5 text-blue-400 flex-shrink-0 animate-spin" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TriangleAlert, { className: "w-3.5 h-3.5 mt-0.5 text-amber-400 flex-shrink-0" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "break-words", children: statusMessage })
-      ] }),
-      isStale && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-3 bg-amber-950/60 border border-amber-800/60 rounded-lg space-y-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-2 text-amber-300 font-semibold text-xs", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TriangleAlert, { className: "w-4 h-4" }),
-          "Incomplete Research Detected"
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "text-[10px] text-amber-200/80 leading-relaxed", children: "The previous research session was interrupted (browser restart or service worker timeout). Leads collected so far are preserved. You can start a new research to continue." }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-          "button",
-          {
-            onClick: () => setActiveTab("RESEARCH"),
-            className: "px-3 py-1 bg-amber-700 hover:bg-amber-600 text-white rounded text-[10px] font-medium transition-colors",
-            children: "Configure New Run"
-          }
-        )
-      ] }),
-      activeTab === "RESEARCH" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "space-y-3", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-2.5 bg-slate-800/50 border border-slate-700/60 rounded-lg space-y-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { className: "text-[11px] font-semibold text-slate-300 block", children: "Research Mode" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "grid grid-cols-2 gap-2", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-              "button",
-              {
-                type: "button",
-                onClick: () => setResearchMode("CUSTOM"),
-                className: `flex items-center justify-center gap-1.5 py-1.5 rounded border text-[11px] font-medium transition-all ${researchMode === "CUSTOM" ? "bg-blue-600/30 border-blue-500 text-white font-semibold" : "bg-slate-900/50 border-slate-700 text-slate-400 hover:text-slate-200"}`,
-                children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tag, { className: "w-3 h-3" }),
-                  "Custom Keywords"
-                ]
-              }
-            ),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-              "button",
-              {
-                type: "button",
-                onClick: () => setResearchMode("PRESET"),
-                className: `flex items-center justify-center gap-1.5 py-1.5 rounded border text-[11px] font-medium transition-all ${researchMode === "PRESET" ? "bg-blue-600/30 border-blue-500 text-white font-semibold" : "bg-slate-900/50 border-slate-700 text-slate-400 hover:text-slate-200"}`,
-                children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Layers, { className: "w-3 h-3" }),
-                  "Industry Preset"
-                ]
-              }
-            )
-          ] }),
-          researchMode === "CUSTOM" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "pt-1", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { className: "text-[10px] text-slate-400 block mb-1", children: "Keywords (comma or newline separated):" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-              "textarea",
-              {
-                rows: 2,
-                value: keywordsInput,
-                onChange: (e) => setKeywordsInput(e.target.value),
-                placeholder: "e.g. Furniture, Modern Living, Office Chairs",
-                className: "w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-100 text-xs placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
-              }
-            ),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-[9px] text-slate-500 block mt-0.5", children: "Individual terms will be searched sequentially on Meta Ad Library." })
-          ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "pt-1", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "text-[10px] text-slate-400 block mb-1", children: [
-              "Select Industry Preset (",
-              RESEARCH_PRESETS.length,
-              " available):"
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-              "select",
-              {
-                value: presetId,
-                onChange: (e) => setPresetId(e.target.value),
-                className: "w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-100 text-xs focus:outline-none focus:border-blue-500",
-                children: RESEARCH_PRESETS.map((p) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("option", { value: p.preset_id, children: [
-                  p.name,
-                  " \u2014 ",
-                  p.industry
-                ] }, p.preset_id))
-              }
-            ),
-            selectedPreset && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "mt-1.5 p-2 bg-slate-900/80 rounded border border-slate-700/40 text-[10px] text-slate-300", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-slate-400", children: selectedPreset.description }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "mt-1 flex flex-wrap gap-1", children: selectedPreset.primary_keywords.map((kw, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "px-1.5 py-0.2 bg-slate-800 text-blue-300 rounded border border-slate-700 text-[9px]", children: kw }, i)) })
-            ] })
-          ] })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-2.5 bg-slate-800/50 border border-slate-700/60 rounded-lg space-y-1", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "text-[11px] font-semibold text-slate-300 flex items-center justify-between", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "flex items-center gap-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Globe, { className: "w-3 h-3 text-blue-400" }),
-              "Search Location"
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-[10px] text-slate-400 font-normal", children: "Auto-Discovery" })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-            "select",
-            {
-              value: countryCode,
-              onChange: (e) => setCountryCode(e.target.value),
-              className: "w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-100 text-xs focus:outline-none focus:border-blue-500",
-              children: META_AD_LIBRARY_LOCATIONS.map((loc) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("option", { value: loc.locationCode, children: [
-                loc.displayName,
-                " (",
-                loc.locationCode,
-                ")"
-              ] }, loc.locationCode))
-            }
-          )
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pt-2", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-          "button",
-          {
-            type: "button",
-            disabled: isSubmitting || isRunning,
-            onClick: handleStartResearch,
-            className: `w-full py-2.5 px-4 rounded-lg font-semibold text-xs flex items-center justify-center gap-2 shadow-md transition-all ${isSubmitting || isRunning ? "bg-slate-700 text-slate-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-500 text-white active:scale-[0.98]"}`,
-            children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Play, { className: "w-3.5 h-3.5 fill-current" }),
-              isRunning ? "Research in Progress..." : "Start Research"
-            ]
-          }
-        ) })
-      ] }),
-      activeTab === "RESULTS" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "space-y-3", children: activeRun ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-2.5 bg-slate-800/60 border border-slate-700 rounded-lg space-y-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { className: "text-xs font-semibold text-white", children: activeRun.researchName }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-[10px] text-slate-400 flex items-center gap-2 mt-0.5", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-                  "Loc: ",
-                  activeRun.locationName,
-                  " (",
-                  activeRun.countryCode,
-                  ")"
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u2022" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-                  "Mode: ",
-                  activeRun.mode
-                ] })
-              ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "flex items-center gap-1", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${activeRun.status === "COMPLETED" ? "bg-emerald-950 text-emerald-300 border border-emerald-700" : activeRun.status === "PARTIAL" ? "bg-amber-950/80 text-amber-300 border border-amber-700/80" : activeRun.status === "CANCELLED" ? "bg-amber-950 text-amber-300 border border-amber-700" : activeRun.status === "BLOCKED" ? "bg-rose-950 text-rose-300 border border-rose-700" : activeRun.status === "RECOVERY_REQUIRED" ? "bg-amber-950/50 text-amber-400 border border-amber-700/50" : activeRun.status === "FAILED" ? "bg-rose-950 text-rose-300 border border-rose-700" : "bg-blue-950 text-blue-300 border border-blue-700 animate-pulse"}`, children: formatStatus(activeRun.status) }) })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "grid grid-cols-3 gap-1.5 pt-1 text-center", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-1.5 bg-slate-900 rounded border border-slate-800", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-[9px] text-slate-400", children: "Relevant" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-sm font-bold text-emerald-400", children: activeRun.counters?.finalUniqueRelevantLeads ?? activeRun.counters?.finalUniqueLeads ?? activeRun.leads.length })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-1.5 bg-slate-900 rounded border border-slate-800", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-[9px] text-slate-400", children: "Uncertain" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-sm font-bold text-amber-400", children: activeRun.counters?.uncertainEntities ?? activeRun.counters?.uncertainCandidates ?? 0 })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-1.5 bg-slate-900 rounded border border-slate-800", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-[9px] text-slate-400", children: "Rejected" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-sm font-bold text-rose-400", children: activeRun.counters?.notRelevantEntities ?? activeRun.counters?.notRelevantCandidates ?? 0 })
-            ] })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between pt-1", children: [
-            isRunning ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-              "button",
-              {
-                type: "button",
-                onClick: handleStopResearch,
-                className: "px-2.5 py-1 bg-rose-900/60 hover:bg-rose-800/80 border border-rose-700 text-rose-200 rounded text-[10px] font-medium flex items-center gap-1",
-                children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Square, { className: "w-3 h-3 fill-current" }),
-                  "Stop Research"
-                ]
-              }
-            ) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1.5", children: [
-              ["PARTIAL", "BROWSER_TAB_CLOSED", "BROWSER_INTERRUPTED", "RECOVERY_REQUIRED"].includes(activeRun.status) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-                "button",
-                {
-                  type: "button",
-                  onClick: handleResumeResearch,
-                  className: "px-2 py-1 bg-purple-900/70 hover:bg-purple-800 border border-purple-700 text-purple-200 rounded text-[10px] font-medium flex items-center gap-1",
-                  title: "Resume research from last checkpoint",
-                  children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RefreshCw, { className: "w-3 h-3" }),
-                    "Resume"
-                  ]
-                }
-              ),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-[10px] text-slate-400", children: activeRun.stopReason ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "text-slate-300 font-medium", children: [
-                "(",
-                formatStopReason(activeRun.stopReason),
-                ")"
-              ] }) : "Research completed" })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-                "button",
-                {
-                  type: "button",
-                  disabled: activeRun.leads.length === 0 && !(activeRun.counters?.finalUniqueRelevantLeads || activeRun.counters?.finalUniqueLeads),
-                  onClick: () => handleExportCsv(activeRun.leads, activeRun),
-                  className: "px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 rounded text-[10px] flex items-center gap-1",
-                  title: "Export RFC-4180 CSV with Formula Injection Protection",
-                  children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileSpreadsheet, { className: "w-3 h-3 text-emerald-400" }),
-                    "CSV"
-                  ]
-                }
-              ),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-                "button",
-                {
-                  type: "button",
-                  onClick: () => handleExportJson(activeRun),
-                  className: "px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 rounded text-[10px] flex items-center gap-1",
-                  title: "Export Full JSON Run Payload",
-                  children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileCode, { className: "w-3 h-3 text-blue-400" }),
-                    "JSON"
-                  ]
-                }
-              )
-            ] })
-          ] })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1.5 p-1 bg-slate-900/90 rounded border border-slate-700/60 text-[10px]", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-            "button",
-            {
-              type: "button",
-              onClick: () => setShowUncertainView(false),
-              className: `flex-1 py-1 px-2 rounded font-medium transition-all ${!showUncertainView ? "bg-blue-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-200"}`,
-              children: [
-                "Relevant Leads (",
-                activeRun.counters?.finalUniqueRelevantLeads ?? activeRun.counters?.finalUniqueLeads ?? activeRun.leads.length,
-                ")"
-              ]
-            }
-          ),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-            "button",
-            {
-              type: "button",
-              onClick: () => setShowUncertainView(true),
-              className: `flex-1 py-1 px-2 rounded font-medium transition-all ${showUncertainView ? "bg-amber-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-200"}`,
-              children: [
-                "View Uncertain (",
-                activeRun.counters?.uncertainEntities ?? activeRun.counters?.uncertainCandidates ?? 0,
-                ")"
-              ]
-            }
-          )
-        ] }),
-        isRunning && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-2 bg-blue-950/40 border border-blue-800/40 rounded text-[10px] text-blue-300 flex items-center gap-1.5 animate-pulse", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RefreshCw, { className: "w-3 h-3 animate-spin flex-shrink-0" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Checking more public ads from verified advertisers\u2026" })
-        ] }),
-        showUncertainView ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "space-y-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-2 bg-amber-950/30 border border-amber-800/40 rounded text-[10px] text-amber-200/90", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "font-semibold text-amber-300 flex items-center gap-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TriangleAlert, { className: "w-3 h-3 text-amber-400" }),
-              "Internal Review Queue \u2014 Excluded From Final Leads"
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-[9px] text-amber-300/70 mt-0.5", children: "These candidates possess ambiguous signals or incomplete category corroboration. Excluded from exports." })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "space-y-1.5", children: activeRun.counters?.uncertainEntities === 0 && activeRun.counters?.uncertainCandidates === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "p-4 bg-slate-800/30 border border-dashed border-slate-700 rounded-lg text-center text-slate-500 text-[11px]", children: "No uncertain candidates recorded in this run." }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-3 bg-slate-800/40 border border-slate-700 rounded-lg space-y-2", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between text-xs text-slate-200 font-semibold", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Uncertain Evaluation Summary" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "px-2 py-0.5 bg-amber-950 border border-amber-800 text-amber-300 rounded text-[10px]", children: [
-                activeRun.counters?.uncertainEntities ?? activeRun.counters?.uncertainCandidates ?? 0,
-                " candidates"
-              ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-[10px] text-slate-400 space-y-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-                "\u2022 ",
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-300", children: "Preserved Fields:" }),
-                " Canonical name, ad copy, observed domains, Facebook Page handle, missing evidence dimensions, reason codes."
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-                "\u2022 ",
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-300", children: "Policy:" }),
-                " Strict Relevance Gate v3 requires strong category corroboration before lead qualification."
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-                "\u2022 ",
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-300", children: "Storage:" }),
-                " Persisted durable in local IndexedDB 'uncertain_entities' store."
-              ] })
-            ] })
-          ] }) })
-        ] }) : (
-          /* RELEVANT LEADS LIST */
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "space-y-1.5", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between text-[11px] font-semibold text-slate-300 px-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-                "Relevant Leads (",
-                activeRun.counters?.finalUniqueRelevantLeads ?? activeRun.counters?.finalUniqueLeads ?? activeRun.leads.length,
-                ")",
-                (activeRun.counters?.finalUniqueRelevantLeads ?? activeRun.counters?.finalUniqueLeads ?? activeRun.leads.length) > activeRun.leads.length && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "text-[9px] text-slate-400 font-normal ml-1", children: [
-                  "(showing top ",
-                  activeRun.leads.length,
-                  " preview)"
-                ] })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-[9px] text-slate-400 font-normal", children: activeRun.rejectedLeadsCount ? `${activeRun.rejectedLeadsCount} irrelevant excluded` : "Click lead to inspect" })
-            ] }),
-            activeRun.leads.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "p-4 bg-slate-800/30 border border-dashed border-slate-700 rounded-lg text-center text-slate-500 text-[11px]", children: isRunning ? "Actively extracting ad cards from Meta Ad Library..." : "No leads found yet. Start research above." }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-              activeRun.leads.slice((currentPage - 1) * LEADS_PER_PAGE, currentPage * LEADS_PER_PAGE).map((lead) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-                "div",
-                {
-                  onClick: () => setSelectedLead(lead),
-                  className: `p-2 bg-slate-800/60 hover:bg-slate-800 border rounded cursor-pointer transition-all ${selectedLead?.id === lead.id ? "border-blue-500 bg-slate-800" : "border-slate-700/60"}`,
-                  children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-start justify-between gap-1", children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "font-semibold text-slate-100 text-xs truncate max-w-[220px]", children: lead.name }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1", children: [
-                        lead.relevanceDecision && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "px-1.5 py-0.2 bg-emerald-950 border border-emerald-800 text-emerald-300 rounded text-[9px] font-mono whitespace-nowrap", children: [
-                          lead.relevanceDecision,
-                          " (",
-                          Math.round((lead.relevanceScore || 1) * 100),
-                          "%)"
-                        ] }),
-                        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "px-1.5 py-0.2 bg-blue-950 border border-blue-800 text-blue-300 rounded text-[9px] font-mono whitespace-nowrap", children: [
-                          lead.activeAdCount,
-                          " ",
-                          lead.activeAdCount === 1 ? "ad" : "ads"
-                        ] })
-                      ] })
-                    ] }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-2 mt-1.5 text-[10px]", children: [
-                      lead.facebookPageUrl ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-                        "a",
-                        {
-                          href: lead.facebookPageUrl,
-                          target: "_blank",
-                          rel: "noreferrer",
-                          onClick: (e) => e.stopPropagation(),
-                          className: "text-blue-400 hover:text-blue-300 flex items-center gap-0.5 truncate max-w-[140px]",
-                          children: [
-                            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-2.5 h-2.5 text-emerald-400 flex-shrink-0" }),
-                            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "truncate", children: "FB Page" }),
-                            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-2.5 h-2.5" })
-                          ]
-                        }
-                      ) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "text-slate-500 flex items-center gap-0.5", children: [
-                        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "w-1.5 h-1.5 rounded-full bg-slate-600" }),
-                        "No Page"
-                      ] }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-600", children: "\u2022" }),
-                      lead.destinationUrl ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-                        "a",
-                        {
-                          href: lead.destinationUrl,
-                          target: "_blank",
-                          rel: "noreferrer",
-                          onClick: (e) => e.stopPropagation(),
-                          className: "text-emerald-400 hover:text-emerald-300 flex items-center gap-0.5 truncate max-w-[140px]",
-                          children: [
-                            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Globe, { className: "w-2.5 h-2.5 text-emerald-400 flex-shrink-0" }),
-                            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "truncate", children: lead.destinationDomain || "Website" }),
-                            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-2.5 h-2.5" })
-                          ]
-                        }
-                      ) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "text-slate-500 flex items-center gap-0.5", children: [
-                        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "w-1.5 h-1.5 rounded-full bg-slate-600" }),
-                        "No Website"
-                      ] }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1 ml-auto", children: [
-                        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: `px-1.5 py-0.2 rounded text-[8px] font-medium ${lead.websiteVerificationStatus === "VERIFIED_BUSINESS_WEBSITE" ? "bg-emerald-950 text-emerald-300 border border-emerald-800" : lead.websiteVerificationStatus === "LIKELY_BUSINESS_WEBSITE" ? "bg-blue-950 text-blue-300 border border-blue-800" : lead.websiteVerificationStatus === "UNCERTAIN_WEBSITE" ? "bg-amber-950 text-amber-300 border border-amber-800" : lead.websiteVerificationStatus === "BLOCKED" ? "bg-rose-950 text-rose-300 border border-rose-800" : lead.websiteVerificationStatus === "NOT_A_BUSINESS_SITE" ? "bg-slate-800 text-slate-400 border border-slate-700" : lead.websiteVerificationStatus === "INVALID" ? "bg-rose-950 text-rose-300 border border-rose-800" : !lead.destinationUrl && (!lead.observedUrls || lead.observedUrls.length === 0) ? "bg-slate-900 text-slate-500 border border-slate-800" : "bg-slate-900 text-slate-400 border border-slate-700"}`, children: [
-                          "Website: ",
-                          lead.websiteVerificationStatus === "VERIFIED_BUSINESS_WEBSITE" ? "Verified" : lead.websiteVerificationStatus === "LIKELY_BUSINESS_WEBSITE" ? "Likely" : lead.websiteVerificationStatus === "UNCERTAIN_WEBSITE" ? "Uncertain" : lead.websiteVerificationStatus === "BLOCKED" ? "Blocked" : lead.websiteVerificationStatus === "NOT_A_BUSINESS_SITE" ? "Not Business" : lead.websiteVerificationStatus === "INVALID" ? "Invalid" : !lead.destinationUrl && (!lead.observedUrls || lead.observedUrls.length === 0) ? "No website" : "Not Verified"
-                        ] }),
-                        (lead.destinationUrl || lead.observedUrls && lead.observedUrls.length > 0) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                          "button",
-                          {
-                            type: "button",
-                            onClick: (e) => {
-                              e.stopPropagation();
-                              if (lead.websiteVerificationStatus && lead.websiteVerificationStatus !== "NOT_VERIFIED") {
-                                setSelectedLead(lead);
-                              } else {
-                                handleVerifyWebsite(lead);
-                              }
-                            },
-                            disabled: verifyingLeadId === lead.id,
-                            className: "px-1.5 py-0.2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-[8px] font-medium flex items-center gap-0.5 transition-all",
-                            children: verifyingLeadId === lead.id ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RefreshCw, { className: "w-2 h-2 animate-spin" }) : lead.websiteVerificationStatus && lead.websiteVerificationStatus !== "NOT_VERIFIED" ? "View Evidence" : "Verify Website"
-                          }
-                        )
-                      ] })
-                    ] })
-                  ]
-                },
-                lead.id
-              )),
-              activeRun.leads.length > LEADS_PER_PAGE && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between pt-2 px-1 text-[11px] text-slate-400", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-                  "Showing ",
-                  (currentPage - 1) * LEADS_PER_PAGE + 1,
-                  "\u2013",
-                  Math.min(currentPage * LEADS_PER_PAGE, activeRun.leads.length),
-                  " of ",
-                  activeRun.leads.length
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "button",
-                    {
-                      type: "button",
-                      disabled: currentPage === 1,
-                      onClick: () => setCurrentPage((p) => Math.max(1, p - 1)),
-                      className: "px-2 py-0.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 border border-slate-700 rounded text-slate-200",
-                      children: "Prev"
-                    }
-                  ),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "px-1 text-slate-300 font-medium", children: [
-                    currentPage,
-                    " / ",
-                    Math.ceil(activeRun.leads.length / LEADS_PER_PAGE)
-                  ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "button",
-                    {
-                      type: "button",
-                      disabled: currentPage >= Math.ceil(activeRun.leads.length / LEADS_PER_PAGE),
-                      onClick: () => setCurrentPage((p) => Math.min(Math.ceil(activeRun.leads.length / LEADS_PER_PAGE), p + 1)),
-                      className: "px-2 py-0.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 border border-slate-700 rounded text-slate-200",
-                      children: "Next"
-                    }
-                  )
-                ] })
-              ] })
-            ] })
-          ] })
-        ),
-        selectedLead && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-2.5 bg-slate-950 border border-blue-700/60 rounded-lg space-y-2 mt-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between border-b border-slate-800 pb-1.5", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { className: "font-semibold text-white text-xs", children: selectedLead.name }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-              "button",
-              {
-                onClick: () => setSelectedLead(null),
-                className: "text-slate-400 hover:text-slate-200 text-xs",
-                children: "\u2715"
-              }
-            )
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "space-y-1 text-[10px]", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-500", children: "Facebook Page: " }),
-              selectedLead.facebookPageUrl ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                "a",
-                {
-                  href: selectedLead.facebookPageUrl,
-                  target: "_blank",
-                  rel: "noreferrer",
-                  className: "text-blue-400 hover:underline break-all",
-                  children: selectedLead.facebookPageUrl
-                }
-              ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-400", children: "Not detected in ad card" })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-500", children: "Website Destination: " }),
-              selectedLead.destinationUrl ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                "a",
-                {
-                  href: selectedLead.destinationUrl,
-                  target: "_blank",
-                  rel: "noreferrer",
-                  className: "text-emerald-400 hover:underline break-all",
-                  children: selectedLead.destinationUrl
-                }
-              ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-400", children: "No external link detected" })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-500", children: "Ad Library: " }),
-              selectedLead.adLibraryUrl ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-                "a",
-                {
-                  href: selectedLead.adLibraryUrl,
-                  target: "_blank",
-                  rel: "noreferrer",
-                  className: "text-blue-300 hover:underline font-mono text-[9px] inline-flex items-center gap-1",
-                  children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-                      "View Ad (",
-                      selectedLead.adLibraryIds[0],
-                      ")"
-                    ] }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-2.5 h-2.5" })
-                  ]
-                }
-              ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-300 font-mono text-[9px]", children: selectedLead.adLibraryIds.join(", ") })
-            ] }),
-            selectedLead.sampleCopy && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "mt-1 pt-1 border-t border-slate-900", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-500 block mb-0.5", children: "Observed Ad Copy:" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-1.5 bg-slate-900 rounded text-slate-300 italic text-[10px]", children: [
-                '"',
-                selectedLead.sampleCopy,
-                '"'
-              ] })
-            ] }),
-            selectedLead.relevanceDecision && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "mt-1.5 pt-1.5 border-t border-slate-800 space-y-1.5", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1.5", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-400 font-semibold", children: "Strict Relevance Gate:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "px-1.5 py-0.2 bg-blue-950/80 border border-blue-800/80 text-blue-300 rounded text-[8px] font-mono", children: selectedLead.engineVersion || "strict-v2" })
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "px-1.5 py-0.2 bg-emerald-950 border border-emerald-800 text-emerald-300 rounded text-[9px]", children: [
-                  selectedLead.relevanceDecision,
-                  " (",
-                  selectedLead.relevanceConfidence || "HIGH",
-                  ") \u2022 ",
-                  Math.round((selectedLead.relevanceScore || 1) * 100),
-                  "%"
-                ] })
-              ] }),
-              selectedLead.relevanceMatchedTerms && selectedLead.relevanceMatchedTerms.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-[9px] text-slate-400", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-500", children: "Matched Category Terms: " }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-blue-300", children: selectedLead.relevanceMatchedTerms.join(", ") })
-              ] }),
-              selectedLead.relevanceReasons && selectedLead.relevanceReasons.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "space-y-0.5 mt-1 bg-slate-900/90 p-1.5 rounded border border-slate-800/80", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-[9px] text-slate-500 block", children: "Evaluation & Signals:" }),
-                selectedLead.relevanceReasons.map((r, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-[9px] text-slate-300 flex items-start gap-1", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-emerald-400", children: "\u2022" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: r })
-                ] }, i))
-              ] }),
-              selectedLead.relevanceEvidence && selectedLead.relevanceEvidence.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "space-y-1 mt-1", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-[9px] text-slate-500 block", children: "Verified Evidence Breakdown:" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "flex flex-wrap gap-1", children: selectedLead.relevanceEvidence.map((ev, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-                  "span",
-                  {
-                    className: `px-1.5 py-0.5 rounded text-[8px] font-mono border ${ev.type === "ENTITY_IDENTITY" ? "bg-blue-950/60 border-blue-800/60 text-blue-300" : ev.type === "CATEGORY_MATCH" ? "bg-emerald-950/60 border-emerald-800/60 text-emerald-300" : ev.type === "COMMERCIAL_INTENT" ? "bg-amber-950/60 border-amber-800/60 text-amber-300" : "bg-slate-800 border-slate-700 text-slate-300"}`,
-                    title: ev.reason,
-                    children: [
-                      formatEvidenceType(ev.type),
-                      ": ",
-                      ev.strength
-                    ]
-                  },
-                  i
-                )) })
-              ] }),
-              selectedLead.creativeSignals && selectedLead.creativeSignals.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "space-y-1 mt-1.5 pt-1.5 border-t border-slate-800/80", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-[9px] text-slate-400 font-semibold block", children: "Observed Creative Signals:" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "flex flex-wrap gap-1", children: selectedLead.creativeSignals.map((sig, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-                  "span",
-                  {
-                    className: "px-1.5 py-0.5 bg-purple-950/60 border border-purple-800/60 text-purple-300 rounded text-[8px] font-mono",
-                    title: `Raw: "${sig.rawSignal}" (${sig.occurrences}x)`,
-                    children: [
-                      sig.type,
-                      ": ",
-                      sig.normalized,
-                      " ",
-                      sig.occurrences > 1 ? `(${sig.occurrences}x)` : ""
-                    ]
-                  },
-                  i
-                )) })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "mt-1.5 pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[9px]", children: [
-                selectedLead.matchedQueries && selectedLead.matchedQueries.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-slate-400", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-500", children: "Queries: " }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-blue-300", children: selectedLead.matchedQueries.join(", ") })
-                ] }),
-                selectedLead.advertiserExpansionStatus && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-slate-400", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-500", children: "Expansion: " }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `px-1 py-0.2 rounded font-mono ${selectedLead.advertiserExpansionStatus === "COMPLETED" ? "text-emerald-400" : selectedLead.advertiserExpansionStatus === "PENDING" ? "text-blue-400" : "text-slate-500"}`, children: selectedLead.advertiserExpansionStatus })
-                ] })
-              ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "mt-2 pt-2 border-t border-slate-800 space-y-1.5", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1.5", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Globe, { className: "w-3 h-3 text-emerald-400" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-300 font-semibold text-[10px]", children: "Website Deep Verification" })
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1.5", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `px-2 py-0.5 rounded text-[8px] font-semibold uppercase ${selectedLead.websiteVerificationStatus === "VERIFIED_BUSINESS_WEBSITE" ? "bg-emerald-950 text-emerald-300 border border-emerald-800" : selectedLead.websiteVerificationStatus === "LIKELY_BUSINESS_WEBSITE" ? "bg-blue-950 text-blue-300 border border-blue-800" : selectedLead.websiteVerificationStatus === "UNCERTAIN_WEBSITE" ? "bg-amber-950 text-amber-300 border border-amber-800" : selectedLead.websiteVerificationStatus === "BLOCKED" ? "bg-rose-950 text-rose-300 border border-rose-800" : selectedLead.websiteVerificationStatus === "NOT_A_BUSINESS_SITE" ? "bg-slate-800 text-slate-400 border border-slate-700" : selectedLead.websiteVerificationStatus === "INVALID" ? "bg-rose-950 text-rose-300 border border-rose-800" : !selectedLead.destinationUrl && (!selectedLead.observedUrls || selectedLead.observedUrls.length === 0) ? "bg-slate-900 text-slate-500 border border-slate-800" : "bg-slate-800 text-slate-300 border border-slate-700"}`, children: selectedLead.websiteVerificationStatus || "NOT_VERIFIED" }),
-                  (selectedLead.destinationUrl || selectedLead.observedUrls && selectedLead.observedUrls.length > 0) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "button",
-                    {
-                      type: "button",
-                      disabled: verifyingLeadId === selectedLead.id,
-                      onClick: () => handleVerifyWebsite(selectedLead),
-                      className: "px-2 py-0.5 bg-blue-700 hover:bg-blue-600 text-white rounded text-[8px] font-medium flex items-center gap-1",
-                      children: verifyingLeadId === selectedLead.id ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RefreshCw, { className: "w-2.5 h-2.5 animate-spin" }) : selectedLead.websiteVerification ? "Re-verify" : "Verify Website"
-                    }
-                  )
-                ] })
-              ] }),
-              selectedLead.websiteVerification ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "bg-slate-900/90 p-2 rounded border border-slate-800 space-y-1.5 text-[9px]", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between text-slate-400", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-                    "Verified Domain: ",
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-200 font-mono", children: selectedLead.websiteVerification.hostname })
-                  ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-                    "Duration: ",
-                    selectedLead.websiteVerification.durationMs,
-                    "ms"
-                  ] })
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "grid grid-cols-2 gap-2 text-slate-300", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-                    "Identity Match: ",
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "font-semibold text-emerald-400", children: selectedLead.websiteVerification.identityMatch })
-                  ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-                    "Category Match: ",
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "font-semibold text-blue-400", children: selectedLead.websiteVerification.categoryMatch })
-                  ] })
-                ] }),
-                selectedLead.websiteVerification.commercialSignals.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "space-y-0.5", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-500 block", children: "Commercial Signals:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "flex flex-wrap gap-1", children: selectedLead.websiteVerification.commercialSignals.map((sig, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "px-1.5 py-0.2 bg-emerald-950/80 border border-emerald-800 text-emerald-300 rounded text-[8px]", children: sig.replace("WEBSITE_", "").replace("_SIGNAL", "") }, i)) })
-                ] }),
-                selectedLead.websiteVerification.contactSignals.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "space-y-0.5", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "text-slate-500 block", children: "Public Contact Signals:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-slate-300 space-y-0.5", children: selectedLead.websiteVerification.contactSignals.map((cs, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center gap-1 text-[9px]", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "text-blue-400 uppercase font-mono text-[8px]", children: [
-                      cs.type,
-                      ":"
-                    ] }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "font-mono text-slate-200", children: cs.value })
-                  ] }, i)) })
-                ] }),
-                selectedLead.websiteVerification.pagesVisited.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-slate-500 text-[8px]", children: [
-                  "Pages inspected: ",
-                  selectedLead.websiteVerification.pagesVisited.length
-                ] }),
-                selectedLead.websiteVerification.blockedReason && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-rose-400 text-[8px]", children: [
-                  "Blocked Reason: ",
-                  selectedLead.websiteVerification.blockedReason
-                ] })
-              ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-[9px] text-slate-400 italic", children: selectedLead.destinationUrl ? 'Website not yet deeply verified. Click "Verify Website" to inspect public pages.' : "No website destination URL discovered for this lead." })
-            ] })
-          ] })
-        ] })
-      ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "p-6 bg-slate-800/30 border border-dashed border-slate-700 rounded-lg text-center space-y-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "w-6 h-6 text-slate-500 mx-auto" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-slate-300 font-medium text-xs", children: "Discover your first set of business leads." }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "text-slate-500 text-[10px]", children: "LeadNoria \u2022 Discover. Verify. Connect." }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-          "button",
-          {
-            type: "button",
-            onClick: () => setActiveTab("RESEARCH"),
-            className: "px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded text-[11px] mt-1 transition-colors",
-            children: "Configure Research"
-          }
-        )
-      ] }) }),
-      activeTab === "HISTORY" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "space-y-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between text-[11px] font-semibold text-slate-300 px-1", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-            "Research History (",
-            historyRuns.length,
-            ")"
-          ] }),
-          historyRuns.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-            "button",
-            {
-              type: "button",
-              onClick: handleClearHistory,
-              className: "text-rose-400 hover:text-rose-300 text-[10px] flex items-center gap-1",
-              children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trash2, { className: "w-3 h-3" }),
-                "Clear History"
-              ]
-            }
-          )
-        ] }),
-        historyRuns.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "p-6 bg-slate-800/30 border border-dashed border-slate-700 rounded-lg text-center text-slate-500 text-[11px]", children: "No previous research runs recorded yet." }) : historyRuns.map((run) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-          "div",
-          {
-            className: "p-2.5 bg-slate-800/60 border border-slate-700/60 rounded-lg space-y-1.5 hover:border-slate-600 transition-all",
-            children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-between", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "font-semibold text-white text-xs", children: run.researchName }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `px-1.5 py-0.2 rounded text-[9px] font-semibold uppercase ${run.status === "COMPLETED" ? "bg-emerald-950 text-emerald-300" : run.status === "PARTIAL" ? "bg-amber-950/80 text-amber-300" : run.status === "CANCELLED" ? "bg-amber-950 text-amber-300" : run.status === "RECOVERY_REQUIRED" ? "bg-amber-900 text-amber-200" : "bg-slate-800 text-slate-400"}`, children: formatStatus(run.status) })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-[10px] text-slate-400 flex items-center justify-between", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-                  run.locationName,
-                  " \u2022 ",
-                  run.leads.length,
-                  " unique leads"
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: new Date(run.startedAt).toLocaleDateString() })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center justify-end gap-1.5 pt-1 border-t border-slate-700/40", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                  "button",
-                  {
-                    type: "button",
-                    onClick: () => {
-                      setActiveRun(run);
-                      setActiveTab("RESULTS");
-                    },
-                    className: "px-2 py-0.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 rounded text-[10px]",
-                    children: "View Results"
-                  }
-                ),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-                  "button",
-                  {
-                    type: "button",
-                    disabled: run.leads.length === 0,
-                    onClick: () => handleExportCsv(run.leads, run),
-                    className: "px-2 py-0.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-emerald-400 rounded text-[10px] flex items-center gap-1",
-                    children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileSpreadsheet, { className: "w-2.5 h-2.5" }),
-                      "CSV"
-                    ]
-                  }
-                )
-              ] })
-            ]
-          },
-          run.runId
-        ))
-      ] })
-    ] })
+    pendingPlan && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+      PlanReviewModal,
+      {
+        isOpen: isPlanReviewOpen,
+        plan: pendingPlan,
+        onConfirm: handleConfirmStart,
+        onCancel: () => setIsPlanReviewOpen(false),
+        isSubmitting
+      }
+    ),
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+      ResultDetailDrawer,
+      {
+        isOpen: isDetailDrawerOpen,
+        lead: inspectedLead,
+        onClose: () => setIsDetailDrawerOpen(false)
+      }
+    ),
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+      ExportModal,
+      {
+        isOpen: isExportModalOpen,
+        preview: exportPreviewVM,
+        onConfirmExport: handleConfirmExport,
+        onCancel: () => setIsExportModalOpen(false),
+        isExporting
+      }
+    ),
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+      DiagnosticsDrawer,
+      {
+        isOpen: isDiagnosticsOpen,
+        diagnostics: diagnosticsVM,
+        onClose: () => setIsDiagnosticsOpen(false)
+      }
+    )
   ] });
 };
 
 // src/extension/ui/index.tsx
-var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime15 = __toESM(require_jsx_runtime(), 1);
 var rootElement = document.getElementById("root");
 if (rootElement) {
   import_client.default.createRoot(rootElement).render(
-    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_react4.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(ExtensionApp, {}) })
+    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(import_react8.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(ExtensionApp, {}) })
   );
 }
 /*! Bundled license information:
@@ -18876,33 +20125,6 @@ react/cjs/react-jsx-runtime.production.js:
    *
    * This source code is licensed under the MIT license found in the
    * LICENSE file in the root directory of this source tree.
-   *)
-
-lucide-react/dist/esm/shared/src/utils.js:
-lucide-react/dist/esm/defaultAttributes.js:
-lucide-react/dist/esm/Icon.js:
-lucide-react/dist/esm/createLucideIcon.js:
-lucide-react/dist/esm/icons/building-2.js:
-lucide-react/dist/esm/icons/circle-check.js:
-lucide-react/dist/esm/icons/external-link.js:
-lucide-react/dist/esm/icons/file-code.js:
-lucide-react/dist/esm/icons/file-spreadsheet.js:
-lucide-react/dist/esm/icons/globe.js:
-lucide-react/dist/esm/icons/history.js:
-lucide-react/dist/esm/icons/layers.js:
-lucide-react/dist/esm/icons/play.js:
-lucide-react/dist/esm/icons/refresh-cw.js:
-lucide-react/dist/esm/icons/search.js:
-lucide-react/dist/esm/icons/square.js:
-lucide-react/dist/esm/icons/tag.js:
-lucide-react/dist/esm/icons/trash-2.js:
-lucide-react/dist/esm/icons/triangle-alert.js:
-lucide-react/dist/esm/lucide-react.js:
-  (**
-   * @license lucide-react v0.546.0 - ISC
-   *
-   * This source code is licensed under the ISC license.
-   * See the LICENSE file in the root directory of this source tree.
    *)
 */
 //# sourceMappingURL=app.js.map

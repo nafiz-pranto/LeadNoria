@@ -1,0 +1,12 @@
+{
+  "fixtureId": "18-missing-locality",
+  "description": "Address with postal code and country but omitted locality",
+  "candidate": {
+    "sourceId": "ChIJ_no_locality_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Rural Texas Electrician",
+    "address": "Highway 71, 78669, USA",
+    "postalCode": "78669",
+    "countryCode": "US"
+  }
+}

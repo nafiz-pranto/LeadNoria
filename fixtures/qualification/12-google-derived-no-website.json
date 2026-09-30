@@ -1,0 +1,120 @@
+{
+  "fixtureId": "12-google-derived-no-website",
+  "description": "Google Maps consumer web listing with omitted website URL: OBSERVED_NO_WEBSITE_POINTER",
+  "candidate": {
+    "candidateId": "cand-12",
+    "runId": "run-p6-test",
+    "source": "GOOGLE_MAPS",
+    "sourceIdentifier": {
+      "sourceType": "GOOGLE_MAPS",
+      "sourceRecordId": "cand-12",
+      "sourceRecordType": "GENERIC_SOURCE_ID",
+      "sourceContext": "GOOGLE_CONSUMER_WEB",
+      "originalValue": "cand-12",
+      "normalizedValue": "cand-12",
+      "provenance": "GOOGLE_DERIVED",
+      "policyStatus": "POLICY_GATED"
+    },
+    "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+    "overallPolicyStatus": "POLICY_GATED",
+    "overallPersistenceStatus": "NOT_PERSISTABLE",
+    "overallExportStatus": "NOT_EXPORTABLE",
+    "overallProvenance": "GOOGLE_DERIVED",
+    "sourceContributions": [
+      {
+        "source": "GOOGLE_MAPS",
+        "provenance": "GOOGLE_DERIVED",
+        "fieldName": "entity",
+        "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+        "restrictionBasis": "GOOGLE_CONSUMER_WEB_RESTRICTED",
+        "isRestricted": true,
+        "policyStatus": "POLICY_GATED",
+        "persistenceStatus": "NOT_PERSISTABLE",
+        "exportStatus": "NOT_EXPORTABLE"
+      }
+    ],
+    "businessName": {
+      "value": {
+        "displayName": "Local Plumber Austin",
+        "normalizedName": "local plumber austin",
+        "comparisonName": "localplumberaustin",
+        "detectedScript": "LATIN"
+      },
+      "fieldName": "businessName",
+      "provenance": "GOOGLE_DERIVED",
+      "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+      "source": "GOOGLE_MAPS",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_GATED",
+      "persistenceStatus": "NOT_PERSISTABLE",
+      "exportStatus": "NOT_EXPORTABLE"
+    },
+    "phones": [
+      {
+        "value": {
+          "rawPhone": "+15125550122",
+          "e164Format": "+15125550122",
+          "countryCode": "US",
+          "countryInference": "COUNTRY_EXPLICIT",
+          "phoneState": "PHONE_NORMALIZED",
+          "isValid": true
+        },
+        "fieldName": "phone",
+        "provenance": "GOOGLE_DERIVED",
+        "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+        "source": "GOOGLE_MAPS",
+        "capturedAt": "2026-09-29T12:00:00.000Z",
+        "confidence": "STRONG",
+        "policyStatus": "POLICY_GATED",
+        "persistenceStatus": "NOT_PERSISTABLE",
+        "exportStatus": "NOT_EXPORTABLE"
+      }
+    ],
+    "emails": [],
+    "address": {
+      "value": {
+        "displayAddress": "Austin, USA",
+        "normalizedAddress": "austin, usa",
+        "locality": "Austin",
+        "country": "USA",
+        "countryCode": "US"
+      },
+      "fieldName": "address",
+      "provenance": "GOOGLE_DERIVED",
+      "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+      "source": "GOOGLE_MAPS",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_APPROVED",
+      "persistenceStatus": "PERSISTABLE",
+      "exportStatus": "EXPORTABLE"
+    },
+    "categories": [
+      {
+        "value": {
+          "sourceCategory": "Plumber",
+          "normalizedCategory": "plumber",
+          "categoryConfidence": "STRONG"
+        },
+        "fieldName": "category",
+        "provenance": "GOOGLE_DERIVED",
+        "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+        "source": "GOOGLE_MAPS",
+        "capturedAt": "2026-09-29T12:00:00.000Z",
+        "confidence": "STRONG",
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "socialUrls": [],
+    "normalizationAudit": {
+      "normalizedAt": "2026-09-29T12:00:00.000Z",
+      "engineVersion": "1.1.0",
+      "errors": [],
+      "warnings": [],
+      "isSanitized": true
+    }
+  }
+}

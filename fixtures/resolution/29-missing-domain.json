@@ -1,0 +1,28 @@
+{
+  "fixtureId": "29-missing-domain",
+  "description": "Two candidates missing website domain but matching on name, street address, and phone",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_nodom_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Garrison Family Plumbing",
+      "street": "120 Elm St",
+      "locality": "Dallas",
+      "postalCode": "75201",
+      "countryCode": "US",
+      "phone": "+1 214-555-0166"
+    },
+    {
+      "sourceId": "ChIJ_nodom_02",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Garrison Family Plumbing LLC",
+      "street": "120 Elm St",
+      "locality": "Dallas",
+      "postalCode": "75201",
+      "countryCode": "US",
+      "phone": "+1 214-555-0166"
+    }
+  ]
+}

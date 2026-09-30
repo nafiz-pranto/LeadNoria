@@ -1,0 +1,12 @@
+{
+  "fixtureId": "08-branch-name",
+  "description": "Specific branch name that must survive normalization without collapsing",
+  "candidate": {
+    "sourceId": "ChIJ_branch_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "ABC Furniture Ltd - Uttara Branch",
+    "category": "Furniture Store",
+    "locality": "Dhaka",
+    "countryCode": "BD"
+  }
+}

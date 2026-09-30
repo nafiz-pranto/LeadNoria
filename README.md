@@ -1,116 +1,295 @@
-# LeadNoria (Chrome Extension)
+# LeadNoria
 
 > **Discover. Verify. Connect.**  
-> *Business lead research from real public signals.*
+> Business lead research from real public signals — built as a Manifest V3 Chrome Extension.
 
-A standalone **Manifest V3 Chrome Extension** that operates as a **local-only browser research tool** for the public Meta Ad Library.
-
-LeadNoria researches publicly accessible Meta Ad Library information and organizes the results into verified business lead records.
-
----
-
-## 💡 What LeadNoria Does
-
-LeadNoria discovers and qualifies business advertisers running active campaigns on the public Meta Ad Library.
-
-It operates **100% locally** inside your Google Chrome browser. It requires **no remote servers**, no backend databases, no paid scraping subscriptions, and no external AI APIs. All data processing and relevance classification happen right inside your browser.
+[![Version](https://img.shields.io/badge/version-1.1.0-blue)](RELEASE-NOTES-v1.1.0.md)
+[![Build](https://img.shields.io/badge/build-passing-brightgreen)](#testing)
+[![License](https://img.shields.io/badge/license-MIT-green)](#license)
+[![Manifest](https://img.shields.io/badge/Manifest-V3-orange)](extension/manifest.json)
 
 ---
 
-## 🚀 How to Use LeadNoria
+## What is LeadNoria?
 
-LeadNoria uses an **Auto-Discovery** engine. You do not need to enter a maximum lead count or guess quotas—LeadNoria automatically searches and collects active advertisers for your query.
+LeadNoria is a **Chrome Extension** that researches business leads by collecting, verifying, and qualifying commercial signals from public sources — entirely within the user's browser, without any third-party servers or proprietary APIs.
 
-### Option A: Preset Mode
-1. **Choose an Industry Preset** from the curated catalog (e.g. *Gyms & Fitness*, *Real Estate*, *E-commerce Brands*, *Home Services*, *Clean Energy & Solar*, *B2B Tech & SaaS*).
-2. **Select Location** (e.g. `United States`, `United Kingdom`, `Bangladesh`, `Australia`, or `Worldwide`).
-3. Click **Start Research**.
+It automates a multi-stage research pipeline:
 
-### Option B: Custom Mode
-1. **Enter Keywords** separated by commas or new lines (e.g. `Furniture, Office Chairs, Living Room Decor`).
-2. **Select Location** for your target market.
-3. Click **Start Research**.
-
----
-
-## 🔍 How Auto-Discovery Works
-
-LeadNoria automatically discovers publicly accessible results while new results are available. You do not need to enter a lead count.
-
-During research, LeadNoria searches the public Meta Ad Library, evaluates ad relevance in real-time, deduplicates multiple ads from the same advertiser, and stores unique leads directly in your browser.
-
-Research will finish or stop when:
-- **Search Results Exhausted**: Meta Ad Library has returned all available public ads for your query and location.
-- **No New Ads Observed**: No additional ads were found for the specified search terms.
-- **User Cancelled**: You clicked **Stop Research**.
-- **Tab Closed**: The active research tab was closed.
-- **Security Check / Rate Limit**: Meta presented an interactive security verification or temporary access limit.
-- **Safety Limit Reached**: The session reached the built-in system safety limit (5,000 unique leads) to protect browser memory.
+1. **Source Planning** — determines which sources to query and in what mode
+2. **Source Execution** — collects candidate business records from supported sources
+3. **Normalization** — normalizes raw signals into a consistent structured format
+4. **Entity Resolution** — deduplicates candidates into canonical business entities
+5. **Evidence Collection** — gathers corroborating evidence facts per entity
+6. **Relevance Scoring** — evaluates entity relevance against query intent
+7. **Website Verification** — verifies target domain presence and live HTTP signals
+8. **Contact Enrichment** — extracts phone, email, address, and social links
+9. **Qualification** — scores entities against commercial qualification criteria
+10. **Geographic Accounting** — tracks coverage and saturation by area
+11. **Persistence** — durably stores run state, entities, and checkpoints
+12. **Export** — exports qualified leads as CSV or JSON with field-level policy enforcement
 
 ---
 
-## 📖 Key Concepts Explained (In Simple Terms)
+## Current Version
 
-- **Lead**: A business advertiser discovered through public advertisements in the Meta Ad Library.
-- **Unique Lead**: One distinct business entity. If an advertiser runs 5 different ad cards across multiple keywords, all 5 ads are combined into **one single unique lead** with an active ad count of 5.
-- **Website (`found` / `not_found`)**:
-  - `found`: The advertiser's ad cards include a direct link to their official business website or online store.
-  - `not_found`: The advertiser runs ads directly on Facebook or Instagram (such as Messenger or lead forms) without an external website link.
-- **Facebook Page (`found` / `not_found`)**:
-  - `found`: The advertiser's public Facebook Page URL was identified.
-  - `not_found`: The ad card did not display a direct public Page URL.
-- **Matched Keywords**: The search terms for which this advertiser's ads appeared during your research session.
-- **Relevance Confidence**: The deterministic relevance engine evaluates ad copy and entity names to filter out unrelated businesses (e.g., sports teams or clinics when searching for furniture).
+| Property | Value |
+|---|---|
+| **Version** | `1.1.0` |
+| **Build** | Post-Release Full-System Audit Verified |
+| **Manifest Version** | Manifest V3 |
+| **Release Artifact** | `dist/leadnoria-v1.1.0.zip` |
+| **SHA-256** | `c17610fc1b22773cfe8ed282f6ddf40be31d0a38488999dff27bd3831e985e94` |
+| **Total Tests** | 1,270 (all passing) |
 
----
-
-## ⚡ Technical Highlights
-
-- **100% Local Browser Execution**: Uses Chrome Extensions Manifest V3 APIs (`chrome.tabs`, `chrome.scripting`, `chrome.storage.local`, `chrome.sidePanel`).
-- **No Remote Dependencies**: Zero external API keys, zero external database calls, zero telemetry tracking.
-- **Deterministic Strict Relevance Gate v2**: Evaluates commercial domain alignment locally using explainable scoring, catalog terms, and exclusion filters to reject irrelevant entities.
-- **Formula-Safe CSV & JSON Export**: Exports lead lists with RFC-4180 compliance and protection against spreadsheet formula injection (`=`, `+`, `-`, `@`).
-- **Bulk IndexedDB Storage**: Uses an isolated browser database for storing thousands of entity records, raw ad cards, and progress checkpoints.
+See [RELEASE-NOTES-v1.1.0.md](RELEASE-NOTES-v1.1.0.md) for the full changelog.
 
 ---
 
-## 📦 How to Install the Extension (Summary)
+## Major Capabilities
 
-For the complete step-by-step installation walkthrough, see [INSTALL_GUIDE.md](INSTALL_GUIDE.md).
+### Multi-Source Research Pipeline
+- **Meta Ad Library** — extracts public commercial advertiser signals (business name, website, category, ad creative text) from `facebook.com/ads/library`
+- **Website Verification** — user-directed target domain verification with HTTP probing, domain matching, and contact form detection
+- **User-Provided Input** — accepts manual domain seeds or business records directly from the user
+- **Geographic Planning** — plans and tracks search coverage by country, region, city, and district
 
-1. Download the release package (`dist/leadnoria-v1.0.0.zip` or `extension.zip`).
-2. **Extract / unzip the ZIP file**. (*Important: Never select the `.zip` file in Chrome!*).
-3. Open Google Chrome and navigate to `chrome://extensions`.
-4. Turn **ON** the **Developer mode** toggle in the top-right corner.
-5. Click **Load unpacked** in the top-left corner.
-6. Select the extracted folder named **`extension`** (the folder that directly contains `manifest.json`).
-7. Click the **Puzzle piece** icon in your Chrome toolbar and **Pin** LeadNoria.
+### Entity Resolution & Deduplication
+- Cross-source entity deduplication using multi-signal fingerprinting
+- Transitive conflict resolution with explicit winner selection
+- Provenance-tagged field contributions (`META_DERIVED`, `WEBSITE_DERIVED`, `MIXED`)
+
+### Field-Level Export Policy Firewall
+- Every field is individually evaluated against export eligibility rules before inclusion in export output
+- Restricted fields are redacted from CSV/JSON output — never leaked
+- Export records are deterministic (bit-for-bit identical SHA-256 on repeated export)
+
+### Durable State & Recovery
+- Two-phase commit checkpoint system: `STAGED` → `COMMITTED`
+- SHA-256 checksum integrity validation on every checkpoint read
+- Automatic recovery of interrupted pipeline runs from the last valid committed checkpoint
+- Bounded checkpoint retention (10 per run) to prevent storage quota exhaustion
+
+### Security Controls
+- Formula injection defense in CSV export (`=`, `+`, `-`, `@` prefix neutralization)
+- XSS prevention via `escapeHtml()` on all source-provided text
+- URL protocol allowlist (`http:` and `https:` only; blocks `javascript:`, `data:`, `blob:`, etc.)
+- Prototype pollution protection in canonical JSON serialization
+- No external API calls, no telemetry, no server-side processing
 
 ---
 
-## 🔄 How to Update the Extension
+## ⚠️ Google Maps: CONTRACT_ONLY Limitation
 
-When a new version is released:
-1. Download the latest release ZIP.
-2. Extract the ZIP and replace your existing local extension files.
-3. Open `chrome://extensions` in Chrome.
-4. Click the circular **Reload** icon on the **LeadNoria** card.
-5. LeadNoria updates immediately with your research data preserved.
+> **IMPORTANT — Read before use.**
 
----
+LeadNoria supports Google Maps as a **source type for planning, dry-run, and geographic structuring only**.
 
-## 🏗️ Building from Source
+**Live extraction from Google Maps (consumer web) is strictly prohibited** under Google's Terms of Service. The `GoogleMapsUnifiedAdapter` enforces this at the code level:
 
-```bash
-# Install dependencies
-npm install
-
-# Compile web app, server, and Chrome extension bundle
-npm run build
-
-# Run the test suite
-node tests/test-prompt57-final-system-acceptance.mjs
-node tests/test-strict-gate-v2.mjs
-node tests/test-final-validation-e2e.mjs
+```typescript
+async executeLive(_config: any): Promise<CandidateEnvelope[]> {
+  throw new Error(
+    'Google Maps execution is CONTRACT_ONLY. Live extraction, DOM scraping, and network calls are strictly prohibited.'
+  );
+}
 ```
 
+Any attempt to call `executeLive()` on the Google Maps adapter will throw a `CONTRACT_ONLY` error immediately. This is **not configurable** and cannot be bypassed.
+
+Fields derived from Google Maps consumer web data are tagged `GOOGLE_DERIVED` and are permanently blocked from export with reason `GOOGLE_CONSUMER_WEB_RESTRICTED`.
+
+---
+
+## Project Architecture
+
+```
+leadnoria/
+├── src/extension/              # All TypeScript source modules
+│   ├── pipeline/               # Multi-source adapter registry & pipeline orchestration
+│   │   ├── sourceAdapter.ts    # Meta, GoogleMaps, Website, UserProvided adapters
+│   │   ├── sourceRegistry.ts   # UnifiedSourceAdapterRegistry
+│   │   ├── sourcePlan.ts       # Canonical source planning
+│   │   └── pipelineTypes.ts    # Shared pipeline type contracts
+│   ├── extraction/             # Raw candidate extraction types & normalization
+│   ├── resolution/             # Entity deduplication & conflict resolution
+│   ├── relevance/              # Evidence waterfall & relevance scoring
+│   ├── enrichment/             # Contact & website enrichment
+│   ├── qualification/          # Commercial qualification engine
+│   ├── geography/              # Geographic planning, saturation, & coverage
+│   │   ├── saturationEngine.ts # Multi-scope saturation with false-saturation protection
+│   │   └── searchUnitPlanner.ts
+│   ├── persistence/            # Storage, recovery, & audit
+│   │   ├── checkpointStore.ts  # Two-phase commit checkpoints with SHA-256 integrity
+│   │   ├── recoveryManager.ts  # Interrupted run resumption planner
+│   │   ├── persistenceRepository.ts # Typed repository over partitioned collections
+│   │   ├── retentionManager.ts # Storage compaction with retention policies
+│   │   ├── recordValidator.ts  # Pre-write & post-read validation
+│   │   └── storageAdapter.ts   # MemoryStorageAdapter + ChromeStorageAdapter
+│   ├── export/                 # Export policy, projection, CSV, JSON
+│   │   ├── exportPolicy.ts     # Field-level export firewall
+│   │   ├── csvExporter.ts      # RFC-4180 CSV with formula injection defense
+│   │   └── exportManager.ts    # Export orchestrator with audit logging
+│   └── ui/                     # Chrome Extension UI (React/TSX compiled to JS)
+│       ├── App.tsx             # Root application with state machine
+│       ├── viewModelMappers.ts # Domain → UI view model mappers
+│       ├── security.ts         # XSS escaping & safe URL validation
+│       └── components/         # Reusable UI component library
+├── extension/                  # Compiled & packaged Chrome extension
+│   ├── manifest.json
+│   ├── app.js                  # Compiled bundle
+│   ├── popup.html
+│   └── sidepanel.html
+├── tests/                      # Full test suites (Phases 5–18 + Post-Release Audit)
+├── scripts/                    # Build, verification, regression runner
+├── dist/                       # Release archives
+│   ├── leadnoria-v1.0.0.zip    # Frozen historical baseline
+│   └── leadnoria-v1.1.0.zip    # Current production release
+└── docs/                       # Engineering phase reports & release documentation
+```
+
+---
+
+## Installation
+
+### Prerequisites
+
+- **Node.js** ≥ 20.x
+- **npm** ≥ 10.x
+- **Google Chrome** or **Microsoft Edge** (Chromium-based)
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/nafiz-pranto/LeadNoria.git
+cd LeadNoria
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Build the extension
+
+```bash
+node scripts/build-extension.mjs
+```
+
+This compiles all TypeScript source, bundles the extension via Vite, and packages the output into:
+- `extension/` — unpacked extension directory (load directly into Chrome)
+- `extension.zip` — distributable archive
+
+### 4. Load into Chrome
+
+1. Open Chrome and navigate to `chrome://extensions`
+2. Enable **Developer mode** (top-right toggle)
+3. Click **Load unpacked**
+4. Select the `extension/` directory from this repository
+
+### 5. Use the release archive
+
+A pre-built release archive is available at `dist/leadnoria-v1.1.0.zip`.  
+SHA-256: `c17610fc1b22773cfe8ed282f6ddf40be31d0a38488999dff27bd3831e985e94`
+
+---
+
+## Testing
+
+LeadNoria has **1,270 automated tests** across 17 suites covering all phases from extraction through post-release audit.
+
+### Run all tests
+
+```bash
+node scripts/run-all-regressions.mjs
+```
+
+### Run a specific suite
+
+```bash
+node --import tsx tests/test-phase16-persistence-export.mjs
+node --import tsx tests/test-post-release-audit.mjs
+```
+
+### Test suites
+
+| Suite | Tests | Coverage |
+|---|---|---|
+| Post-Freeze V1.0 Verification | 19 | Baseline regression |
+| Phase 5: Extraction & Normalization | 45 | Raw signal normalization |
+| Phase 6: Website Qualification | 50 | Domain verification |
+| Phase 7: Google Maps Normalization | 37 | CONTRACT_ONLY adapter |
+| Phase 8: Entity Resolution | 30 | Deduplication |
+| Phase 8B: Transitive Conflict Resolution | 18 | Multi-source merging |
+| Phase 9: Evidence Relevance Waterfall | 70 | Relevance scoring |
+| Phase 10: Website Integration | 9 | HTTP verification |
+| Phase 11: Contact Enrichment | 55 | Phone/email extraction |
+| Phase 12: Advanced Qualification | 60 | Commercial scoring |
+| Phase 13: Geographic Expansion | 80 | Coverage & saturation |
+| Phase 14: Unified Multi-Source Arch | 100 | Pipeline orchestration |
+| Phase 15: UI/UX & ViewModels | 125 | UI state mapping |
+| Phase 16: Persistence, Recovery & Export | 142 | Checkpoint & storage |
+| Phase 17: Security + Full E2E | 210 | Security & integration |
+| Phase 18: Final Production Audit | 157 | Full system audit |
+| Post-Release Full-System Audit | 63 | 30 E2E + adversarial |
+| **Total** | **1,270** | |
+
+### Typecheck
+
+```bash
+node node_modules/typescript/bin/tsc --noEmit
+```
+
+---
+
+## Required Permissions
+
+The extension declares the minimum necessary permissions:
+
+| Permission | Purpose |
+|---|---|
+| `storage` | Persist run state, entities, and checkpoints locally |
+| `tabs` | Detect active Meta Ad Library tab |
+| `scripting` | Inject content script into Ad Library pages |
+| `sidePanel` | Display the research side panel |
+
+**Host permissions** are strictly bounded to:
+- `https://www.facebook.com/ads/library/*`
+- `https://web.facebook.com/ads/library/*`
+
+**Optional host permissions** (`https://*/*`) are requested only when the user initiates website verification for a specific target domain.
+
+---
+
+## Release Notes
+
+- [v1.1.0](RELEASE-NOTES-v1.1.0.md) — Post-Release Audit Build: 5 bugs fixed, full 18-phase pipeline, 1,270 tests passing
+- [v1.0.0](RELEASE-NOTES-v1.0.0.md) — Initial production release
+
+---
+
+## Engineering Documentation
+
+| Document | Description |
+|---|---|
+| [LEADNORIA-POST-RELEASE-FULL-AUDIT.md](LEADNORIA-POST-RELEASE-FULL-AUDIT.md) | Complete post-release audit report (30 E2E + adversarial) |
+| [LEADNORIA-RELEASE-METADATA.json](LEADNORIA-RELEASE-METADATA.json) | Machine-readable release metadata & test accounting |
+| [LEADNORIA-RELEASE-SHA256.txt](LEADNORIA-RELEASE-SHA256.txt) | SHA-256 checksums for all release artifacts |
+| [LEADNORIA-FINAL-PRODUCTION-AUDIT.md](LEADNORIA-FINAL-PRODUCTION-AUDIT.md) | Phase 18 final production audit |
+| [LEADNORIA-V1.1-REGRESSION-CONTRACT.md](LEADNORIA-V1.1-REGRESSION-CONTRACT.md) | v1.1 regression change guard |
+| Phase reports (LEADNORIA-GOOGLE-MAPS-PHASE*.md) | Per-phase engineering decisions and results |
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE) if present, or contact the repository owner.
+
+---
+
+## Author
+
+**Nafiz Pranto** — `pranto.mdnafiz@gmail.com`
+
+Built with TypeScript, Vite, React, and the Chrome Extensions Manifest V3 platform.

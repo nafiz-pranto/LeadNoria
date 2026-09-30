@@ -1,0 +1,12 @@
+{
+  "fixtureId": "19-missing-postal-code",
+  "description": "Address with city and country but no postal code",
+  "candidate": {
+    "sourceId": "ChIJ_no_postal_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Dhaka City Tailors",
+    "address": "Dhanmondi, Dhaka, Bangladesh",
+    "locality": "Dhaka",
+    "countryCode": "BD"
+  }
+}

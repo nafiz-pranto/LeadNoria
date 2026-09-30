@@ -1,0 +1,11 @@
+{
+  "fixtureId": "29-numeric-review-count",
+  "description": "Review count provided as string with comma formatting",
+  "candidate": {
+    "sourceId": "ChIJ_review_count_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Popular Austin BBQ",
+    "rating": 4.7,
+    "reviewCount": "1,420"
+  }
+}

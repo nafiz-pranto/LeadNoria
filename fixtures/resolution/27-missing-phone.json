@@ -1,0 +1,20 @@
+{
+  "fixtureId": "27-missing-phone",
+  "description": "Two candidates missing phone numbers but matching on name and canonical domain",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_nophone_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Blue Wave Design Studio",
+      "website": "https://bluewavestudio.io"
+    },
+    {
+      "sourceId": "ChIJ_nophone_02",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Blue Wave Design Studio LLC",
+      "website": "https://bluewavestudio.io"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "fixtureId": "11-same-phone-different-businesses",
+  "description": "Shared phone number between completely different businesses (call center/HQ) -> separate entities",
+  "expectedRelationship": "DIFFERENT_ENTITY",
+  "expectedEntityCount": 2,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_callctr_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Quick 24/7 Towing Service",
+      "locality": "Chicago",
+      "countryCode": "US",
+      "phone": "+1 800-555-0199"
+    },
+    {
+      "sourceId": "ChIJ_callctr_02",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Metro Emergency Locksmith",
+      "locality": "Chicago",
+      "countryCode": "US",
+      "phone": "+1 800-555-0199"
+    }
+  ]
+}

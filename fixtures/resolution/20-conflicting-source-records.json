@@ -1,0 +1,20 @@
+{
+  "fixtureId": "20-conflicting-source-records",
+  "description": "Same candidate name with conflicting countries (US vs DE) -> conflict",
+  "expectedRelationship": "CONFLICTING_ENTITY",
+  "expectedEntityCount": 2,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_geo_us",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Global Logistics Alliance",
+      "countryCode": "US"
+    },
+    {
+      "sourceId": "ChIJ_geo_de",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Global Logistics Alliance",
+      "countryCode": "DE"
+    }
+  ]
+}

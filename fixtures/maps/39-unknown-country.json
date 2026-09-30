@@ -1,0 +1,11 @@
+{
+  "fixtureId": "39-unknown-country",
+  "description": "Candidate with unrecognized / empty country",
+  "candidate": {
+    "sourceId": "ChIJ_unknown_country_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Island Trade Center",
+    "country": "",
+    "countryCode": ""
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "fixtureId": "23-missing-coordinates",
+  "description": "Candidate with null coordinates",
+  "candidate": {
+    "sourceId": "ChIJ_coords_missing_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Mobile Service Contractor",
+    "latitude": null,
+    "longitude": null
+  }
+}

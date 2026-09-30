@@ -1,0 +1,18 @@
+{
+  "description": "Synthetic Google Maps candidate fixture for Phase 5 extraction testing (NOT from live session)",
+  "source": "GOOGLE_MAPS",
+  "candidate": {
+    "sourceRecordId": "ChIJN1t_tDeuEmsRUsoyG83frY4_synthetic",
+    "placeName": "Lone Star Plumbing LLC (Verified)",
+    "websiteUrl": "https://www.lonestarplumbingtx.com/services/?ref=maps_web",
+    "phoneNumber": "(512) 555-0199",
+    "formattedAddress": "1200 S Congress Ave, Austin, TX 78704, United States",
+    "category": "Plumber",
+    "locality": "Austin, Texas",
+    "countryCode": "US",
+    "coordinates": {
+      "latitude": 30.2520,
+      "longitude": -97.7490
+    }
+  }
+}

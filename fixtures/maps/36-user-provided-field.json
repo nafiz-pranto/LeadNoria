@@ -1,0 +1,13 @@
+{
+  "fixtureId": "36-user-provided-field",
+  "description": "Candidate provided directly by user form input",
+  "candidate": {
+    "sourceId": "user_input_hash_89712",
+    "source": "USER_PROVIDED_DOMAIN",
+    "provenance": "USER_PROVIDED",
+    "acquisitionContext": "USER_INPUT",
+    "restrictionBasis": "NONE",
+    "businessName": "Manual User Supplied Roofer",
+    "website": "https://manualroofer.com"
+  }
+}

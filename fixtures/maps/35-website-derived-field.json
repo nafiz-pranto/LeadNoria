@@ -1,0 +1,13 @@
+{
+  "fixtureId": "35-website-derived-field",
+  "description": "Candidate extracted directly from website crawl",
+  "candidate": {
+    "sourceId": "web_crawl_austindental_com",
+    "source": "USER_PROVIDED_DOMAIN",
+    "provenance": "WEBSITE_DERIVED",
+    "acquisitionContext": "WEBSITE_DIRECT",
+    "restrictionBasis": "TARGET_SITE_RULES",
+    "businessName": "Direct Crawled Dental Clinic",
+    "phone": "+1 512-555-0122"
+  }
+}

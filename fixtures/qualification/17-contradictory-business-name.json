@@ -1,0 +1,172 @@
+{
+  "fixtureId": "17-contradictory-business-name",
+  "description": "Irreconcilable business name contradiction between candidate and destination website",
+  "candidate": {
+    "candidateId": "cand-17",
+    "runId": "run-p6-test",
+    "source": "META_AD_LIBRARY",
+    "sourceIdentifier": {
+      "sourceType": "META_AD_LIBRARY",
+      "sourceRecordId": "cand-17",
+      "sourceRecordType": "GENERIC_SOURCE_ID",
+      "sourceContext": "META_AD_LIBRARY",
+      "originalValue": "cand-17",
+      "normalizedValue": "cand-17",
+      "provenance": "META_DERIVED",
+      "policyStatus": "POLICY_APPROVED"
+    },
+    "acquisitionContext": "META_AD_LIBRARY",
+    "overallPolicyStatus": "POLICY_APPROVED",
+    "overallPersistenceStatus": "PERSISTABLE",
+    "overallExportStatus": "EXPORTABLE",
+    "overallProvenance": "META_DERIVED",
+    "sourceContributions": [
+      {
+        "source": "META_AD_LIBRARY",
+        "provenance": "META_DERIVED",
+        "fieldName": "entity",
+        "acquisitionContext": "META_AD_LIBRARY",
+        "restrictionBasis": "NONE",
+        "isRestricted": false,
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "businessName": {
+      "value": {
+        "displayName": "Elite Family Dentistry",
+        "normalizedName": "elite family dentistry",
+        "comparisonName": "elitefamilydentistry",
+        "detectedScript": "LATIN"
+      },
+      "fieldName": "businessName",
+      "provenance": "META_DERIVED",
+      "acquisitionContext": "META_AD_LIBRARY",
+      "source": "META_AD_LIBRARY",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_APPROVED",
+      "persistenceStatus": "PERSISTABLE",
+      "exportStatus": "EXPORTABLE"
+    },
+    "websiteUrl": {
+      "value": {
+        "originalUrl": "https://elitedental.com",
+        "normalizedUrl": "https://elitedental.com",
+        "canonicalDomain": "elitedental.com",
+        "canonicalOrigin": "https://example.com",
+        "protocol": "https:",
+        "hostname": "example.com",
+        "pathname": "/",
+        "hasMeaningfulSubdomain": false,
+        "preservedParams": {},
+        "isCredentialBearing": false,
+        "isValid": true
+      },
+      "fieldName": "websiteUrl",
+      "provenance": "META_DERIVED",
+      "acquisitionContext": "META_AD_LIBRARY",
+      "source": "META_AD_LIBRARY",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_APPROVED",
+      "persistenceStatus": "PERSISTABLE",
+      "exportStatus": "EXPORTABLE"
+    },
+    "phones": [],
+    "emails": [],
+    "categories": [
+      {
+        "value": {
+          "sourceCategory": "Dental Clinic",
+          "normalizedCategory": "dental clinic",
+          "categoryConfidence": "STRONG"
+        },
+        "fieldName": "category",
+        "provenance": "META_DERIVED",
+        "acquisitionContext": "META_AD_LIBRARY",
+        "source": "META_AD_LIBRARY",
+        "capturedAt": "2026-09-29T12:00:00.000Z",
+        "confidence": "STRONG",
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "socialUrls": [],
+    "normalizationAudit": {
+      "normalizedAt": "2026-09-29T12:00:00.000Z",
+      "engineVersion": "1.1.0",
+      "errors": [],
+      "warnings": [],
+      "isSanitized": true
+    }
+  },
+  "evidence": {
+    "websiteUrl": "https://elitedental.com",
+    "normalizedUrl": "https://elitedental.com",
+    "canonicalOrigin": "https://elitedental.com",
+    "canonicalDomain": "elitedental.com",
+    "verificationState": "WEBSITE_NON_BUSINESS",
+    "httpStatus": 200,
+    "redirectChain": [
+      "https://elitedental.com"
+    ],
+    "pagesVisited": [
+      "https://elitedental.com"
+    ],
+    "sameOrigin": true,
+    "businessNameEvidence": {
+      "matched": false,
+      "score": 0.05
+    },
+    "addressEvidence": {
+      "matched": false,
+      "localityMatched": true
+    },
+    "phoneEvidence": {
+      "matched": false
+    },
+    "emailEvidence": {
+      "matched": false
+    },
+    "brandEvidence": {
+      "matched": false
+    },
+    "serviceEvidence": {
+      "matched": false,
+      "keywords": []
+    },
+    "aboutEvidence": {
+      "matched": false
+    },
+    "contactEvidence": {
+      "matched": false,
+      "formPresent": false
+    },
+    "parkingEvidence": {
+      "isParked": false
+    },
+    "nonBusinessEvidence": {
+      "isNonBusiness": true,
+      "reason": "Site header belongs to Bob Towing and Wrecker Service."
+    },
+    "capturedAt": "2026-09-29T12:00:00.000Z",
+    "policyStatus": "TARGET_SITE_RULES_APPLY",
+    "sourceContributions": [
+      {
+        "source": "USER_PROVIDED_DOMAIN",
+        "provenance": "WEBSITE_DERIVED",
+        "fieldName": "websiteEvidence",
+        "acquisitionContext": "WEBSITE_DIRECT",
+        "restrictionBasis": "TARGET_SITE_RULES",
+        "isRestricted": false,
+        "policyStatus": "TARGET_SITE_RULES_APPLY",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "derivedFrom": []
+  }
+}

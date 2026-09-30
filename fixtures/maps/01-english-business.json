@@ -1,0 +1,25 @@
+{
+  "fixtureId": "01-english-business",
+  "description": "English business with complete standard fields",
+  "candidate": {
+    "sourceId": "ChIJ123456789_en",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Austin Craft Roofing & Siding LLC",
+    "category": "Roofing Contractor",
+    "address": "100 Congress Ave #2000, Austin, TX 78701, USA",
+    "street": "100 Congress Ave #2000",
+    "locality": "Austin",
+    "region": "TX",
+    "postalCode": "78701",
+    "country": "USA",
+    "countryCode": "US",
+    "latitude": 30.267153,
+    "longitude": -97.743061,
+    "phone": "+1 512-555-0144",
+    "website": "https://austincraftroofing.com/?ref=gmb_listing",
+    "businessStatus": "OPERATIONAL",
+    "rating": 4.8,
+    "reviewCount": 142,
+    "mapsUrl": "https://maps.google.com/?cid=1029384756&q=Austin+Craft+Roofing"
+  }
+}

@@ -1,0 +1,172 @@
+{
+  "fixtureId": "23-export-blocked-candidate",
+  "description": "Candidate satisfies relevance and verified website, but carries restricted Google consumer-web lineage, blocking export",
+  "candidate": {
+    "candidateId": "cand-23",
+    "runId": "run-p6-test",
+    "source": "GOOGLE_MAPS",
+    "sourceIdentifier": {
+      "sourceType": "GOOGLE_MAPS",
+      "sourceRecordId": "cand-23",
+      "sourceRecordType": "GENERIC_SOURCE_ID",
+      "sourceContext": "GOOGLE_CONSUMER_WEB",
+      "originalValue": "cand-23",
+      "normalizedValue": "cand-23",
+      "provenance": "GOOGLE_DERIVED",
+      "policyStatus": "POLICY_GATED"
+    },
+    "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+    "overallPolicyStatus": "POLICY_GATED",
+    "overallPersistenceStatus": "NOT_PERSISTABLE",
+    "overallExportStatus": "NOT_EXPORTABLE",
+    "overallProvenance": "GOOGLE_DERIVED",
+    "sourceContributions": [
+      {
+        "source": "GOOGLE_MAPS",
+        "provenance": "GOOGLE_DERIVED",
+        "fieldName": "entity",
+        "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+        "restrictionBasis": "GOOGLE_CONSUMER_WEB_RESTRICTED",
+        "isRestricted": true,
+        "policyStatus": "POLICY_GATED",
+        "persistenceStatus": "NOT_PERSISTABLE",
+        "exportStatus": "NOT_EXPORTABLE"
+      }
+    ],
+    "businessName": {
+      "value": {
+        "displayName": "Austin Premier Roofing",
+        "normalizedName": "austin premier roofing",
+        "comparisonName": "austinpremierroofing",
+        "detectedScript": "LATIN"
+      },
+      "fieldName": "businessName",
+      "provenance": "GOOGLE_DERIVED",
+      "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+      "source": "GOOGLE_MAPS",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_GATED",
+      "persistenceStatus": "NOT_PERSISTABLE",
+      "exportStatus": "NOT_EXPORTABLE"
+    },
+    "websiteUrl": {
+      "value": {
+        "originalUrl": "https://austinpremroof.com",
+        "normalizedUrl": "https://austinpremroof.com",
+        "canonicalDomain": "austinpremroof.com",
+        "canonicalOrigin": "https://example.com",
+        "protocol": "https:",
+        "hostname": "example.com",
+        "pathname": "/",
+        "hasMeaningfulSubdomain": false,
+        "preservedParams": {},
+        "isCredentialBearing": false,
+        "isValid": true
+      },
+      "fieldName": "websiteUrl",
+      "provenance": "GOOGLE_DERIVED",
+      "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+      "source": "GOOGLE_MAPS",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_GATED",
+      "persistenceStatus": "NOT_PERSISTABLE",
+      "exportStatus": "NOT_EXPORTABLE"
+    },
+    "phones": [],
+    "emails": [],
+    "categories": [
+      {
+        "value": {
+          "sourceCategory": "Roofing Contractor",
+          "normalizedCategory": "roofing contractor",
+          "categoryConfidence": "STRONG"
+        },
+        "fieldName": "category",
+        "provenance": "GOOGLE_DERIVED",
+        "acquisitionContext": "GOOGLE_CONSUMER_WEB",
+        "source": "GOOGLE_MAPS",
+        "capturedAt": "2026-09-29T12:00:00.000Z",
+        "confidence": "STRONG",
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "socialUrls": [],
+    "normalizationAudit": {
+      "normalizedAt": "2026-09-29T12:00:00.000Z",
+      "engineVersion": "1.1.0",
+      "errors": [],
+      "warnings": [],
+      "isSanitized": true
+    }
+  },
+  "evidence": {
+    "websiteUrl": "https://austinpremroof.com",
+    "normalizedUrl": "https://austinpremroof.com",
+    "canonicalOrigin": "https://austinpremroof.com",
+    "canonicalDomain": "austinpremroof.com",
+    "verificationState": "WEBSITE_VERIFIED_BUSINESS_SITE",
+    "httpStatus": 200,
+    "redirectChain": [
+      "https://austinpremroof.com"
+    ],
+    "pagesVisited": [
+      "https://austinpremroof.com"
+    ],
+    "sameOrigin": true,
+    "businessNameEvidence": {
+      "matched": true,
+      "score": 0.95,
+      "evidenceSnippet": "Matched business name on homepage"
+    },
+    "addressEvidence": {
+      "matched": false,
+      "localityMatched": true
+    },
+    "phoneEvidence": {
+      "matched": false
+    },
+    "emailEvidence": {
+      "matched": false
+    },
+    "brandEvidence": {
+      "matched": true
+    },
+    "serviceEvidence": {
+      "matched": false,
+      "keywords": []
+    },
+    "aboutEvidence": {
+      "matched": false
+    },
+    "contactEvidence": {
+      "matched": false,
+      "formPresent": false
+    },
+    "parkingEvidence": {
+      "isParked": false
+    },
+    "nonBusinessEvidence": {
+      "isNonBusiness": false
+    },
+    "capturedAt": "2026-09-29T12:00:00.000Z",
+    "policyStatus": "TARGET_SITE_RULES_APPLY",
+    "sourceContributions": [
+      {
+        "source": "USER_PROVIDED_DOMAIN",
+        "provenance": "WEBSITE_DERIVED",
+        "fieldName": "websiteEvidence",
+        "acquisitionContext": "WEBSITE_DIRECT",
+        "restrictionBasis": "TARGET_SITE_RULES",
+        "isRestricted": false,
+        "policyStatus": "TARGET_SITE_RULES_APPLY",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "derivedFrom": []
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "fixtureId": "08-same-brand-different-branch",
+  "description": "Same parent brand with explicit branch markers in different localities (MUST NOT MERGE into one entity)",
+  "expectedRelationship": "SAME_PARENT_BRAND_DIFFERENT_BRANCH",
+  "expectedEntityCount": 2,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_branch_dhaka",
+      "source": "GOOGLE_MAPS",
+      "businessName": "ABC Furniture (Dhanmondi Main Branch)",
+      "street": "Road 5, Dhanmondi",
+      "locality": "Dhaka",
+      "countryCode": "BD",
+      "phone": "+880 1711-000111",
+      "website": "https://abcfurniture.com.bd"
+    },
+    {
+      "sourceId": "ChIJ_branch_uttara",
+      "source": "GOOGLE_MAPS",
+      "businessName": "ABC Furniture (Uttara Branch)",
+      "street": "Sector 3, Uttara",
+      "locality": "Dhaka",
+      "countryCode": "BD",
+      "phone": "+880 1711-000222",
+      "website": "https://abcfurniture.com.bd"
+    }
+  ]
+}

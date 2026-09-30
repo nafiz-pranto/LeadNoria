@@ -1,0 +1,10 @@
+{
+  "fixtureId": "11-tracking-website-params",
+  "description": "Website URL with marketing click IDs that must be stripped",
+  "candidate": {
+    "sourceId": "ChIJ_tracking_params_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Austin Modern Roofing",
+    "website": "https://austinmodernroofing.com/?gclid=Cj0KCQjw123&fbclid=IwAR987&gbraid=0AAAAAD"
+  }
+}

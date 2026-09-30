@@ -1,0 +1,20 @@
+{
+  "fixtureId": "12-same-domain-conflicting-identity",
+  "description": "Same domain hosting completely incompatible business names -> contradiction conflict",
+  "expectedRelationship": "CONFLICTING_ENTITY",
+  "expectedEntityCount": 2,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_domain_conflict_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Dr. John Dental Practice",
+      "website": "https://sharedhealthportal.com"
+    },
+    {
+      "sourceId": "ChIJ_domain_conflict_02",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Bob Auto Collision Center",
+      "website": "https://sharedhealthportal.com"
+    }
+  ]
+}

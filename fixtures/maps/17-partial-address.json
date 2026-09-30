@@ -1,0 +1,11 @@
+{
+  "fixtureId": "17-partial-address",
+  "description": "Address with only street and city",
+  "candidate": {
+    "sourceId": "ChIJ_partial_addr_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Austin Downtown Barber",
+    "address": "6th Street, Austin",
+    "locality": "Austin"
+  }
+}

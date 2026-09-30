@@ -1,0 +1,125 @@
+{
+  "fixtureId": "20-requirement-without",
+  "description": "Candidate qualified for WITHOUT mode with explicit verified absence proof",
+  "candidate": {
+    "candidateId": "cand-20",
+    "runId": "run-p6-test",
+    "source": "USER_PROVIDED_DOMAIN",
+    "sourceIdentifier": {
+      "sourceType": "USER_PROVIDED_DOMAIN",
+      "sourceRecordId": "cand-20",
+      "sourceRecordType": "GENERIC_SOURCE_ID",
+      "sourceContext": "USER_INPUT",
+      "originalValue": "cand-20",
+      "normalizedValue": "cand-20",
+      "provenance": "USER_PROVIDED",
+      "policyStatus": "POLICY_APPROVED"
+    },
+    "acquisitionContext": "USER_INPUT",
+    "overallPolicyStatus": "POLICY_APPROVED",
+    "overallPersistenceStatus": "PERSISTABLE",
+    "overallExportStatus": "EXPORTABLE",
+    "overallProvenance": "USER_PROVIDED",
+    "sourceContributions": [
+      {
+        "source": "USER_PROVIDED_DOMAIN",
+        "provenance": "USER_PROVIDED",
+        "fieldName": "entity",
+        "acquisitionContext": "USER_INPUT",
+        "restrictionBasis": "NONE",
+        "isRestricted": false,
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "businessName": {
+      "value": {
+        "displayName": "Joe Mobile Barber",
+        "normalizedName": "joe mobile barber",
+        "comparisonName": "joemobilebarber",
+        "detectedScript": "LATIN"
+      },
+      "fieldName": "businessName",
+      "provenance": "USER_PROVIDED",
+      "acquisitionContext": "USER_INPUT",
+      "source": "USER_PROVIDED_DOMAIN",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_APPROVED",
+      "persistenceStatus": "PERSISTABLE",
+      "exportStatus": "EXPORTABLE"
+    },
+    "phones": [
+      {
+        "value": {
+          "rawPhone": "+15125550999",
+          "e164Format": "+15125550999",
+          "countryCode": "US",
+          "countryInference": "COUNTRY_EXPLICIT",
+          "phoneState": "PHONE_NORMALIZED",
+          "isValid": true
+        },
+        "fieldName": "phone",
+        "provenance": "USER_PROVIDED",
+        "acquisitionContext": "USER_INPUT",
+        "source": "USER_PROVIDED_DOMAIN",
+        "capturedAt": "2026-09-29T12:00:00.000Z",
+        "confidence": "STRONG",
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "emails": [],
+    "address": {
+      "value": {
+        "displayAddress": "Austin, USA",
+        "normalizedAddress": "austin, usa",
+        "locality": "Austin",
+        "country": "USA",
+        "countryCode": "US"
+      },
+      "fieldName": "address",
+      "provenance": "USER_PROVIDED",
+      "acquisitionContext": "USER_INPUT",
+      "source": "USER_PROVIDED_DOMAIN",
+      "capturedAt": "2026-09-29T12:00:00.000Z",
+      "confidence": "STRONG",
+      "policyStatus": "POLICY_APPROVED",
+      "persistenceStatus": "PERSISTABLE",
+      "exportStatus": "EXPORTABLE"
+    },
+    "categories": [
+      {
+        "value": {
+          "sourceCategory": "Barbershop",
+          "normalizedCategory": "barbershop",
+          "categoryConfidence": "STRONG"
+        },
+        "fieldName": "category",
+        "provenance": "USER_PROVIDED",
+        "acquisitionContext": "USER_INPUT",
+        "source": "USER_PROVIDED_DOMAIN",
+        "capturedAt": "2026-09-29T12:00:00.000Z",
+        "confidence": "STRONG",
+        "policyStatus": "POLICY_APPROVED",
+        "persistenceStatus": "PERSISTABLE",
+        "exportStatus": "EXPORTABLE"
+      }
+    ],
+    "socialUrls": [],
+    "normalizationAudit": {
+      "normalizedAt": "2026-09-29T12:00:00.000Z",
+      "engineVersion": "1.1.0",
+      "errors": [],
+      "warnings": [],
+      "isSanitized": true
+    }
+  },
+  "explicitNoWebsiteEvidence": {
+    "hasConfirmedAbsence": true,
+    "source": "USER_PROVIDED_DOMAIN",
+    "evidenceSnippet": "Official business registration confirms walk-in only service without commercial website."
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "fixtureId": "10-same-name-different-domain",
+  "description": "Same common business name with distinct websites -> conflicting / different entities",
+  "expectedRelationship": "CONFLICTING_ENTITY",
+  "expectedEntityCount": 2,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_diffdom_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Precision Roofing LLC",
+      "locality": "Phoenix",
+      "countryCode": "US",
+      "website": "https://precisionroofingaz.com"
+    },
+    {
+      "sourceId": "ChIJ_diffdom_02",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Precision Roofing LLC",
+      "locality": "Phoenix",
+      "countryCode": "US",
+      "website": "https://precisioncommercialroofing.com"
+    }
+  ]
+}

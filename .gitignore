@@ -1,10 +1,52 @@
+# Dependencies
 node_modules/
+
+# Build outputs (keep extension.zip root for distribution)
 build/
 dist/*
 !dist/leadnoria-v1.0.0.zip
+!dist/leadnoria-v1.1.0.zip
+
+# Coverage
 coverage/
-.DS_Store
-*.log
-.env*
+
+# Environment files with secrets
+.env
 !.env.example
+
+# OS / IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary / scratch
+scratch/
 test-userData/
+.data/
+
+# One-off fix scripts (not part of the source)
+fix_*.py
+update_*.py
+replace_*.py
+
+# One-off ad-hoc test stubs (not the formal test suite)
+test-meta*.cjs
+test-playwright.cjs
+
+# Test data / result snapshots committed by mistake
+accuracy-benchmark.json
+saturation-results.json
+stress-results.json
+
+# Bun lock (project uses npm)
+bun.lock
+
+# Screenshots
+*.png

@@ -1,0 +1,32 @@
+{
+  "fixtureId": "03-formatting-only-duplicate",
+  "description": "Formatting differences in casing, punctuation, and phone spacing",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_fmt_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Bay Area Solar Solutions, Inc.",
+      "address": "500 Market St, San Francisco, CA 94105",
+      "street": "500 Market St",
+      "locality": "San Francisco",
+      "postalCode": "94105",
+      "countryCode": "US",
+      "phone": "+1 415-555-0122",
+      "website": "https://bayareasolar.com/"
+    },
+    {
+      "sourceId": "ChIJ_fmt_02",
+      "source": "GOOGLE_MAPS",
+      "businessName": "bay area solar solutions inc",
+      "address": "500 market st, san francisco, ca 94105",
+      "street": "500 Market St",
+      "locality": "San Francisco",
+      "postalCode": "94105",
+      "countryCode": "US",
+      "phone": "+14155550122",
+      "website": "https://www.bayareasolar.com"
+    }
+  ]
+}

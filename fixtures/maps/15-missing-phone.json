@@ -1,0 +1,10 @@
+{
+  "fixtureId": "15-missing-phone",
+  "description": "Candidate without phone number",
+  "candidate": {
+    "sourceId": "ChIJ_no_phone_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Online Direct Crafts",
+    "phone": null
+  }
+}

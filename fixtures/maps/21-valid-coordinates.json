@@ -1,0 +1,11 @@
+{
+  "fixtureId": "21-valid-coordinates",
+  "description": "Valid geographic latitude and longitude",
+  "candidate": {
+    "sourceId": "ChIJ_coords_valid_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Texas State Capitol Tours",
+    "latitude": 30.274722,
+    "longitude": -97.740556
+  }
+}

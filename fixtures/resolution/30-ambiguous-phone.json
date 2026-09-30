@@ -1,0 +1,22 @@
+{
+  "fixtureId": "30-ambiguous-phone",
+  "description": "National phone without country code (ambiguous) but matching on canonical domain",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_ambph_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Alpha Medical Care",
+      "phone": "555-0199",
+      "website": "https://alphamedical.com"
+    },
+    {
+      "sourceId": "ChIJ_ambph_02",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Alpha Medical Care",
+      "phone": "555-0199",
+      "website": "https://alphamedical.com"
+    }
+  ]
+}

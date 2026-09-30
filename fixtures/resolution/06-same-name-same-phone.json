@@ -1,0 +1,24 @@
+{
+  "fixtureId": "06-same-name-same-phone",
+  "description": "Same business name and exact normalized phone with compatible locality",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_phone_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Prestige Auto Repair",
+      "locality": "Denver",
+      "countryCode": "US",
+      "phone": "+1 303-555-0188"
+    },
+    {
+      "sourceId": "ChIJ_phone_02",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Prestige Auto Repair LLC",
+      "locality": "Denver",
+      "countryCode": "US",
+      "phone": "+1 303-555-0188"
+    }
+  ]
+}

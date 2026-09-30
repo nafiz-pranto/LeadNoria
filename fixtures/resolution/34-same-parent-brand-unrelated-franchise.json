@@ -1,0 +1,28 @@
+{
+  "fixtureId": "34-same-parent-brand-unrelated-franchise",
+  "description": "Independent franchise operators under parent brand with different phone numbers and addresses",
+  "expectedRelationship": "SAME_PARENT_BRAND_DIFFERENT_BRANCH",
+  "expectedEntityCount": 2,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_franchise_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Ace Hardware - Downtown",
+      "street": "100 Main St",
+      "locality": "Dallas",
+      "countryCode": "US",
+      "phone": "+1 214-555-0111",
+      "website": "https://acehardware.com"
+    },
+    {
+      "sourceId": "ChIJ_franchise_02",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Ace Hardware - West End",
+      "street": "900 Oak St",
+      "locality": "Dallas",
+      "countryCode": "US",
+      "phone": "+1 214-555-0222",
+      "website": "https://acehardware.com"
+    }
+  ]
+}

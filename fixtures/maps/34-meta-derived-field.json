@@ -1,0 +1,13 @@
+{
+  "fixtureId": "34-meta-derived-field",
+  "description": "Candidate with Meta Ad Library origin",
+  "candidate": {
+    "sourceId": "meta_ad_1029384756",
+    "source": "META_AD_LIBRARY",
+    "provenance": "META_DERIVED",
+    "acquisitionContext": "META_AD_LIBRARY",
+    "restrictionBasis": "NONE",
+    "businessName": "Austin SaaS Marketing Agency",
+    "website": "https://austinsaas.com"
+  }
+}

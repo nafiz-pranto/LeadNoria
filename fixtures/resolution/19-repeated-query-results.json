@@ -1,0 +1,22 @@
+{
+  "fixtureId": "19-repeated-query-results",
+  "description": "Identical candidate appearing across repeated searches or pagination cycles",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_repeat_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Nordic Woodworks",
+      "phone": "+49 30 123456",
+      "website": "https://nordicwoodworks.de"
+    },
+    {
+      "sourceId": "ChIJ_repeat_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Nordic Woodworks",
+      "phone": "+49 30 123456",
+      "website": "https://nordicwoodworks.de"
+    }
+  ]
+}

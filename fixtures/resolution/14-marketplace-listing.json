@@ -1,0 +1,20 @@
+{
+  "fixtureId": "14-marketplace-listing",
+  "description": "Marketplace platform domains (daraz.com.bd, amazon.com) must never act as identity anchors",
+  "expectedRelationship": "DIFFERENT_ENTITY",
+  "expectedEntityCount": 2,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_mkt_01",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Dhaka Leather Crafts",
+      "website": "https://daraz.com.bd/shop/dhaka-leather"
+    },
+    {
+      "sourceId": "ChIJ_mkt_02",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Bengal Organic Honey",
+      "website": "https://daraz.com.bd/shop/bengal-honey"
+    }
+  ]
+}

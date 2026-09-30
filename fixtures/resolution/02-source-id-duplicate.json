@@ -1,0 +1,24 @@
+{
+  "fixtureId": "02-source-id-duplicate",
+  "description": "Same stable source identifier (Google Place ID) with minor metadata variation",
+  "expectedRelationship": "SAME_ENTITY",
+  "expectedEntityCount": 1,
+  "candidates": [
+    {
+      "sourceId": "ChIJ_stable_place_123",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Apex Medical Clinic",
+      "locality": "Dallas",
+      "countryCode": "US",
+      "phone": "+1 214-555-0199"
+    },
+    {
+      "sourceId": "ChIJ_stable_place_123",
+      "source": "GOOGLE_MAPS",
+      "businessName": "Apex Medical Clinic (Official)",
+      "locality": "Dallas",
+      "countryCode": "US",
+      "website": "https://apexmedical.org"
+    }
+  ]
+}

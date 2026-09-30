@@ -1,0 +1,11 @@
+{
+  "fixtureId": "12-international-phone-plus",
+  "description": "Explicit international E.164 phone format",
+  "candidate": {
+    "sourceId": "ChIJ_phone_intl_01",
+    "source": "GOOGLE_MAPS",
+    "businessName": "Global Dental Care",
+    "phone": "+44 20 7946 0991",
+    "countryCode": "GB"
+  }
+}
