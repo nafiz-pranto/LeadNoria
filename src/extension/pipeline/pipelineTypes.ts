@@ -76,6 +76,7 @@ export const ORDERED_PIPELINE_STAGES: PipelineStageId[] = [
 export type StageCapabilityState =
   | 'SUPPORTED'
   | 'CONTRACT_ONLY'
+  | 'EXPERIMENTAL'
   | 'NOT_SUPPORTED'
   | 'RESTRICTED';
 
@@ -94,7 +95,7 @@ export type RestrictionClass =
 export interface SourceCapability {
   sourceType: SourceType;
   adapterVersion: string;
-  implementationState: 'LIVE' | 'CONTRACT_ONLY' | 'MOCK' | 'DISABLED';
+  implementationState: 'LIVE' | 'CONTRACT_ONLY' | 'EXPERIMENTAL' | 'MOCK' | 'DISABLED';
   stages: Record<PipelineStageId, StageCapabilityState>;
   supportedExecutionModes: ExecutionMode[];
   supportedDataTypes: string[];

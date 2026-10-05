@@ -12,12 +12,11 @@ const iconsDir = path.join(outDir, 'icons');
 
 console.log('[build-extension] Target directory:', outDir);
 
-if (!fs.existsSync(outDir)) {
-  fs.mkdirSync(outDir, { recursive: true });
+if (fs.existsSync(outDir)) {
+  fs.rmSync(outDir, { recursive: true, force: true });
 }
-if (!fs.existsSync(iconsDir)) {
-  fs.mkdirSync(iconsDir, { recursive: true });
-}
+fs.mkdirSync(outDir, { recursive: true });
+fs.mkdirSync(iconsDir, { recursive: true });
 
 // 1. Generate standard valid PNG icons
 function createPngBuffer(width, height, r, g, b) {
@@ -109,7 +108,7 @@ const manifest = {
   manifest_version: 3,
   name: "LeadNoria",
   short_name: "LeadNoria",
-  version: "1.1.0",
+  version: "1.2.1",
   description: "Business lead research from real public signals.",
   permissions: [
     "storage",
@@ -206,7 +205,7 @@ await esbuild.build({
   format: 'esm',
   target: 'chrome120',
   platform: 'browser',
-  sourcemap: true
+  sourcemap: false
 });
 console.log('[build-extension] Bundled service-worker.js');
 
@@ -218,9 +217,21 @@ await esbuild.build({
   format: 'iife',
   target: 'chrome120',
   platform: 'browser',
-  sourcemap: true
+  sourcemap: false
 });
 console.log('[build-extension] Bundled content-script.js');
+
+// 5b. Bundle Google Maps Content Script (IIFE — Experimental)
+await esbuild.build({
+  entryPoints: [path.join(rootDir, 'src/extension/acquisition/googleMapsContentScript.ts')],
+  outfile: path.join(outDir, 'gmaps-content-script.js'),
+  bundle: true,
+  format: 'iife',
+  target: 'chrome120',
+  platform: 'browser',
+  sourcemap: false
+});
+console.log('[build-extension] Bundled gmaps-content-script.js (experimental)');
 
 // 6. Bundle UI App (ESM)
 await esbuild.build({
@@ -235,7 +246,7 @@ await esbuild.build({
   define: {
     'process.env.NODE_ENV': '"production"'
   },
-  sourcemap: true
+  sourcemap: false
 });
 console.log('[build-extension] Bundled app.js');
 
@@ -293,18 +304,28 @@ function createZipArchive(sourceDir, zipPath) {
 }
 
 const releaseZipPath1 = path.join(rootDir, 'extension.zip');
-const releaseZipPath2 = path.join(rootDir, 'dist/meta-ad-library-lead-scraper-v1.0.0.zip');
 const releaseZipPath3 = path.join(rootDir, 'dist/leadnoria-v1.0.0.zip');
 const releaseZipPath4 = path.join(rootDir, 'dist/leadnoria-v1.1.0.zip');
+const releaseZipPath5 = path.join(rootDir, 'dist/leadnoria-v1.2.0.zip');
+const releaseZipPath6 = path.join(rootDir, 'dist/leadnoria-v1.2.1.zip');
 
 await createZipArchive(outDir, releaseZipPath1);
-await createZipArchive(outDir, releaseZipPath2);
-await createZipArchive(outDir, releaseZipPath4);
+await createZipArchive(outDir, releaseZipPath6);
 if (!fs.existsSync(releaseZipPath3)) {
   await createZipArchive(outDir, releaseZipPath3);
 } else {
   console.log('[build-extension] Preserved frozen V1.0 release archive: dist/leadnoria-v1.0.0.zip');
 }
+if (!fs.existsSync(releaseZipPath4)) {
+  await createZipArchive(outDir, releaseZipPath4);
+} else {
+  console.log('[build-extension] Preserved frozen V1.1 release archive: dist/leadnoria-v1.1.0.zip');
+}
+if (!fs.existsSync(releaseZipPath5)) {
+  await createZipArchive(outDir, releaseZipPath5);
+} else {
+  console.log('[build-extension] Preserved historical V1.2.0 release archive: dist/leadnoria-v1.2.0.zip');
+}
 
 console.log('[build-extension] Extension build completed successfully in ./extension');
-console.log('[build-extension] Release distribution packages ready in ./extension.zip, ./dist/leadnoria-v1.0.0.zip, ./dist/leadnoria-v1.1.0.zip, and ./dist/meta-ad-library-lead-scraper-v1.0.0.zip');
+console.log('[build-extension] Release distribution packages ready in ./extension.zip and ./dist/leadnoria-v1.2.1.zip');

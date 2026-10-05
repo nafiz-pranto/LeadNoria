@@ -11,7 +11,9 @@ import type {
   CandidateEvaluationContext,
   QualificationDecision,
   AdvancedQualificationState,
-  CriterionEvaluationResult
+  CriterionEvaluationResult,
+  QualificationReasonGraph,
+  QualificationReasonNode
 } from './qualificationTypes.ts';
 import { validateQualificationProfile } from './qualificationProfile.ts';
 import { evaluateCriterion } from './criterionEvaluator.ts';
@@ -126,8 +128,32 @@ export function evaluateLeadQualification(
     }
   }
 
-  // 6. Build Explanation Ledger
+  // 6. Build Explanation Ledger & Reason Graph
   const explanationLedger = buildExplanationLedger(finalStatus, criterionResults, scoreSummary);
+
+  const reasonNodes: QualificationReasonNode[] = criterionResults.map(cr => ({
+    criterionId: cr.criterionId,
+    criterionType: cr.criterionType,
+    outcome: cr.outcome,
+    mandatory: cr.mandatory,
+    weight: cr.weight,
+    scoreContribution: cr.scoreContribution,
+    explanation: cr.explanation,
+    evidenceCount: cr.evidence.length,
+    sources: Array.from(new Set(cr.evidence.map(e => e.source || e.provenance).filter(Boolean)))
+  }));
+
+  const reasonGraph: QualificationReasonGraph = {
+    finalStatus,
+    primaryRationale: explanationLedger.summaryNarrative,
+    summaryText: `Candidate ${context.entityId} evaluated to ${finalStatus} under profile ${profile.profileId}.`,
+    nodes: reasonNodes,
+    passingFactors: criterionResults.filter(c => c.outcome === 'PASS').map(c => c.explanation),
+    failingFactors: criterionResults.filter(c => c.outcome === 'FAIL').map(c => c.explanation),
+    uncertainFactors: criterionResults.filter(c => c.outcome === 'UNKNOWN').map(c => c.explanation),
+    contradictoryFactors: criterionResults.filter(c => c.outcome === 'CONTRADICTORY').map(c => c.explanation),
+    blockingFactors: criterionResults.filter(c => c.outcome === 'BLOCKED').map(c => c.explanation)
+  };
 
   // 7. Derive Composite Lineage & Source Restrictions
   const compositeRestrictions = deriveCompositeRestrictions(context);
@@ -160,6 +186,8 @@ export function evaluateLeadQualification(
       errors,
       warnings,
       notices: [explanationLedger.summaryNarrative]
-    }
+    },
+    reasonGraph,
+    completenessMetrics: context.businessIntelligence?.completenessMetrics
   };
 }

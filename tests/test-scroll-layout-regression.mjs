@@ -105,10 +105,10 @@ console.log('\nGroup 2: Bottom control reachability\n');
 
 const researchConfig = readFile('src/extension/ui/components/ResearchConfigView.tsx');
 
-test('REG-SCROLL-06: Execution Mode control is present and has an id', () => {
+test('REG-SCROLL-06: Category & Query Scope control is present', () => {
   assert(
-    researchConfig.includes('id="execution-mode-select"'),
-    'Execution Mode select must have id="execution-mode-select" for tab accessibility'
+    researchConfig.includes('Category &amp; Query Scope') || researchConfig.includes('Category & Query Scope'),
+    'Category & Query Scope control must be present in ResearchConfigView'
   );
 });
 
@@ -119,16 +119,14 @@ test('REG-SCROLL-07: Max Candidates control is present and has an id', () => {
   );
 });
 
-test('REG-SCROLL-08: Review Research Plan button is rendered after Execution Mode and Max Candidates', () => {
-  const modeIdx = researchConfig.indexOf('execution-mode-select');
-  const maxIdx = researchConfig.indexOf('max-candidates-input');
-  const btnIdx = researchConfig.indexOf('Review Research Plan');
-  assert(modeIdx > 0, 'execution-mode-select must exist');
+test('REG-SCROLL-08: Review Research Plan button is rendered after scope controls and Max Candidates', () => {
+  const maxIdx = researchConfig.lastIndexOf('max-candidates-input');
+  const btnIdx = researchConfig.lastIndexOf('Review Research Plan');
   assert(maxIdx > 0, 'max-candidates-input must exist');
   assert(btnIdx > 0, 'Review Research Plan button must exist');
   assert(
-    btnIdx > modeIdx && btnIdx > maxIdx,
-    'Review Research Plan button must come after Execution Mode and Max Candidates in the DOM order'
+    btnIdx > maxIdx,
+    'Review Research Plan button must come after Max Candidates in the DOM order'
   );
 });
 
@@ -290,11 +288,11 @@ test('REG-SCROLL-22: Build script template generates #root with display:flex (sc
 // --- Group 8: Keyboard accessibility (static structural check) ---
 console.log('\nGroup 8: Keyboard accessibility (structural)\n');
 
-test('REG-SCROLL-23: Execution Mode select has explicit id + htmlFor label association', () => {
+test('REG-SCROLL-23: Category & Query Scope has explicit aria-label association', () => {
   assert(
-    researchConfig.includes('id="execution-mode-select"') &&
-    researchConfig.includes('htmlFor="execution-mode-select"'),
-    'Execution Mode must have matching id and htmlFor for keyboard label association'
+    researchConfig.includes('aria-label="Select industry research preset"') &&
+    researchConfig.includes('aria-label="Custom research keywords"'),
+    'Category & Query Scope controls must have explicit aria-labels for keyboard accessibility'
   );
 });
 

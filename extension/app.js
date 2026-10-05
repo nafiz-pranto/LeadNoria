@@ -17294,78 +17294,45 @@ var SourceSelector = ({
   disabled = false
 }) => {
   const isMeta = selectedSource === "META";
-  const isGmaps = selectedSource === "GOOGLE_MAPS";
   return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "w-full flex flex-col gap-2 p-3 bg-slate-900 border border-slate-800 rounded-lg", children: [
     /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center justify-between", children: [
       /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "Research Source" }),
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-[11px] text-slate-500", children: "Explicit Source Selection" })
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-[11px] text-slate-500", children: "Approved Production Source" })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "grid grid-cols-2 gap-2", role: "radiogroup", "aria-label": "Select research source", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
-        "button",
-        {
-          type: "button",
-          role: "radio",
-          "aria-checked": isMeta,
-          "aria-label": "From Meta Ad Library (Available for live discovery)",
-          disabled,
-          onClick: () => onSelectSource("META"),
-          className: `flex flex-col items-start p-3 rounded-md border text-left transition-all focus:outline-none focus:ring-2 focus:ring-sky-400 ${isMeta ? "bg-slate-800 border-sky-500/80 shadow-sm shadow-sky-500/10" : "bg-slate-950/60 border-slate-800 hover:border-slate-700 opacity-80"}`,
-          children: [
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center justify-between w-full mb-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { className: "font-medium text-sm text-slate-100 flex items-center gap-1.5", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-sky-400", "aria-hidden": "true", children: "\u29BF" }),
-                "From Meta Ad Library"
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { className: "inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 rounded", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { "aria-hidden": "true", children: "\u2713" }),
-                " AVAILABLE"
-              ] })
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "w-full", role: "radiogroup", "aria-label": "Select research source", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
+      "button",
+      {
+        type: "button",
+        role: "radio",
+        "aria-checked": isMeta,
+        "aria-label": "From Meta Ad Library (Approved production source for commercial discovery)",
+        disabled,
+        onClick: () => onSelectSource("META"),
+        className: "w-full flex flex-col items-start p-3 rounded-md border text-left transition-all focus:outline-none focus:ring-2 focus:ring-sky-400 bg-slate-800 border-sky-500/80 shadow-sm shadow-sky-500/10 cursor-pointer",
+        children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center justify-between w-full mb-1", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { className: "font-semibold text-sm text-slate-100 flex items-center gap-1.5", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-sky-400", "aria-hidden": "true", children: "\u29BF" }),
+              "From Meta Ad Library"
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "text-[11px] text-slate-400 leading-relaxed", children: "Public commercial advertiser signals with active creative presence." })
-          ]
-        }
-      ),
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
-        "button",
-        {
-          type: "button",
-          role: "radio",
-          "aria-checked": isGmaps,
-          "aria-label": "From Google Maps (Contract available, live extraction not enabled)",
-          disabled,
-          onClick: () => onSelectSource("GOOGLE_MAPS"),
-          className: `flex flex-col items-start p-3 rounded-md border text-left transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 ${isGmaps ? "bg-slate-800 border-purple-500/80 shadow-sm shadow-purple-500/10" : "bg-slate-950/60 border-slate-800 hover:border-slate-700 opacity-80"}`,
-          children: [
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center justify-between w-full mb-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { className: "font-medium text-sm text-slate-100 flex items-center gap-1.5", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-purple-400", "aria-hidden": "true", children: "\u2298" }),
-                "From Google Maps"
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { className: "inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold text-purple-400 bg-purple-950/60 border border-purple-500/40 rounded", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { "aria-hidden": "true", children: "\u2298" }),
-                " CONTRACT ONLY"
-              ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "text-[11px] text-slate-400 leading-relaxed", children: "Contract & geographic planning available. Live extraction is not enabled." })
-          ]
-        }
-      )
-    ] }),
-    isGmaps && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { className: "inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 rounded", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { "aria-hidden": "true", children: "\u2713" }),
+              " APPROVED PRODUCTION SOURCE"
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "text-[11px] text-slate-400 leading-relaxed", children: "Public commercial advertiser signals with active creative presence." })
+        ]
+      }
+    ) }),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
       "div",
       {
-        className: "mt-1 p-2.5 rounded bg-purple-950/30 border border-purple-500/30 text-[11px] text-purple-200 flex items-start gap-2",
+        className: "mt-1 p-2 rounded bg-slate-950/60 border border-slate-800 text-[10px] text-slate-400 flex items-center justify-between",
         role: "status",
-        "aria-live": "polite",
+        "aria-label": "Source contract status",
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-purple-400 text-sm leading-none mt-0.5", "aria-hidden": "true", children: "\u2139" }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: "Architectural Invariant:" }),
-            " Google Maps operates strictly in ",
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("code", { className: "px-1 py-0.5 bg-purple-900/50 rounded text-purple-300 font-mono", children: "CONTRACT_ONLY" }),
-            " mode. You may plan geographic coverage, inspect SearchUnits, or replay test fixtures. Live extraction cannot be executed."
-          ] })
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { children: "Production signals: Meta Ad Library" }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "font-mono text-slate-500", children: "CONTRACT ONLY: Google Maps live extraction disabled" })
         ]
       }
     )
@@ -17478,20 +17445,8 @@ var ResearchConfigView = ({
   const [presetId, setPresetId] = (0, import_react.useState)(RESEARCH_PRESETS[0]?.preset_id || "");
   const [customKeywords, setCustomKeywords] = (0, import_react.useState)("Furniture, Home Decor");
   const [countryCode, setCountryCode] = (0, import_react.useState)("BD");
-  const [executionMode, setExecutionMode] = (0, import_react.useState)(
-    selectedSource === "GOOGLE_MAPS" ? "DRY_RUN" : "LIVE"
-  );
   const [maxCandidates, setMaxCandidates] = (0, import_react.useState)(200);
   const selectedPreset = RESEARCH_PRESETS.find((p) => p.preset_id === presetId) || RESEARCH_PRESETS[0];
-  const isGmaps = selectedSource === "GOOGLE_MAPS";
-  const handleSourceChange = (src) => {
-    onSelectSource(src);
-    if (src === "GOOGLE_MAPS") {
-      setExecutionMode("DRY_RUN");
-    } else {
-      setExecutionMode("LIVE");
-    }
-  };
   const handleReviewClick = () => {
     let keywords = [];
     let presetName;
@@ -17504,7 +17459,7 @@ var ResearchConfigView = ({
     const selectedLoc = META_AD_LIBRARY_LOCATIONS.find((l) => l.locationCode === countryCode);
     onOpenPlanReview({
       sourceType: selectedSource,
-      executionMode,
+      executionMode: "LIVE",
       keywords,
       countryCode,
       locationName: selectedLoc?.displayName || countryCode,
@@ -17517,7 +17472,7 @@ var ResearchConfigView = ({
       SourceSelector,
       {
         selectedSource,
-        onSelectSource: handleSourceChange,
+        onSelectSource,
         disabled
       }
     ),
@@ -17582,7 +17537,7 @@ var ResearchConfigView = ({
           }
         ),
         selectedPreset && /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("p", { className: "text-[11px] text-slate-400", children: [
-          "Primary keywords: ",
+          "Keywords: ",
           /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "text-slate-300 font-mono", children: selectedPreset.primary_keywords.join(", ") })
         ] })
       ] }) : /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { children: [
@@ -17601,28 +17556,9 @@ var ResearchConfigView = ({
         /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { className: "text-[10px] text-slate-500", children: "Separate multiple search terms with commas or newlines." })
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "grid grid-cols-2 gap-3", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("label", { htmlFor: "execution-mode-select", className: "text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1", children: "Execution Mode" }),
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
-          "select",
-          {
-            id: "execution-mode-select",
-            value: executionMode,
-            onChange: (e) => setExecutionMode(e.target.value),
-            disabled,
-            className: "w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-400",
-            children: [
-              !isGmaps && /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("option", { value: "LIVE", children: "LIVE (Public Source)" }),
-              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("option", { value: "DRY_RUN", children: "DRY_RUN (Plan & Validate)" }),
-              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("option", { value: "REPLAY", children: "REPLAY (Synthetic Fixtures)" }),
-              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("option", { value: "VALIDATION_ONLY", children: "VALIDATION_ONLY" })
-            ]
-          }
-        )
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("label", { htmlFor: "max-candidates-input", className: "text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1", children: "Max Candidates" }),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("label", { htmlFor: "max-candidates-input", className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "Max Leads Target" }),
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex items-center gap-3", children: [
         /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
           "input",
           {
@@ -17633,18 +17569,19 @@ var ResearchConfigView = ({
             value: maxCandidates,
             onChange: (e) => setMaxCandidates(Math.max(10, Math.min(1e3, parseInt(e.target.value) || 100))),
             disabled,
-            className: "w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-400"
+            className: "w-32 px-3 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-400"
           }
-        )
+        ),
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "text-[11px] text-slate-400", children: "Target unique relevant business leads to discover." })
       ] })
-    ] }) }),
+    ] }),
     /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
       "button",
       {
         type: "button",
         disabled,
         onClick: handleReviewClick,
-        className: "w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm shadow-sky-600/20 focus:outline-none focus:ring-2 focus:ring-sky-400",
+        className: "w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm shadow-sky-600/20 focus:outline-none focus:ring-2 focus:ring-sky-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
         children: [
           /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: "\u{1F4CB}" }),
           " Review Research Plan \u2192"
@@ -17729,6 +17666,7 @@ var StatusBadge = ({
   return /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
     "span",
     {
+      role: "status",
       className: `inline-flex items-center gap-1 font-semibold rounded border uppercase tracking-wider ${colorClass} ${sizeClasses} ${className}`,
       "aria-label": accessibleLabel,
       title: accessibleLabel,
@@ -18052,373 +17990,138 @@ var RunStatusView = ({
 
 // src/extension/ui/components/ResultsTableView.tsx
 var import_react3 = __toESM(require_react(), 1);
-var import_jsx_runtime7 = __toESM(require_jsx_runtime(), 1);
-var ResultsTableView = ({
-  results,
-  selectedRecordIds,
-  onToggleSelect,
-  onSelectAll,
-  onClearSelection,
-  onInspectRecord,
-  onOpenExportModal
-}) => {
-  const [searchTerm, setSearchTerm] = (0, import_react3.useState)("");
-  const [sourceFilter, setSourceFilter] = (0, import_react3.useState)("ALL");
-  const [relevanceFilter, setRelevanceFilter] = (0, import_react3.useState)("ALL");
-  const [qualificationFilter, setQualificationFilter] = (0, import_react3.useState)("ALL");
-  const [requirePhone, setRequirePhone] = (0, import_react3.useState)(false);
-  const [requireEmail, setRequireEmail] = (0, import_react3.useState)(false);
-  const [sortBy, setSortBy] = (0, import_react3.useState)("NAME_ASC");
-  const [page, setPage] = (0, import_react3.useState)(1);
-  const PAGE_SIZE = 50;
-  const filteredResults = (0, import_react3.useMemo)(() => {
-    return results.filter((r) => {
-      if (searchTerm.trim() !== "") {
-        const q = searchTerm.toLowerCase();
-        const matchesName = r.displayName.toLowerCase().includes(q);
-        const matchesPhone = r.contactSummary.phoneText?.toLowerCase().includes(q);
-        const matchesEmail = r.contactSummary.emailText?.toLowerCase().includes(q);
-        const matchesWebsite = r.websiteUrl?.toLowerCase().includes(q);
-        if (!matchesName && !matchesPhone && !matchesEmail && !matchesWebsite) {
-          return false;
-        }
-      }
-      if (sourceFilter !== "ALL" && r.primarySource !== sourceFilter) {
-        return false;
-      }
-      if (relevanceFilter !== "ALL" && r.relevanceDecision !== relevanceFilter) {
-        return false;
-      }
-      if (qualificationFilter !== "ALL" && r.qualificationState !== qualificationFilter) {
-        return false;
-      }
-      if (requirePhone && !r.contactSummary.hasPhone) return false;
-      if (requireEmail && !r.contactSummary.hasEmail) return false;
-      return true;
-    });
-  }, [results, searchTerm, sourceFilter, relevanceFilter, qualificationFilter, requirePhone, requireEmail]);
-  const sortedResults = (0, import_react3.useMemo)(() => {
-    const list = [...filteredResults];
-    list.sort((a, b) => {
-      switch (sortBy) {
-        case "NAME_ASC":
-          return a.displayName.localeCompare(b.displayName);
-        case "NAME_DESC":
-          return b.displayName.localeCompare(a.displayName);
-        case "SOURCE":
-          return a.primarySource.localeCompare(b.primarySource) || a.displayName.localeCompare(b.displayName);
-        case "QUALIFICATION":
-          return a.qualificationState.localeCompare(b.qualificationState) || a.displayName.localeCompare(b.displayName);
-        default:
-          return 0;
-      }
-    });
-    return list;
-  }, [filteredResults, sortBy]);
-  const totalPages = Math.max(1, Math.ceil(sortedResults.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
-  const paginatedResults = (0, import_react3.useMemo)(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return sortedResults.slice(start, start + PAGE_SIZE);
-  }, [sortedResults, currentPage]);
-  const allFilteredSelected = paginatedResults.length > 0 && paginatedResults.every((r) => selectedRecordIds.has(r.recordId));
-  const handleToggleSelectAll = () => {
-    if (allFilteredSelected) {
-      onClearSelection();
-    } else {
-      onSelectAll(paginatedResults.map((r) => r.recordId));
-    }
-  };
-  return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-col gap-3", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "p-3 bg-slate-900 border border-slate-800 rounded-lg flex flex-col gap-2.5", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "relative flex-1", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "absolute left-2.5 top-2.5 text-xs text-slate-500", "aria-hidden": "true", children: "\u{1F50D}" }),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
-            "input",
-            {
-              type: "text",
-              value: searchTerm,
-              onChange: (e) => {
-                setSearchTerm(e.target.value);
-                setPage(1);
-              },
-              placeholder: "Search eligible business names, emails, phones, domains...",
-              className: "w-full pl-8 pr-3 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400",
-              "aria-label": "Search results"
-            }
-          )
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
-          "button",
-          {
-            type: "button",
-            onClick: onOpenExportModal,
-            disabled: results.length === 0,
-            className: `px-3 py-1.5 text-xs font-semibold rounded transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 ${results.length > 0 ? "bg-sky-600 hover:bg-sky-500 text-white" : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"}`,
-            children: [
-              /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u2B73" }),
-              " Export (",
-              selectedRecordIds.size > 0 ? selectedRecordIds.size : results.length,
-              ")"
-            ]
-          }
-        )
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-wrap items-center justify-between gap-2 text-xs", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-wrap items-center gap-1.5", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
-            "select",
-            {
-              value: sourceFilter,
-              onChange: (e) => {
-                setSourceFilter(e.target.value);
-                setPage(1);
-              },
-              className: "px-2 py-1 bg-slate-950 border border-slate-700 rounded text-slate-300 text-xs focus:outline-none focus:ring-1 focus:ring-sky-400",
-              "aria-label": "Filter by source",
-              children: [
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "ALL", children: "All Sources" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "META", children: "Meta Ad Library" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "GOOGLE_MAPS", children: "Google Maps" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "WEBSITE", children: "Website" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "USER_PROVIDED", children: "User Provided" })
-              ]
-            }
-          ),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
-            "select",
-            {
-              value: relevanceFilter,
-              onChange: (e) => {
-                setRelevanceFilter(e.target.value);
-                setPage(1);
-              },
-              className: "px-2 py-1 bg-slate-950 border border-slate-700 rounded text-slate-300 text-xs focus:outline-none focus:ring-1 focus:ring-sky-400",
-              "aria-label": "Filter by relevance",
-              children: [
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "ALL", children: "All Relevance" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "RELEVANT", children: "Relevant Only" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "UNCERTAIN", children: "Uncertain Only" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "NOT_RELEVANT", children: "Not Relevant" })
-              ]
-            }
-          ),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
-            "select",
-            {
-              value: qualificationFilter,
-              onChange: (e) => {
-                setQualificationFilter(e.target.value);
-                setPage(1);
-              },
-              className: "px-2 py-1 bg-slate-950 border border-slate-700 rounded text-slate-300 text-xs focus:outline-none focus:ring-1 focus:ring-sky-400",
-              "aria-label": "Filter by qualification",
-              children: [
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "ALL", children: "All Qualification" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "QUALIFIED", children: "Qualified" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "NOT_QUALIFIED", children: "Not Qualified" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "UNCERTAIN", children: "Uncertain" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "BLOCKED", children: "Blocked" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "NOT_STARTED", children: "Not Started" })
-              ]
-            }
-          ),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("label", { className: "flex items-center gap-1 text-[11px] text-slate-400 cursor-pointer select-none", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
-              "input",
-              {
-                type: "checkbox",
-                checked: requirePhone,
-                onChange: (e) => {
-                  setRequirePhone(e.target.checked);
-                  setPage(1);
-                },
-                className: "rounded border-slate-700 bg-slate-950 text-sky-500 focus:ring-0"
-              }
-            ),
-            "Phone"
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("label", { className: "flex items-center gap-1 text-[11px] text-slate-400 cursor-pointer select-none", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
-              "input",
-              {
-                type: "checkbox",
-                checked: requireEmail,
-                onChange: (e) => {
-                  setRequireEmail(e.target.checked);
-                  setPage(1);
-                },
-                className: "rounded border-slate-700 bg-slate-950 text-sky-500 focus:ring-0"
-              }
-            ),
-            "Email"
-          ] })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-1", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-[11px] text-slate-500", children: "Sort:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
-            "select",
-            {
-              value: sortBy,
-              onChange: (e) => setSortBy(e.target.value),
-              className: "px-2 py-1 bg-slate-950 border border-slate-700 rounded text-slate-300 text-xs focus:outline-none focus:ring-1 focus:ring-sky-400",
-              "aria-label": "Sort results by",
-              children: [
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "NAME_ASC", children: "Name (A-Z)" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "NAME_DESC", children: "Name (Z-A)" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "SOURCE", children: "Source" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "QUALIFICATION", children: "Qualification" })
-              ]
-            }
-          )
-        ] })
-      ] })
-    ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center justify-between text-xs text-slate-400 px-1", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
-          "input",
-          {
-            type: "checkbox",
-            checked: allFilteredSelected,
-            onChange: handleToggleSelectAll,
-            className: "rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-0",
-            "aria-label": "Select all on this page"
-          }
-        ),
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { children: [
-          "Showing ",
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("strong", { children: paginatedResults.length }),
-          " of ",
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("strong", { children: sortedResults.length }),
-          " records",
-          results.length !== sortedResults.length && ` (filtered from ${results.length})`
-        ] })
-      ] }),
-      selectedRecordIds.size > 0 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "text-sky-300 font-semibold text-[11px]", children: [
-          selectedRecordIds.size,
-          " selected"
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
-          "button",
-          {
-            type: "button",
-            onClick: onClearSelection,
-            className: "text-[11px] text-slate-400 hover:text-slate-200 underline focus:outline-none",
-            children: "Clear"
-          }
-        )
-      ] })
-    ] }),
-    paginatedResults.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "p-8 text-center bg-slate-900/60 border border-slate-800 rounded-lg", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-2xl block mb-1", children: "\u{1F50D}" }),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("p", { className: "text-xs font-semibold text-slate-300 mb-0.5", children: results.length === 0 ? "No Research Results Available" : "No Matching Leads Found" }),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("p", { className: "text-[11px] text-slate-500", children: results.length === 0 ? "Research data not available. Start a research run to discover leads." : "Try relaxing your search terms or filter criteria." })
-    ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "flex flex-col gap-1.5", role: "list", "aria-label": "Research results list", children: paginatedResults.map((r) => {
-      const isSelected = selectedRecordIds.has(r.recordId);
-      return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
-        "div",
-        {
-          role: "listitem",
-          onClick: () => onInspectRecord(r.recordId),
-          className: `p-3 rounded-lg border transition-all cursor-pointer flex flex-col gap-2 ${isSelected ? "bg-slate-850 border-sky-500/50 shadow-sm" : "bg-slate-900 border-slate-850 hover:border-slate-700 hover:bg-slate-850/80"}`,
-          children: [
-            /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-start justify-between gap-2", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-start gap-2.5", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
-                  "input",
-                  {
-                    type: "checkbox",
-                    checked: isSelected,
-                    onClick: (e) => e.stopPropagation(),
-                    onChange: () => onToggleSelect(r.recordId),
-                    className: "mt-1 rounded border-slate-700 bg-slate-950 text-sky-500 focus:ring-0",
-                    "aria-label": `Select ${r.displayName}`
-                  }
-                ),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("h4", { className: "text-sm font-semibold text-slate-100 leading-tight hover:text-sky-300", children: r.displayName }),
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-1.5 mt-1 text-[11px] text-slate-400", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "font-mono text-slate-500", children: r.primarySource }),
-                    r.isMixedProvenance && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "px-1 py-0.2 text-[9px] font-semibold bg-sky-950 text-sky-300 border border-sky-500/30 rounded", children: "MIXED" }),
-                    r.geographicContext && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(import_jsx_runtime7.Fragment, { children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u2022" }),
-                      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: r.geographicContext })
-                    ] })
-                  ] })
-                ] })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-wrap items-center gap-1.5 justify-end", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(StatusBadge, { status: r.relevanceDecision, size: "sm" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(StatusBadge, { status: r.qualificationState, size: "sm" }),
-                r.isRestricted && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
-                  "span",
-                  {
-                    className: "px-1.5 py-0.5 text-[10px] font-semibold text-purple-300 bg-purple-950/60 border border-purple-500/40 rounded",
-                    title: "Restricted by source policy (Not exportable or persistable)",
-                    children: "\u2298 RESTRICTED"
-                  }
-                )
-              ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800/60", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-3", children: [
-                r.websiteUrl ? /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "flex items-center gap-1 text-slate-300 truncate max-w-[160px]", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u{1F310}" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "truncate", children: r.websiteUrl.replace(/^https?:\/\//, "") })
-                ] }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-slate-600", children: "No website" }),
-                r.contactSummary.phoneText && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "flex items-center gap-1 text-slate-300", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u{1F4DE}" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: r.contactSummary.phoneText })
-                ] }),
-                r.contactSummary.emailText && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "flex items-center gap-1 text-slate-300", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u2709" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: r.contactSummary.emailText })
-                ] })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-sky-400 font-medium text-[11px] hover:underline", children: "Inspect Dossier \u2192" })
-            ] })
-          ]
-        },
-        r.recordId
-      );
-    }) }),
-    totalPages > 1 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center justify-between p-2 text-xs text-slate-400 bg-slate-900 border border-slate-800 rounded-lg", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
-        "button",
-        {
-          type: "button",
-          disabled: currentPage <= 1,
-          onClick: () => setPage((p) => Math.max(1, p - 1)),
-          className: "px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none",
-          children: "\u2190 Previous"
-        }
-      ),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { children: [
-        "Page ",
-        currentPage,
-        " of ",
-        totalPages
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
-        "button",
-        {
-          type: "button",
-          disabled: currentPage >= totalPages,
-          onClick: () => setPage((p) => Math.min(totalPages, p + 1)),
-          className: "px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none",
-          children: "Next \u2192"
-        }
-      )
-    ] })
-  ] });
-};
 
-// src/extension/ui/components/ResultDetailDrawer.tsx
-var import_react4 = __toESM(require_react(), 1);
+// src/extension/ui/humanLabels.ts
+function toFriendlyStatus(status) {
+  if (!status) return "Not available";
+  const norm = status.trim().toUpperCase();
+  switch (norm) {
+    // Qualification States
+    case "QUALIFIED":
+      return "Qualified";
+    case "NOT_QUALIFIED":
+      return "Does not meet current criteria";
+    case "UNCERTAIN":
+      return "Needs review";
+    case "BLOCKED":
+      return "Unavailable due to policy restrictions";
+    case "NOT_STARTED":
+      return "Not evaluated";
+    case "DISQUALIFIED":
+      return "Does not meet current criteria";
+    // Freshness & Change States
+    case "CURRENT":
+      return "Recently observed";
+    case "STALE":
+      return "May be outdated";
+    case "UNKNOWN":
+      return "Not enough information";
+    case "CONTRADICTORY":
+      return "Conflicting information found";
+    case "OBSERVED":
+      return "Observed";
+    case "NOT_OBSERVED_THIS_RUN":
+      return "Not observed this run";
+    case "CHANGED":
+      return "Updated value observed";
+    // Relevance States
+    case "RELEVANT":
+      return "Relevant";
+    case "NOT_RELEVANT":
+      return "Not relevant";
+    // Criteria outcomes
+    case "PASS":
+      return "Meets requirement";
+    case "FAIL":
+      return "Does not meet requirement";
+    // Website Verification States
+    case "VERIFIED_BUSINESS_WEBSITE":
+    case "WEBSITE_VERIFIED_BUSINESS_SITE":
+      return "Verified business website";
+    case "NOT_OBSERVED":
+    case "WEBSITE_NOT_FOUND":
+      return "Website not observed";
+    case "WEBSITE_UNCERTAIN":
+      return "Website needs review";
+    case "WEBSITE_PRESENT_UNVERIFIED":
+      return "Website unverified";
+    // Entity Types
+    case "LOCAL_BUSINESS":
+      return "Local Business";
+    case "PARENT_ORGANIZATION":
+      return "Parent Organization";
+    case "BRANCH":
+      return "Branch Location";
+    case "ONLINE_BUSINESS":
+      return "Online Business";
+    case "GENERAL_BUSINESS":
+      return "General Business";
+    // Operational Status
+    case "OPERATIONAL":
+      return "Operational";
+    case "PERMANENTLY_CLOSED":
+      return "Permanently Closed";
+    case "TEMPORARILY_CLOSED":
+      return "Temporarily Closed";
+    // Contact Categories
+    case "OPERATIONAL_ROLE":
+      return "Operational Role";
+    case "NAMED_INDIVIDUAL":
+      return "Named Individual";
+    case "GENERAL_INQUIRY":
+      return "General Inquiry";
+    // Sources
+    case "META":
+      return "Meta Ad Library";
+    case "WEBSITE":
+      return "Public Website";
+    case "GOOGLE_MAPS":
+      return "Restricted Google";
+    case "USER_PROVIDED":
+      return "User Provided";
+    default:
+      return status.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+}
+function getSourceBadgeInfo(sourceType) {
+  switch (sourceType?.toUpperCase()) {
+    case "GOOGLE_MAPS":
+      return {
+        sourceType: "GOOGLE_MAPS",
+        label: "Restricted Google",
+        isRestricted: true,
+        badgeClass: "text-purple-300 bg-purple-950/60 border-purple-500/40"
+      };
+    case "WEBSITE":
+      return {
+        sourceType: "WEBSITE",
+        label: "Website",
+        isRestricted: false,
+        badgeClass: "text-emerald-300 bg-emerald-950/60 border-emerald-500/40"
+      };
+    case "META":
+      return {
+        sourceType: "META",
+        label: "Meta",
+        isRestricted: false,
+        badgeClass: "text-sky-300 bg-sky-950/60 border-sky-500/40"
+      };
+    case "USER_PROVIDED":
+      return {
+        sourceType: "USER_PROVIDED",
+        label: "User Provided",
+        isRestricted: false,
+        badgeClass: "text-slate-300 bg-slate-800 border-slate-700"
+      };
+    default:
+      return {
+        sourceType: sourceType || "PUBLIC",
+        label: sourceType || "Public Source",
+        isRestricted: false,
+        badgeClass: "text-slate-300 bg-slate-800 border-slate-700"
+      };
+  }
+}
 
 // src/extension/ui/security.ts
 function isValidExternalUrl(url) {
@@ -18449,7 +18152,529 @@ function sanitizePassiveText(text, maxLength = 1e3) {
   return bounded.trim();
 }
 
+// src/extension/ui/components/ResultsTableView.tsx
+var import_jsx_runtime7 = __toESM(require_jsx_runtime(), 1);
+var ResultsTableView = ({
+  results,
+  selectedRecordIds,
+  onToggleSelect,
+  onSelectAll,
+  onClearSelection,
+  onInspectRecord,
+  onOpenExportModal
+}) => {
+  const [searchTerm, setSearchTerm] = (0, import_react3.useState)("");
+  const [sourceFilter, setSourceFilter] = (0, import_react3.useState)("ALL");
+  const [qualificationFilter, setQualificationFilter] = (0, import_react3.useState)("ALL");
+  const [freshnessFilter, setFreshnessFilter] = (0, import_react3.useState)("ALL");
+  const [categoryFilter, setCategoryFilter] = (0, import_react3.useState)("ALL");
+  const [requirePhone, setRequirePhone] = (0, import_react3.useState)(false);
+  const [requireEmail, setRequireEmail] = (0, import_react3.useState)(false);
+  const [requireWebsite, setRequireWebsite] = (0, import_react3.useState)(false);
+  const [requirePerson, setRequirePerson] = (0, import_react3.useState)(false);
+  const [sortBy, setSortBy] = (0, import_react3.useState)("NAME_ASC");
+  const [page, setPage] = (0, import_react3.useState)(1);
+  const PAGE_SIZE = 50;
+  const availableCategories = (0, import_react3.useMemo)(() => {
+    const set = /* @__PURE__ */ new Set();
+    for (const r of results) {
+      if (r.category) set.add(r.category);
+    }
+    return Array.from(set).sort();
+  }, [results]);
+  const filteredResults = (0, import_react3.useMemo)(() => {
+    return results.filter((r) => {
+      if (searchTerm.trim() !== "") {
+        const q = searchTerm.toLowerCase();
+        const matchesName = r.displayName.toLowerCase().includes(q);
+        const matchesPhone = r.contactSummary.phoneText?.toLowerCase().includes(q);
+        const matchesEmail = r.contactSummary.emailText?.toLowerCase().includes(q);
+        const matchesWebsite = r.websiteUrl?.toLowerCase().includes(q);
+        const matchesCategory = r.category?.toLowerCase().includes(q);
+        const matchesLocation = r.geographicContext?.toLowerCase().includes(q);
+        const matchesPeople = (r.canonicalRecord?.people?.publicPeople || []).some(
+          (p) => p.name?.toLowerCase().includes(q) || p.canonicalName?.toLowerCase().includes(q)
+        );
+        if (!matchesName && !matchesPhone && !matchesEmail && !matchesWebsite && !matchesCategory && !matchesLocation && !matchesPeople) {
+          return false;
+        }
+      }
+      if (sourceFilter !== "ALL") {
+        const hasSource = r.sourceBadges ? r.sourceBadges.some((b) => b.sourceType === sourceFilter) : r.primarySource === sourceFilter;
+        if (!hasSource) return false;
+      }
+      if (qualificationFilter !== "ALL" && r.qualificationState !== qualificationFilter) {
+        return false;
+      }
+      if (freshnessFilter !== "ALL") {
+        const freshState = r.dataSignals?.freshness || "UNKNOWN";
+        if (freshState !== freshnessFilter) return false;
+      }
+      if (categoryFilter !== "ALL" && r.category !== categoryFilter) {
+        return false;
+      }
+      if (requirePhone && !r.contactSummary.hasPhone) return false;
+      if (requireEmail && !r.contactSummary.hasEmail) return false;
+      if (requireWebsite && !r.dataSignals?.websiteVerified) return false;
+      if (requirePerson && !r.dataSignals?.publicPersonAvailable) return false;
+      return true;
+    });
+  }, [
+    results,
+    searchTerm,
+    sourceFilter,
+    qualificationFilter,
+    freshnessFilter,
+    categoryFilter,
+    requirePhone,
+    requireEmail,
+    requireWebsite,
+    requirePerson
+  ]);
+  const sortedResults = (0, import_react3.useMemo)(() => {
+    const list = [...filteredResults];
+    list.sort((a, b) => {
+      let diff = 0;
+      switch (sortBy) {
+        case "NAME_ASC":
+          diff = a.displayName.localeCompare(b.displayName);
+          break;
+        case "NAME_DESC":
+          diff = b.displayName.localeCompare(a.displayName);
+          break;
+        case "LOCATION":
+          diff = (a.geographicContext || "").localeCompare(b.geographicContext || "");
+          break;
+        case "QUALIFICATION":
+          diff = a.qualificationState.localeCompare(b.qualificationState);
+          break;
+        case "COMPLETENESS": {
+          const compA = a.qualityMetrics?.completenessPercent || 0;
+          const compB = b.qualityMetrics?.completenessPercent || 0;
+          diff = compB - compA;
+          break;
+        }
+        case "CONTACT_COMPLETENESS": {
+          const compA = a.qualityMetrics?.contactCompletenessPercent || 0;
+          const compB = b.qualityMetrics?.contactCompletenessPercent || 0;
+          diff = compB - compA;
+          break;
+        }
+        case "LAST_OBSERVED": {
+          const tA = a.lastObservedText ? new Date(a.lastObservedText).getTime() : 0;
+          const tB = b.lastObservedText ? new Date(b.lastObservedText).getTime() : 0;
+          diff = tB - tA;
+          break;
+        }
+        case "SOURCE":
+          diff = a.primarySource.localeCompare(b.primarySource);
+          break;
+        default:
+          diff = 0;
+      }
+      return diff !== 0 ? diff : (a.entityId || a.recordId).localeCompare(b.entityId || b.recordId);
+    });
+    return list;
+  }, [filteredResults, sortBy]);
+  const totalPages = Math.max(1, Math.ceil(sortedResults.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paginatedResults = (0, import_react3.useMemo)(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return sortedResults.slice(start, start + PAGE_SIZE);
+  }, [sortedResults, currentPage]);
+  const allFilteredSelected = paginatedResults.length > 0 && paginatedResults.every((r) => selectedRecordIds.has(r.entityId) || selectedRecordIds.has(r.recordId));
+  const handleToggleSelectAll = () => {
+    if (allFilteredSelected) {
+      onClearSelection();
+    } else {
+      onSelectAll(paginatedResults.map((r) => r.entityId || r.recordId));
+    }
+  };
+  return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-col gap-3", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "p-3 bg-slate-900 border border-slate-800 rounded-lg flex flex-col gap-2.5", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "relative flex-1", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "absolute left-2.5 top-2.5 text-xs text-slate-500", "aria-hidden": "true", children: "\u{1F50D}" }),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+            "input",
+            {
+              type: "text",
+              value: searchTerm,
+              onChange: (e) => {
+                setSearchTerm(e.target.value);
+                setPage(1);
+              },
+              placeholder: "Search eligible businesses, emails, phones, domains, categories...",
+              className: "w-full pl-8 pr-3 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400",
+              "aria-label": "Search results"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+          "button",
+          {
+            type: "button",
+            onClick: onOpenExportModal,
+            disabled: results.length === 0,
+            className: `px-3 py-1.5 text-xs font-semibold rounded transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 cursor-pointer ${results.length > 0 ? "bg-sky-600 hover:bg-sky-500 text-white" : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"}`,
+            children: [
+              /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u2B73" }),
+              " Export (",
+              selectedRecordIds.size > 0 ? selectedRecordIds.size : results.length,
+              ")"
+            ]
+          }
+        )
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-wrap items-center justify-between gap-2 text-xs", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-wrap items-center gap-1.5", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+            "select",
+            {
+              value: qualificationFilter,
+              onChange: (e) => {
+                setQualificationFilter(e.target.value);
+                setPage(1);
+              },
+              className: "px-2 py-1 bg-slate-950 border border-slate-700 rounded text-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-400",
+              "aria-label": "Filter by qualification status",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "ALL", children: "All Qualifications" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "QUALIFIED", children: "Qualified" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "NOT_QUALIFIED", children: "Does not meet criteria" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "UNCERTAIN", children: "Needs review" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "BLOCKED", children: "Unavailable" })
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+            "select",
+            {
+              value: sourceFilter,
+              onChange: (e) => {
+                setSourceFilter(e.target.value);
+                setPage(1);
+              },
+              className: "px-2 py-1 bg-slate-950 border border-slate-700 rounded text-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-400",
+              "aria-label": "Filter by source",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "ALL", children: "All Sources" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "META", children: "Meta" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "WEBSITE", children: "Website" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "GOOGLE_MAPS", children: "Restricted Google" })
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+            "select",
+            {
+              value: freshnessFilter,
+              onChange: (e) => {
+                setFreshnessFilter(e.target.value);
+                setPage(1);
+              },
+              className: "px-2 py-1 bg-slate-950 border border-slate-700 rounded text-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-400",
+              "aria-label": "Filter by data freshness",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "ALL", children: "All Freshness" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "CURRENT", children: "Recently observed" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "STALE", children: "May be outdated" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "UNKNOWN", children: "Not enough info" })
+              ]
+            }
+          ),
+          availableCategories.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+            "select",
+            {
+              value: categoryFilter,
+              onChange: (e) => {
+                setCategoryFilter(e.target.value);
+                setPage(1);
+              },
+              className: "px-2 py-1 bg-slate-950 border border-slate-700 rounded text-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-400 max-w-[140px]",
+              "aria-label": "Filter by business category",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "ALL", children: "All Categories" }),
+                availableCategories.map((cat) => /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: cat, children: cat }, cat))
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("label", { className: "flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer ml-1", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+              "input",
+              {
+                type: "checkbox",
+                checked: requirePhone,
+                onChange: (e) => {
+                  setRequirePhone(e.target.checked);
+                  setPage(1);
+                },
+                className: "rounded border-slate-700 bg-slate-950 text-sky-500 focus:ring-0"
+              }
+            ),
+            "Phone"
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("label", { className: "flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+              "input",
+              {
+                type: "checkbox",
+                checked: requireEmail,
+                onChange: (e) => {
+                  setRequireEmail(e.target.checked);
+                  setPage(1);
+                },
+                className: "rounded border-slate-700 bg-slate-950 text-sky-500 focus:ring-0"
+              }
+            ),
+            "Email"
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("label", { className: "flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+              "input",
+              {
+                type: "checkbox",
+                checked: requireWebsite,
+                onChange: (e) => {
+                  setRequireWebsite(e.target.checked);
+                  setPage(1);
+                },
+                className: "rounded border-slate-700 bg-slate-950 text-sky-500 focus:ring-0"
+              }
+            ),
+            "Website"
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("label", { className: "flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+              "input",
+              {
+                type: "checkbox",
+                checked: requirePerson,
+                onChange: (e) => {
+                  setRequirePerson(e.target.checked);
+                  setPage(1);
+                },
+                className: "rounded border-slate-700 bg-slate-950 text-sky-500 focus:ring-0"
+              }
+            ),
+            "Person"
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-1.5 ml-auto", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-slate-500 text-[11px]", children: "Sort:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+            "select",
+            {
+              value: sortBy,
+              onChange: (e) => setSortBy(e.target.value),
+              className: "px-2 py-1 bg-slate-950 border border-slate-700 rounded text-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-400 text-xs",
+              "aria-label": "Sort records",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "NAME_ASC", children: "Name (A-Z)" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "NAME_DESC", children: "Name (Z-A)" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "LOCATION", children: "Location" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "QUALIFICATION", children: "Qualification" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "COMPLETENESS", children: "Completeness" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "CONTACT_COMPLETENESS", children: "Contact Depth" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "LAST_OBSERVED", children: "Recently Observed" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "SOURCE", children: "Source" })
+              ]
+            }
+          )
+        ] })
+      ] })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center justify-between px-1 text-xs text-slate-400", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-3", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("label", { className: "flex items-center gap-1.5 cursor-pointer", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+            "input",
+            {
+              type: "checkbox",
+              checked: allFilteredSelected,
+              onChange: handleToggleSelectAll,
+              className: "rounded border-slate-700 bg-slate-950 text-sky-500 focus:ring-0",
+              "aria-label": "Select all visible records"
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-[11px]", children: "Select Visible" })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-[11px] text-slate-500", children: "\u2022" }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "text-[11px]", children: [
+          "Showing ",
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("strong", { children: paginatedResults.length }),
+          " of ",
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("strong", { children: sortedResults.length }),
+          " records",
+          results.length !== sortedResults.length && ` (filtered from ${results.length})`
+        ] })
+      ] }),
+      selectedRecordIds.size > 0 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "text-sky-300 font-semibold text-[11px]", children: [
+          selectedRecordIds.size,
+          " selected"
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+          "button",
+          {
+            type: "button",
+            onClick: onClearSelection,
+            className: "text-[11px] text-slate-400 hover:text-slate-200 underline focus:outline-none cursor-pointer",
+            children: "Clear"
+          }
+        )
+      ] })
+    ] }),
+    paginatedResults.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "p-8 text-center bg-slate-900/60 border border-slate-800 rounded-lg", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-2xl block mb-1", children: "\u{1F50D}" }),
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("p", { className: "text-xs font-semibold text-slate-300 mb-0.5", children: results.length === 0 ? "No Research Results Available" : "No Matching Businesses Found" }),
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("p", { className: "text-[11px] text-slate-500", children: results.length === 0 ? "Data not available. Start a research run to discover leads." : "Try adjusting your search terms or relaxing your filter criteria." })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "flex flex-col gap-2", role: "list", "aria-label": "Research results list", children: paginatedResults.map((r) => {
+      const isSelected = selectedRecordIds.has(r.entityId) || selectedRecordIds.has(r.recordId);
+      const safeWeb = getSafeExternalUrl(r.websiteUrl);
+      return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+        "div",
+        {
+          role: "listitem",
+          onClick: () => onInspectRecord(r.recordId),
+          className: `p-3 rounded-lg border transition-all cursor-pointer flex flex-col gap-2 ${isSelected ? "bg-slate-850 border-sky-500/50 shadow-sm" : "bg-slate-900 border-slate-800 hover:border-slate-700 hover:bg-slate-850/80"}`,
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-start justify-between gap-2", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-start gap-2.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+                  "input",
+                  {
+                    type: "checkbox",
+                    checked: isSelected,
+                    onClick: (e) => e.stopPropagation(),
+                    onChange: () => onToggleSelect(r.entityId || r.recordId),
+                    className: "mt-1 rounded border-slate-700 bg-slate-950 text-sky-500 focus:ring-0 cursor-pointer",
+                    "aria-label": `Select ${r.displayName}`
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("h4", { className: "text-sm font-semibold text-slate-100 leading-tight hover:text-sky-300", children: r.displayName }),
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-1.5 flex-wrap mt-1 text-[11px] text-slate-400", children: [
+                    r.category && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-slate-300 font-medium", children: r.category }),
+                    r.geographicContext && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(import_jsx_runtime7.Fragment, { children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-slate-600", children: "\u2022" }),
+                      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { children: [
+                        "\u{1F4CD} ",
+                        r.geographicContext
+                      ] })
+                    ] }),
+                    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-slate-600", children: "\u2022" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "flex items-center gap-1", children: r.sourceBadges && r.sourceBadges.length > 0 ? r.sourceBadges.map((badge, bIdx) => /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+                      "span",
+                      {
+                        className: `px-1.5 py-0.2 text-[9px] font-semibold rounded border ${badge.isRestricted ? "text-purple-300 bg-purple-950/60 border-purple-500/40" : badge.sourceType === "WEBSITE" ? "text-emerald-300 bg-emerald-950/60 border-emerald-500/40" : "text-sky-300 bg-sky-950/60 border-sky-500/40"}`,
+                        children: badge.label
+                      },
+                      bIdx
+                    )) : /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "font-mono text-slate-500 text-[10px]", children: r.primarySource }) })
+                  ] })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-wrap items-center gap-1.5 justify-end", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+                  StatusBadge,
+                  {
+                    status: r.qualificationState,
+                    customLabel: r.friendlyQualificationState || toFriendlyStatus(r.qualificationState),
+                    size: "sm"
+                  }
+                ),
+                r.isRestricted && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+                  "span",
+                  {
+                    className: "px-1.5 py-0.5 text-[10px] font-semibold text-purple-300 bg-purple-950/60 border border-purple-500/40 rounded",
+                    title: "Restricted by source policy (Not exportable or persistable)",
+                    children: "\u2298 RESTRICTED"
+                  }
+                )
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-wrap items-center justify-between text-[11px] text-slate-400 pt-1.5 border-t border-slate-800/60 gap-2", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-wrap items-center gap-3", children: [
+                r.contactSummary.hasPhone ? /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "flex items-center gap-1 font-mono text-slate-300", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u{1F4DE}" }),
+                  " ",
+                  r.contactSummary.phoneText
+                ] }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-slate-600", children: "No phone" }),
+                r.contactSummary.hasEmail ? /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "flex items-center gap-1 font-mono text-slate-300", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u2709" }),
+                  " ",
+                  r.contactSummary.emailText
+                ] }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-slate-600", children: "No email" }),
+                safeWeb ? /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "flex items-center gap-1 text-sky-400", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u{1F310}" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "truncate max-w-[150px]", children: safeWeb.replace(/^https?:\/\//, "") }),
+                  r.dataSignals?.websiteVerified && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-emerald-400 font-bold", title: "Verified business website", children: "\u2713" })
+                ] }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-slate-600", children: "No website" }),
+                r.dataSignals?.publicPersonAvailable && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "flex items-center gap-0.5 text-slate-300", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u{1F464}" }),
+                  " Person"
+                ] }),
+                r.dataSignals?.freshness && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: `px-1.5 py-0.2 text-[9px] rounded font-medium ${r.dataSignals.freshness === "CURRENT" ? "bg-slate-800 text-slate-400" : "bg-amber-950/50 text-amber-300 border border-amber-500/30"}`, children: r.dataSignals.freshnessLabel })
+              ] }),
+              r.qualityMetrics && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-2 text-[10px] text-slate-500 ml-auto", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { children: [
+                  "Quality: ",
+                  /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("strong", { className: "text-slate-300", children: [
+                    r.qualityMetrics.completenessPercent,
+                    "%"
+                  ] })
+                ] }),
+                r.qualityMetrics.corroborationCount > 1 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "text-sky-400 font-semibold", children: [
+                  r.qualityMetrics.corroborationCount,
+                  " sources"
+                ] }),
+                r.qualityMetrics.contradictionCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "text-amber-400 font-semibold", children: [
+                  "\u26A0\uFE0F ",
+                  r.qualityMetrics.contradictionCount,
+                  " conflict"
+                ] })
+              ] })
+            ] })
+          ]
+        },
+        r.recordId
+      );
+    }) }),
+    totalPages > 1 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center justify-between p-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-slate-400", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+        "button",
+        {
+          type: "button",
+          disabled: currentPage <= 1,
+          onClick: () => setPage((p) => Math.max(1, p - 1)),
+          className: "px-2.5 py-1 bg-slate-950 border border-slate-700 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800 focus:outline-none",
+          children: "\u2190 Previous"
+        }
+      ),
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { children: [
+        "Page ",
+        currentPage,
+        " of ",
+        totalPages
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+        "button",
+        {
+          type: "button",
+          disabled: currentPage >= totalPages,
+          onClick: () => setPage((p) => Math.min(totalPages, p + 1)),
+          className: "px-2.5 py-1 bg-slate-950 border border-slate-700 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800 focus:outline-none",
+          children: "Next \u2192"
+        }
+      )
+    ] })
+  ] });
+};
+
 // src/extension/ui/components/ResultDetailDrawer.tsx
+var import_react4 = __toESM(require_react(), 1);
 var import_jsx_runtime8 = __toESM(require_jsx_runtime(), 1);
 var ResultDetailDrawer = ({
   isOpen,
@@ -18457,6 +18682,8 @@ var ResultDetailDrawer = ({
   onClose
 }) => {
   const drawerRef = (0, import_react4.useRef)(null);
+  const [expandedConflicts, setExpandedConflicts] = (0, import_react4.useState)(/* @__PURE__ */ new Set());
+  const [expandedFieldEvidence, setExpandedFieldEvidence] = (0, import_react4.useState)(/* @__PURE__ */ new Set());
   (0, import_react4.useEffect)(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
@@ -18471,7 +18698,84 @@ var ResultDetailDrawer = ({
     };
   }, [isOpen, onClose]);
   if (!isOpen || !lead) return null;
-  const safeWebsiteUrl = getSafeExternalUrl(lead.websiteUrl);
+  const safeWebsiteUrl = getSafeExternalUrl(lead.websiteUrl || lead.digitalPresence?.websiteUrl);
+  const toggleConflict = (idx) => {
+    const next = new Set(expandedConflicts);
+    if (next.has(idx)) next.delete(idx);
+    else next.add(idx);
+    setExpandedConflicts(next);
+  };
+  const toggleFieldEvidence = (field) => {
+    const next = new Set(expandedFieldEvidence);
+    if (next.has(field)) next.delete(field);
+    else next.add(field);
+    setExpandedFieldEvidence(next);
+  };
+  const identity = lead.identityDetails || {
+    canonicalBusinessName: lead.displayName,
+    aliases: lead.aliases || [],
+    entityType: "LOCAL_BUSINESS",
+    entityTypeLabel: "Local Business"
+  };
+  const business = lead.businessDetails || {
+    categories: lead.category ? [lead.category] : [],
+    services: [],
+    businessStatus: "Operational"
+  };
+  const location = lead.locationDetails || {
+    address: lead.addresses?.[0]?.addressLine,
+    city: lead.addresses?.[0]?.locality,
+    addresses: (lead.addresses || []).map((a) => a.addressLine)
+  };
+  const digital = lead.digitalPresence || {
+    websiteUrl: safeWebsiteUrl || void 0,
+    socialLinks: lead.socialLinks || []
+  };
+  const contacts = lead.contactsDetails || {
+    emails: (lead.emails || []).map((e) => ({ address: e.address, classification: e.classification, source: e.observation })),
+    phones: (lead.phones || []).map((p) => ({ number: p.number, type: p.type, source: p.observation })),
+    forms: lead.hasContactForm ? ["Observed on Website"] : []
+  };
+  const people = lead.peopleDetails || [];
+  const qualification = lead.qualificationDetails || {
+    finalState: lead.qualificationState,
+    friendlyFinalState: toFriendlyStatus(lead.qualificationState),
+    profileName: lead.qualificationProfileName,
+    explanation: lead.qualificationSummaryExplanation,
+    whyReasons: lead.mandatoryCriteria.filter((c) => c.status === "PASS").map((c) => ({ label: c.name, passed: true, explanation: c.explanation })),
+    potentialIssues: lead.mandatoryCriteria.filter((c) => c.status !== "PASS").map((c) => ({ label: c.name, explanation: c.explanation })),
+    criteria: [...lead.mandatoryCriteria, ...lead.optionalCriteria].map((c) => ({
+      ...c,
+      friendlyStatus: toFriendlyStatus(c.status)
+    }))
+  };
+  const evidence = lead.evidenceDetails || {
+    totalCount: lead.evidenceItems.length,
+    items: lead.evidenceItems.map((e) => ({
+      id: e.id,
+      fact: e.fact,
+      source: e.sourceFamily,
+      sourceUrl: e.pageOrSourceReference,
+      observedAt: lead.updatedAt,
+      isRestricted: e.isRestricted
+    })),
+    fieldEvidence: [],
+    conflicts: []
+  };
+  const freshness = lead.freshnessDetails || {
+    overallState: lead.dataSignals?.freshness || "CURRENT",
+    friendlyLabel: lead.dataSignals?.freshnessLabel || "Recently observed",
+    firstObservedAt: lead.createdAt,
+    lastObservedAt: lead.updatedAt,
+    perSource: []
+  };
+  const quality = lead.qualityDetails || lead.qualityMetrics || {
+    completenessPercent: 75,
+    contactCompletenessPercent: 50,
+    evidenceCoveragePercent: 80,
+    corroborationCount: lead.corroborationCount,
+    contradictionCount: 0
+  };
   return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
     "div",
     {
@@ -18488,21 +18792,42 @@ var ResultDetailDrawer = ({
           children: [
             /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-4 border-b border-slate-800 bg-slate-950 flex items-start justify-between gap-3", children: [
               /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex-1", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center gap-2 mb-1", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(StatusBadge, { status: lead.qualificationState, size: "sm" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(StatusBadge, { status: lead.relevanceDecision, size: "sm" }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex flex-wrap items-center gap-1.5 mb-1.5", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                    StatusBadge,
+                    {
+                      status: lead.qualificationState,
+                      customLabel: qualification.friendlyFinalState,
+                      size: "sm"
+                    }
+                  ),
+                  lead.sourceBadges && lead.sourceBadges.length > 0 ? lead.sourceBadges.map((badge, idx) => /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                    "span",
+                    {
+                      className: `px-1.5 py-0.5 text-[10px] font-semibold rounded border ${badge.isRestricted ? "text-purple-300 bg-purple-950/60 border-purple-500/40" : badge.sourceType === "WEBSITE" ? "text-emerald-300 bg-emerald-950/60 border-emerald-500/40" : "text-sky-300 bg-sky-950/60 border-sky-500/40"}`,
+                      children: badge.label
+                    },
+                    idx
+                  )) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-1.5 py-0.5 text-[10px] font-semibold text-sky-300 bg-sky-950/60 border border-sky-500/40 rounded", children: toFriendlyStatus(lead.primarySource) }),
                   lead.isRestricted && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-1.5 py-0.5 text-[10px] font-semibold text-purple-300 bg-purple-950/60 border border-purple-500/40 rounded", children: "\u2298 RESTRICTED SOURCE" })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h2", { id: "detail-drawer-title", className: "text-base font-bold text-slate-100 leading-snug", children: lead.displayName }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] text-slate-400 mt-0.5 flex items-center gap-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h2", { id: "detail-drawer-title", className: "text-base font-bold text-slate-100 leading-snug", children: identity.canonicalBusinessName }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] text-slate-400 mt-1 flex flex-wrap items-center gap-2", children: [
                   /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
-                    "Entity ID: ",
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("code", { className: "text-slate-300 font-mono", children: lead.entityId.substring(0, 16) })
+                    "Type: ",
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: identity.entityTypeLabel })
                   ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "\u2022" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
-                    "Primary: ",
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: lead.primarySource })
+                  location.city && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(import_jsx_runtime8.Fragment, { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "\u2022" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
+                      "\u{1F4CD} ",
+                      location.city,
+                      location.country ? `, ${location.country}` : ""
+                    ] })
+                  ] }),
+                  business.categories.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(import_jsx_runtime8.Fragment, { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "\u2022" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-sky-300", children: business.categories[0] })
                   ] })
                 ] })
               ] }),
@@ -18511,202 +18836,418 @@ var ResultDetailDrawer = ({
                 {
                   type: "button",
                   onClick: onClose,
-                  className: "p-1.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-400",
+                  className: "p-1.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer",
                   "aria-label": "Close details",
                   children: "\u2715"
                 }
               )
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-4 overflow-y-auto flex flex-col gap-5 text-xs text-slate-300", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "px-4 py-2.5 bg-slate-950/80 border-b border-slate-800 grid grid-cols-4 gap-2 text-center text-xs", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-slate-500 block", children: "Data Completeness" }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("strong", { className: "text-slate-200 text-xs", children: [
+                  quality.completenessPercent,
+                  "%"
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-slate-500 block", children: "Contact Depth" }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("strong", { className: "text-slate-200 text-xs", children: [
+                  quality.contactCompletenessPercent,
+                  "%"
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-slate-500 block", children: "Corroborated Sources" }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-sky-300 text-xs", children: quality.corroborationCount })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-slate-500 block", children: "Contradictions" }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: `text-xs ${quality.contradictionCount > 0 ? "text-amber-400" : "text-slate-400"}`, children: quality.contradictionCount })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-4 overflow-y-auto flex flex-col gap-4 text-xs text-slate-300", children: [
               /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "1. Identity" }),
                 /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "grid grid-cols-2 gap-2 text-[11px]", children: [
                   /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Display Name:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-medium text-slate-200", children: lead.displayName })
-                  ] }),
-                  lead.legalName && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Legal Name:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-medium text-slate-200", children: lead.legalName })
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Canonical Business Name:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-semibold text-slate-100", children: identity.canonicalBusinessName })
                   ] }),
                   /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Identity Confidence:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-medium text-slate-200", children: lead.identityConfidence })
-                  ] })
-                ] })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "2. Sources & Provenance" }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] flex flex-col gap-1", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "Provenance Lineage:" }),
-                    " ",
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: lead.provenanceLineage }),
-                    " (",
-                    lead.provenanceClassification,
-                    ")"
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Entity Classification:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-medium text-slate-200", children: identity.entityTypeLabel })
                   ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-slate-500", children: [
-                      "Contributing Sources (",
-                      lead.contributingSources.length,
-                      "):"
+                  identity.aliases.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "col-span-2", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Known Aliases:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-300", children: identity.aliases.join(", ") })
+                  ] }),
+                  identity.branchInfo && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "col-span-2 p-2 bg-slate-900 rounded border border-slate-800 text-[11px]", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-semibold text-slate-200 block mb-0.5", children: identity.branchInfo.isBranch ? "Branch Location" : "Parent Organization" }),
+                    identity.branchInfo.parentEntityId && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-slate-400 block", children: [
+                      "Parent ID: ",
+                      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("code", { className: "font-mono text-slate-300", children: identity.branchInfo.parentEntityId })
                     ] }),
-                    " ",
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-300", children: lead.contributingSources.join(", ") })
+                    identity.branchInfo.branchSignals && identity.branchInfo.branchSignals.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-slate-400 block mt-0.5", children: [
+                      "Signals: ",
+                      identity.branchInfo.branchSignals.join("; ")
+                    ] })
                   ] })
                 ] })
               ] }),
               /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "3. Relevance (Phase 9)" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(StatusBadge, { status: lead.relevanceDecision, size: "sm" })
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("p", { className: "text-[11px] text-slate-300 leading-relaxed", children: lead.relevanceExplanation }),
-                lead.relevanceMatchedTerms.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center gap-1 flex-wrap mt-1", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-slate-500", children: "Matched Terms:" }),
-                  lead.relevanceMatchedTerms.map((term, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-1.5 py-0.2 text-[10px] bg-slate-800 text-sky-300 rounded font-mono", children: term }, i))
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "2. Business" }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex flex-col gap-1.5 text-[11px]", children: [
+                  business.categories.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Categories:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "flex flex-wrap gap-1 mt-0.5", children: business.categories.map((c, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-2 py-0.5 bg-slate-900 text-sky-300 rounded border border-slate-800 font-medium", children: c }, i)) })
+                  ] }),
+                  business.services.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Identified Services:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "flex flex-wrap gap-1 mt-0.5", children: business.services.map((s, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-1.5 py-0.2 bg-slate-900 text-slate-300 rounded border border-slate-800", children: s }, i)) })
+                  ] }),
+                  business.description && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Business Description:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("p", { className: "text-slate-300 leading-relaxed mt-0.5", children: business.description })
+                  ] }),
+                  business.hours && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Business Hours:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-300 font-mono", children: business.hours })
+                  ] }),
+                  business.serviceAreas && business.serviceAreas.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Service Areas:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-300", children: business.serviceAreas.join(", ") })
+                  ] }),
+                  business.businessStatus && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "Operational Status: " }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: business.businessStatus })
+                  ] })
                 ] })
               ] }),
               /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "4. Website Verification" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(StatusBadge, { status: lead.websiteVerificationStatus, size: "sm" })
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "text-[11px] flex flex-col gap-1", children: safeWebsiteUrl ? /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center gap-1.5", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "URL:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
-                    "a",
-                    {
-                      href: safeWebsiteUrl,
-                      target: "_blank",
-                      rel: "noreferrer noopener",
-                      className: "text-sky-400 hover:underline truncate max-w-sm",
-                      children: [
-                        safeWebsiteUrl,
-                        " \u2197"
-                      ]
-                    }
-                  )
-                ] }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "Website data not available or unverified pointer." }) })
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "3. Location" }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] flex flex-col gap-1", children: [
+                  location.addresses.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1", children: location.addresses.map((addr, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "p-1.5 bg-slate-900 rounded border border-slate-800 text-slate-200 flex items-start gap-1.5", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "\u{1F4CD}" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: addr })
+                  ] }, i)) }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "Physical address data not available." }),
+                  location.city && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "mt-1 text-slate-400", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "Geographic Scope: " }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: [location.city, location.region, location.country].filter(Boolean).join(", ") })
+                  ] }),
+                  location.coordinates && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-slate-500 font-mono text-[10px]", children: [
+                    "Coordinates: ",
+                    location.coordinates
+                  ] })
+                ] })
               ] }),
               /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "5. Contact Information" }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] font-medium text-slate-400 block mb-1", children: "Business Phones:" }),
-                  lead.phones.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1", children: lead.phones.map((p, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "flex items-center justify-between text-[11px] bg-slate-900 p-1.5 rounded border border-slate-800", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "font-mono text-slate-200", children: [
-                      "\u{1F4DE} ",
-                      p.number
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "4. Digital Presence" }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] flex flex-col gap-1.5", children: [
+                  safeWebsiteUrl ? /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center gap-2 p-1.5 bg-slate-900 rounded border border-slate-800", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "Website:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
+                      "a",
+                      {
+                        href: safeWebsiteUrl,
+                        target: "_blank",
+                        rel: "noreferrer noopener",
+                        className: "text-sky-400 hover:underline truncate max-w-sm font-medium",
+                        children: [
+                          safeWebsiteUrl,
+                          " \u2197"
+                        ]
+                      }
+                    ),
+                    lead.dataSignals?.websiteVerified && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-1.5 py-0.2 text-[9px] bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 rounded font-semibold ml-auto", children: "\u2713 VERIFIED" })
+                  ] }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "Website data not available." }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex flex-wrap gap-1.5 mt-0.5", children: [
+                    digital.cms && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "px-1.5 py-0.5 bg-slate-900 text-slate-300 rounded border border-slate-800 text-[10px]", children: [
+                      "CMS: ",
+                      digital.cms
                     ] }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-slate-500", children: p.observation })
+                    digital.ecommerce && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-1.5 py-0.5 bg-sky-950/50 text-sky-300 rounded border border-sky-500/30 text-[10px]", children: "\u{1F6D2} E-Commerce" }),
+                    digital.booking && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-1.5 py-0.5 bg-purple-950/50 text-purple-300 rounded border border-purple-500/30 text-[10px]", children: "\u{1F4C5} Booking Available" }),
+                    digital.chat && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-1.5 py-0.5 bg-emerald-950/50 text-emerald-300 rounded border border-emerald-500/30 text-[10px]", children: "\u{1F4AC} Live Chat" })
+                  ] }),
+                  digital.socialLinks && digital.socialLinks.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block mb-1", children: "Public Profiles:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "flex flex-wrap gap-1.5", children: digital.socialLinks.map((s, i) => {
+                      const safe = getSafeExternalUrl(s.url);
+                      return /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
+                        "a",
+                        {
+                          href: safe || "#",
+                          target: "_blank",
+                          rel: "noreferrer noopener",
+                          className: "px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-sky-300 rounded border border-slate-800 flex items-center gap-1 text-[10px]",
+                          children: [
+                            /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "\u{1F517}" }),
+                            " ",
+                            s.platform
+                          ]
+                        },
+                        i
+                      );
+                    }) })
+                  ] })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "5. Contacts" }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] font-medium text-slate-400 block mb-1", children: "Public Business Phones:" }),
+                  contacts.phones.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1.5", children: contacts.phones.map((p, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "p-2 bg-slate-900 rounded border border-slate-800 text-[11px]", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "font-mono text-slate-100 font-medium", children: [
+                        "\u{1F4DE} ",
+                        p.number
+                      ] }),
+                      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center gap-1.5", children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-slate-400", children: p.type }),
+                        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                          "button",
+                          {
+                            type: "button",
+                            onClick: () => toggleFieldEvidence(`phone_${i}`),
+                            className: "text-[10px] text-sky-400 hover:underline cursor-pointer ml-1",
+                            children: expandedFieldEvidence.has(`phone_${i}`) ? "Hide Source" : "View Source"
+                          }
+                        )
+                      ] })
+                    ] }),
+                    expandedFieldEvidence.has(`phone_${i}`) && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "mt-1.5 p-1.5 bg-slate-950/80 rounded border border-slate-800 text-[10px] text-slate-400 flex flex-col gap-0.5", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                        "Source Attribution: ",
+                        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-300", children: p.source || "Public Web Observation" })
+                      ] }),
+                      p.observedAt && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                        "Observed: ",
+                        p.observedAt
+                      ] }),
+                      p.hasConflict && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "text-amber-400", children: "\u26A0\uFE0F Multiple phone numbers observed across sources" })
+                    ] })
                   ] }, i)) }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] text-slate-500", children: "Public phone data not available." })
                 ] }),
                 /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] font-medium text-slate-400 block mb-1", children: "Business Emails:" }),
-                  lead.emails.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1", children: lead.emails.map((e, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "flex items-center justify-between text-[11px] bg-slate-900 p-1.5 rounded border border-slate-800", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "font-mono text-slate-200", children: [
-                      "\u2709 ",
-                      e.address
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] font-medium text-slate-400 block mb-1", children: "Public Business Emails:" }),
+                  contacts.emails.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1.5", children: contacts.emails.map((e, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "p-2 bg-slate-900 rounded border border-slate-800 text-[11px]", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "font-mono text-slate-100 font-medium", children: [
+                        "\u2709 ",
+                        e.address
+                      ] }),
+                      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center gap-1.5", children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-slate-400", children: e.classification }),
+                        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                          "button",
+                          {
+                            type: "button",
+                            onClick: () => toggleFieldEvidence(`email_${i}`),
+                            className: "text-[10px] text-sky-400 hover:underline cursor-pointer ml-1",
+                            children: expandedFieldEvidence.has(`email_${i}`) ? "Hide Source" : "View Source"
+                          }
+                        )
+                      ] })
                     ] }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-slate-500", children: e.classification })
-                  ] }, i)) }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] text-slate-500", children: "Public business email data not available." })
+                    expandedFieldEvidence.has(`email_${i}`) && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "mt-1.5 p-1.5 bg-slate-950/80 rounded border border-slate-800 text-[10px] text-slate-400 flex flex-col gap-0.5", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                        "Source Attribution: ",
+                        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-300", children: e.source || "Public Web Observation" })
+                      ] }),
+                      e.observedAt && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                        "Observed: ",
+                        e.observedAt
+                      ] }),
+                      e.hasConflict && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "text-amber-400", children: "\u26A0\uFE0F Conflicting email observed" })
+                    ] })
+                  ] }, i)) }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] text-slate-500", children: "Public email data not available." })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] text-slate-400", children: [
+                contacts.forms && contacts.forms.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] text-slate-400 pt-1 border-t border-slate-800/60", children: [
                   /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "Contact Form: " }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: lead.hasContactForm ? "Observed on Website" : "Not Observed" })
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: "Observed on public website" })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "6. Physical Locations" }),
-                lead.addresses.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1 text-[11px]", children: lead.addresses.map((a, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "p-1.5 bg-slate-900 rounded border border-slate-800 text-slate-300", children: [
-                  "\u{1F4CD} ",
-                  a.addressLine,
-                  " ",
-                  a.locality && `\u2014 ${a.locality}`,
-                  " ",
-                  a.isBranch && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-amber-400", children: "(Branch)" })
-                ] }, i)) }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] text-slate-500", children: "Physical address data not available." })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "7. Digital Presence" }),
-                lead.socialLinks.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "flex flex-wrap gap-1.5", children: lead.socialLinks.map((s, i) => {
-                  const safe = getSafeExternalUrl(s.url);
-                  return /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "6. People & Roles" }),
+                people.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1.5 text-[11px]", children: people.map((p, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "p-2 bg-slate-900 rounded border border-slate-800 flex flex-col gap-1", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("strong", { className: "text-slate-100 flex items-center gap-1.5", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "\u{1F464}" }),
+                      " ",
+                      p.name
+                    ] }),
+                    p.titles && p.titles.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-sky-400 font-medium", children: p.titles.join(", ") })
+                  ] }),
+                  p.emails && p.emails.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[10px] text-slate-400 font-mono", children: [
+                    "Email: ",
+                    p.emails.join(", ")
+                  ] }),
+                  p.phones && p.phones.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[10px] text-slate-400 font-mono", children: [
+                    "Phone: ",
+                    p.phones.join(", ")
+                  ] }),
+                  p.linkedInUrl && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
                     "a",
                     {
-                      href: safe || "#",
+                      href: p.linkedInUrl,
                       target: "_blank",
                       rel: "noreferrer noopener",
-                      className: "px-2 py-1 text-[11px] bg-slate-800 hover:bg-slate-700 text-sky-300 rounded border border-slate-700 flex items-center gap-1",
+                      className: "text-[10px] text-sky-400 hover:underline flex items-center gap-1",
                       children: [
                         /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "\u{1F517}" }),
-                        " ",
-                        s.platform
+                        " Public Profile \u2197"
                       ]
-                    },
-                    i
-                  );
-                }) }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] text-slate-500", children: "Social presence data not available." })
+                    }
+                  )
+                ] }, i)) }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] text-slate-500", children: "No public individual roles observed for this business." })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2.5", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "8. Qualification (Phase 12)" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(StatusBadge, { status: lead.qualificationState, size: "sm" })
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "7. Qualification Evaluation" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                    StatusBadge,
+                    {
+                      status: qualification.finalState,
+                      customLabel: qualification.friendlyFinalState,
+                      size: "sm"
+                    }
+                  )
                 ] }),
                 /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] text-slate-400", children: [
                   "Profile: ",
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: lead.qualificationProfileName }),
-                  " (v",
-                  lead.qualificationProfileVersion,
-                  ")",
-                  lead.qualificationScoreText && ` \u2022 Score: ${lead.qualificationScoreText}`
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: qualification.profileName })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("p", { className: "text-[11px] text-slate-300 leading-relaxed", children: lead.qualificationSummaryExplanation }),
-                lead.mandatoryCriteria.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex flex-col gap-1 mt-1", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] font-semibold uppercase text-slate-400", children: "Mandatory Criteria:" }),
-                  lead.mandatoryCriteria.map((c, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between p-1.5 bg-slate-900 rounded border border-slate-800 text-[11px]", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-mono text-slate-300", children: c.name }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(StatusBadge, { status: c.status, size: "sm" })
-                  ] }, i))
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("p", { className: "text-[11px] text-slate-300 leading-relaxed bg-slate-900/60 p-2 rounded border border-slate-800", children: qualification.explanation }),
+                qualification.whyReasons && qualification.whyReasons.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] font-semibold uppercase text-emerald-400 block mb-1", children: "Why Qualified:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1 text-[11px]", children: qualification.whyReasons.map((r, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "flex items-start gap-1.5 text-slate-200", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-emerald-400 font-bold", children: "\u2713" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
+                      r.label,
+                      r.explanation ? ` \u2014 ${r.explanation}` : ""
+                    ] })
+                  ] }, i)) })
+                ] }),
+                qualification.potentialIssues && qualification.potentialIssues.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] font-semibold uppercase text-amber-400 block mb-1", children: "Potential Issues / Observations:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1 text-[11px]", children: qualification.potentialIssues.map((issue, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "flex items-start gap-1.5 text-amber-200", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-amber-400 font-bold", children: "!" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
+                      issue.label,
+                      issue.explanation ? ` \u2014 ${issue.explanation}` : ""
+                    ] })
+                  ] }, i)) })
+                ] }),
+                qualification.criteria && qualification.criteria.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "pt-2 border-t border-slate-800/80 flex flex-col gap-1", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] font-semibold uppercase text-slate-400", children: "Criteria Outcomes:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "space-y-1", children: qualification.criteria.map((c, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-1.5 bg-slate-900 rounded border border-slate-800 text-[11px] flex items-center justify-between", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-200 font-medium", children: c.name }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(StatusBadge, { status: c.status, customLabel: c.friendlyStatus, size: "sm" })
+                  ] }, i)) })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "8. Evidence & Conflicts" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-[10px] text-slate-500", children: [
+                    evidence.totalCount,
+                    " public facts"
+                  ] })
+                ] }),
+                evidence.conflicts && evidence.conflicts.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-2.5 rounded bg-amber-950/30 border border-amber-500/40 flex flex-col gap-2", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-xs font-semibold text-amber-300 flex items-center gap-1.5", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "\u26A0\uFE0F" }),
+                    " Conflicting Information Found (",
+                    evidence.conflicts.length,
+                    ")"
+                  ] }),
+                  evidence.conflicts.map((conf, cIdx) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-2 bg-slate-900/90 rounded border border-amber-500/30 flex flex-col gap-1 text-[11px]", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("strong", { className: "text-slate-100", children: [
+                        conf.field,
+                        " differs between sources"
+                      ] }),
+                      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: () => toggleConflict(cIdx),
+                          className: "text-[10px] text-amber-400 hover:underline cursor-pointer",
+                          children: expandedConflicts.has(cIdx) ? "Collapse" : "Expand Details"
+                        }
+                      )
+                    ] }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("p", { className: "text-[10px] text-slate-400", children: conf.description }),
+                    expandedConflicts.has(cIdx) && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "mt-1 space-y-1 pt-1 border-t border-slate-800", children: conf.conflictingValues.map((cv, vIdx) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-1.5 bg-slate-950 rounded text-[10px] flex items-center justify-between text-slate-300", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "Source: " }),
+                        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: cv.source }),
+                        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "ml-2 font-mono text-sky-300", children: [
+                          '"',
+                          cv.value,
+                          '"'
+                        ] })
+                      ] }),
+                      cv.observedAt && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 text-[9px]", children: cv.observedAt })
+                    ] }, vIdx)) })
+                  ] }, cIdx))
+                ] }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] text-slate-500", children: "No field conflicts detected across public sources." }),
+                evidence.items && evidence.items.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "space-y-1", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] uppercase font-semibold text-slate-400 block mb-0.5", children: "Observed Facts:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1 text-[11px]", children: evidence.items.slice(0, 5).map((ev) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "p-2 bg-slate-900 rounded border border-slate-800 flex flex-col gap-0.5", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between text-[10px] text-slate-400", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-semibold text-slate-300", children: toFriendlyStatus(ev.source) }),
+                      ev.isRestricted && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-purple-400 font-semibold", children: "RESTRICTED" })
+                    ] }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-200", children: ev.fact })
+                  ] }, ev.id)) })
                 ] })
               ] }),
               /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "9. Evidence Ledger" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-[10px] text-slate-500", children: [
-                    lead.evidenceItems.length,
-                    " facts"
-                  ] })
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "9. Data Freshness" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: `px-2 py-0.5 text-[10px] font-semibold rounded border ${freshness.overallState === "CURRENT" ? "text-emerald-400 bg-emerald-950/50 border-emerald-500/40" : "text-amber-400 bg-amber-950/50 border-amber-500/40"}`, children: freshness.friendlyLabel })
                 ] }),
-                lead.evidenceItems.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1.5 text-[11px]", children: lead.evidenceItems.map((ev) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "p-2 bg-slate-900 rounded border border-slate-800/80 flex flex-col gap-0.5", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between text-[10px] text-slate-400", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-semibold text-slate-300", children: ev.sourceFamily }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-mono text-slate-500", children: ev.evidenceType })
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] flex flex-col gap-1", children: [
+                  freshness.lastObservedAt && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "Last Public Observation: " }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: freshness.lastObservedAt })
                   ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-200", children: ev.fact }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-[10px] text-slate-500", children: [
-                    "Ref: ",
-                    ev.pageOrSourceReference
+                  freshness.firstObservedAt && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "First Public Observation: " }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-300", children: freshness.firstObservedAt })
+                  ] }),
+                  freshness.perSource && freshness.perSource.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "mt-1 space-y-1", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] uppercase font-semibold text-slate-400 block", children: "By Source:" }),
+                    freshness.perSource.map((s, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between p-1 bg-slate-900 rounded text-[10px] text-slate-300", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: s.source }),
+                      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-slate-400", children: [
+                        s.friendlyState,
+                        " (",
+                        s.lastObservedAt,
+                        ")"
+                      ] })
+                    ] }, i))
                   ] })
-                ] }, ev.id)) }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] text-slate-500", children: "No granular evidence records bound to this entity." })
+                ] })
               ] }),
               /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "10. Policy & Compliance" }),
                 /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "grid grid-cols-2 gap-2 text-[11px]", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Export Eligibility:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: `font-semibold ${lead.isExportable ? "text-emerald-400" : "text-rose-400"}`, children: lead.isExportable ? "\u2713 EXPORTABLE" : "\u2298 NOT EXPORTABLE" })
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-2 bg-slate-900 rounded border border-slate-800 text-center", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block mb-0.5 text-[10px] uppercase", children: "Export Eligibility" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: `font-semibold ${lead.isExportable ? "text-emerald-400" : "text-rose-400"}`, children: lead.isExportable ? "\u2713 Eligible for Export" : "\u2298 Not Exportable" })
                   ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Persistence Eligibility:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: `font-semibold ${lead.isPersistable ? "text-emerald-400" : "text-rose-400"}`, children: lead.isPersistable ? "\u2713 PERSISTABLE" : "\u2298 NOT PERSISTABLE" })
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-2 bg-slate-900 rounded border border-slate-800 text-center", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block mb-0.5 text-[10px] uppercase", children: "Storage Eligibility" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: `font-semibold ${lead.isPersistable ? "text-emerald-400" : "text-rose-400"}`, children: lead.isPersistable ? "\u2713 Persistable" : "\u2298 Not Persistable" })
                   ] })
                 ] }),
-                lead.isRestricted && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("p", { className: "text-[11px] text-purple-300 bg-purple-950/40 p-2 rounded border border-purple-500/30 mt-1", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { children: "Restriction Notice:" }),
+                lead.isRestricted && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("p", { className: "text-[11px] text-purple-300 bg-purple-950/40 p-2.5 rounded border border-purple-500/30 mt-1 leading-relaxed", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { children: "Policy Notice:" }),
                   " ",
-                  lead.restrictionExplanation || "Contains restricted public source data. Protected by compliance firewall."
+                  lead.restrictionExplanation || "Protected by source compliance policy. Consumer-web records cannot be exported or stored persistently."
                 ] })
               ] })
             ] })
@@ -18758,14 +19299,14 @@ var ExportModal = ({
             {
               type: "button",
               onClick: onCancel,
-              className: "p-1 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 focus:outline-none",
+              className: "p-1 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 focus:outline-none cursor-pointer",
               "aria-label": "Close export dialog",
               children: "\u2715"
             }
           )
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-4 flex flex-col gap-3 text-xs text-slate-300", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("p", { className: "text-[11px] text-slate-400 leading-relaxed", children: "Data is filtered by the LeadNoria policy firewall. Records and fields with restricted consumer-web provenance are protected." }),
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("p", { className: "text-[11px] text-slate-400 leading-relaxed", children: "Data export complies strictly with the LeadNoria source policy firewall. Records with restricted consumer-web provenance are protected and excluded." }),
           /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "grid grid-cols-2 gap-2 text-center", children: [
             /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-2.5 bg-slate-950/60 rounded border border-slate-800", children: [
               /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-[10px] uppercase text-slate-500 block mb-0.5", children: "Selected Records" }),
@@ -18776,17 +19317,27 @@ var ExportModal = ({
               /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-base font-bold text-emerald-300", children: preview.exportableRecordsCount })
             ] })
           ] }),
-          preview.restrictedRecordsCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-2.5 bg-purple-950/40 border border-purple-500/40 rounded text-[11px] text-purple-200", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "font-semibold text-purple-300 block mb-0.5", children: [
-              "\u2298 Policy Exclusions (",
-              preview.restrictedRecordsCount,
-              "):"
-            ] }),
-            preview.policyNotice
+          preview.restrictedRecordsCount > 0 ? /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-2.5 bg-purple-950/40 border border-purple-500/40 rounded text-[11px] text-purple-200", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "font-semibold text-purple-300 block mb-0.5", children: "\u2298 Partial Export Eligibility:" }),
+            "You selected ",
+            preview.totalSelectedRecords,
+            " records. ",
+            preview.restrictedRecordsCount,
+            " are unavailable for export due to source restrictions. ",
+            preview.exportableRecordsCount,
+            " are eligible."
+          ] }) : /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-2 bg-emerald-950/20 border border-emerald-500/30 rounded text-[11px] text-emerald-300", children: [
+            "\u2713 All ",
+            preview.totalSelectedRecords,
+            " selected records satisfy export policy requirements."
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { children: [
             /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-[10px] uppercase tracking-wider text-slate-400 block mb-1", children: "Included Export Fields:" }),
             /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "flex flex-wrap gap-1", children: preview.eligibleFields.map((f) => /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "px-1.5 py-0.2 text-[10px] font-mono bg-slate-800 text-slate-300 rounded", children: f }, f)) })
+          ] }),
+          preview.restrictedFieldsOmitted.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-[10px] uppercase tracking-wider text-slate-500 block mb-1", children: "Restricted Fields Protected:" }),
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("ul", { className: "list-disc list-inside text-[10px] text-slate-400 space-y-0.5", children: preview.restrictedFieldsOmitted.map((rf, i) => /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("li", { children: rf }, i)) })
           ] })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-end gap-2", children: [
@@ -18795,7 +19346,7 @@ var ExportModal = ({
             {
               type: "button",
               onClick: onCancel,
-              className: "px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 rounded transition-colors focus:outline-none",
+              className: "px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 rounded transition-colors focus:outline-none cursor-pointer",
               children: "Cancel"
             }
           ),
@@ -18806,8 +19357,12 @@ var ExportModal = ({
               type: "button",
               disabled: !preview.isExportReady || isExporting,
               onClick: onConfirmExport,
-              className: `px-4 py-1.5 text-xs font-semibold rounded transition-all flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 ${preview.isExportReady && !isExporting ? "bg-sky-600 hover:bg-sky-500 text-white" : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"}`,
-              children: isExporting ? "Exporting..." : `Download CSV (${preview.exportableRecordsCount} leads)`
+              className: `px-4 py-1.5 text-xs font-semibold rounded transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-400 cursor-pointer ${preview.isExportReady && !isExporting ? "bg-emerald-600 hover:bg-emerald-500 text-white" : "bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed opacity-50"}`,
+              children: isExporting ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { children: "Exporting CSV..." }) : /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { children: [
+                "Download CSV (",
+                preview.exportableRecordsCount,
+                ")"
+              ] })
             }
           )
         ] })
@@ -19143,7 +19698,396 @@ var RecoveryBanner = ({
 };
 
 // src/extension/ui/viewModelMappers.ts
+function isCanonicalLeadRecord(record) {
+  return Boolean(
+    record && typeof record === "object" && (record.schemaVersion === "lead-intelligence-v1" || "canonicalEntityId" in record && "canonicalBusinessName" in record && "policy" in record)
+  );
+}
+function canonicalLeadToResultRowViewModel(record) {
+  const recordId = `rec_${record.canonicalEntityId}`;
+  const entityId = record.canonicalEntityId;
+  const displayName = record.canonicalBusinessName.preferredObservedValue || record.canonicalBusinessName.value || "Unknown Business";
+  const category = record.business.categories.value?.[0] || void 0;
+  const rawWeb = record.digital.verifiedWebsite.value || record.digital.domains.value?.[0];
+  const safeWeb = getSafeExternalUrl(rawWeb);
+  const phones = record.contacts.phones || [];
+  const emails = record.contacts.emails || [];
+  const hasPhone = phones.length > 0;
+  const hasEmail = emails.length > 0;
+  const phoneText = phones[0]?.preferredObservedValue || phones[0]?.normalizedValue || phones[0]?.value;
+  const emailText = emails[0]?.preferredObservedValue || emails[0]?.normalizedValue || emails[0]?.value;
+  const sourceBadges = [];
+  const seenSources = /* @__PURE__ */ new Set();
+  if (record.policy.hasMetaLineage) {
+    sourceBadges.push(getSourceBadgeInfo("META"));
+    seenSources.add("META");
+  }
+  if (record.policy.hasWebsiteLineage) {
+    sourceBadges.push(getSourceBadgeInfo("WEBSITE"));
+    seenSources.add("WEBSITE");
+  }
+  if (record.policy.hasGoogleConsumerWebLineage) {
+    sourceBadges.push(getSourceBadgeInfo("GOOGLE_MAPS"));
+    seenSources.add("GOOGLE_MAPS");
+  }
+  if (record.policy.hasUserProvidedLineage && !seenSources.has("USER_PROVIDED")) {
+    sourceBadges.push(getSourceBadgeInfo("USER_PROVIDED"));
+    seenSources.add("USER_PROVIDED");
+  }
+  for (const st of record.evidence?.evidencePack?.sourceTypes || []) {
+    if (!seenSources.has(st)) {
+      seenSources.add(st);
+      sourceBadges.push(getSourceBadgeInfo(st));
+    }
+  }
+  const primarySource = record.policy.hasMetaLineage ? "META" : record.policy.hasGoogleConsumerWebLineage ? "GOOGLE_MAPS" : "META";
+  const isMixedProvenance = record.policy.overallProvenance === "MIXED" || sourceBadges.length > 1;
+  const rawQState = (record.qualification.finalState || record.qualification.qualificationDecision?.status || "NOT_STARTED").toUpperCase();
+  const qualificationState = ["QUALIFIED", "NOT_QUALIFIED", "UNCERTAIN", "BLOCKED", "NOT_STARTED"].includes(rawQState) ? rawQState : "NOT_STARTED";
+  const freshnessEntries = Object.values(record.freshness.perSourceFreshness || {});
+  let overallFreshness = "UNKNOWN";
+  if (freshnessEntries.some((f) => f.state === "CURRENT")) {
+    overallFreshness = "CURRENT";
+  } else if (freshnessEntries.some((f) => f.state === "STALE")) {
+    overallFreshness = "STALE";
+  }
+  const q = record.quality || {
+    identityCompleteness: 0,
+    businessCompleteness: 0,
+    contactCompleteness: 0,
+    websiteCompleteness: 0,
+    evidenceCoverage: 0,
+    corroborationCount: 0,
+    contradictionCount: 0
+  };
+  const qualityMetrics = {
+    completenessPercent: Math.round((q.identityCompleteness + q.businessCompleteness + q.contactCompleteness + q.websiteCompleteness) / 4 * 100) || 0,
+    contactCompletenessPercent: Math.round(q.contactCompleteness * 100) || 0,
+    evidenceCoveragePercent: Math.round(q.evidenceCoverage * 100) || 0,
+    corroborationCount: q.corroborationCount || (record.evidence?.corroborations?.length ?? 0) || (sourceBadges.length > 1 ? sourceBadges.length : 1),
+    contradictionCount: q.contradictionCount || record.evidence.conflicts?.length || 0
+  };
+  const dataSignals = {
+    websiteVerified: Boolean(record.digital.verifiedWebsite.value),
+    contactAvailable: hasPhone || hasEmail,
+    publicPersonAvailable: (record.people.publicPeople || []).length > 0,
+    advertisingEvidence: Boolean(record.sourceSignals?.metaEvidence && record.sourceSignals.metaEvidence.adCount > 0),
+    freshness: overallFreshness,
+    freshnessLabel: toFriendlyStatus(overallFreshness)
+  };
+  const city = record.location?.city?.value;
+  const country = record.location?.country?.value;
+  const locationDisplay = [city, country].filter(Boolean).join(", ") || record.location?.normalizedAddress?.value || "Global / Unspecified";
+  return {
+    recordId,
+    entityId,
+    displayName: sanitizePassiveText(displayName, 120),
+    primarySource,
+    provenance: record.policy.overallProvenance,
+    isMixedProvenance,
+    relevanceDecision: "RELEVANT",
+    websiteState: record.digital.verifiedWebsite.value ? "VERIFIED_BUSINESS_WEBSITE" : rawWeb ? "WEBSITE_PRESENT_UNVERIFIED" : "NOT_OBSERVED",
+    websiteUrl: safeWeb || void 0,
+    contactSummary: {
+      hasPhone,
+      hasEmail,
+      hasAddress: (record.location.addresses.value || []).length > 0,
+      hasContactForm: (record.contacts.contactForms || []).length > 0,
+      hasSocialLinks: (record.digital.socialProfiles.value || []).length > 0,
+      phoneText,
+      emailText
+    },
+    qualificationState,
+    qualificationScore: void 0,
+    // no opaque scores exposed
+    geographicContext: locationDisplay,
+    isRestricted: record.policy.isRestricted,
+    isExportable: record.policy.exportEligible,
+    isPersistable: record.policy.persistenceEligible,
+    restrictionBadgeText: record.policy.isRestricted ? record.policy.restrictionBasis || "RESTRICTED_SOURCE" : void 0,
+    corroborationCount: qualityMetrics.corroborationCount,
+    // Phase 25 Unified UI fields
+    category,
+    sourceBadges,
+    dataSignals,
+    qualityMetrics,
+    friendlyQualificationState: toFriendlyStatus(qualificationState),
+    friendlyFreshnessState: toFriendlyStatus(overallFreshness),
+    lastObservedText: record.freshness.lastObservedAt,
+    canonicalRecord: record
+  };
+}
+function canonicalLeadToResultDetailViewModel(record) {
+  const row = canonicalLeadToResultRowViewModel(record);
+  const identityDetails = {
+    canonicalBusinessName: record.canonicalBusinessName.preferredObservedValue || record.canonicalBusinessName.value || "Unknown Business",
+    aliases: record.aliases || [],
+    entityType: record.entityType,
+    entityTypeLabel: toFriendlyStatus(record.entityType),
+    branchInfo: record.branchRelationship ? {
+      isBranch: record.branchRelationship.isBranch,
+      isParent: record.branchRelationship.isParent,
+      parentEntityId: record.branchRelationship.parentEntityId,
+      branchSignals: (record.branchRelationship.branchSignals || []).map((s) => `${s.type}: ${s.token}`)
+    } : void 0
+  };
+  const businessDetails = {
+    categories: record.business.categories.value || [],
+    services: record.business.services.value || [],
+    description: record.business.description.value || void 0,
+    hours: record.business.businessHours.value || void 0,
+    serviceAreas: record.business.serviceAreas.value || [],
+    businessStatus: toFriendlyStatus(record.business.businessStatus.value)
+  };
+  const locationDetails = {
+    address: record.location.normalizedAddress.value || record.location.addresses.value?.[0],
+    city: record.location.city.value,
+    region: record.location.region.value,
+    country: record.location.country.value,
+    coordinates: record.location.latitude && record.location.longitude ? `${record.location.latitude}, ${record.location.longitude}` : void 0,
+    addresses: record.location.addresses.value || []
+  };
+  const digitalPresence = {
+    websiteUrl: getSafeExternalUrl(record.digital.verifiedWebsite.value) || void 0,
+    domain: record.digital.domains.value?.[0],
+    cms: record.digital.cms,
+    booking: record.digital.booking,
+    ecommerce: record.digital.ecommerce,
+    chat: record.digital.chat,
+    analytics: record.digital.analytics,
+    technologySignals: (record.digital.technologySignals || []).map((t) => `${t.name} (${t.category})`),
+    socialLinks: (record.digital.socialProfiles.value || []).map((s) => ({
+      platform: s.platform,
+      url: getSafeExternalUrl(s.url) || "#"
+    }))
+  };
+  const contactsDetails = {
+    emails: (record.contacts.emails || []).map((e) => ({
+      address: e.value,
+      classification: toFriendlyStatus(e.category),
+      source: toFriendlyStatus(e.provenance),
+      isRestricted: e.isRestricted,
+      observedAt: e.lastObservedAt,
+      hasConflict: e.hasConflict,
+      alternatives: e.alternatives
+    })),
+    phones: (record.contacts.phones || []).map((p) => ({
+      number: p.value,
+      type: toFriendlyStatus(p.category),
+      source: toFriendlyStatus(p.provenance),
+      isRestricted: p.isRestricted,
+      observedAt: p.lastObservedAt,
+      hasConflict: p.hasConflict,
+      alternatives: p.alternatives
+    })),
+    forms: record.contacts.contactForms || []
+  };
+  const peopleDetails = (record.people.publicPeople || []).map((p) => ({
+    name: p.name,
+    canonicalName: p.canonicalName,
+    titles: p.titles || [],
+    emails: p.emails || [],
+    phones: p.phones || [],
+    linkedInUrl: getSafeExternalUrl(p.linkedInUrl) || void 0,
+    isRestricted: p.isRestricted,
+    associatedContacts: [...p.emails, ...p.phones]
+  }));
+  const qDec = record.qualification.qualificationDecision;
+  const whyReasons = [];
+  const potentialIssues = [];
+  const criteria = (qDec?.criterionResults || []).map((c) => {
+    const passed = c.outcome === "PASS";
+    const friendlyStatus = toFriendlyStatus(c.outcome);
+    const label = c.criterionId.replace(/_/g, " ");
+    if (passed) {
+      whyReasons.push({ label, passed: true, explanation: c.explanation });
+    } else {
+      potentialIssues.push({ label, explanation: c.explanation });
+    }
+    return {
+      criterionId: c.criterionId,
+      name: label,
+      isMandatory: c.mandatory,
+      status: c.outcome,
+      friendlyStatus,
+      scoreAwarded: c.scoreContribution,
+      maxScore: c.scoreContribution,
+      explanation: c.explanation || "",
+      reasonCode: c.reasonCode || ""
+    };
+  });
+  if (row.dataSignals?.freshness === "STALE") {
+    potentialIssues.push({
+      label: "May be outdated",
+      explanation: "One or more public observations are over 30 days old."
+    });
+  }
+  for (const conf of record.evidence.conflicts || []) {
+    potentialIssues.push({
+      label: `Conflicting ${conf.field}`,
+      explanation: conf.reason || "Different sources observed conflicting values."
+    });
+  }
+  const qualificationDetails = {
+    finalState: row.qualificationState,
+    friendlyFinalState: toFriendlyStatus(row.qualificationState),
+    profileId: record.qualification.qualificationProfileId,
+    profileName: qDec?.profileId || "Commercial Qualification Profile",
+    explanation: record.qualification.explanation || qDec?.summaryExplanation || "Qualification evaluated from verified public signals.",
+    whyReasons,
+    potentialIssues,
+    criteria
+  };
+  const fieldEvidence = [];
+  if (row.contactSummary.phoneText) {
+    const ph = record.contacts.phones[0];
+    fieldEvidence.push({
+      fieldName: "Business Phone",
+      value: row.contactSummary.phoneText,
+      sources: ph ? ph.corroboratedBySources.map(String) : [row.primarySource],
+      observedAt: ph?.lastObservedAt || record.updatedAt,
+      evidenceNote: ph?.isCorroborated ? "Corroborated across multiple public sources" : "Observed from public source"
+    });
+  }
+  if (row.contactSummary.emailText) {
+    const em = record.contacts.emails[0];
+    fieldEvidence.push({
+      fieldName: "Business Email",
+      value: row.contactSummary.emailText,
+      sources: em ? em.corroboratedBySources.map(String) : [row.primarySource],
+      observedAt: em?.lastObservedAt || record.updatedAt,
+      evidenceNote: em?.isCorroborated ? "Corroborated across multiple public sources" : "Publicly listed business email"
+    });
+  }
+  if (row.websiteUrl) {
+    fieldEvidence.push({
+      fieldName: "Website",
+      value: row.websiteUrl,
+      sources: record.digital.verifiedWebsite.corroboratedBySources.map(String),
+      observedAt: record.digital.verifiedWebsite.lastObservedAt || record.updatedAt,
+      evidenceNote: "Verified public domain"
+    });
+  }
+  const conflicts = (record.evidence.conflicts || []).map((c) => ({
+    field: c.field,
+    description: c.reason,
+    conflictingValues: (c.conflictingValues || []).map((cv) => ({
+      value: String(cv.value),
+      source: toFriendlyStatus(cv.source),
+      observedAt: cv.observedAt
+    }))
+  }));
+  const evidenceItems = (record.evidence.evidenceReferences || []).map((ev, idx) => ({
+    id: ev.evidenceId || `ev_${idx + 1}`,
+    fact: ev.factSummary || "Observed fact",
+    sourceFamily: ev.sourceType,
+    evidenceType: ev.factType || "OBSERVATION",
+    pageOrSourceReference: ev.sourceUrl || "Public source signal",
+    observationState: "OBSERVED",
+    provenance: ev.provenance,
+    isRestricted: ev.isRestricted,
+    restrictionNotice: ev.isRestricted ? "Restricted source evidence" : void 0
+  }));
+  const evidenceDetails = {
+    totalCount: record.evidence.evidencePack?.totalEvidenceCount || evidenceItems.length,
+    items: evidenceItems.map((e) => ({
+      id: e.id,
+      fact: e.fact,
+      source: e.sourceFamily,
+      sourceUrl: e.pageOrSourceReference,
+      observedAt: record.updatedAt,
+      isRestricted: e.isRestricted
+    })),
+    fieldEvidence,
+    conflicts
+  };
+  const perSource = Object.entries(record.freshness.perSourceFreshness || {}).map(([src, val]) => ({
+    source: toFriendlyStatus(src),
+    state: val.state,
+    friendlyState: toFriendlyStatus(val.state),
+    lastObservedAt: val.lastObservedAt,
+    count: val.observationCount
+  }));
+  const freshnessDetails = {
+    overallState: row.dataSignals.freshness,
+    friendlyLabel: toFriendlyStatus(row.dataSignals.freshness),
+    firstObservedAt: record.freshness.firstObservedAt,
+    lastObservedAt: record.freshness.lastObservedAt,
+    perSource
+  };
+  return {
+    ...row,
+    aliases: record.aliases || [],
+    identityConfidence: "HIGH",
+    contradictionFlags: conflicts.map((c) => c.field),
+    primarySource: row.primarySource,
+    contributingSources: row.sourceBadges?.map((b) => b.sourceType) || [row.primarySource],
+    provenanceLineage: record.policy.overallProvenance,
+    provenanceClassification: record.policy.overallProvenance === "MIXED" ? "MIXED" : "DERIVED",
+    relevanceDecision: row.relevanceDecision,
+    relevanceConfidence: "HIGH",
+    relevanceExplanation: "Entity matches research requirements",
+    relevanceMatchedTerms: [],
+    websiteUrl: row.websiteUrl,
+    websiteVerificationStatus: row.websiteState,
+    websiteIdentityMatchLevel: "STRONG",
+    websiteVerifiedAt: record.updatedAt,
+    phones: contactsDetails.phones.map((p) => ({ number: p.number, type: p.type || "MAIN", observation: p.source })),
+    emails: contactsDetails.emails.map((e) => ({ address: e.address, classification: e.classification || "GENERIC_BUSINESS", observation: e.source })),
+    addresses: locationDetails.addresses.map((a) => ({ addressLine: a, isBranch: false })),
+    hasContactForm: contactsDetails.forms.length > 0,
+    socialLinks: digitalPresence.socialLinks,
+    mandatoryCriteria: qualificationDetails.criteria.filter((c) => c.isMandatory).map((c) => ({
+      criterionId: c.criterionId,
+      name: c.name,
+      isMandatory: true,
+      status: c.status,
+      scoreAwarded: c.scoreAwarded,
+      maxScore: c.maxScore,
+      explanation: c.explanation,
+      reasonCode: c.reasonCode,
+      referencedEvidence: []
+    })),
+    optionalCriteria: qualificationDetails.criteria.filter((c) => !c.isMandatory).map((c) => ({
+      criterionId: c.criterionId,
+      name: c.name,
+      isMandatory: false,
+      status: c.status,
+      scoreAwarded: c.scoreAwarded,
+      maxScore: c.maxScore,
+      explanation: c.explanation,
+      reasonCode: c.reasonCode,
+      referencedEvidence: []
+    })),
+    qualificationProfileName: record.qualification.qualificationProfileId || "Commercial Qualification Profile",
+    qualificationProfileVersion: "1.0.0",
+    qualificationSummaryExplanation: qualificationDetails.explanation,
+    evidenceItems,
+    fieldEligibility: {},
+    restrictionExplanation: record.policy.isRestricted ? record.policy.restrictionBasis || "Restricted consumer-web source" : void 0,
+    runId: "canonical_lead",
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
+    // Phase 25 Detailed Sections
+    category: row.category,
+    sourceBadges: row.sourceBadges,
+    identityDetails,
+    businessDetails,
+    locationDetails,
+    digitalPresence,
+    contactsDetails,
+    peopleDetails,
+    qualificationDetails,
+    evidenceDetails,
+    freshnessDetails,
+    qualityDetails: row.qualityMetrics,
+    canonicalRecord: record
+  };
+}
 function toResultRowViewModel(record) {
+  if (isCanonicalLeadRecord(record)) {
+    return canonicalLeadToResultRowViewModel(record);
+  }
   const isUnified = "entityId" in record && "corroborationCount" in record;
   const u = record;
   const c = record;
@@ -19218,6 +20162,30 @@ function toResultRowViewModel(record) {
   const isExportable = Boolean(record.restrictions?.exportEligible);
   const isPersistable = Boolean(record.restrictions?.persistenceEligible);
   const restrictionBadgeText = isRestricted ? record.restrictions?.restrictionBasis || "RESTRICTED_SOURCE" : void 0;
+  const sourceBadges = [];
+  sourceBadges.push(getSourceBadgeInfo(primarySource));
+  if (isUnified && u.corroborationSources) {
+    for (const cs of u.corroborationSources) {
+      if (cs !== primarySource && !sourceBadges.some((b) => b.sourceType === cs)) {
+        sourceBadges.push(getSourceBadgeInfo(cs));
+      }
+    }
+  }
+  const dataSignals = {
+    websiteVerified: websiteState.includes("VERIFIED"),
+    contactAvailable: contactSummary.hasPhone || contactSummary.hasEmail,
+    publicPersonAvailable: false,
+    advertisingEvidence: primarySource === "META",
+    freshness: "CURRENT",
+    freshnessLabel: toFriendlyStatus("CURRENT")
+  };
+  const qualityMetrics = {
+    completenessPercent: (contactSummary.hasPhone ? 25 : 0) + (contactSummary.hasEmail ? 25 : 0) + (websiteUrl ? 25 : 0) + (displayName ? 25 : 0),
+    contactCompletenessPercent: (contactSummary.hasPhone ? 50 : 0) + (contactSummary.hasEmail ? 50 : 0),
+    evidenceCoveragePercent: isUnified ? Math.min(100, (u.evidence?.length || 1) * 25) : 50,
+    corroborationCount: isUnified ? u.corroborationCount : 1,
+    contradictionCount: 0
+  };
   return {
     recordId,
     entityId,
@@ -19227,7 +20195,7 @@ function toResultRowViewModel(record) {
     isMixedProvenance,
     relevanceDecision,
     websiteState,
-    websiteUrl,
+    websiteUrl: getSafeExternalUrl(websiteUrl) || void 0,
     contactSummary,
     qualificationState,
     qualificationScore,
@@ -19236,32 +20204,43 @@ function toResultRowViewModel(record) {
     isExportable,
     isPersistable,
     restrictionBadgeText,
-    corroborationCount: isUnified ? u.corroborationCount : 1
+    corroborationCount: isUnified ? u.corroborationCount : 1,
+    // Phase 25 additions
+    sourceBadges,
+    dataSignals,
+    qualityMetrics,
+    friendlyQualificationState: toFriendlyStatus(qualificationState),
+    friendlyFreshnessState: toFriendlyStatus("CURRENT"),
+    lastObservedText: record.createdAt
   };
 }
 function toResultDetailViewModel(record) {
-  const row = toResultRowViewModel(record);
+  if (isCanonicalLeadRecord(record)) {
+    return canonicalLeadToResultDetailViewModel(record);
+  }
+  const u = record;
+  const row = toResultRowViewModel(u);
   const aliases = [];
   const contradictionFlags = [];
-  let identityConfidence = "HIGH";
+  const identityConfidence = "HIGH";
   let provenanceClassification = "DERIVED";
-  if (record.provenance === "MIXED") {
+  if (u.provenance === "MIXED") {
     provenanceClassification = "MIXED";
-  } else if (record.provenance === "USER_PROVIDED") {
+  } else if (u.provenance === "USER_PROVIDED") {
     provenanceClassification = "DIRECT_SOURCE";
   }
-  const relevanceExplanation = record.relevanceResult?.explanation || "Relevance evaluation not executed or not applicable";
-  const relevanceMatchedTerms = (record.relevanceResult?.reasonCodes || []).map(String);
+  const relevanceExplanation = u.relevanceResult?.explanation || "Relevance evaluation not executed or not applicable";
+  const relevanceMatchedTerms = (u.relevanceResult?.reasonCodes || []).map(String);
   const relevanceConfidence = "HIGH";
-  const websiteVerificationStatus = record.websiteVerificationResult?.status || "NOT_VERIFIED";
-  const websiteIdentityMatchLevel = record.websiteVerificationResult?.identityMatch || "UNKNOWN";
-  const websiteVerifiedAt = record.websiteVerificationResult?.verifiedAt;
+  const websiteVerificationStatus = u.websiteVerificationResult?.status || "NOT_VERIFIED";
+  const websiteIdentityMatchLevel = u.websiteVerificationResult?.identityMatch || "UNKNOWN";
+  const websiteVerifiedAt = u.websiteVerificationResult?.verifiedAt;
   const phones = [];
   const emails = [];
   const addresses = [];
   const socialLinks = [];
-  if (record.contactEnrichmentResult) {
-    const ce = record.contactEnrichmentResult;
+  if (u.contactEnrichmentResult) {
+    const ce = u.contactEnrichmentResult;
     for (const p of ce.phones || []) {
       phones.push({
         number: p.e164Format || p.normalizedValue || p.rawValue,
@@ -19285,13 +20264,16 @@ function toResultDetailViewModel(record) {
       });
     }
     for (const s of ce.socialProfiles || []) {
-      socialLinks.push({ platform: s.platform, url: s.normalizedUrl || s.rawUrl });
+      const safe = getSafeExternalUrl(s.normalizedUrl || s.rawUrl);
+      if (safe) {
+        socialLinks.push({ platform: s.platform, url: safe });
+      }
     }
   }
-  const q = record.qualificationDecision;
+  const q = u.qualificationDecision;
   const mandatoryCriteria = (q?.criterionResults || []).filter((c) => c.mandatory).map((c) => ({
     criterionId: c.criterionId,
-    name: c.criterionId,
+    name: c.criterionId.replace(/_/g, " "),
     isMandatory: true,
     status: c.outcome,
     scoreAwarded: c.scoreContribution,
@@ -19301,7 +20283,7 @@ function toResultDetailViewModel(record) {
   }));
   const optionalCriteria = (q?.criterionResults || []).filter((c) => !c.mandatory).map((c) => ({
     criterionId: c.criterionId,
-    name: c.criterionId,
+    name: c.criterionId.replace(/_/g, " "),
     isMandatory: false,
     status: c.outcome,
     scoreAwarded: c.scoreContribution,
@@ -19309,34 +20291,99 @@ function toResultDetailViewModel(record) {
     reasonCode: c.reasonCode || "",
     referencedEvidence: (c.evidence || []).map((e) => e.signature || e.reason || String(e))
   }));
-  const evidenceItems = (record.evidence || []).map((ev, idx) => ({
+  const evidenceItems = (u.evidence || []).map((ev, idx) => ({
     id: `ev_${idx + 1}`,
     fact: ev.explanation || ev.reason || ev.value || "Observed public fact",
     sourceFamily: ev.source || "PUBLIC_WEB",
     evidenceType: ev.type || "OBSERVATION",
     pageOrSourceReference: ev.matchedSignal || ev.page || "Public source signal",
     observationState: "OBSERVED",
-    provenance: ev.provenance || record.provenance,
+    provenance: ev.provenance || u.provenance,
     isRestricted: Boolean(ev.isRestricted),
     restrictionNotice: ev.restrictionNotice
   }));
   const fieldEligibility = {};
-  if (record.fieldEligibility) {
-    for (const [k, v] of Object.entries(record.fieldEligibility)) {
+  if (u.fieldEligibility) {
+    for (const [k, v] of Object.entries(u.fieldEligibility)) {
       fieldEligibility[k] = {
         isEligible: v.isEligible,
         notice: v.restrictionBasis
       };
     }
   }
+  const identityDetails = {
+    canonicalBusinessName: row.displayName,
+    aliases,
+    entityType: "LOCAL_BUSINESS",
+    entityTypeLabel: toFriendlyStatus("LOCAL_BUSINESS")
+  };
+  const businessDetails = {
+    categories: [],
+    services: [],
+    serviceAreas: [],
+    businessStatus: toFriendlyStatus("OPERATIONAL")
+  };
+  const locationDetails = {
+    address: addresses[0]?.addressLine,
+    city: addresses[0]?.locality,
+    addresses: addresses.map((a) => a.addressLine)
+  };
+  const digitalPresence = {
+    websiteUrl: row.websiteUrl,
+    domain: row.websiteUrl ? new URL(row.websiteUrl).hostname : void 0,
+    socialLinks
+  };
+  const contactsDetails = {
+    emails: emails.map((e) => ({ address: e.address, classification: e.classification, source: e.observation })),
+    phones: phones.map((p) => ({ number: p.number, type: p.type, source: p.observation })),
+    forms: row.contactSummary.hasContactForm ? ["Observed on Website"] : []
+  };
+  const qualificationDetails = {
+    finalState: row.qualificationState,
+    friendlyFinalState: toFriendlyStatus(row.qualificationState),
+    profileId: q?.profileId,
+    profileName: q?.profileId || "Commercial Profile",
+    explanation: q?.summaryExplanation || "Qualification evaluated from public signals.",
+    whyReasons: mandatoryCriteria.filter((c) => c.status === "PASS").map((c) => ({ label: c.name, passed: true, explanation: c.explanation })),
+    potentialIssues: mandatoryCriteria.filter((c) => c.status !== "PASS").map((c) => ({ label: c.name, explanation: c.explanation })),
+    criteria: [...mandatoryCriteria, ...optionalCriteria].map((c) => ({
+      ...c,
+      friendlyStatus: toFriendlyStatus(c.status)
+    }))
+  };
+  const evidenceDetails = {
+    totalCount: evidenceItems.length,
+    items: evidenceItems.map((e) => ({
+      id: e.id,
+      fact: e.fact,
+      source: e.sourceFamily,
+      sourceUrl: e.pageOrSourceReference,
+      observedAt: u.updatedAt || u.createdAt,
+      isRestricted: e.isRestricted
+    })),
+    fieldEvidence: [],
+    conflicts: []
+  };
+  const freshnessDetails = {
+    overallState: "CURRENT",
+    friendlyLabel: toFriendlyStatus("CURRENT"),
+    firstObservedAt: u.createdAt,
+    lastObservedAt: u.updatedAt || u.createdAt,
+    perSource: [{
+      source: toFriendlyStatus(row.primarySource),
+      state: "CURRENT",
+      friendlyState: toFriendlyStatus("CURRENT"),
+      lastObservedAt: u.updatedAt || u.createdAt
+    }]
+  };
   return {
     ...row,
     aliases,
     identityConfidence,
     contradictionFlags,
-    primarySource: record.primarySource,
-    contributingSources: record.corroborationSources || [record.primarySource],
-    provenanceLineage: record.provenance,
+    primarySource: u.primarySource,
+    contributingSources: u.corroborationSources || [u.primarySource],
+    provenanceLineage: u.provenance,
     provenanceClassification,
     relevanceDecision: row.relevanceDecision,
     relevanceConfidence,
@@ -19352,23 +20399,34 @@ function toResultDetailViewModel(record) {
     hasContactForm: row.contactSummary.hasContactForm,
     socialLinks,
     qualificationState: row.qualificationState,
-    qualificationProfileName: q?.profileId || "Default Business Profile",
+    qualificationProfileName: q?.profileId || "Default Commercial Profile",
     qualificationProfileVersion: q?.profileVersion || "1.0.0",
-    qualificationScoreText: q?.scoreSummary?.totalScore != null ? `${q.scoreSummary.totalScore} points` : void 0,
+    qualificationScoreText: q?.scoreSummary ? `${q.scoreSummary.totalScore} points` : void 0,
     mandatoryCriteria,
     optionalCriteria,
-    qualificationSummaryExplanation: q?.failureReasons?.join(", ") || "Qualification evaluated by configured profile",
+    qualificationSummaryExplanation: q?.summaryExplanation || q?.failureReasons?.join("; ") || "Entity evaluated against configured criteria.",
     evidenceItems,
     fieldEligibility,
-    restrictionExplanation: record.restrictions?.restrictionBasis,
-    runId: record.runMetadata?.runId || "run_unknown",
-    createdAt: record.createdAt,
-    updatedAt: record.updatedAt
+    restrictionExplanation: row.isRestricted ? u.restrictions?.restrictionBasis || "Restricted source data" : void 0,
+    runId: "run_unified",
+    createdAt: u.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
+    updatedAt: u.updatedAt || (/* @__PURE__ */ new Date()).toISOString(),
+    // Phase 25 additions
+    identityDetails,
+    businessDetails,
+    locationDetails,
+    digitalPresence,
+    contactsDetails,
+    peopleDetails: [],
+    qualificationDetails,
+    evidenceDetails,
+    freshnessDetails,
+    qualityDetails: row.qualityMetrics
   };
 }
 function toRunStatusViewModel(run, elapsedMs = 0) {
   const cfg = run.config;
-  const canonicalStages = [
+  const stages = [
     "SOURCE_PLANNING",
     "SOURCE_EXECUTION",
     "NORMALIZATION",
@@ -19382,8 +20440,22 @@ function toRunStatusViewModel(run, elapsedMs = 0) {
     "PERSISTENCE",
     "EXPORT"
   ];
-  const stageViewModels = canonicalStages.map((stageId) => {
-    const rawState = (run.stageStates instanceof Map ? run.stageStates.get(stageId) : run.stageStates?.[stageId]) || "NOT_STARTED";
+  const stageLabels = {
+    SOURCE_PLANNING: "Source Planning",
+    SOURCE_EXECUTION: "Source Execution",
+    NORMALIZATION: "Candidate Normalization",
+    ENTITY_RESOLUTION: "Entity Resolution",
+    EVIDENCE: "Evidence Aggregation",
+    RELEVANCE: "Relevance Scoring",
+    WEBSITE_VERIFICATION: "Website Verification",
+    CONTACT_ENRICHMENT: "Contact Enrichment",
+    QUALIFICATION: "Commercial Qualification",
+    GEOGRAPHIC_ACCOUNTING: "Geographic Accounting",
+    PERSISTENCE: "Persistence",
+    EXPORT: "Export Firewall"
+  };
+  const stageViewModels = stages.map((st) => {
+    const rawState = (run.stageStates instanceof Map ? run.stageStates.get(st) : run.stageStates?.[st]) || "NOT_STARTED";
     const isCompleted = rawState === "COMPLETED";
     const isActive = rawState === "IN_PROGRESS";
     const isBlocked = rawState === "BLOCKED";
@@ -19392,12 +20464,13 @@ function toRunStatusViewModel(run, elapsedMs = 0) {
     let stateText = "Not Started";
     if (isCompleted) stateText = "Completed";
     else if (isActive) stateText = "In Progress";
-    else if (isBlocked) stateText = "Blocked";
+    else if (isBlocked) stateText = "Blocked by Policy";
     else if (isSkipped) stateText = "Skipped";
     else if (isFailed) stateText = "Failed";
+    else if (rawState === "CONTRACT_ONLY") stateText = "Contract Only";
     return {
-      stageId,
-      label: stageId.replace(/_/g, " "),
+      stageId: st,
+      label: stageLabels[st],
       state: rawState,
       stateText,
       isCompleted,
@@ -19439,6 +20512,7 @@ init_relevanceEngine();
 function sanitizeCsvField(val) {
   if (val === null || val === void 0) return "";
   let str = String(val).trim();
+  str = str.replace(/\t/g, " ").replace(/\r/g, "");
   if (/^[=+\-@\t\r]/.test(str)) {
     str = `'${str}`;
   }
@@ -19648,6 +20722,9 @@ var ExtensionApp = () => {
   };
   const resultsVM = (0, import_react7.useMemo)(() => {
     return rawLeads.map((item, idx) => {
+      if (isCanonicalLeadRecord(item)) {
+        return toResultRowViewModel(item);
+      }
       const candidateEnv = {
         candidateId: item.leadId || `cand_${idx}`,
         sourceKey: {
@@ -19795,8 +20872,15 @@ var ExtensionApp = () => {
     }
   };
   const handleInspectRecord = (recordId) => {
-    const raw = rawLeads.find((l) => (l.leadId || l.pageId) === recordId) || rawLeads[0];
+    const raw = rawLeads.find(
+      (l) => (l.canonicalEntityId || l.entityId || l.leadId || l.pageId) === recordId || `rec_${l.canonicalEntityId}` === recordId
+    ) || rawLeads[0];
     if (raw) {
+      if (isCanonicalLeadRecord(raw)) {
+        setInspectedLead(toResultDetailViewModel(raw));
+        setIsDetailDrawerOpen(true);
+        return;
+      }
       const uRecord = {
         recordId,
         entityId: raw.entityId || recordId,
@@ -19873,25 +20957,30 @@ var ExtensionApp = () => {
     }
   };
   const exportPreviewVM = (0, import_react7.useMemo)(() => {
-    const selectedLeads = selectedRecordIds.size > 0 ? resultsVM.filter((r) => selectedRecordIds.has(r.recordId)) : resultsVM;
+    const selectedLeads = selectedRecordIds.size > 0 ? resultsVM.filter((r) => selectedRecordIds.has(r.entityId) || selectedRecordIds.has(r.recordId)) : resultsVM;
+    const totalSelected = selectedLeads.length;
+    const exportableCount = selectedLeads.filter((r) => r.isExportable && !r.isRestricted).length;
+    const restrictedCount = selectedLeads.filter((r) => r.isRestricted || !r.isExportable).length;
+    const policyNotice = restrictedCount > 0 ? `You selected ${totalSelected} records. ${restrictedCount} are unavailable for export due to source restrictions. ${exportableCount} are eligible.` : "All selected records satisfy public source export policy.";
     return {
-      totalSelectedRecords: selectedLeads.length,
-      exportableRecordsCount: selectedLeads.filter((r) => r.isExportable).length,
-      restrictedRecordsCount: selectedLeads.filter((r) => r.isRestricted).length,
-      blockedDueToComplianceCount: selectedLeads.filter((r) => !r.isExportable).length,
-      eligibleFields: ["displayName", "primarySource", "provenance", "websiteUrl", "businessEmail", "businessPhone"],
-      restrictedFieldsOmitted: ["Google consumer-web raw search entries"],
-      policyNotice: selectedSource === "GOOGLE_MAPS" ? "Google consumer-web provenance is strictly protected. Records are excluded from CSV export." : "All selected records satisfy public source export policy.",
-      isExportReady: selectedLeads.some((r) => r.isExportable)
+      totalSelectedRecords: totalSelected,
+      exportableRecordsCount: exportableCount,
+      restrictedRecordsCount: restrictedCount,
+      blockedDueToComplianceCount: restrictedCount,
+      eligibleFields: ["displayName", "category", "location", "websiteUrl", "businessEmail", "businessPhone", "qualificationState"],
+      restrictedFieldsOmitted: ["Google consumer-web raw search entries", "Google consumer-web place identifiers"],
+      policyNotice,
+      isExportReady: exportableCount > 0
     };
-  }, [resultsVM, selectedRecordIds, selectedSource]);
+  }, [resultsVM, selectedRecordIds]);
   const handleConfirmExport = () => {
     if (isExporting) return;
     setIsExporting(true);
     const eligibleLeads = rawLeads.filter((_, idx) => {
       const row = resultsVM[idx];
-      const isSelected = selectedRecordIds.size === 0 || row && selectedRecordIds.has(row.recordId);
-      return isSelected && row && row.isExportable;
+      if (!row) return false;
+      const isSelected = selectedRecordIds.size === 0 || selectedRecordIds.has(row.entityId) || selectedRecordIds.has(row.recordId);
+      return isSelected && row.isExportable && !row.isRestricted;
     });
     if (eligibleLeads.length > 0) {
       const csv = exportLeadsToCsv(eligibleLeads);
@@ -19915,7 +21004,7 @@ var ExtensionApp = () => {
       });
     }
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "w-full max-w-[800px] h-full min-h-[600px] max-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans select-none", children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "min-w-[360px] w-full max-w-[800px] h-full min-h-[600px] max-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans select-none", children: [
     /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
       Header,
       {
@@ -20127,4 +21216,3 @@ react/cjs/react-jsx-runtime.production.js:
    * LICENSE file in the root directory of this source tree.
    *)
 */
-//# sourceMappingURL=app.js.map

@@ -1,11 +1,15 @@
 /**
- * LeadNoria — Phase 15: UI/UX Integration
+ * LeadNoria — Phase 25: Unified Lead Intelligence UI & Research Workflow Integration
  * Research Configuration View Component
  * 
  * Strict Invariants:
- * - Reuses Phase 13 geographic & Phase 14 source models
- * - If Google Maps is selected, LIVE mode is strictly disabled
- * - Plan review available before starting execution
+ * - Simple, human-understandable controls only
+ * - Source: [ From Meta Ad Library ] (approved production source)
+ * - Geographic Scope (Country / Region / City)
+ * - Category & Query Scope (Industry Preset or Custom Keywords)
+ * - Max Candidates Limit
+ * - No internal adapter names, provenance flags, execution mode switches, search-unit IDs, retry counters
+ * - Review Research Plan before execution
  */
 
 import React, { useState } from 'react';
@@ -39,22 +43,9 @@ export const ResearchConfigView: React.FC<ResearchConfigViewProps> = ({
   const [presetId, setPresetId] = useState<string>(RESEARCH_PRESETS[0]?.preset_id || '');
   const [customKeywords, setCustomKeywords] = useState<string>('Furniture, Home Decor');
   const [countryCode, setCountryCode] = useState<string>('BD');
-  const [executionMode, setExecutionMode] = useState<ExecutionMode>(
-    selectedSource === 'GOOGLE_MAPS' ? 'DRY_RUN' : 'LIVE'
-  );
   const [maxCandidates, setMaxCandidates] = useState<number>(200);
 
   const selectedPreset = RESEARCH_PRESETS.find(p => p.preset_id === presetId) || RESEARCH_PRESETS[0];
-  const isGmaps = selectedSource === 'GOOGLE_MAPS';
-
-  const handleSourceChange = (src: SourceType) => {
-    onSelectSource(src);
-    if (src === 'GOOGLE_MAPS') {
-      setExecutionMode('DRY_RUN');
-    } else {
-      setExecutionMode('LIVE');
-    }
-  };
 
   const handleReviewClick = () => {
     let keywords: string[] = [];
@@ -74,7 +65,7 @@ export const ResearchConfigView: React.FC<ResearchConfigViewProps> = ({
 
     onOpenPlanReview({
       sourceType: selectedSource,
-      executionMode,
+      executionMode: 'LIVE',
       keywords,
       countryCode,
       locationName: selectedLoc?.displayName || countryCode,
@@ -85,10 +76,10 @@ export const ResearchConfigView: React.FC<ResearchConfigViewProps> = ({
 
   return (
     <div className="flex flex-col gap-4 p-4 bg-slate-900 border border-slate-800 rounded-xl">
-      {/* 1. Source Selector */}
+      {/* 1. Source Selector (Approved Production Source) */}
       <SourceSelector
         selectedSource={selectedSource}
-        onSelectSource={handleSourceChange}
+        onSelectSource={onSelectSource}
         disabled={disabled}
       />
 
@@ -157,7 +148,7 @@ export const ResearchConfigView: React.FC<ResearchConfigViewProps> = ({
             </select>
             {selectedPreset && (
               <p className="text-[11px] text-slate-400">
-                Primary keywords: <span className="text-slate-300 font-mono">{selectedPreset.primary_keywords.join(', ')}</span>
+                Keywords: <span className="text-slate-300 font-mono">{selectedPreset.primary_keywords.join(', ')}</span>
               </p>
             )}
           </div>
@@ -177,42 +168,23 @@ export const ResearchConfigView: React.FC<ResearchConfigViewProps> = ({
         )}
       </div>
 
-      {/* 4. Execution Mode & Limits */}
+      {/* 4. Research Scope Limit */}
       <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="execution-mode-select" className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
-              Execution Mode
-            </label>
-            <select
-              id="execution-mode-select"
-              value={executionMode}
-              onChange={e => setExecutionMode(e.target.value as ExecutionMode)}
-              disabled={disabled}
-              className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-400"
-            >
-              {!isGmaps && <option value="LIVE">LIVE (Public Source)</option>}
-              <option value="DRY_RUN">DRY_RUN (Plan &amp; Validate)</option>
-              <option value="REPLAY">REPLAY (Synthetic Fixtures)</option>
-              <option value="VALIDATION_ONLY">VALIDATION_ONLY</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="max-candidates-input" className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
-              Max Candidates
-            </label>
-            <input
-              id="max-candidates-input"
-              type="number"
-              min={10}
-              max={1000}
-              value={maxCandidates}
-              onChange={e => setMaxCandidates(Math.max(10, Math.min(1000, parseInt(e.target.value) || 100)))}
-              disabled={disabled}
-              className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-400"
-            />
-          </div>
+        <label htmlFor="max-candidates-input" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          Max Leads Target
+        </label>
+        <div className="flex items-center gap-3">
+          <input
+            id="max-candidates-input"
+            type="number"
+            min={10}
+            max={1000}
+            value={maxCandidates}
+            onChange={e => setMaxCandidates(Math.max(10, Math.min(1000, parseInt(e.target.value) || 100)))}
+            disabled={disabled}
+            className="w-32 px-3 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-400"
+          />
+          <span className="text-[11px] text-slate-400">Target unique relevant business leads to discover.</span>
         </div>
       </div>
 
@@ -221,7 +193,7 @@ export const ResearchConfigView: React.FC<ResearchConfigViewProps> = ({
         type="button"
         disabled={disabled}
         onClick={handleReviewClick}
-        className="w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm shadow-sky-600/20 focus:outline-none focus:ring-2 focus:ring-sky-400"
+        className="w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm shadow-sky-600/20 focus:outline-none focus:ring-2 focus:ring-sky-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <span>📋</span> Review Research Plan →
       </button>

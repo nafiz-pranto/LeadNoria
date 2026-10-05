@@ -27,7 +27,31 @@ const VALID_CRITERION_TYPES: ReadonlySet<CriterionType> = new Set([
   'NEGATIVE_EVIDENCE',
   'SOURCE_EVIDENCE_REQUIREMENT',
   'COMPLETENESS_THRESHOLD',
-  'CUSTOM_FIELD'
+  'CUSTOM_FIELD',
+  // Phase 23 Business Intelligence Additions:
+  'VERIFIED_BUSINESS_WEBSITE',
+  'PUBLISHED_SERVICES',
+  'SERVICE_AREA_MATCH',
+  'BUSINESS_HOURS_PRESENT',
+  'DIGITAL_BOOKING_PRESENT',
+  'DIGITAL_ECOMMERCE_PRESENT',
+  'DIGITAL_CHAT_PRESENT',
+  'DIGITAL_ANALYTICS_PRESENT',
+  'DIGITAL_CMS_DETECTED',
+  'PUBLIC_EMAIL_AVAILABLE',
+  'ROLE_EMAIL_AVAILABLE',
+  'PERSON_EMAIL_AVAILABLE',
+  'PUBLIC_PHONE_AVAILABLE',
+  'PERSON_PHONE_AVAILABLE',
+  'PUBLIC_PERSON_AVAILABLE',
+  'PERSON_WITH_TITLE_AVAILABLE',
+  'CROSS_SOURCE_CORROBORATION',
+  'CORROBORATED_PHONE',
+  'CORROBORATED_IDENTITY',
+  'META_AD_ACTIVE',
+  'EVIDENCE_COVERAGE_THRESHOLD',
+  'BUSINESS_COMPLETENESS_THRESHOLD',
+  'TEMPORAL_FRESHNESS'
 ]);
 
 const VALID_OPERATORS: ReadonlySet<CriterionOperator> = new Set([
@@ -260,3 +284,214 @@ export const CANONICAL_DEFAULT_PROFILE: QualificationProfile = {
     }
   ]
 };
+
+// ==========================================
+// Phase 23 Reusable Profile Templates
+// ==========================================
+
+export const LOCAL_SERVICE_BUSINESS_PROFILE: QualificationProfile = {
+  profileId: 'leadnoria_local_service_v1',
+  profileName: 'Local Service Business Qualification',
+  version: '1.0.0',
+  enabled: true,
+  missingDataPolicy: 'MISSING_IS_UNKNOWN',
+  unknownDataPolicy: 'UNKNOWN_YIELDS_UNCERTAIN',
+  conflictPolicy: 'STRICT_CONTRADICTION',
+  thresholds: {
+    minimumScore: 60
+  },
+  criteria: [
+    {
+      id: 'req_local_website',
+      type: 'VERIFIED_BUSINESS_WEBSITE',
+      operator: 'EXISTS',
+      mandatory: true,
+      weight: 25,
+      description: 'Business must possess a verified website'
+    },
+    {
+      id: 'req_local_contact',
+      type: 'PUBLIC_PHONE_AVAILABLE',
+      operator: 'EXISTS',
+      mandatory: true,
+      weight: 25,
+      description: 'Business must provide a public phone contact'
+    },
+    {
+      id: 'opt_local_services',
+      type: 'PUBLISHED_SERVICES',
+      operator: 'COUNT_AT_LEAST',
+      expectedValue: 1,
+      mandatory: false,
+      weight: 20,
+      description: 'Business lists published local services'
+    },
+    {
+      id: 'opt_local_hours',
+      type: 'BUSINESS_HOURS_PRESENT',
+      operator: 'EXISTS',
+      mandatory: false,
+      weight: 15,
+      description: 'Business hours are publicly available'
+    },
+    {
+      id: 'opt_local_booking',
+      type: 'DIGITAL_BOOKING_PRESENT',
+      operator: 'EXISTS',
+      mandatory: false,
+      weight: 15,
+      description: 'Online booking capability detected'
+    }
+  ]
+};
+
+export const B2B_PROSPECT_PROFILE: QualificationProfile = {
+  profileId: 'leadnoria_b2b_prospect_v1',
+  profileName: 'B2B Commercial Prospect Qualification',
+  version: '1.0.0',
+  enabled: true,
+  missingDataPolicy: 'MISSING_IS_UNKNOWN',
+  unknownDataPolicy: 'UNKNOWN_YIELDS_UNCERTAIN',
+  conflictPolicy: 'STRICT_CONTRADICTION',
+  thresholds: {
+    minimumScore: 65
+  },
+  criteria: [
+    {
+      id: 'req_b2b_website',
+      type: 'VERIFIED_BUSINESS_WEBSITE',
+      operator: 'EXISTS',
+      mandatory: true,
+      weight: 25,
+      description: 'Verified business domain must exist'
+    },
+    {
+      id: 'req_b2b_email',
+      type: 'PUBLIC_EMAIL_AVAILABLE',
+      operator: 'EXISTS',
+      mandatory: true,
+      weight: 25,
+      description: 'Public business email must be available'
+    },
+    {
+      id: 'opt_b2b_services',
+      type: 'PUBLISHED_SERVICES',
+      operator: 'COUNT_AT_LEAST',
+      expectedValue: 1,
+      mandatory: false,
+      weight: 20,
+      description: 'Business describes explicit service offerings'
+    },
+    {
+      id: 'opt_b2b_person',
+      type: 'PUBLIC_PERSON_AVAILABLE',
+      operator: 'EXISTS',
+      mandatory: false,
+      weight: 15,
+      description: 'Public team member or person identified'
+    },
+    {
+      id: 'opt_b2b_corroboration',
+      type: 'CORROBORATED_IDENTITY',
+      operator: 'EXISTS',
+      mandatory: false,
+      weight: 15,
+      description: 'Business identity corroborated across multiple sources'
+    }
+  ]
+};
+
+export const DIGITAL_COMMERCE_BUSINESS_PROFILE: QualificationProfile = {
+  profileId: 'leadnoria_digital_commerce_v1',
+  profileName: 'Digital Commerce Business Qualification',
+  version: '1.0.0',
+  enabled: true,
+  missingDataPolicy: 'MISSING_IS_UNKNOWN',
+  unknownDataPolicy: 'UNKNOWN_YIELDS_UNCERTAIN',
+  conflictPolicy: 'STRICT_CONTRADICTION',
+  thresholds: {
+    minimumScore: 60
+  },
+  criteria: [
+    {
+      id: 'req_ecom_website',
+      type: 'VERIFIED_BUSINESS_WEBSITE',
+      operator: 'EXISTS',
+      mandatory: true,
+      weight: 30,
+      description: 'Active website required'
+    },
+    {
+      id: 'req_ecom_capability',
+      type: 'DIGITAL_ECOMMERCE_PRESENT',
+      operator: 'EXISTS',
+      mandatory: true,
+      weight: 30,
+      description: 'E-commerce platform or checkout capability detected'
+    },
+    {
+      id: 'opt_ecom_chat',
+      type: 'DIGITAL_CHAT_PRESENT',
+      operator: 'EXISTS',
+      mandatory: false,
+      weight: 20,
+      description: 'Customer chat / widget present'
+    },
+    {
+      id: 'opt_ecom_analytics',
+      type: 'DIGITAL_ANALYTICS_PRESENT',
+      operator: 'EXISTS',
+      mandatory: false,
+      weight: 20,
+      description: 'Digital analytics technology detected'
+    }
+  ]
+};
+
+export const HIGH_CONTACTABILITY_PROFILE: QualificationProfile = {
+  profileId: 'leadnoria_high_contactability_v1',
+  profileName: 'High Contactability Qualification',
+  version: '1.0.0',
+  enabled: true,
+  missingDataPolicy: 'MISSING_IS_UNKNOWN',
+  unknownDataPolicy: 'UNKNOWN_YIELDS_UNCERTAIN',
+  conflictPolicy: 'STRICT_CONTRADICTION',
+  thresholds: {
+    minimumScore: 70
+  },
+  criteria: [
+    {
+      id: 'req_contact_email',
+      type: 'PUBLIC_EMAIL_AVAILABLE',
+      operator: 'EXISTS',
+      mandatory: true,
+      weight: 30,
+      description: 'Public business email must be available'
+    },
+    {
+      id: 'req_contact_phone',
+      type: 'PUBLIC_PHONE_AVAILABLE',
+      operator: 'EXISTS',
+      mandatory: true,
+      weight: 30,
+      description: 'Public business phone must be available'
+    },
+    {
+      id: 'opt_contact_form',
+      type: 'HAS_CONTACT_FORM',
+      operator: 'EXISTS',
+      mandatory: false,
+      weight: 20,
+      description: 'Contact form available on website'
+    },
+    {
+      id: 'opt_contact_corroborated_phone',
+      type: 'CORROBORATED_PHONE',
+      operator: 'EXISTS',
+      mandatory: false,
+      weight: 20,
+      description: 'Phone corroborated across distinct sources'
+    }
+  ]
+};
+

@@ -1,6 +1,38 @@
 # Changelog
 
-All notable changes to the **Meta Ad Library Lead Scraper** Chrome Extension are documented in this file.
+All notable changes to the **LeadNoria** Chrome Extension are documented in this file.
+
+---
+
+## [1.2.1] - 2026-10-05
+
+### Fixed
+- **Contact Reference Array Evaluation:** Added defensive nullish checks on optional `emailRefs` and `phoneRefs` arrays in people profiles within `src/extension/qualification/businessIntelligence.ts`, resolving runtime `TypeError` on records with unpopulated people contact arrays.
+
+### Packaging & Operations
+- **Release Verification:** Verified fresh release candidate `dist/leadnoria-v1.2.1.zip` via isolated directory extraction and automated clean Chromium browser testing.
+- **Repository Hygiene:** Whitelisted `v1.2.0` and `v1.2.1` release archives in `.gitignore`; synchronized license and release metadata.
+
+---
+
+## [1.2.0] - 2026-10-04
+
+### Added
+- **Unified Lead Intelligence:** Cross-source candidate assembly joining Meta commercial signals with target website intelligence facts under deterministic `canonicalEntityId`.
+- **Public Website Intelligence Engine:** Bounded same-origin website crawler discovering public emails, phones, social links, and digital technology stacks (up to 5 pages, 10s page timeout, 30s domain timeout).
+- **Explainable Qualification Engine:** Multi-factor commercial qualification with transparent reason graphs, freshness indicators, and conflict detection (`QUALIFIED`, `NOT_QUALIFIED`, `UNCERTAIN`, `BLOCKED`).
+- **Responsive Dual UI:** Seamless support for Chrome Side Panel (100vh flex) and Extension Popup (440x600 fixed), featuring fluid multi-column sorting, row filtering, and drawer drill-down inspection.
+- **Compliance Export Firewall:** Strict projection-based CSV/JSON export governed by `ExportPolicy`; spreadsheet formula injection neutralized via RFC-4180 escaping.
+- **Production Pilot Validation:** Comprehensive 156-assertion pilot test suite covering live Meta workflows, load scaling (up to 5,000 leads), fault injection, and security boundaries.
+
+---
+
+## [1.1.0] - 2026-09-30
+
+### Changed
+- **Product Rebranding:** Official rebrand to LeadNoria with brand new icon assets and unified identity.
+- **UI Scroll Discipline:** Resolved vertical scrolling defect in popup and side panel; added responsive flex scrolling containers and eliminated horizontal scroll traps.
+- **Unified Source Planning:** Canonical source adapter registry separating production sources (Meta, Website) from contract-only planning sources (Google Maps).
 
 ---
 
@@ -28,5 +60,5 @@ All notable changes to the **Meta Ad Library Lead Scraper** Chrome Extension are
   - Transparent export of relevance decisions, scores, confidence levels, and active ad metrics.
 - **Distribution Packages**:
   - Unpacked build directory in `./extension`.
-  - Production distribution archive in `./extension.zip` and `./dist/meta-ad-library-lead-scraper-v1.0.0.zip`.
-  - Non-technical 21-step installation guide in `INSTALL_GUIDE.md`.
+  - Production distribution archive in `./extension.zip` and `./dist/leadnoria-v1.0.0.zip`.
+  - Non-technical installation guide in `INSTALL_GUIDE.md`.

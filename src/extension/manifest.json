@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "LeadNoria",
   "short_name": "LeadNoria",
-  "version": "1.1.0",
+  "version": "1.2.1",
   "description": "Business lead research from real public signals.",
   "permissions": [
     "storage",
@@ -36,6 +36,16 @@
       ],
       "js": [
         "content-script.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.google.com/maps*",
+        "https://maps.google.com/*"
+      ],
+      "js": [
+        "gmaps-content-script.js"
       ],
       "run_at": "document_idle"
     }

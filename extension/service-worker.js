@@ -5747,7 +5747,3508 @@ async function verifyLeadWebsite(lead, customFetch) {
   return record;
 }
 
+// src/extension/qualification/qualificationProfile.ts
+var VALID_CRITERION_TYPES = /* @__PURE__ */ new Set([
+  "RELEVANCE",
+  "WEBSITE_STATUS",
+  "BUSINESS_IDENTITY",
+  "HAS_BUSINESS_PHONE",
+  "HAS_BUSINESS_EMAIL",
+  "HAS_BUSINESS_ADDRESS",
+  "HAS_CONTACT_FORM",
+  "HAS_SOCIAL_PROFILE",
+  "LOCATION_MATCH",
+  "CATEGORY_MATCH",
+  "NAME_MATCH",
+  "NEGATIVE_EVIDENCE",
+  "SOURCE_EVIDENCE_REQUIREMENT",
+  "COMPLETENESS_THRESHOLD",
+  "CUSTOM_FIELD",
+  // Phase 23 Business Intelligence Additions:
+  "VERIFIED_BUSINESS_WEBSITE",
+  "PUBLISHED_SERVICES",
+  "SERVICE_AREA_MATCH",
+  "BUSINESS_HOURS_PRESENT",
+  "DIGITAL_BOOKING_PRESENT",
+  "DIGITAL_ECOMMERCE_PRESENT",
+  "DIGITAL_CHAT_PRESENT",
+  "DIGITAL_ANALYTICS_PRESENT",
+  "DIGITAL_CMS_DETECTED",
+  "PUBLIC_EMAIL_AVAILABLE",
+  "ROLE_EMAIL_AVAILABLE",
+  "PERSON_EMAIL_AVAILABLE",
+  "PUBLIC_PHONE_AVAILABLE",
+  "PERSON_PHONE_AVAILABLE",
+  "PUBLIC_PERSON_AVAILABLE",
+  "PERSON_WITH_TITLE_AVAILABLE",
+  "CROSS_SOURCE_CORROBORATION",
+  "CORROBORATED_PHONE",
+  "CORROBORATED_IDENTITY",
+  "META_AD_ACTIVE",
+  "EVIDENCE_COVERAGE_THRESHOLD",
+  "BUSINESS_COMPLETENESS_THRESHOLD",
+  "TEMPORAL_FRESHNESS"
+]);
+var VALID_OPERATORS = /* @__PURE__ */ new Set([
+  "EQUALS",
+  "NOT_EQUALS",
+  "IN",
+  "NOT_IN",
+  "CONTAINS",
+  "NOT_CONTAINS",
+  "MATCHES",
+  "EXISTS",
+  "NOT_EXISTS",
+  "COUNT_AT_LEAST",
+  "COUNT_AT_MOST",
+  "THRESHOLD_AT_LEAST",
+  "THRESHOLD_AT_MOST",
+  "ANY",
+  "ALL",
+  "NONE"
+]);
+var BANNED_KEYS = /* @__PURE__ */ new Set(["__proto__", "constructor", "prototype"]);
+function validateQualificationProfile(profile) {
+  const errors = [];
+  const warnings = [];
+  if (!profile || typeof profile !== "object") {
+    return { isValid: false, errors: ["Profile must be a non-null object"], warnings: [] };
+  }
+  for (const k of Object.keys(profile)) {
+    if (BANNED_KEYS.has(k)) {
+      errors.push(`Security violation: Prohibited object key '${k}' detected`);
+    }
+  }
+  if (!profile.profileId || typeof profile.profileId !== "string" || !profile.profileId.trim()) {
+    errors.push("Profile must have a valid non-empty string profileId");
+  }
+  if (!profile.version || typeof profile.version !== "string" || !profile.version.trim()) {
+    errors.push("Profile must have a valid non-empty string version");
+  }
+  const validMissingPolicies = ["MISSING_IS_UNKNOWN", "MISSING_FAILS_REQUIRED", "MISSING_ALLOWED"];
+  if (!profile.missingDataPolicy || !validMissingPolicies.includes(profile.missingDataPolicy)) {
+    errors.push(`Invalid missingDataPolicy: must be one of ${validMissingPolicies.join(", ")}`);
+  }
+  const validUnknownPolicies = ["UNKNOWN_FAILS_MANDATORY", "UNKNOWN_YIELDS_UNCERTAIN", "UNKNOWN_ALLOWED"];
+  if (!profile.unknownDataPolicy || !validUnknownPolicies.includes(profile.unknownDataPolicy)) {
+    errors.push(`Invalid unknownDataPolicy: must be one of ${validUnknownPolicies.join(", ")}`);
+  }
+  const validConflictPolicies = ["STRICT_CONTRADICTION", "PERMISSIVE"];
+  if (!profile.conflictPolicy || !validConflictPolicies.includes(profile.conflictPolicy)) {
+    errors.push(`Invalid conflictPolicy: must be one of ${validConflictPolicies.join(", ")}`);
+  }
+  if (profile.thresholds) {
+    if (typeof profile.thresholds !== "object") {
+      errors.push("thresholds must be an object if specified");
+    } else {
+      const minScore = profile.thresholds.minimumScore;
+      if (minScore !== void 0) {
+        if (typeof minScore !== "number" || Number.isNaN(minScore) || !Number.isFinite(minScore) || minScore < 0) {
+          errors.push("thresholds.minimumScore must be a non-negative finite number");
+        }
+      }
+    }
+  }
+  if (!Array.isArray(profile.criteria)) {
+    errors.push("Profile must contain an array of criteria");
+    return { isValid: errors.length === 0, errors, warnings };
+  }
+  if (profile.criteria.length === 0) {
+    warnings.push("Profile has 0 criteria; evaluation will trivially pass");
+  }
+  if (profile.criteria.length > 100) {
+    errors.push("Resource limit exceeded: profile cannot contain more than 100 criteria");
+  }
+  const seenIds = /* @__PURE__ */ new Set();
+  for (let idx = 0; idx < profile.criteria.length; idx++) {
+    const c = profile.criteria[idx];
+    const prefix = `Criterion[${idx}]`;
+    if (!c || typeof c !== "object") {
+      errors.push(`${prefix}: must be a non-null object`);
+      continue;
+    }
+    for (const ck of Object.keys(c)) {
+      if (BANNED_KEYS.has(ck)) {
+        errors.push(`${prefix}: Security violation: Prohibited key '${ck}' detected`);
+      }
+    }
+    if (!c.id || typeof c.id !== "string" || !c.id.trim()) {
+      errors.push(`${prefix}: must have a non-empty string id`);
+    } else {
+      if (seenIds.has(c.id)) {
+        errors.push(`${prefix}: duplicate criterion ID '${c.id}'`);
+      }
+      seenIds.add(c.id);
+    }
+    if (!c.type || !VALID_CRITERION_TYPES.has(c.type)) {
+      errors.push(`${prefix}: invalid or unsupported criterion type '${c.type}'`);
+    }
+    if (!c.operator || !VALID_OPERATORS.has(c.operator)) {
+      errors.push(`${prefix}: invalid or unsupported operator '${c.operator}'`);
+    }
+    if (typeof c.mandatory !== "boolean") {
+      errors.push(`${prefix}: 'mandatory' must be a boolean`);
+    }
+    if (c.weight !== void 0) {
+      if (typeof c.weight !== "number" || Number.isNaN(c.weight) || !Number.isFinite(c.weight) || c.weight < 0) {
+        errors.push(`${prefix}: 'weight' must be a non-negative finite number`);
+      }
+    }
+    if (c.operator === "COUNT_AT_LEAST" || c.operator === "COUNT_AT_MOST") {
+      if (typeof c.expectedValue !== "number" || Number.isNaN(c.expectedValue) || c.expectedValue < 0) {
+        errors.push(`${prefix}: operator '${c.operator}' requires a non-negative integer expectedValue`);
+      }
+    }
+    if (c.operator === "MATCHES") {
+      if (typeof c.expectedValue !== "string") {
+        errors.push(`${prefix}: operator 'MATCHES' requires a string regex pattern`);
+      } else {
+        if (c.expectedValue.length > 200) {
+          errors.push(`${prefix}: regex pattern exceeds safe maximum length (200 chars)`);
+        } else {
+          try {
+            new RegExp(c.expectedValue);
+          } catch (regErr) {
+            errors.push(`${prefix}: invalid regular expression '${c.expectedValue}': ${regErr.message}`);
+          }
+        }
+      }
+    }
+  }
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings
+  };
+}
+var CANONICAL_DEFAULT_PROFILE = {
+  profileId: "leadnoria_default_commercial_v1",
+  profileName: "Standard Commercial Business Qualification",
+  version: "1.0.0",
+  enabled: true,
+  missingDataPolicy: "MISSING_IS_UNKNOWN",
+  unknownDataPolicy: "UNKNOWN_YIELDS_UNCERTAIN",
+  conflictPolicy: "STRICT_CONTRADICTION",
+  thresholds: {
+    minimumScore: 60
+  },
+  criteria: [
+    {
+      id: "req_relevance",
+      type: "RELEVANCE",
+      operator: "EQUALS",
+      expectedValue: "RELEVANT",
+      mandatory: true,
+      weight: 30,
+      description: "Business must satisfy search relevance"
+    },
+    {
+      id: "req_website_status",
+      type: "WEBSITE_STATUS",
+      operator: "IN",
+      expectedValue: ["WEBSITE_VERIFIED_BUSINESS_SITE", "WEBSITE_PRESENT"],
+      mandatory: true,
+      weight: 25,
+      description: "Business must possess an active or verified business website"
+    },
+    {
+      id: "req_phone",
+      type: "HAS_BUSINESS_PHONE",
+      operator: "COUNT_AT_LEAST",
+      expectedValue: 1,
+      mandatory: true,
+      weight: 25,
+      description: "Business must have at least one usable public phone number"
+    },
+    {
+      id: "opt_email",
+      type: "HAS_BUSINESS_EMAIL",
+      operator: "COUNT_AT_LEAST",
+      expectedValue: 1,
+      mandatory: false,
+      weight: 20,
+      description: "Bonus: Business possesses a public business email"
+    }
+  ]
+};
+var LOCAL_SERVICE_BUSINESS_PROFILE = {
+  profileId: "leadnoria_local_service_v1",
+  profileName: "Local Service Business Qualification",
+  version: "1.0.0",
+  enabled: true,
+  missingDataPolicy: "MISSING_IS_UNKNOWN",
+  unknownDataPolicy: "UNKNOWN_YIELDS_UNCERTAIN",
+  conflictPolicy: "STRICT_CONTRADICTION",
+  thresholds: {
+    minimumScore: 60
+  },
+  criteria: [
+    {
+      id: "req_local_website",
+      type: "VERIFIED_BUSINESS_WEBSITE",
+      operator: "EXISTS",
+      mandatory: true,
+      weight: 25,
+      description: "Business must possess a verified website"
+    },
+    {
+      id: "req_local_contact",
+      type: "PUBLIC_PHONE_AVAILABLE",
+      operator: "EXISTS",
+      mandatory: true,
+      weight: 25,
+      description: "Business must provide a public phone contact"
+    },
+    {
+      id: "opt_local_services",
+      type: "PUBLISHED_SERVICES",
+      operator: "COUNT_AT_LEAST",
+      expectedValue: 1,
+      mandatory: false,
+      weight: 20,
+      description: "Business lists published local services"
+    },
+    {
+      id: "opt_local_hours",
+      type: "BUSINESS_HOURS_PRESENT",
+      operator: "EXISTS",
+      mandatory: false,
+      weight: 15,
+      description: "Business hours are publicly available"
+    },
+    {
+      id: "opt_local_booking",
+      type: "DIGITAL_BOOKING_PRESENT",
+      operator: "EXISTS",
+      mandatory: false,
+      weight: 15,
+      description: "Online booking capability detected"
+    }
+  ]
+};
+var B2B_PROSPECT_PROFILE = {
+  profileId: "leadnoria_b2b_prospect_v1",
+  profileName: "B2B Commercial Prospect Qualification",
+  version: "1.0.0",
+  enabled: true,
+  missingDataPolicy: "MISSING_IS_UNKNOWN",
+  unknownDataPolicy: "UNKNOWN_YIELDS_UNCERTAIN",
+  conflictPolicy: "STRICT_CONTRADICTION",
+  thresholds: {
+    minimumScore: 65
+  },
+  criteria: [
+    {
+      id: "req_b2b_website",
+      type: "VERIFIED_BUSINESS_WEBSITE",
+      operator: "EXISTS",
+      mandatory: true,
+      weight: 25,
+      description: "Verified business domain must exist"
+    },
+    {
+      id: "req_b2b_email",
+      type: "PUBLIC_EMAIL_AVAILABLE",
+      operator: "EXISTS",
+      mandatory: true,
+      weight: 25,
+      description: "Public business email must be available"
+    },
+    {
+      id: "opt_b2b_services",
+      type: "PUBLISHED_SERVICES",
+      operator: "COUNT_AT_LEAST",
+      expectedValue: 1,
+      mandatory: false,
+      weight: 20,
+      description: "Business describes explicit service offerings"
+    },
+    {
+      id: "opt_b2b_person",
+      type: "PUBLIC_PERSON_AVAILABLE",
+      operator: "EXISTS",
+      mandatory: false,
+      weight: 15,
+      description: "Public team member or person identified"
+    },
+    {
+      id: "opt_b2b_corroboration",
+      type: "CORROBORATED_IDENTITY",
+      operator: "EXISTS",
+      mandatory: false,
+      weight: 15,
+      description: "Business identity corroborated across multiple sources"
+    }
+  ]
+};
+var DIGITAL_COMMERCE_BUSINESS_PROFILE = {
+  profileId: "leadnoria_digital_commerce_v1",
+  profileName: "Digital Commerce Business Qualification",
+  version: "1.0.0",
+  enabled: true,
+  missingDataPolicy: "MISSING_IS_UNKNOWN",
+  unknownDataPolicy: "UNKNOWN_YIELDS_UNCERTAIN",
+  conflictPolicy: "STRICT_CONTRADICTION",
+  thresholds: {
+    minimumScore: 60
+  },
+  criteria: [
+    {
+      id: "req_ecom_website",
+      type: "VERIFIED_BUSINESS_WEBSITE",
+      operator: "EXISTS",
+      mandatory: true,
+      weight: 30,
+      description: "Active website required"
+    },
+    {
+      id: "req_ecom_capability",
+      type: "DIGITAL_ECOMMERCE_PRESENT",
+      operator: "EXISTS",
+      mandatory: true,
+      weight: 30,
+      description: "E-commerce platform or checkout capability detected"
+    },
+    {
+      id: "opt_ecom_chat",
+      type: "DIGITAL_CHAT_PRESENT",
+      operator: "EXISTS",
+      mandatory: false,
+      weight: 20,
+      description: "Customer chat / widget present"
+    },
+    {
+      id: "opt_ecom_analytics",
+      type: "DIGITAL_ANALYTICS_PRESENT",
+      operator: "EXISTS",
+      mandatory: false,
+      weight: 20,
+      description: "Digital analytics technology detected"
+    }
+  ]
+};
+var HIGH_CONTACTABILITY_PROFILE = {
+  profileId: "leadnoria_high_contactability_v1",
+  profileName: "High Contactability Qualification",
+  version: "1.0.0",
+  enabled: true,
+  missingDataPolicy: "MISSING_IS_UNKNOWN",
+  unknownDataPolicy: "UNKNOWN_YIELDS_UNCERTAIN",
+  conflictPolicy: "STRICT_CONTRADICTION",
+  thresholds: {
+    minimumScore: 70
+  },
+  criteria: [
+    {
+      id: "req_contact_email",
+      type: "PUBLIC_EMAIL_AVAILABLE",
+      operator: "EXISTS",
+      mandatory: true,
+      weight: 30,
+      description: "Public business email must be available"
+    },
+    {
+      id: "req_contact_phone",
+      type: "PUBLIC_PHONE_AVAILABLE",
+      operator: "EXISTS",
+      mandatory: true,
+      weight: 30,
+      description: "Public business phone must be available"
+    },
+    {
+      id: "opt_contact_form",
+      type: "HAS_CONTACT_FORM",
+      operator: "EXISTS",
+      mandatory: false,
+      weight: 20,
+      description: "Contact form available on website"
+    },
+    {
+      id: "opt_contact_corroborated_phone",
+      type: "CORROBORATED_PHONE",
+      operator: "EXISTS",
+      mandatory: false,
+      weight: 20,
+      description: "Phone corroborated across distinct sources"
+    }
+  ]
+};
+
+// src/extension/qualification/qualificationFirewall.ts
+function checkQualificationEligibility(contribution) {
+  if (!contribution) {
+    return { isBlocked: false, restrictionBasis: "NONE" };
+  }
+  if (contribution.policyStatus === "PRODUCT_REJECTED") {
+    return {
+      isBlocked: true,
+      reason: `Field '${contribution.fieldName}' is PRODUCT_REJECTED by compliance policy`,
+      restrictionBasis: contribution.restrictionBasis
+    };
+  }
+  return {
+    isBlocked: false,
+    restrictionBasis: contribution.restrictionBasis
+  };
+}
+function deriveCompositeRestrictions(context) {
+  const allContributions = [
+    ...context.sourceContributions || [],
+    ...context.relevanceResult?.sourceContributions || [],
+    ...context.mapsVerificationResult?.sourceContributions || [],
+    ...context.contactEnrichment?.sourceContributions || [],
+    ...context.businessIntelligence?.sourceContributions || []
+  ];
+  const seenContribKeys = /* @__PURE__ */ new Set();
+  const dedupedContributions = [];
+  for (const c of allContributions) {
+    const key = `${c.fieldName}_${c.source}_${c.provenance}_${c.acquisitionContext}`;
+    if (!seenContribKeys.has(key)) {
+      seenContribKeys.add(key);
+      dedupedContributions.push(c);
+    }
+  }
+  const allDerivedFrom = /* @__PURE__ */ new Set([
+    ...context.derivedFrom || [],
+    ...context.relevanceResult?.derivedFrom || [],
+    ...context.mapsVerificationResult?.derivedFrom || [],
+    ...context.contactEnrichment?.derivedFrom || [],
+    ...context.businessIntelligence?.derivedFrom || []
+  ]);
+  const hasRestrictedGoogle = context.businessIntelligence?.hasRestrictedGoogleEvidence === true || context.businessIntelligence?.sourceRestrictions?.isRestricted === true || dedupedContributions.some(
+    (c) => c.provenance === "GOOGLE_DERIVED" || c.restrictionBasis === "GOOGLE_CONSUMER_WEB_RESTRICTED"
+  );
+  const hasRestrictedAPI = dedupedContributions.some(
+    (c) => c.restrictionBasis === "GOOGLE_API_SERVICE_SPECIFIC"
+  );
+  let restrictionBasis = "NONE";
+  let persistenceEligibility = "PERSISTABLE";
+  let exportEligibility = "EXPORTABLE";
+  let policyStatus = "POLICY_APPROVED";
+  if (hasRestrictedGoogle) {
+    restrictionBasis = "GOOGLE_CONSUMER_WEB_RESTRICTED";
+    persistenceEligibility = "NOT_PERSISTABLE";
+    exportEligibility = "NOT_EXPORTABLE";
+  } else if (hasRestrictedAPI) {
+    restrictionBasis = "GOOGLE_API_SERVICE_SPECIFIC";
+    persistenceEligibility = "PERSISTENCE_GATED";
+    exportEligibility = "EXPORT_GATED";
+    policyStatus = "POLICY_REVIEW_REQUIRED";
+  }
+  const provenances = new Set(dedupedContributions.map((c) => c.provenance));
+  let provenance = "LEADNORIA_DERIVED";
+  if (provenances.size > 1) {
+    provenance = "MIXED";
+  } else if (provenances.size === 1) {
+    provenance = Array.from(provenances)[0];
+  } else if (context.contactEnrichment) {
+    provenance = context.contactEnrichment.provenance;
+  }
+  return {
+    isRestricted: hasRestrictedGoogle || hasRestrictedAPI,
+    restrictionBasis,
+    policyStatus,
+    persistenceEligibility,
+    exportEligibility,
+    provenance,
+    sourceContributions: dedupedContributions,
+    derivedFrom: Array.from(allDerivedFrom).sort()
+  };
+}
+
+// src/extension/qualification/criterionEvaluator.ts
+function evaluateOperator(operator, actual, expected) {
+  switch (operator) {
+    case "EQUALS":
+      return actual === expected || String(actual).toLowerCase() === String(expected).toLowerCase();
+    case "NOT_EQUALS":
+      return actual !== expected && String(actual).toLowerCase() !== String(expected).toLowerCase();
+    case "IN":
+      if (Array.isArray(expected)) {
+        return expected.some((exp) => exp === actual || String(exp).toLowerCase() === String(actual).toLowerCase());
+      }
+      return false;
+    case "NOT_IN":
+      if (Array.isArray(expected)) {
+        return !expected.some((exp) => exp === actual || String(exp).toLowerCase() === String(actual).toLowerCase());
+      }
+      return true;
+    case "CONTAINS":
+      if (typeof actual === "string" && typeof expected === "string") {
+        return actual.toLowerCase().includes(expected.toLowerCase());
+      }
+      if (Array.isArray(actual)) {
+        return actual.some((item) => item === expected || String(item).toLowerCase() === String(expected).toLowerCase());
+      }
+      return false;
+    case "NOT_CONTAINS":
+      if (typeof actual === "string" && typeof expected === "string") {
+        return !actual.toLowerCase().includes(expected.toLowerCase());
+      }
+      if (Array.isArray(actual)) {
+        return !actual.some((item) => item === expected || String(item).toLowerCase() === String(expected).toLowerCase());
+      }
+      return true;
+    case "MATCHES":
+      if (typeof actual === "string" && typeof expected === "string") {
+        try {
+          const reg = new RegExp(expected, "i");
+          return reg.test(actual);
+        } catch {
+          return false;
+        }
+      }
+      return false;
+    case "EXISTS":
+      return actual !== void 0 && actual !== null && actual !== false && actual !== "" && (!Array.isArray(actual) || actual.length > 0);
+    case "NOT_EXISTS":
+      return actual === void 0 || actual === null || actual === "" || Array.isArray(actual) && actual.length === 0;
+    case "COUNT_AT_LEAST":
+      if (Array.isArray(actual)) {
+        return actual.length >= Number(expected);
+      }
+      if (typeof actual === "number") {
+        return actual >= Number(expected);
+      }
+      return false;
+    case "COUNT_AT_MOST":
+      if (Array.isArray(actual)) {
+        return actual.length <= Number(expected);
+      }
+      if (typeof actual === "number") {
+        return actual <= Number(expected);
+      }
+      return false;
+    case "THRESHOLD_AT_LEAST":
+      return Number(actual) >= Number(expected);
+    case "THRESHOLD_AT_MOST":
+      return Number(actual) <= Number(expected);
+    case "ANY":
+      if (Array.isArray(actual) && Array.isArray(expected)) {
+        return actual.some((a) => expected.includes(a));
+      }
+      return false;
+    case "ALL":
+      if (Array.isArray(actual) && Array.isArray(expected)) {
+        return expected.every((e) => actual.includes(e));
+      }
+      return false;
+    case "NONE":
+      if (Array.isArray(actual) && Array.isArray(expected)) {
+        return !actual.some((a) => expected.includes(a));
+      }
+      return true;
+    default:
+      return false;
+  }
+}
+function evaluateCriterion(criterion, context, policies) {
+  const weight = criterion.weight ?? (criterion.mandatory ? 10 : 5);
+  const evidence = [];
+  let actualValue = void 0;
+  let isMissing = false;
+  let isContradictory = false;
+  let contradictionReason = "";
+  let reasonCode = "";
+  let explanation = "";
+  switch (criterion.type) {
+    case "RELEVANCE": {
+      actualValue = context.relevanceResult?.relevanceState;
+      if (!actualValue) {
+        isMissing = true;
+      } else {
+        if (context.relevanceResult?.evidenceItems) {
+          evidence.push(...context.relevanceResult.evidenceItems);
+        }
+      }
+      break;
+    }
+    case "WEBSITE_STATUS": {
+      actualValue = context.websiteState || context.mapsVerificationResult?.websiteState || context.normalizedCandidate?.verificationPlaceholder?.verificationStatus;
+      if (!actualValue) {
+        isMissing = true;
+      } else {
+        if (context.websiteEvidence) {
+          evidence.push(...context.websiteEvidence);
+        }
+        if (context.mapsVerificationResult?.verificationEvidence) {
+          evidence.push(...context.mapsVerificationResult.verificationEvidence);
+        }
+      }
+      break;
+    }
+    case "BUSINESS_IDENTITY": {
+      const biConflict = context.businessIntelligence?.identity.canonicalBusinessName.state === "CONTRADICTORY";
+      const isConflict = biConflict || context.resolvedEntityGroup?.resolutionStatus === "CONFLICTING_IDENTITY" || context.resolvedEntityGroup?.relationshipType === "CONFLICTING_IDENTITY" || context.resolvedEntityGroup?.identityConflicts && context.resolvedEntityGroup.identityConflicts.length > 0 || context.contactEnrichment?.diagnostics?.warnings?.some((w) => w.includes("conflicts with candidate name"));
+      if (isConflict) {
+        isContradictory = true;
+        contradictionReason = "Business identity contradiction detected across source records";
+      }
+      actualValue = isConflict ? "CONTRADICTION" : context.businessIntelligence?.identity.canonicalBusinessName.value || context.canonicalDisplayName || context.normalizedCandidate?.businessName?.value?.displayName;
+      if (!actualValue) isMissing = true;
+      if (context.businessIntelligence?.identity.canonicalBusinessName.sourceContributions) {
+        evidence.push(...context.businessIntelligence.identity.canonicalBusinessName.sourceContributions);
+      }
+      break;
+    }
+    case "HAS_BUSINESS_PHONE": {
+      if (context.businessIntelligence?.contactPresence.publicPhonePresent.state === "CONTRADICTORY") {
+        isContradictory = true;
+        contradictionReason = "Conflicting phone numbers observed across distinct sources";
+      }
+      const enrichmentPhones = context.contactEnrichment?.phones || [];
+      const candidatePhones = context.normalizedCandidate?.phones || [];
+      const biPhones = context.businessIntelligence?.contactPresence.publicPhonePresent.value ? [context.businessIntelligence.contactPresence.publicPhonePresent.value] : [];
+      const hasPhones = enrichmentPhones.length > 0 || candidatePhones.length > 0 || biPhones.length > 0;
+      actualValue = enrichmentPhones.length > 0 ? enrichmentPhones : candidatePhones.length > 0 ? candidatePhones : biPhones;
+      if (!hasPhones) {
+        isMissing = true;
+      } else {
+        for (const p of enrichmentPhones) {
+          if (p.evidence) evidence.push(...p.evidence);
+        }
+        for (const cp of candidatePhones) {
+          if (cp.sourceContributions) evidence.push(...cp.sourceContributions);
+        }
+        if (context.businessIntelligence?.contactPresence.publicPhonePresent.sourceContributions) {
+          evidence.push(...context.businessIntelligence.contactPresence.publicPhonePresent.sourceContributions);
+        }
+      }
+      break;
+    }
+    case "HAS_BUSINESS_EMAIL": {
+      if (context.businessIntelligence?.contactPresence.publicEmailPresent.state === "CONTRADICTORY") {
+        isContradictory = true;
+        contradictionReason = "Conflicting email records observed across sources";
+      }
+      const enrichmentEmails = context.contactEnrichment?.emails || [];
+      const candidateEmails = context.normalizedCandidate?.emails || [];
+      const biEmails = context.businessIntelligence?.contactPresence.publicEmailPresent.value ? [context.businessIntelligence.contactPresence.publicEmailPresent.value] : [];
+      const hasEmails = enrichmentEmails.length > 0 || candidateEmails.length > 0 || biEmails.length > 0;
+      actualValue = enrichmentEmails.length > 0 ? enrichmentEmails : candidateEmails.length > 0 ? candidateEmails : biEmails;
+      if (!hasEmails) {
+        isMissing = true;
+      } else {
+        for (const e of enrichmentEmails) {
+          if (e.evidence) evidence.push(...e.evidence);
+        }
+        for (const ce of candidateEmails) {
+          if (ce.sourceContributions) evidence.push(...ce.sourceContributions);
+        }
+        if (context.businessIntelligence?.contactPresence.publicEmailPresent.sourceContributions) {
+          evidence.push(...context.businessIntelligence.contactPresence.publicEmailPresent.sourceContributions);
+        }
+      }
+      break;
+    }
+    case "HAS_BUSINESS_ADDRESS": {
+      if (context.businessIntelligence?.location.address.state === "CONTRADICTORY") {
+        isContradictory = true;
+        contradictionReason = "Address conflict detected across distinct sources";
+      }
+      const enrichmentAddresses = context.contactEnrichment?.addresses || [];
+      const candidateAddress = context.normalizedCandidate?.address ? [context.normalizedCandidate.address] : [];
+      const biAddress = context.businessIntelligence?.location.address.value ? [context.businessIntelligence.location.address.value] : [];
+      const hasAddresses = enrichmentAddresses.length > 0 || candidateAddress.length > 0 || biAddress.length > 0;
+      actualValue = enrichmentAddresses.length > 0 ? enrichmentAddresses : candidateAddress.length > 0 ? candidateAddress : biAddress;
+      if (!hasAddresses) {
+        isMissing = true;
+      } else {
+        for (const a of enrichmentAddresses) {
+          if (a.evidence) evidence.push(...a.evidence);
+        }
+        for (const ca of candidateAddress) {
+          if (ca.sourceContributions) evidence.push(...ca.sourceContributions);
+        }
+        if (context.businessIntelligence?.location.address.sourceContributions) {
+          evidence.push(...context.businessIntelligence.location.address.sourceContributions);
+        }
+      }
+      break;
+    }
+    case "HAS_CONTACT_FORM": {
+      const forms = context.contactEnrichment?.contactForms || [];
+      const biForm = context.businessIntelligence?.digitalPresence.contactFormPresent.value;
+      actualValue = forms.some((f) => f.present) || (biForm === true ? true : void 0);
+      if (forms.length === 0 && biForm === void 0) {
+        isMissing = true;
+      } else {
+        for (const f of forms) {
+          if (f.evidence) evidence.push(...f.evidence);
+        }
+        if (context.businessIntelligence?.digitalPresence.contactFormPresent.sourceContributions) {
+          evidence.push(...context.businessIntelligence.digitalPresence.contactFormPresent.sourceContributions);
+        }
+      }
+      break;
+    }
+    case "HAS_SOCIAL_PROFILE": {
+      const socials = context.contactEnrichment?.socialProfiles || [];
+      const biSocials = context.businessIntelligence?.digitalPresence.socialPresence.value || [];
+      actualValue = socials.length > 0 ? socials.map((s) => s.platform) : biSocials.length > 0 ? biSocials : void 0;
+      if (socials.length === 0 && biSocials.length === 0) {
+        isMissing = true;
+      } else {
+        for (const s of socials) {
+          if (s.evidence) evidence.push(...s.evidence);
+        }
+        if (context.businessIntelligence?.digitalPresence.socialPresence.sourceContributions) {
+          evidence.push(...context.businessIntelligence.digitalPresence.socialPresence.sourceContributions);
+        }
+      }
+      break;
+    }
+    case "LOCATION_MATCH": {
+      const country = context.businessIntelligence?.location.country.value || context.normalizedCandidate?.address?.value?.countryCode || context.normalizedCandidate?.location?.value?.countryCode || context.contactEnrichment?.addresses?.[0]?.country;
+      const city = context.businessIntelligence?.location.city.value || context.normalizedCandidate?.address?.value?.locality || context.normalizedCandidate?.location?.value?.city || context.contactEnrichment?.addresses?.[0]?.city;
+      actualValue = { country, city };
+      if (!country && !city) {
+        isMissing = true;
+      }
+      break;
+    }
+    case "CATEGORY_MATCH": {
+      actualValue = context.businessIntelligence?.identity.primaryCategory.value || context.normalizedCandidate?.categories?.[0]?.value?.normalizedCategory || context.normalizedCandidate?.category?.normalizedCategory || context.normalizedCandidate?.category || context.relevanceResult?.evidenceItems?.find((e) => e.evidenceType === "CATEGORY_EVIDENCE")?.observedValue;
+      if (!actualValue) isMissing = true;
+      break;
+    }
+    case "NAME_MATCH": {
+      if (context.businessIntelligence?.identity.canonicalBusinessName.state === "CONTRADICTORY") {
+        isContradictory = true;
+        contradictionReason = "Conflicting business names observed across distinct sources";
+      }
+      actualValue = context.businessIntelligence?.identity.canonicalBusinessName.value || context.canonicalDisplayName || context.normalizedCandidate?.businessName?.value?.displayName || context.contactEnrichment?.businessName?.normalizedName;
+      if (!actualValue) isMissing = true;
+      break;
+    }
+    case "NEGATIVE_EVIDENCE": {
+      const hasNegativeRelevance = context.relevanceResult?.relevanceState === "NOT_RELEVANT";
+      const hasNegativeWeb = context.websiteState === "WEBSITE_NON_BUSINESS" || context.websiteState === "WEBSITE_PARKED";
+      actualValue = hasNegativeRelevance || hasNegativeWeb;
+      break;
+    }
+    case "SOURCE_EVIDENCE_REQUIREMENT": {
+      const allContribs = [
+        ...context.sourceContributions || [],
+        ...context.contactEnrichment?.sourceContributions || []
+      ];
+      actualValue = allContribs.map((c) => c.provenance);
+      if (allContribs.length === 0) isMissing = true;
+      break;
+    }
+    case "COMPLETENESS_THRESHOLD": {
+      actualValue = context.businessIntelligence?.completenessMetrics.businessCompleteness ?? context.contactEnrichment?.completeness;
+      if (actualValue === void 0 || actualValue === null) isMissing = true;
+      break;
+    }
+    // ==========================================
+    // Phase 23 Business Intelligence Criteria
+    // ==========================================
+    case "VERIFIED_BUSINESS_WEBSITE": {
+      const biWeb = context.businessIntelligence?.digitalPresence.verifiedWebsite;
+      if (biWeb?.state === "CONTRADICTORY") {
+        isContradictory = true;
+        contradictionReason = "Conflicting website domains detected";
+      }
+      const isVerified = biWeb?.value === true || context.businessIntelligence?.digitalPresence.websitePresent.value === true || context.websiteState === "WEBSITE_VERIFIED_BUSINESS_SITE";
+      actualValue = isVerified ? true : void 0;
+      if (actualValue === void 0) {
+        isMissing = true;
+      } else {
+        if (biWeb?.sourceContributions) evidence.push(...biWeb.sourceContributions);
+        if (context.websiteEvidence) evidence.push(...context.websiteEvidence);
+      }
+      break;
+    }
+    case "PUBLISHED_SERVICES": {
+      const biServices = context.businessIntelligence?.businessActivity.publishedServices;
+      if (biServices?.state === "CONTRADICTORY") {
+        isContradictory = true;
+        contradictionReason = "Contradictory service offerings reported";
+      }
+      const services = biServices?.value ?? context.websiteIntelligence?.services ?? [];
+      actualValue = Array.isArray(services) && services.length > 0 ? services : void 0;
+      if (!actualValue) {
+        isMissing = true;
+      } else {
+        if (biServices?.sourceContributions) evidence.push(...biServices.sourceContributions);
+      }
+      break;
+    }
+    case "SERVICE_AREA_MATCH": {
+      const areas = context.businessIntelligence?.location.serviceAreas.value ?? context.websiteIntelligence?.serviceAreas ?? [];
+      actualValue = Array.isArray(areas) && areas.length > 0 ? areas : void 0;
+      if (!actualValue) {
+        isMissing = true;
+      } else {
+        if (context.businessIntelligence?.location.serviceAreas.sourceContributions) {
+          evidence.push(...context.businessIntelligence.location.serviceAreas.sourceContributions);
+        }
+      }
+      break;
+    }
+    case "BUSINESS_HOURS_PRESENT": {
+      const hours = context.businessIntelligence?.businessActivity.businessHours.value;
+      actualValue = hours && Object.keys(hours).length > 0 ? hours : void 0;
+      if (!actualValue) {
+        isMissing = true;
+      } else {
+        if (context.businessIntelligence?.businessActivity.businessHours.sourceContributions) {
+          evidence.push(...context.businessIntelligence.businessActivity.businessHours.sourceContributions);
+        }
+      }
+      break;
+    }
+    case "DIGITAL_BOOKING_PRESENT": {
+      const booking = context.businessIntelligence?.digitalPresence.bookingSystemPresent.value ?? context.websiteIntelligence?.technologies?.booking;
+      actualValue = booking === true ? true : void 0;
+      if (actualValue === void 0) isMissing = true;
+      if (context.businessIntelligence?.digitalPresence.bookingSystemPresent.sourceContributions) {
+        evidence.push(...context.businessIntelligence.digitalPresence.bookingSystemPresent.sourceContributions);
+      }
+      break;
+    }
+    case "DIGITAL_ECOMMERCE_PRESENT": {
+      const ecom = context.businessIntelligence?.digitalPresence.ecommercePresent.value ?? context.websiteIntelligence?.technologies?.ecommerce;
+      actualValue = ecom === true ? true : void 0;
+      if (actualValue === void 0) isMissing = true;
+      if (context.businessIntelligence?.digitalPresence.ecommercePresent.sourceContributions) {
+        evidence.push(...context.businessIntelligence.digitalPresence.ecommercePresent.sourceContributions);
+      }
+      break;
+    }
+    case "DIGITAL_CHAT_PRESENT": {
+      const chat = context.businessIntelligence?.digitalPresence.chatPresent.value ?? context.websiteIntelligence?.technologies?.chat;
+      actualValue = chat === true ? true : void 0;
+      if (actualValue === void 0) isMissing = true;
+      if (context.businessIntelligence?.digitalPresence.chatPresent.sourceContributions) {
+        evidence.push(...context.businessIntelligence.digitalPresence.chatPresent.sourceContributions);
+      }
+      break;
+    }
+    case "DIGITAL_ANALYTICS_PRESENT": {
+      const analytics = context.businessIntelligence?.digitalPresence.analyticsTechnologyPresent.value ?? context.websiteIntelligence?.technologies?.analytics;
+      actualValue = analytics === true ? true : void 0;
+      if (actualValue === void 0) isMissing = true;
+      if (context.businessIntelligence?.digitalPresence.analyticsTechnologyPresent.sourceContributions) {
+        evidence.push(...context.businessIntelligence.digitalPresence.analyticsTechnologyPresent.sourceContributions);
+      }
+      break;
+    }
+    case "DIGITAL_CMS_DETECTED": {
+      const cms = context.businessIntelligence?.digitalPresence?.cmsDetected?.value ?? context.websiteIntelligence?.technologies?.cms;
+      actualValue = cms ? cms : void 0;
+      if (!actualValue) isMissing = true;
+      break;
+    }
+    case "PUBLIC_EMAIL_AVAILABLE": {
+      if (context.businessIntelligence?.contactPresence.publicEmailPresent.state === "CONTRADICTORY") {
+        isContradictory = true;
+        contradictionReason = "Email contradiction observed";
+      }
+      const hasEmail = context.businessIntelligence?.contactPresence.publicEmailPresent.value ?? ((context.contactEnrichment?.emails?.length ?? 0) > 0 || (context.normalizedCandidate?.emails?.length ?? 0) > 0);
+      actualValue = hasEmail ? true : void 0;
+      if (actualValue === void 0) isMissing = true;
+      if (context.businessIntelligence?.contactPresence.publicEmailPresent.sourceContributions) {
+        evidence.push(...context.businessIntelligence.contactPresence.publicEmailPresent.sourceContributions);
+      }
+      break;
+    }
+    case "ROLE_EMAIL_AVAILABLE": {
+      const roleEmail = context.businessIntelligence?.contactPresence.roleEmailPresent.value;
+      actualValue = roleEmail === true ? true : void 0;
+      if (actualValue === void 0) isMissing = true;
+      if (context.businessIntelligence?.contactPresence.roleEmailPresent.sourceContributions) {
+        evidence.push(...context.businessIntelligence.contactPresence.roleEmailPresent.sourceContributions);
+      }
+      break;
+    }
+    case "PERSON_EMAIL_AVAILABLE": {
+      const personEmail = context.businessIntelligence?.contactPresence.personEmailPresent.value;
+      actualValue = personEmail === true ? true : void 0;
+      if (actualValue === void 0) isMissing = true;
+      if (context.businessIntelligence?.contactPresence.personEmailPresent.sourceContributions) {
+        evidence.push(...context.businessIntelligence.contactPresence.personEmailPresent.sourceContributions);
+      }
+      break;
+    }
+    case "PUBLIC_PHONE_AVAILABLE": {
+      if (context.businessIntelligence?.contactPresence.publicPhonePresent.state === "CONTRADICTORY") {
+        isContradictory = true;
+        contradictionReason = "Phone contradiction observed";
+      }
+      const hasPhone = context.businessIntelligence?.contactPresence.publicPhonePresent.value ?? ((context.contactEnrichment?.phones?.length ?? 0) > 0 || (context.normalizedCandidate?.phones?.length ?? 0) > 0);
+      actualValue = hasPhone ? true : void 0;
+      if (actualValue === void 0) isMissing = true;
+      if (context.businessIntelligence?.contactPresence.publicPhonePresent.sourceContributions) {
+        evidence.push(...context.businessIntelligence.contactPresence.publicPhonePresent.sourceContributions);
+      }
+      break;
+    }
+    case "PERSON_PHONE_AVAILABLE": {
+      const personPhone = context.businessIntelligence?.contactPresence.personPhonePresent.value;
+      actualValue = personPhone === true ? true : void 0;
+      if (actualValue === void 0) isMissing = true;
+      if (context.businessIntelligence?.contactPresence.personPhonePresent.sourceContributions) {
+        evidence.push(...context.businessIntelligence.contactPresence.personPhonePresent.sourceContributions);
+      }
+      break;
+    }
+    case "PUBLIC_PERSON_AVAILABLE": {
+      const publicPerson = context.businessIntelligence?.contactPresence.publicPersonPresent.value;
+      actualValue = publicPerson === true ? true : void 0;
+      if (actualValue === void 0) isMissing = true;
+      if (context.businessIntelligence?.contactPresence.publicPersonPresent.sourceContributions) {
+        evidence.push(...context.businessIntelligence.contactPresence.publicPersonPresent.sourceContributions);
+      }
+      break;
+    }
+    case "PERSON_WITH_TITLE_AVAILABLE": {
+      const personWithTitle = context.businessIntelligence?.contactPresence?.personWithTitlePresent?.value;
+      actualValue = personWithTitle === true ? true : void 0;
+      if (actualValue === void 0) isMissing = true;
+      break;
+    }
+    case "CROSS_SOURCE_CORROBORATION": {
+      const count = context.businessIntelligence?.completenessMetrics.sourceCorroborationCount ?? (context.businessIntelligence?.crossSourceCorroborations?.length ?? 0);
+      actualValue = count;
+      if (count === 0) isMissing = true;
+      if (context.businessIntelligence?.crossSourceCorroborations) {
+        evidence.push(...context.businessIntelligence.crossSourceCorroborations);
+      }
+      break;
+    }
+    case "CORROBORATED_PHONE": {
+      const sig = context.businessIntelligence?.contactPresence.publicPhonePresent;
+      if (sig?.state === "CONTRADICTORY") {
+        isContradictory = true;
+        contradictionReason = "Phone conflict observed between sources";
+      }
+      const corroborated = sig?.state === "CORROBORATED" || sig?.corroborationSources && sig.corroborationSources.length > 1;
+      actualValue = corroborated ? true : void 0;
+      if (!actualValue) isMissing = true;
+      if (sig?.sourceContributions) evidence.push(...sig.sourceContributions);
+      break;
+    }
+    case "CORROBORATED_IDENTITY": {
+      const sig = context.businessIntelligence?.identity.canonicalBusinessName;
+      if (sig?.state === "CONTRADICTORY") {
+        isContradictory = true;
+        contradictionReason = "Business identity contradiction between sources";
+      }
+      const corroborated = sig?.state === "CORROBORATED" || sig?.corroborationSources && sig.corroborationSources.length > 1;
+      actualValue = corroborated ? true : void 0;
+      if (!actualValue) isMissing = true;
+      if (sig?.sourceContributions) evidence.push(...sig.sourceContributions);
+      break;
+    }
+    case "META_AD_ACTIVE": {
+      const adSig = context.businessIntelligence?.advertisingSignals.adPresenceState;
+      actualValue = adSig?.value;
+      if (adSig?.freshnessState === "STALE") {
+        isMissing = true;
+      } else if (!actualValue) {
+        isMissing = true;
+      } else {
+        if (adSig?.sourceContributions) evidence.push(...adSig.sourceContributions);
+      }
+      break;
+    }
+    case "EVIDENCE_COVERAGE_THRESHOLD": {
+      actualValue = context.businessIntelligence?.completenessMetrics.evidenceCoverage;
+      if (actualValue === void 0 || actualValue === null) isMissing = true;
+      break;
+    }
+    case "BUSINESS_COMPLETENESS_THRESHOLD": {
+      actualValue = context.businessIntelligence?.completenessMetrics.businessCompleteness;
+      if (actualValue === void 0 || actualValue === null) isMissing = true;
+      break;
+    }
+    case "TEMPORAL_FRESHNESS": {
+      const freshness = context.businessIntelligence?.advertisingSignals.adPresenceState.freshnessState || context.businessIntelligence?.digitalPresence.verifiedWebsite.freshnessState;
+      actualValue = freshness;
+      if (!actualValue || actualValue === "UNKNOWN") isMissing = true;
+      break;
+    }
+    case "CUSTOM_FIELD": {
+      if (criterion.field) {
+        const resolvePath = (obj, path) => {
+          if (!obj) return void 0;
+          return path.split(".").reduce((curr, key) => curr !== null && curr !== void 0 ? curr[key] : void 0, obj);
+        };
+        actualValue = resolvePath(context, criterion.field) ?? resolvePath(context.normalizedCandidate, criterion.field) ?? resolvePath(context.businessIntelligence, criterion.field) ?? resolvePath(context.contactEnrichment, criterion.field);
+      }
+      if (actualValue === void 0 || actualValue === null) isMissing = true;
+      break;
+    }
+  }
+  const matchingContrib = context.sourceContributions?.find(
+    (c) => c.fieldName === criterion.field || c.fieldName === criterion.type.toLowerCase() || criterion.type.includes("PHONE") && c.fieldName.toLowerCase().includes("phone") || criterion.type.includes("EMAIL") && c.fieldName.toLowerCase().includes("email") || criterion.type.includes("WEBSITE") && c.fieldName.toLowerCase().includes("website") || criterion.type.includes("ADDRESS") && c.fieldName.toLowerCase().includes("address")
+  );
+  const policyCheck = checkQualificationEligibility(matchingContrib);
+  if (policyCheck.isBlocked) {
+    return {
+      criterionId: criterion.id,
+      criterionType: criterion.type,
+      operator: criterion.operator,
+      expectedValue: criterion.expectedValue,
+      actualValue,
+      outcome: "BLOCKED",
+      mandatory: criterion.mandatory,
+      weight,
+      scoreContribution: 0,
+      evidence,
+      reasonCode: "CRITERION_BLOCKED_BY_POLICY",
+      explanation: `Evaluation blocked: ${policyCheck.reason || "Source compliance restriction"}`
+    };
+  }
+  if (isContradictory && policies.conflictPolicy === "STRICT_CONTRADICTION") {
+    return {
+      criterionId: criterion.id,
+      criterionType: criterion.type,
+      operator: criterion.operator,
+      expectedValue: criterion.expectedValue,
+      actualValue,
+      outcome: "CONTRADICTORY",
+      mandatory: criterion.mandatory,
+      weight,
+      scoreContribution: 0,
+      evidence,
+      reasonCode: "CRITERION_CONTRADICTORY",
+      explanation: `Contradiction detected: ${contradictionReason}`
+    };
+  }
+  if (isMissing) {
+    if (policies.missingDataPolicy === "MISSING_FAILS_REQUIRED") {
+      return {
+        criterionId: criterion.id,
+        criterionType: criterion.type,
+        operator: criterion.operator,
+        expectedValue: criterion.expectedValue,
+        actualValue: void 0,
+        outcome: "FAIL",
+        mandatory: criterion.mandatory,
+        weight,
+        scoreContribution: 0,
+        evidence: [],
+        reasonCode: "MISSING_DATA_FAILS",
+        explanation: `Mandatory evidence for '${criterion.id}' is missing; policy classifies missing as FAIL.`
+      };
+    } else if (policies.missingDataPolicy === "MISSING_ALLOWED") {
+      return {
+        criterionId: criterion.id,
+        criterionType: criterion.type,
+        operator: criterion.operator,
+        expectedValue: criterion.expectedValue,
+        actualValue: void 0,
+        outcome: "PASS",
+        mandatory: criterion.mandatory,
+        weight,
+        scoreContribution: weight,
+        evidence: [],
+        reasonCode: "MISSING_DATA_ALLOWED",
+        explanation: `Evidence for '${criterion.id}' is absent; policy permits missing data as PASS.`
+      };
+    } else {
+      return {
+        criterionId: criterion.id,
+        criterionType: criterion.type,
+        operator: criterion.operator,
+        expectedValue: criterion.expectedValue,
+        actualValue: void 0,
+        outcome: "UNKNOWN",
+        mandatory: criterion.mandatory,
+        weight,
+        scoreContribution: 0,
+        evidence: [],
+        reasonCode: "MISSING_DATA_UNKNOWN",
+        explanation: `Evidence for '${criterion.id}' is currently unknown or unobserved.`
+      };
+    }
+  }
+  let passed = false;
+  if (criterion.type === "LOCATION_MATCH" && typeof criterion.expectedValue === "object") {
+    const locActual = actualValue || {};
+    let countryPass = true;
+    let cityPass = true;
+    if (criterion.expectedValue.country) {
+      countryPass = evaluateOperator(criterion.operator, locActual.country, criterion.expectedValue.country);
+    }
+    if (criterion.expectedValue.city) {
+      cityPass = evaluateOperator(criterion.operator, locActual.city, criterion.expectedValue.city);
+    }
+    passed = countryPass && cityPass;
+  } else {
+    passed = evaluateOperator(criterion.operator, actualValue, criterion.expectedValue);
+  }
+  const outcome = passed ? "PASS" : "FAIL";
+  const scoreContribution = passed ? weight : 0;
+  reasonCode = passed ? "CRITERION_SATISFIED" : "CRITERION_UNSATISFIED";
+  explanation = passed ? `Criterion '${criterion.id}' (${criterion.type}) passed: observed value satisfied operator ${criterion.operator}.` : `Criterion '${criterion.id}' (${criterion.type}) failed: observed value did not satisfy operator ${criterion.operator}.`;
+  return {
+    criterionId: criterion.id,
+    criterionType: criterion.type,
+    operator: criterion.operator,
+    expectedValue: criterion.expectedValue,
+    actualValue,
+    outcome,
+    mandatory: criterion.mandatory,
+    weight,
+    scoreContribution,
+    evidence,
+    reasonCode,
+    explanation
+  };
+}
+
+// src/extension/qualification/qualificationScorer.ts
+function calculateQualificationScore(criterionResults, profile) {
+  let totalScore = 0;
+  let maxPossibleScore = 0;
+  for (const cr of criterionResults) {
+    maxPossibleScore += cr.weight;
+    if (cr.outcome === "PASS") {
+      totalScore += cr.scoreContribution;
+    }
+  }
+  const threshold = profile.thresholds?.minimumScore ?? 0;
+  const thresholdPassed = totalScore >= threshold;
+  return {
+    totalScore,
+    maxPossibleScore,
+    threshold,
+    thresholdPassed
+  };
+}
+
+// src/extension/qualification/qualificationExplainer.ts
+function buildExplanationLedger(status, criterionResults, scoreSummary) {
+  const blockingReasons = [];
+  const contradictionReasons = [];
+  const unknownReasons = [];
+  const failureReasons = [];
+  const supportingEvidence = [];
+  for (const cr of criterionResults) {
+    if (cr.evidence && cr.evidence.length > 0) {
+      supportingEvidence.push(...cr.evidence);
+    }
+    if (cr.outcome === "BLOCKED") {
+      blockingReasons.push(cr.explanation);
+    } else if (cr.outcome === "CONTRADICTORY") {
+      contradictionReasons.push(cr.explanation);
+    } else if (cr.outcome === "UNKNOWN") {
+      if (cr.mandatory) {
+        unknownReasons.push(cr.explanation);
+      }
+    } else if (cr.outcome === "FAIL") {
+      if (cr.mandatory) {
+        failureReasons.push(cr.explanation);
+      }
+    }
+  }
+  let summaryNarrative = "";
+  switch (status) {
+    case "QUALIFIED":
+      summaryNarrative = `Candidate successfully satisfied all mandatory qualification criteria (Score: ${scoreSummary.totalScore}/${scoreSummary.maxPossibleScore}, Threshold: ${scoreSummary.threshold}).`;
+      break;
+    case "NOT_QUALIFIED":
+      if (failureReasons.length > 0) {
+        summaryNarrative = `Candidate failed ${failureReasons.length} mandatory qualification requirement(s): ${failureReasons.join("; ")}`;
+      } else if (!scoreSummary.thresholdPassed) {
+        summaryNarrative = `Candidate score (${scoreSummary.totalScore}) fell below the configured minimum threshold (${scoreSummary.threshold}).`;
+      } else {
+        summaryNarrative = "Candidate did not satisfy configured qualification criteria.";
+      }
+      break;
+    case "UNCERTAIN":
+      summaryNarrative = `Qualification is uncertain due to unresolved or missing mandatory facts: ${unknownReasons.join("; ")}`;
+      break;
+    case "BLOCKED":
+      summaryNarrative = `Qualification evaluation was blocked by compliance or source restrictions: ${blockingReasons.join("; ")}`;
+      break;
+  }
+  return {
+    blockingReasons,
+    contradictionReasons,
+    unknownReasons,
+    failureReasons,
+    supportingEvidence,
+    summaryNarrative
+  };
+}
+
+// src/extension/qualification/qualificationEvaluator.ts
+var QUALIFICATION_EVALUATOR_VERSION = "1.0.0";
+function evaluateLeadQualification(context, profile) {
+  const errors = [];
+  const warnings = [];
+  const notices = [];
+  const evaluatedAt = context.evaluatedAt || (/* @__PURE__ */ new Date()).toISOString();
+  const validation = validateQualificationProfile(profile);
+  if (!validation.isValid) {
+    return {
+      entityId: context.entityId,
+      status: "BLOCKED",
+      profileId: profile?.profileId || "UNKNOWN_PROFILE",
+      profileVersion: profile?.version || "0.0.0",
+      evaluatorVersion: QUALIFICATION_EVALUATOR_VERSION,
+      evaluatedAt,
+      criterionResults: [],
+      scoreSummary: {
+        totalScore: 0,
+        maxPossibleScore: 0,
+        threshold: 0,
+        thresholdPassed: false
+      },
+      blockingReasons: [`Profile validation failed: ${validation.errors.join("; ")}`],
+      contradictionReasons: [],
+      unknownReasons: [],
+      failureReasons: [],
+      supportingEvidence: [],
+      provenance: "LEADNORIA_DERIVED",
+      sourceContributions: context.sourceContributions || [],
+      derivedFrom: context.derivedFrom || [],
+      sourceRestrictions: {
+        isRestricted: false,
+        restrictionBasis: "NONE",
+        policyStatus: "PRODUCT_REJECTED",
+        persistenceEligibility: "NOT_PERSISTABLE",
+        exportEligibility: "NOT_EXPORTABLE"
+      },
+      diagnostics: {
+        errors: validation.errors,
+        warnings: validation.warnings,
+        notices: ["Evaluation halted due to invalid qualification profile configuration."]
+      }
+    };
+  }
+  const sortedCriteria = [...profile.criteria].sort((a, b) => a.id.localeCompare(b.id));
+  const criterionResults = [];
+  for (const criterion of sortedCriteria) {
+    const res = evaluateCriterion(criterion, context, {
+      missingDataPolicy: profile.missingDataPolicy,
+      unknownDataPolicy: profile.unknownDataPolicy,
+      conflictPolicy: profile.conflictPolicy
+    });
+    criterionResults.push(res);
+  }
+  const scoreSummary = calculateQualificationScore(criterionResults, profile);
+  let finalStatus = "QUALIFIED";
+  const mandatoryBlocked = criterionResults.some((cr) => cr.mandatory && cr.outcome === "BLOCKED");
+  const mandatoryContradictory = criterionResults.some((cr) => cr.mandatory && cr.outcome === "CONTRADICTORY");
+  const mandatoryFailed = criterionResults.some((cr) => cr.mandatory && cr.outcome === "FAIL");
+  const mandatoryUnknown = criterionResults.some((cr) => cr.mandatory && cr.outcome === "UNKNOWN");
+  if (mandatoryBlocked) {
+    finalStatus = "BLOCKED";
+  } else if (mandatoryContradictory) {
+    finalStatus = "UNCERTAIN";
+  } else if (mandatoryFailed) {
+    finalStatus = "NOT_QUALIFIED";
+  } else if (mandatoryUnknown) {
+    if (profile.unknownDataPolicy === "UNKNOWN_FAILS_MANDATORY") {
+      finalStatus = "NOT_QUALIFIED";
+    } else {
+      finalStatus = "UNCERTAIN";
+    }
+  } else {
+    if (!scoreSummary.thresholdPassed) {
+      finalStatus = "NOT_QUALIFIED";
+    } else {
+      finalStatus = "QUALIFIED";
+    }
+  }
+  const explanationLedger = buildExplanationLedger(finalStatus, criterionResults, scoreSummary);
+  const reasonNodes = criterionResults.map((cr) => ({
+    criterionId: cr.criterionId,
+    criterionType: cr.criterionType,
+    outcome: cr.outcome,
+    mandatory: cr.mandatory,
+    weight: cr.weight,
+    scoreContribution: cr.scoreContribution,
+    explanation: cr.explanation,
+    evidenceCount: cr.evidence.length,
+    sources: Array.from(new Set(cr.evidence.map((e) => e.source || e.provenance).filter(Boolean)))
+  }));
+  const reasonGraph = {
+    finalStatus,
+    primaryRationale: explanationLedger.summaryNarrative,
+    summaryText: `Candidate ${context.entityId} evaluated to ${finalStatus} under profile ${profile.profileId}.`,
+    nodes: reasonNodes,
+    passingFactors: criterionResults.filter((c) => c.outcome === "PASS").map((c) => c.explanation),
+    failingFactors: criterionResults.filter((c) => c.outcome === "FAIL").map((c) => c.explanation),
+    uncertainFactors: criterionResults.filter((c) => c.outcome === "UNKNOWN").map((c) => c.explanation),
+    contradictoryFactors: criterionResults.filter((c) => c.outcome === "CONTRADICTORY").map((c) => c.explanation),
+    blockingFactors: criterionResults.filter((c) => c.outcome === "BLOCKED").map((c) => c.explanation)
+  };
+  const compositeRestrictions = deriveCompositeRestrictions(context);
+  return {
+    entityId: context.entityId,
+    status: finalStatus,
+    profileId: profile.profileId,
+    profileVersion: profile.version,
+    evaluatorVersion: QUALIFICATION_EVALUATOR_VERSION,
+    evaluatedAt,
+    criterionResults,
+    scoreSummary,
+    blockingReasons: explanationLedger.blockingReasons,
+    contradictionReasons: explanationLedger.contradictionReasons,
+    unknownReasons: explanationLedger.unknownReasons,
+    failureReasons: explanationLedger.failureReasons,
+    supportingEvidence: explanationLedger.supportingEvidence,
+    provenance: compositeRestrictions.provenance,
+    sourceContributions: compositeRestrictions.sourceContributions,
+    derivedFrom: compositeRestrictions.derivedFrom,
+    sourceRestrictions: {
+      isRestricted: compositeRestrictions.isRestricted,
+      restrictionBasis: compositeRestrictions.restrictionBasis,
+      policyStatus: compositeRestrictions.policyStatus,
+      persistenceEligibility: compositeRestrictions.persistenceEligibility,
+      exportEligibility: compositeRestrictions.exportEligibility
+    },
+    diagnostics: {
+      errors,
+      warnings,
+      notices: [explanationLedger.summaryNarrative]
+    },
+    reasonGraph,
+    completenessMetrics: context.businessIntelligence?.completenessMetrics
+  };
+}
+
+// src/extension/qualification/businessIntelligence.ts
+function normalizeForComparison(str) {
+  return (str || "").normalize("NFC").replace(/[^\p{L}\p{N}\s]/gu, "").toLowerCase().replace(/\s+/g, " ").trim();
+}
+function normalizePhoneDigits(phone) {
+  let digits = (phone || "").replace(/[^0-9]/g, "");
+  if (digits.length === 11 && digits.startsWith("1")) {
+    digits = digits.slice(1);
+  }
+  return digits;
+}
+function evaluateTemporalFreshness(timestamp, maxAgeDays = 90) {
+  if (!timestamp) return "UNKNOWN";
+  try {
+    const obsTime = new Date(timestamp).getTime();
+    if (isNaN(obsTime)) return "UNKNOWN";
+    const now = Date.now();
+    const diffDays = (now - obsTime) / (1e3 * 60 * 60 * 24);
+    if (diffDays < 0) return "CURRENT";
+    return diffDays <= maxAgeDays ? "CURRENT" : "STALE";
+  } catch {
+    return "UNKNOWN";
+  }
+}
+function createSignal(value, state, source, provenance, observedAt, sourceUrl, extra) {
+  const isGoogle = provenance === "GOOGLE_DERIVED";
+  const contrib = {
+    source,
+    provenance,
+    fieldName: "signal",
+    acquisitionContext: isGoogle ? "GOOGLE_CONSUMER_WEB" : provenance === "META_DERIVED" ? "META_AD_LIBRARY" : "WEBSITE_DIRECT",
+    restrictionBasis: isGoogle ? "GOOGLE_CONSUMER_WEB_RESTRICTED" : "NONE",
+    isRestricted: isGoogle,
+    policyStatus: isGoogle ? "PRODUCT_REJECTED" : "POLICY_APPROVED",
+    persistenceStatus: isGoogle ? "NOT_PERSISTABLE" : "PERSISTABLE",
+    exportStatus: isGoogle ? "NOT_EXPORTABLE" : "EXPORTABLE"
+  };
+  return {
+    value,
+    state,
+    source,
+    sourceUrl,
+    observedAt,
+    firstObservedAt: extra?.firstObservedAt || observedAt,
+    lastObservedAt: extra?.lastObservedAt || observedAt,
+    provenance,
+    sourceContributions: [contrib],
+    corroborationSources: extra?.corroborationSources,
+    conflicts: extra?.conflicts,
+    freshnessState: extra?.freshnessState || evaluateTemporalFreshness(observedAt)
+  };
+}
+function buildBusinessIntelligenceProfile(params) {
+  const observedAt = params.observedAt || (/* @__PURE__ */ new Date()).toISOString();
+  const maxAgeDays = params.freshnessMaxAgeDays || 90;
+  const conflicts = [];
+  const corroborationDetails = [];
+  const isGoogleRestricted = Boolean(
+    params.googleCandidate?.isRestricted || params.candidate?.overallProvenance === "GOOGLE_DERIVED" || params.candidate?.sourceContributions?.some((c) => c.provenance === "GOOGLE_DERIVED" || c.restrictionBasis === "GOOGLE_CONSUMER_WEB_RESTRICTED")
+  );
+  let rootProvenance = "WEBSITE_DERIVED";
+  if (isGoogleRestricted || params.candidate?.overallProvenance === "GOOGLE_DERIVED") {
+    rootProvenance = "GOOGLE_DERIVED";
+  } else if (params.metaCandidate || params.candidate?.overallProvenance === "META_DERIVED") {
+    rootProvenance = "META_DERIVED";
+  } else if (params.userProvidedUrl || params.candidate?.overallProvenance === "USER_PROVIDED") {
+    rootProvenance = "USER_PROVIDED";
+  }
+  const webName = params.websiteResult?.identity?.businessName || params.websiteResult?.identity?.pageTitle;
+  const mapsName = params.googleCandidate?.businessName || params.candidate?.businessName?.value?.displayName;
+  const metaName = params.metaCandidate?.businessName;
+  let businessName = webName || mapsName || metaName || "";
+  let nameState = "UNKNOWN";
+  const nameSources = [];
+  if (webName) nameSources.push("WEBSITE");
+  if (mapsName) nameSources.push("GOOGLE_MAPS");
+  if (metaName) nameSources.push("META");
+  if (nameSources.length >= 2) {
+    const normWeb = normalizeForComparison(webName);
+    const normMaps = normalizeForComparison(mapsName);
+    const normMeta = normalizeForComparison(metaName);
+    const matches = normWeb && normMaps && (normWeb.includes(normMaps) || normMaps.includes(normWeb)) || normWeb && normMeta && (normWeb.includes(normMeta) || normMeta.includes(normWeb)) || normMaps && normMeta && (normMaps.includes(normMeta) || normMeta.includes(normMaps));
+    if (matches) {
+      nameState = "CORROBORATED";
+      corroborationDetails.push({
+        signal: "canonicalBusinessName",
+        sources: nameSources,
+        note: `Business name corroborated across ${nameSources.join(" and ")}`
+      });
+    } else {
+      nameState = "CONTRADICTORY";
+      conflicts.push({
+        signal: "canonicalBusinessName",
+        sources: nameSources.map(String),
+        values: [webName, mapsName, metaName].filter(Boolean),
+        note: "Contradictory business names observed across sources without matching alias"
+      });
+    }
+  } else if (nameSources.length === 1) {
+    nameState = "OBSERVED";
+  } else {
+    nameState = "NOT_FOUND";
+  }
+  const canonicalBusinessName = createSignal(
+    businessName,
+    nameState,
+    nameSources[0] || "WEBSITE",
+    rootProvenance,
+    observedAt,
+    params.websiteResult?.identity?.canonicalUrl,
+    { corroborationSources: nameSources }
+  );
+  const webDomain = params.websiteResult?.identity?.domain;
+  const candDomain = params.candidate?.websiteUrl?.value?.canonicalDomain || params.candidate?.websiteUrl?.value?.hostname || params.candidate?.website?.value?.domain;
+  const domainVal = webDomain || candDomain || "";
+  let domainState = "UNKNOWN";
+  const domainSources = [];
+  if (webDomain) domainSources.push("WEBSITE");
+  if (candDomain) domainSources.push(params.candidate?.overallProvenance === "GOOGLE_DERIVED" ? "GOOGLE_MAPS" : "META");
+  if (domainVal) {
+    if (webDomain && candDomain && webDomain.toLowerCase() === candDomain.toLowerCase()) {
+      domainState = "CORROBORATED";
+      corroborationDetails.push({
+        signal: "verifiedDomain",
+        sources: domainSources,
+        note: `Domain corroborated between website and listing: ${domainVal}`
+      });
+    } else {
+      domainState = params.websiteResult?.identity ? "CONFIRMED" : "OBSERVED";
+    }
+  } else {
+    domainState = "NOT_FOUND";
+  }
+  const verifiedDomain = createSignal(
+    domainVal,
+    domainState,
+    domainSources[0] || "WEBSITE",
+    rootProvenance,
+    observedAt,
+    params.websiteResult?.identity?.canonicalUrl
+  );
+  const primaryCat = params.candidate?.categories?.[0]?.value?.normalizedCategory || params.googleCandidate?.categories?.[0] || params.websiteResult?.identity?.categories?.[0] || "";
+  const primaryCategory = createSignal(
+    primaryCat,
+    primaryCat ? "OBSERVED" : "NOT_FOUND",
+    params.googleCandidate ? "GOOGLE_MAPS" : "WEBSITE",
+    rootProvenance,
+    observedAt
+  );
+  const secCats = [
+    ...params.candidate?.categories?.slice(1).map((c) => c.value?.normalizedCategory).filter(Boolean) || [],
+    ...params.googleCandidate?.categories?.slice(1) || [],
+    ...params.websiteResult?.identity?.categories?.slice(1) || []
+  ];
+  const secondaryCategories = createSignal(
+    secCats,
+    secCats.length > 0 ? "OBSERVED" : "NOT_FOUND",
+    params.googleCandidate ? "GOOGLE_MAPS" : "WEBSITE",
+    rootProvenance,
+    observedAt
+  );
+  const businessStatus = createSignal(
+    "OPERATIONAL",
+    "CONFIRMED",
+    "WEBSITE",
+    rootProvenance,
+    observedAt
+  );
+  const webAddr = params.websiteResult?.address?.normalizedAddress || params.websiteResult?.address?.rawAddress || params.websiteResult?.identity?.address;
+  const mapsAddr = params.googleCandidate?.address || params.candidate?.address?.value?.displayAddress || params.candidate?.address?.value?.normalizedAddress;
+  let addressVal = webAddr || mapsAddr || "";
+  let addressState = "UNKNOWN";
+  if (webAddr && mapsAddr) {
+    const normW = normalizeForComparison(webAddr);
+    const normM = normalizeForComparison(mapsAddr);
+    if (normW === normM || normW.includes(normM) || normM.includes(normW)) {
+      addressState = "CORROBORATED";
+      corroborationDetails.push({
+        signal: "address",
+        sources: ["WEBSITE", "GOOGLE_MAPS"],
+        note: "Physical street address corroborated between Google Maps and website"
+      });
+    } else {
+      addressState = "CONTRADICTORY";
+      conflicts.push({
+        signal: "address",
+        sources: ["WEBSITE", "GOOGLE_MAPS"],
+        values: [webAddr, mapsAddr],
+        note: "Address mismatch between website and Maps listing"
+      });
+    }
+  } else if (webAddr || mapsAddr) {
+    addressState = "OBSERVED";
+  } else {
+    addressState = "NOT_FOUND";
+  }
+  const address = createSignal(
+    addressVal,
+    addressState,
+    webAddr ? "WEBSITE" : "GOOGLE_MAPS",
+    rootProvenance,
+    observedAt
+  );
+  const cityVal = params.websiteResult?.address?.city || params.candidate?.address?.value?.locality || "";
+  const city = createSignal(cityVal, cityVal ? "OBSERVED" : "NOT_FOUND", "WEBSITE", rootProvenance, observedAt);
+  const regionVal = params.websiteResult?.address?.region || params.candidate?.address?.value?.region || "";
+  const region = createSignal(regionVal, regionVal ? "OBSERVED" : "NOT_FOUND", "WEBSITE", rootProvenance, observedAt);
+  const countryVal = params.websiteResult?.address?.country || params.candidate?.address?.value?.countryCode || "US";
+  const country = createSignal(countryVal, countryVal ? "OBSERVED" : "NOT_FOUND", "WEBSITE", rootProvenance, observedAt);
+  const sAreas = params.websiteResult?.identity?.serviceAreas || [];
+  const serviceAreas = createSignal(sAreas, sAreas.length > 0 ? "OBSERVED" : "NOT_FOUND", "WEBSITE", rootProvenance, observedAt);
+  const geoConfidence = createSignal(
+    addressState === "CORROBORATED" ? "HIGH" : addressVal ? "MEDIUM" : "UNKNOWN",
+    addressVal ? "OBSERVED" : "UNKNOWN",
+    "WEBSITE",
+    rootProvenance,
+    observedAt
+  );
+  const rawServices = params.websiteResult?.services || [];
+  const publishedServicesList = rawServices.map((s) => s.name).filter(Boolean);
+  const publishedServices = createSignal(
+    publishedServicesList,
+    publishedServicesList.length > 0 ? "OBSERVED" : "NOT_FOUND",
+    "WEBSITE",
+    rootProvenance,
+    observedAt
+  );
+  const descVal = params.websiteResult?.description?.text || params.websiteResult?.identity?.metaDescription || "";
+  const businessDescription = createSignal(
+    descVal,
+    descVal ? "OBSERVED" : "NOT_FOUND",
+    "WEBSITE",
+    rootProvenance,
+    observedAt
+  );
+  const hoursVal = params.websiteResult?.businessHours || params.websiteResult?.identity?.businessHours || "";
+  const businessHours = createSignal(
+    hoursVal,
+    hoursVal ? "OBSERVED" : "NOT_FOUND",
+    "WEBSITE",
+    rootProvenance,
+    observedAt
+  );
+  const contactAvailability = createSignal(
+    (params.contactResult?.contacts?.length || 0) > 0 ? "AVAILABLE" : "LIMITED",
+    "OBSERVED",
+    "WEBSITE",
+    rootProvenance,
+    observedAt
+  );
+  const hasSite = Boolean(params.websiteResult?.identity?.canonicalUrl || params.candidate?.websiteUrl?.value?.originalUrl || params.candidate?.websiteUrl?.value?.normalizedUrl || params.candidate?.website?.value?.domain);
+  const websitePresent = createSignal(hasSite, hasSite ? "CONFIRMED" : "NOT_FOUND", "WEBSITE", rootProvenance, observedAt);
+  const isVerifiedSite = Boolean(params.websiteResult && params.websiteResult.identity.domain);
+  const verifiedWebsite = createSignal(isVerifiedSite, isVerifiedSite ? "CONFIRMED" : "NOT_FOUND", "WEBSITE", rootProvenance, observedAt);
+  const socialPlatforms = (params.websiteResult?.socialProfiles || []).map((s) => s.platform);
+  const socialPresence = createSignal(
+    socialPlatforms,
+    socialPlatforms.length > 0 ? "OBSERVED" : "NOT_FOUND",
+    "WEBSITE",
+    rootProvenance,
+    observedAt
+  );
+  const tech = params.websiteResult?.technologySignals || [];
+  const hasBooking = tech.some((t) => t.category === "BOOKING");
+  const bookingSystemPresent = createSignal(hasBooking, hasBooking ? "OBSERVED" : "NOT_FOUND", "WEBSITE", rootProvenance, observedAt);
+  const hasEcommerce = tech.some((t) => t.category === "ECOMMERCE");
+  const ecommercePresent = createSignal(hasEcommerce, hasEcommerce ? "OBSERVED" : "NOT_FOUND", "WEBSITE", rootProvenance, observedAt);
+  const hasChat = tech.some((t) => t.category === "CHAT_WIDGET");
+  const chatPresent = createSignal(hasChat, hasChat ? "OBSERVED" : "NOT_FOUND", "WEBSITE", rootProvenance, observedAt);
+  const hasAnalytics = tech.some((t) => t.category === "ANALYTICS" || t.category === "TAG_MANAGER");
+  const analyticsTechnologyPresent = createSignal(hasAnalytics, hasAnalytics ? "OBSERVED" : "NOT_FOUND", "WEBSITE", rootProvenance, observedAt);
+  const cmsTech = tech.find((t) => t.category === "CMS");
+  const cmsDetected = createSignal(cmsTech?.name || "", cmsTech ? "OBSERVED" : "NOT_FOUND", "WEBSITE", rootProvenance, observedAt);
+  const hasForm = (params.contactResult?.contacts || []).some((c) => c.contactType === "CONTACT_FORM") || (params.websiteResult?.contactForms || []).length > 0;
+  const contactFormPresent = createSignal(hasForm, hasForm ? "OBSERVED" : "NOT_FOUND", "WEBSITE", rootProvenance, observedAt);
+  const contacts = params.contactResult?.contacts || [];
+  const people = params.contactResult?.people || [];
+  const emails = contacts.filter((c) => c.contactType === "EMAIL");
+  const phones = contacts.filter((c) => c.contactType === "PHONE");
+  const publicEmailPresent = createSignal(emails.length > 0, emails.length > 0 ? "CONFIRMED" : "NOT_FOUND", "WEBSITE", rootProvenance, observedAt);
+  const roleEmailPresent = createSignal(emails.some((e) => e.emailClassification === "ROLE_ACCOUNT"), emails.some((e) => e.emailClassification === "ROLE_ACCOUNT") ? "CONFIRMED" : "NOT_FOUND", "WEBSITE", rootProvenance, observedAt);
+  const personEmailPresent = createSignal(emails.some((e) => e.emailClassification === "PERSON_NAMED" || e.associatedPersonId), emails.some((e) => e.emailClassification === "PERSON_NAMED" || e.associatedPersonId) ? "CONFIRMED" : "NOT_FOUND", "WEBSITE", rootProvenance, observedAt);
+  const mapsPhone = params.googleCandidate?.phone || params.candidate?.phones?.[0]?.value?.e164Format || params.candidate?.phones?.[0]?.value?.rawPhone;
+  const webPhone = phones[0]?.normalizedValue;
+  let phoneState = phones.length > 0 ? "CONFIRMED" : "NOT_FOUND";
+  if (mapsPhone && webPhone) {
+    if (normalizePhoneDigits(mapsPhone) === normalizePhoneDigits(webPhone)) {
+      phoneState = "CORROBORATED";
+      corroborationDetails.push({
+        signal: "publicPhonePresent",
+        sources: ["GOOGLE_MAPS", "WEBSITE"],
+        note: `Phone number corroborated across Maps and Website: ${webPhone}`
+      });
+    } else {
+      conflicts.push({
+        signal: "publicPhonePresent",
+        sources: ["GOOGLE_MAPS", "WEBSITE"],
+        values: [mapsPhone, webPhone],
+        note: "Phone number mismatch between Maps listing and Website"
+      });
+    }
+  }
+  const publicPhonePresent = createSignal(phones.length > 0, phoneState, "WEBSITE", rootProvenance, observedAt);
+  const personPhonePresent = createSignal(phones.some((p) => p.associatedPersonId), phones.some((p) => p.associatedPersonId) ? "CONFIRMED" : "NOT_FOUND", "WEBSITE", rootProvenance, observedAt);
+  const publicPersonPresent = createSignal(people.length > 0, people.length > 0 ? "CONFIRMED" : "NOT_FOUND", "WEBSITE", rootProvenance, observedAt);
+  const personWithTitlePresent = createSignal(people.some((p) => p.jobTitle || p.roleCategory), people.some((p) => p.jobTitle || p.roleCategory) ? "CONFIRMED" : "NOT_FOUND", "WEBSITE", rootProvenance, observedAt);
+  const hasMeta = Boolean(params.metaCandidate && (params.metaCandidate.adCount || 0) > 0);
+  const metaObservedAt = params.metaCandidate?.observedAt || observedAt;
+  const metaFreshness = evaluateTemporalFreshness(metaObservedAt, maxAgeDays);
+  const hasMetaAds = createSignal(
+    hasMeta,
+    hasMeta ? "OBSERVED" : "NOT_FOUND",
+    "META",
+    "META_DERIVED",
+    metaObservedAt,
+    params.metaCandidate?.pageUrl,
+    { freshnessState: metaFreshness }
+  );
+  const adCount = createSignal(
+    params.metaCandidate?.adCount || 0,
+    hasMeta ? "OBSERVED" : "NOT_FOUND",
+    "META",
+    "META_DERIVED",
+    metaObservedAt,
+    void 0,
+    { freshnessState: metaFreshness }
+  );
+  const adStatus = createSignal(
+    params.metaCandidate?.adStatus || (hasMeta ? "ACTIVE" : "NOT_FOUND"),
+    hasMeta ? "OBSERVED" : "NOT_FOUND",
+    "META",
+    "META_DERIVED",
+    metaObservedAt,
+    void 0,
+    { freshnessState: metaFreshness }
+  );
+  const adPlatforms = createSignal(
+    params.metaCandidate?.adPlatforms || [],
+    hasMeta ? "OBSERVED" : "NOT_FOUND",
+    "META",
+    "META_DERIVED",
+    metaObservedAt,
+    void 0,
+    { freshnessState: metaFreshness }
+  );
+  const identityFields = [canonicalBusinessName.value, verifiedDomain.value, primaryCategory.value];
+  const identityCompleteness = identityFields.filter(Boolean).length / identityFields.length;
+  const locationFields = [address.value, city.value, country.value];
+  const locationCompleteness = locationFields.filter(Boolean).length / locationFields.length;
+  const websiteFields = [verifiedWebsite.value, publishedServicesList.length > 0, descVal, hoursVal];
+  const websiteCompleteness = websiteFields.filter(Boolean).length / websiteFields.length;
+  const contactCompleteness = params.contactResult?.completeness?.contactCompletenessRatio ?? [emails.length > 0, phones.length > 0, socialPlatforms.length > 0, hasForm].filter(Boolean).length / 4;
+  const publicPersonCompleteness = [
+    people.length > 0,
+    people.some((p) => p.jobTitle || p.roleCategory),
+    people.some((p) => (p.emailRefs?.length ?? 0) > 0 || (p.phoneRefs?.length ?? 0) > 0)
+  ].filter(Boolean).length / 3;
+  const socialPresenceCompleteness = Math.min(socialPlatforms.length / 3, 1);
+  const keySignals = [
+    canonicalBusinessName.state,
+    verifiedDomain.state,
+    address.state,
+    publishedServices.state,
+    publicEmailPresent.state,
+    publicPhonePresent.state,
+    publicPersonPresent.state,
+    socialPresence.state
+  ];
+  const coveredSignalsCount = keySignals.filter((s) => s === "CONFIRMED" || s === "OBSERVED" || s === "CORROBORATED").length;
+  const evidenceCoverage = coveredSignalsCount / keySignals.length;
+  const businessCompleteness = identityCompleteness * 0.25 + locationCompleteness * 0.2 + websiteCompleteness * 0.2 + contactCompleteness * 0.2 + publicPersonCompleteness * 0.15;
+  const completeness = {
+    evidenceCoverage,
+    identityCompleteness,
+    locationCompleteness,
+    websiteCompleteness,
+    contactCompleteness,
+    publicPersonCompleteness,
+    socialPresenceCompleteness,
+    businessCompleteness,
+    sourceCorroborationCount: corroborationDetails.length,
+    contradictionCount: conflicts.length,
+    unknownCriterionCount: keySignals.filter((s) => s === "UNKNOWN" || s === "NOT_FOUND").length
+  };
+  return {
+    identity: {
+      canonicalBusinessName,
+      verifiedDomain,
+      businessStatus,
+      primaryCategory,
+      secondaryCategories
+    },
+    location: {
+      address,
+      city,
+      region,
+      country,
+      serviceAreas,
+      geographicConfidence: geoConfidence
+    },
+    businessActivity: {
+      publishedServices,
+      businessDescription,
+      businessHours,
+      contactAvailability
+    },
+    digitalPresence: {
+      websitePresent,
+      verifiedWebsite,
+      socialPresence,
+      contactFormPresent,
+      bookingSystemPresent,
+      ecommercePresent,
+      chatPresent,
+      analyticsTechnologyPresent,
+      cmsDetected
+    },
+    contactPresence: {
+      publicEmailPresent,
+      roleEmailPresent,
+      personEmailPresent,
+      publicPhonePresent,
+      personPhonePresent,
+      publicPersonPresent,
+      personWithTitlePresent
+    },
+    advertisingSignals: {
+      hasMetaAds,
+      adCount,
+      adStatus,
+      adPlatforms,
+      adPresenceState: hasMetaAds
+    },
+    completeness,
+    completenessMetrics: completeness,
+    corroboration: {
+      identityCorroborated: nameState === "CORROBORATED",
+      phoneCorroborated: phoneState === "CORROBORATED",
+      domainCorroborated: domainState === "CORROBORATED",
+      details: corroborationDetails
+    },
+    crossSourceCorroborations: corroborationDetails,
+    conflicts,
+    provenance: rootProvenance,
+    sourceContributions: [
+      canonicalBusinessName.sourceContributions[0],
+      verifiedDomain.sourceContributions[0]
+    ],
+    derivedFrom: [
+      params.candidate?.candidateId,
+      params.websiteResult?.identity?.canonicalUrl,
+      params.googleCandidate?.placeId,
+      params.metaCandidate?.pageUrl
+    ].filter(Boolean),
+    hasRestrictedGoogleEvidence: isGoogleRestricted,
+    sourceRestrictions: {
+      isRestricted: isGoogleRestricted,
+      restrictionBasis: isGoogleRestricted ? "GOOGLE_CONSUMER_WEB_RESTRICTED" : "NONE",
+      policyStatus: isGoogleRestricted ? "POLICY_REVIEW_REQUIRED" : "POLICY_APPROVED",
+      persistenceEligibility: isGoogleRestricted ? "NOT_PERSISTABLE" : "PERSISTABLE",
+      exportEligibility: isGoogleRestricted ? "NOT_EXPORTABLE" : "EXPORTABLE"
+    },
+    observedAt
+  };
+}
+
+// src/extension/leadIntelligence/types.ts
+var CURRENT_LEAD_RECORD_SCHEMA_VERSION = "lead-intelligence-v1";
+
+// src/extension/ui/security.ts
+function isValidExternalUrl(url) {
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim();
+  if (trimmed === "") return false;
+  const lower = trimmed.toLowerCase();
+  if (lower.startsWith("javascript:") || lower.startsWith("data:") || lower.startsWith("vbscript:") || lower.startsWith("file:") || lower.startsWith("blob:")) {
+    return false;
+  }
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+// src/extension/leadIntelligence/sanitizer.ts
+var BANNED_KEYS2 = /* @__PURE__ */ new Set(["__proto__", "constructor", "prototype"]);
+var MAX_COLLECTION_SIZE = 100;
+var MAX_STRING_LENGTH = 2e3;
+function sanitizeObject(input, depth = 0) {
+  if (depth > 12) {
+    return null;
+  }
+  if (input === null || typeof input !== "object") {
+    if (typeof input === "string") {
+      return sanitizeString(input);
+    }
+    return input;
+  }
+  if (Array.isArray(input)) {
+    const safeArr = [];
+    const maxItems = Math.min(input.length, MAX_COLLECTION_SIZE);
+    for (let i = 0; i < maxItems; i++) {
+      safeArr.push(sanitizeObject(input[i], depth + 1));
+    }
+    return safeArr;
+  }
+  const cleanObj = /* @__PURE__ */ Object.create(null);
+  for (const [key, val] of Object.entries(input)) {
+    if (BANNED_KEYS2.has(key)) {
+      continue;
+    }
+    cleanObj[key] = sanitizeObject(val, depth + 1);
+  }
+  return cleanObj;
+}
+function sanitizeString(val, maxLength = MAX_STRING_LENGTH) {
+  if (val == null) return "";
+  const str = String(val).normalize("NFC").trim();
+  if (str.length > maxLength) {
+    return str.slice(0, maxLength);
+  }
+  return str;
+}
+function sanitizeUrl(url) {
+  if (!url || typeof url !== "string") return "";
+  const trimmed = url.trim();
+  if (!isValidExternalUrl(trimmed)) {
+    return "";
+  }
+  return trimmed;
+}
+function normalizeForIdentityComparison(str) {
+  return (str || "").normalize("NFC").replace(/[^\p{L}\p{N}\s]/gu, "").toLowerCase().replace(/\s+/g, " ").trim();
+}
+function normalizePhoneForComparison(phone) {
+  let digits = (phone || "").replace(/[^0-9]/g, "");
+  if (digits.startsWith("00")) {
+    digits = digits.slice(2);
+  }
+  if (digits.length > 7 && digits.startsWith("1")) {
+    digits = digits.slice(1);
+  }
+  return digits;
+}
+function evaluateRestrictionFirewall(inputs) {
+  const isGoogleRestricted = inputs.isExplicitlyRestricted === true || inputs.hasGoogleConsumerWeb === true || inputs.restrictionBasis === "GOOGLE_CONSUMER_WEB_RESTRICTED" || (inputs.provenances || []).some((p) => p === "GOOGLE_DERIVED");
+  if (isGoogleRestricted) {
+    return {
+      isRestricted: true,
+      persistenceEligible: false,
+      exportEligible: false,
+      restrictionBasis: "GOOGLE_CONSUMER_WEB_RESTRICTED",
+      upstreamRestrictions: [
+        "NOT_PERSISTABLE",
+        "NOT_EXPORTABLE",
+        "GOOGLE_CONSUMER_WEB_RESTRICTED"
+      ]
+    };
+  }
+  return {
+    isRestricted: false,
+    persistenceEligible: true,
+    exportEligible: true,
+    restrictionBasis: "NONE",
+    upstreamRestrictions: []
+  };
+}
+
+// src/extension/export/exportPolicy.ts
+var ExportPolicy = class {
+  /**
+   * Evaluates a single field contribution against export policy rules.
+   */
+  evaluateField(fieldName, eligibility, primarySource) {
+    if (!eligibility) {
+      if (primarySource === "GOOGLE_MAPS") {
+        return {
+          fieldName,
+          decision: "EXPORT_BLOCKED",
+          reasonCode: "BLOCKED_BY_SOURCE_POLICY",
+          sourceFamily: "GOOGLE_MAPS",
+          provenance: "GOOGLE_DERIVED"
+        };
+      }
+      return {
+        fieldName,
+        decision: "EXPORT_ALLOWED",
+        reasonCode: "FIELD_DEFAULT_ELIGIBLE",
+        sourceFamily: "META",
+        provenance: "LEADNORIA_DERIVED"
+      };
+    }
+    if (eligibility.sourceProvenance === "GOOGLE_DERIVED") {
+      if (!eligibility.isEligible) {
+        return {
+          fieldName,
+          decision: "EXPORT_BLOCKED",
+          reasonCode: eligibility.restrictionBasis || "BLOCKED_BY_GOOGLE_CONSUMER_POLICY",
+          sourceFamily: "GOOGLE_MAPS",
+          provenance: "GOOGLE_DERIVED"
+        };
+      }
+    }
+    const sourceFamily = eligibility.sourceProvenance === "GOOGLE_DERIVED" ? "GOOGLE_MAPS" : eligibility.sourceProvenance === "META_DERIVED" ? "META" : "WEBSITE";
+    if (!eligibility.isEligible) {
+      return {
+        fieldName,
+        decision: "EXPORT_BLOCKED",
+        reasonCode: eligibility.restrictionBasis || "BLOCKED_BY_POLICY",
+        sourceFamily,
+        provenance: eligibility.sourceProvenance
+      };
+    }
+    return {
+      fieldName,
+      decision: "EXPORT_ALLOWED",
+      reasonCode: "POLICY_APPROVED",
+      sourceFamily,
+      provenance: eligibility.sourceProvenance
+    };
+  }
+  /**
+   * Evaluates an entire UnifiedResearchRecord for export readiness.
+   */
+  evaluateRecord(record) {
+    const fieldEvaluations = [];
+    const excludedFields = [];
+    if (record.restrictions.exportEligible === false) {
+      const allFields = Object.keys(record.fieldEligibility || {});
+      return {
+        recordId: record.recordId,
+        isEligibleForExport: false,
+        fieldEvaluations: allFields.map((f) => this.evaluateField(f, record.fieldEligibility[f], record.primarySource)),
+        projection: null,
+        excludedFields: allFields,
+        blockedReason: record.restrictions.restrictionBasis || "RECORD_NOT_EXPORTABLE_BY_POLICY"
+      };
+    }
+    const targetFields = /* @__PURE__ */ new Set([
+      "businessName",
+      "website",
+      "phone",
+      "email",
+      "address",
+      "category",
+      "social",
+      ...Object.keys(record.fieldEligibility || {})
+    ]);
+    for (const field of targetFields) {
+      const eligibility = record.fieldEligibility[field];
+      const evaluation = this.evaluateField(field, eligibility, record.primarySource);
+      fieldEvaluations.push(evaluation);
+      if (evaluation.decision !== "EXPORT_ALLOWED") {
+        excludedFields.push(field);
+      }
+    }
+    const allowedFields = fieldEvaluations.filter((f) => f.decision === "EXPORT_ALLOWED");
+    if (allowedFields.length === 0) {
+      return {
+        recordId: record.recordId,
+        isEligibleForExport: false,
+        fieldEvaluations,
+        projection: null,
+        excludedFields,
+        blockedReason: "ALL_FIELDS_RESTRICTED_BY_SOURCE_POLICY"
+      };
+    }
+    return {
+      recordId: record.recordId,
+      isEligibleForExport: true,
+      fieldEvaluations,
+      projection: null,
+      // Populated by ExportProjection
+      excludedFields
+    };
+  }
+};
+
+// src/extension/export/exportProjection.ts
+var ExportProjection = class {
+  /**
+   * Projects a UnifiedResearchRecord into an ExportRecordProjection,
+   * respecting field-level policy exclusions.
+   */
+  projectRecord(record, evaluation, exportedAt) {
+    if (!evaluation.isEligibleForExport) {
+      return null;
+    }
+    const excluded = new Set(evaluation.excludedFields);
+    const businessName = excluded.has("businessName") ? "" : record.canonicalDisplayName || record.normalizedEntity?.businessName?.value?.displayName || "";
+    let website = "";
+    if (!excluded.has("website")) {
+      website = record.websiteVerificationResult?.finalUrl || record.normalizedEntity?.websiteUrl?.value?.normalizedUrl || "";
+    }
+    let phone = "";
+    if (!excluded.has("phone")) {
+      if (record.contactEnrichmentResult?.phones && record.contactEnrichmentResult.phones.length > 0) {
+        phone = record.contactEnrichmentResult.phones[0].e164Format || record.contactEnrichmentResult.phones[0].nationalFormat || record.contactEnrichmentResult.phones[0].normalizedValue || "";
+      } else if (record.normalizedEntity?.phones && record.normalizedEntity.phones.length > 0) {
+        const p = record.normalizedEntity.phones[0];
+        phone = p.value?.e164Format || p.value?.internationalFormat || p.value?.nationalFormat || p.value?.rawPhone || "";
+      }
+    }
+    let email = "";
+    if (!excluded.has("email")) {
+      if (record.contactEnrichmentResult?.emails && record.contactEnrichmentResult.emails.length > 0) {
+        email = record.contactEnrichmentResult.emails[0].normalizedEmail || "";
+      } else if (record.normalizedEntity?.emails && record.normalizedEntity.emails.length > 0) {
+        email = record.normalizedEntity.emails[0].value?.normalizedEmail || "";
+      }
+    }
+    let streetAddress = "";
+    let city = "";
+    let country = "";
+    if (!excluded.has("address")) {
+      if (record.contactEnrichmentResult?.addresses && record.contactEnrichmentResult.addresses.length > 0) {
+        const loc = record.contactEnrichmentResult.addresses[0];
+        streetAddress = loc.streetAddress || loc.normalizedAddress || loc.rawAddress || "";
+        city = loc.city || "";
+        country = loc.country || "";
+      } else if (record.normalizedEntity?.address?.value) {
+        const addr = record.normalizedEntity.address.value;
+        streetAddress = addr.displayAddress || addr.normalizedAddress || "";
+        city = addr.locality || "";
+        country = addr.country || addr.countryCode || "";
+      }
+    }
+    let category = "";
+    if (!excluded.has("category")) {
+      const cats = record.normalizedEntity?.categories || [];
+      if (cats.length > 0) {
+        category = cats[0].value?.normalizedCategory || cats[0].value?.sourceCategory || "";
+      }
+    }
+    const relevance = record.relevanceResult?.evidenceTier || record.relevanceResult?.relevanceState || "UNCERTAIN";
+    const qualificationStatus = record.qualificationDecision?.status || record.qualificationState || "NOT_EVALUATED";
+    const qualificationScore = record.qualificationDecision?.scoreSummary?.totalScore !== void 0 ? String(record.qualificationDecision.scoreSummary.totalScore) : "";
+    return {
+      recordId: record.recordId,
+      businessName,
+      website,
+      phone,
+      email,
+      streetAddress,
+      city,
+      country,
+      category,
+      relevance,
+      qualificationStatus,
+      qualificationScore,
+      primarySource: record.primarySource,
+      provenance: record.provenance,
+      corroborationCount: record.corroborationCount || 1,
+      exportedAt: exportedAt || record.updatedAt || (/* @__PURE__ */ new Date()).toISOString()
+    };
+  }
+};
+
+// src/extension/leadIntelligence/recordAssembler.ts
+var RecordAssembler = class _RecordAssembler {
+  static {
+    this.entitySeq = 0;
+  }
+  constructor() {
+    this.exportPolicy = new ExportPolicy();
+    this.exportProjection = new ExportProjection();
+  }
+  /**
+   * Assembles a comprehensive canonical lead intelligence record from multi-source inputs.
+   */
+  assemble(rawInput) {
+    const input = sanitizeObject(rawInput);
+    const now = input.referenceNow || (/* @__PURE__ */ new Date()).toISOString();
+    const maxAgeDays = input.freshnessMaxAgeDays ?? 90;
+    const entityGroup = input.resolvedEntityGroup;
+    let fallbackId = "";
+    if (input.googleCandidate?.placeId) {
+      fallbackId = `ent_${input.googleCandidate.placeId}`;
+    } else if (input.metaCandidate?.pageId) {
+      fallbackId = `ent_${input.metaCandidate.pageId}`;
+    } else if (input.websiteResult?.identity?.domain) {
+      fallbackId = `ent_${input.websiteResult.identity.domain.replace(/[^a-zA-Z0-9]/g, "_")}`;
+    } else if (input.metaCandidate?.pageUrl) {
+      fallbackId = `ent_${input.metaCandidate.pageUrl.replace(/[^a-zA-Z0-9]/g, "_")}`;
+    }
+    const entityId = entityGroup?.entityId || input.candidates?.[0]?.candidateId || input.candidateEnvelopes?.[0]?.candidateId || fallbackId || `ent_${++_RecordAssembler.entitySeq}`;
+    const sourceSignals = {};
+    if (input.metaCandidate) {
+      sourceSignals.metaEvidence = {
+        adCount: input.metaCandidate.adCount ?? 0,
+        adStatus: input.metaCandidate.adStatus || "UNKNOWN",
+        adPlatforms: [...input.metaCandidate.adPlatforms || []].sort(),
+        pageUrl: sanitizeUrl(input.metaCandidate.pageUrl),
+        pageId: input.metaCandidate.pageId,
+        firstSeen: input.metaCandidate.observedAt || now,
+        lastSeen: input.metaCandidate.observedAt || now
+      };
+    }
+    if (input.googleCandidate) {
+      sourceSignals.googleEvidence = {
+        placeId: input.googleCandidate.placeId,
+        businessName: sanitizeString(input.googleCandidate.businessName),
+        rating: typeof input.googleCandidate.rating === "number" ? input.googleCandidate.rating : void 0,
+        reviewCount: typeof input.googleCandidate.reviewCount === "number" ? input.googleCandidate.reviewCount : void 0,
+        categories: [...input.googleCandidate.categories || []].sort(),
+        observedAt: input.googleCandidate.observedAt || now,
+        isRestricted: input.googleCandidate.isRestricted ?? true,
+        mapsUrl: sanitizeUrl(input.googleCandidate.mapsUrl)
+      };
+    }
+    if (input.websiteResult) {
+      const cmsSignal = (input.websiteResult.technologySignals || []).find((t) => t.category === "CMS");
+      sourceSignals.websiteEvidence = {
+        domain: sanitizeString(input.websiteResult.identity?.domain),
+        verifiedUrl: sanitizeUrl(input.websiteResult.identity?.canonicalUrl),
+        cms: cmsSignal?.name,
+        technologySignals: (input.websiteResult.technologySignals || []).map((t) => t.name).sort(),
+        hasBooking: (input.websiteResult.technologySignals || []).some((t) => t.category === "BOOKING"),
+        hasEcommerce: (input.websiteResult.technologySignals || []).some((t) => t.category === "ECOMMERCE"),
+        hasChat: (input.websiteResult.technologySignals || []).some((t) => t.category === "CHAT_WIDGET"),
+        pageCount: input.websiteResult.crawlStats?.pagesVisited?.length || input.websiteResult.crawlStats?.pagesDiscovered || 1,
+        observedAt: input.websiteResult.observedAt || now
+      };
+    }
+    if (input.userOverride) {
+      sourceSignals.userProvidedEvidence = {
+        userProvidedUrl: sanitizeUrl(input.userOverride.website),
+        userProvidedName: sanitizeString(input.userOverride.businessName),
+        userProvidedFields: {
+          phone: input.userOverride.phone,
+          email: input.userOverride.email,
+          address: input.userOverride.address
+        },
+        providedAt: input.userOverride.providedAt || now
+      };
+    }
+    const allProvenances = [];
+    if (entityGroup?.sourceContributions) {
+      allProvenances.push(...entityGroup.sourceContributions.map((c) => c.provenance));
+    }
+    if (input.candidates) {
+      allProvenances.push(...input.candidates.map((c) => c.overallProvenance));
+    }
+    if (input.candidateEnvelopes) {
+      allProvenances.push(...input.candidateEnvelopes.map((e) => e.provenance));
+    }
+    if (input.googleCandidate) allProvenances.push("GOOGLE_DERIVED");
+    if (input.metaCandidate) allProvenances.push("META_DERIVED");
+    if (input.websiteResult) allProvenances.push("WEBSITE_DERIVED");
+    if (input.userOverride) allProvenances.push("USER_PROVIDED");
+    const hasGoogleConsumerWeb = entityGroup?.policySummary?.hasGoogleConsumerWebLineage === true || entityGroup?.policySummary?.isRestricted === true || input.googleCandidate?.isRestricted === true || allProvenances.includes("GOOGLE_DERIVED");
+    const policyFirewall = evaluateRestrictionFirewall({
+      isExplicitlyRestricted: hasGoogleConsumerWeb,
+      hasGoogleConsumerWeb,
+      provenances: allProvenances
+    });
+    const policySummary = {
+      isRestricted: policyFirewall.isRestricted,
+      persistenceEligible: policyFirewall.persistenceEligible,
+      exportEligible: policyFirewall.exportEligible,
+      restrictionBasis: policyFirewall.restrictionBasis,
+      upstreamRestrictions: policyFirewall.upstreamRestrictions,
+      overallProvenance: allProvenances.length > 1 ? "MIXED" : allProvenances[0] || "LEADNORIA_DERIVED",
+      hasGoogleConsumerWebLineage: hasGoogleConsumerWeb,
+      hasMetaLineage: allProvenances.includes("META_DERIVED"),
+      hasWebsiteLineage: allProvenances.includes("WEBSITE_DERIVED"),
+      hasUserProvidedLineage: allProvenances.includes("USER_PROVIDED")
+    };
+    const perSourceFreshness = {};
+    const recordTimestamp = (source, ts) => {
+      const observed = ts || now;
+      if (!perSourceFreshness[source]) {
+        perSourceFreshness[source] = {
+          sourceType: source,
+          firstObservedAt: observed,
+          lastObservedAt: observed,
+          state: this.computeFreshnessState(observed, now, maxAgeDays),
+          observationCount: 1
+        };
+      } else {
+        const entry = perSourceFreshness[source];
+        entry.observationCount++;
+        if (observed < entry.firstObservedAt) entry.firstObservedAt = observed;
+        if (observed > entry.lastObservedAt) {
+          entry.lastObservedAt = observed;
+          entry.state = this.computeFreshnessState(observed, now, maxAgeDays);
+        }
+      }
+    };
+    if (input.metaCandidate) recordTimestamp("META_AD_LIBRARY", input.metaCandidate.observedAt);
+    if (input.googleCandidate) recordTimestamp("GOOGLE_MAPS", input.googleCandidate.observedAt);
+    if (input.websiteResult) recordTimestamp("WEBSITE", input.websiteResult.observedAt);
+    if (input.userOverride) recordTimestamp("USER_PROVIDED", input.userOverride.providedAt);
+    const timestamps = Object.values(perSourceFreshness).flatMap((f) => [f.firstObservedAt, f.lastObservedAt]);
+    const firstObservedAt = timestamps.length > 0 ? [...timestamps].sort()[0] : now;
+    const lastObservedAt = timestamps.length > 0 ? [...timestamps].sort().reverse()[0] : now;
+    const freshnessModel = {
+      firstObservedAt,
+      lastObservedAt,
+      perSourceFreshness
+    };
+    const nameAlternatives = [];
+    if (input.userOverride?.businessName) {
+      nameAlternatives.push({
+        value: input.userOverride.businessName,
+        source: "USER_PROVIDED",
+        provenance: "USER_PROVIDED",
+        observedAt: input.userOverride.providedAt || now,
+        lineage: ["user-input-form"]
+      });
+    }
+    if (entityGroup?.canonicalDisplayName) {
+      nameAlternatives.push({
+        value: entityGroup.canonicalDisplayName,
+        source: "LEADNORIA",
+        provenance: entityGroup.policySummary?.overallProvenance || "LEADNORIA_DERIVED",
+        observedAt: entityGroup.createdAt || now,
+        lineage: ["phase-8-entity-resolution"]
+      });
+    }
+    if (input.googleCandidate?.businessName) {
+      nameAlternatives.push({
+        value: input.googleCandidate.businessName,
+        source: "GOOGLE_MAPS",
+        provenance: "GOOGLE_DERIVED",
+        observedAt: input.googleCandidate.observedAt || now,
+        sourceUrl: input.googleCandidate.mapsUrl,
+        lineage: ["google-maps-candidate"]
+      });
+    }
+    if (input.metaCandidate?.businessName) {
+      nameAlternatives.push({
+        value: input.metaCandidate.businessName,
+        source: "META_AD_LIBRARY",
+        provenance: "META_DERIVED",
+        observedAt: input.metaCandidate.observedAt || now,
+        sourceUrl: input.metaCandidate.pageUrl,
+        lineage: ["meta-ad-candidate"]
+      });
+    }
+    if (input.websiteResult?.identity?.businessName) {
+      nameAlternatives.push({
+        value: input.websiteResult.identity.businessName,
+        source: "WEBSITE",
+        provenance: "WEBSITE_DERIVED",
+        observedAt: input.websiteResult.observedAt || now,
+        sourceUrl: input.websiteResult.identity.canonicalUrl,
+        lineage: ["website-header-discovery"]
+      });
+    }
+    const canonicalBusinessName = this.buildCanonicalField(
+      nameAlternatives,
+      "businessName",
+      now,
+      maxAgeDays,
+      input.userOverride?.applyAsPreferred ? input.userOverride.businessName : void 0,
+      (a, b) => normalizeForIdentityComparison(a) === normalizeForIdentityComparison(b)
+    );
+    const websiteAlternatives = [];
+    if (input.userOverride?.website) {
+      websiteAlternatives.push({
+        value: input.userOverride.website,
+        source: "USER_PROVIDED",
+        provenance: "USER_PROVIDED",
+        observedAt: input.userOverride.providedAt || now,
+        lineage: ["user-input-form"]
+      });
+    }
+    if (input.websiteResult?.identity?.canonicalUrl) {
+      websiteAlternatives.push({
+        value: input.websiteResult.identity.canonicalUrl,
+        source: "WEBSITE",
+        provenance: "WEBSITE_DERIVED",
+        observedAt: input.websiteResult.observedAt || now,
+        sourceUrl: input.websiteResult.identity.canonicalUrl,
+        lineage: ["website-crawl-verification"]
+      });
+    }
+    if (input.googleCandidate?.websiteUrl) {
+      websiteAlternatives.push({
+        value: input.googleCandidate.websiteUrl,
+        source: "GOOGLE_MAPS",
+        provenance: "GOOGLE_DERIVED",
+        observedAt: input.googleCandidate.observedAt || now,
+        sourceUrl: input.googleCandidate.mapsUrl,
+        lineage: ["google-maps-listing-url"]
+      });
+    }
+    if (input.metaCandidate?.pageUrl) {
+      websiteAlternatives.push({
+        value: input.metaCandidate.pageUrl,
+        source: "META_AD_LIBRARY",
+        provenance: "META_DERIVED",
+        observedAt: input.metaCandidate.observedAt || now,
+        sourceUrl: input.metaCandidate.pageUrl,
+        lineage: ["meta-page-url"]
+      });
+    }
+    const preferredWebsite = input.userOverride?.applyAsPreferred ? input.userOverride.website : input.websiteResult?.identity?.canonicalUrl || void 0;
+    const verifiedWebsite = this.buildCanonicalField(
+      websiteAlternatives,
+      "website",
+      now,
+      maxAgeDays,
+      preferredWebsite,
+      (a, b) => {
+        try {
+          const uA = new URL(a.startsWith("http") ? a : "https://" + a);
+          const uB = new URL(b.startsWith("http") ? b : "https://" + b);
+          return uA.hostname.replace(/^www\./, "").toLowerCase() === uB.hostname.replace(/^www\./, "").toLowerCase();
+        } catch {
+          return a.toLowerCase() === b.toLowerCase();
+        }
+      }
+    );
+    const domainSet = /* @__PURE__ */ new Set();
+    if (input.websiteResult?.identity?.domain) domainSet.add(input.websiteResult.identity.domain.toLowerCase());
+    if (entityGroup?.domains) entityGroup.domains.forEach((d) => domainSet.add(d.toLowerCase()));
+    if (input.googleCandidate?.websiteUrl) {
+      try {
+        const u = new URL(input.googleCandidate.websiteUrl.startsWith("http") ? input.googleCandidate.websiteUrl : "https://" + input.googleCandidate.websiteUrl);
+        domainSet.add(u.hostname.replace(/^www\./, "").toLowerCase());
+      } catch {
+      }
+    }
+    const domainsField = this.buildCanonicalField(
+      [{
+        value: Array.from(domainSet).sort(),
+        source: "LEADNORIA",
+        provenance: allProvenances.length > 1 ? "MIXED" : allProvenances[0] || "LEADNORIA_DERIVED",
+        observedAt: now,
+        lineage: ["domain-deduplication"]
+      }],
+      "domains",
+      now,
+      maxAgeDays,
+      Array.from(domainSet).sort()
+    );
+    const categoryAlternatives = [];
+    if (input.googleCandidate?.categories && input.googleCandidate.categories.length > 0) {
+      categoryAlternatives.push({
+        value: [...input.googleCandidate.categories].sort(),
+        source: "GOOGLE_MAPS",
+        provenance: "GOOGLE_DERIVED",
+        observedAt: input.googleCandidate.observedAt || now,
+        sourceUrl: input.googleCandidate.mapsUrl,
+        lineage: ["google-maps-category-list"]
+      });
+    }
+    if (input.websiteResult?.identity?.categories && input.websiteResult.identity.categories.length > 0) {
+      categoryAlternatives.push({
+        value: [...input.websiteResult.identity.categories].sort(),
+        source: "WEBSITE",
+        provenance: "WEBSITE_DERIVED",
+        observedAt: input.websiteResult.observedAt || now,
+        sourceUrl: input.websiteResult.identity?.canonicalUrl,
+        lineage: ["website-identity-category-list"]
+      });
+    }
+    if (input.metaCandidate?.categories && input.metaCandidate.categories.length > 0) {
+      categoryAlternatives.push({
+        value: [...input.metaCandidate.categories].sort(),
+        source: "META_AD_LIBRARY",
+        provenance: "META_DERIVED",
+        observedAt: input.metaCandidate?.observedAt || now,
+        sourceUrl: input.metaCandidate?.pageUrl,
+        lineage: ["meta-candidate-category-list"]
+      });
+    }
+    const mergedCategories = Array.from(
+      new Set(categoryAlternatives.flatMap((a) => a.value))
+    ).sort();
+    const categoriesField = this.buildCanonicalField(
+      categoryAlternatives.length > 0 ? categoryAlternatives : [{
+        value: [],
+        source: "LEADNORIA",
+        provenance: "LEADNORIA_DERIVED",
+        observedAt: now
+      }],
+      "categories",
+      now,
+      maxAgeDays,
+      mergedCategories
+    );
+    const statusAlternatives = [];
+    if (input.candidates?.[0]?.businessStatus?.value?.status) {
+      statusAlternatives.push({
+        value: input.candidates[0].businessStatus.value.status,
+        source: input.candidates[0].source,
+        provenance: input.candidates[0].businessStatus.provenance,
+        observedAt: input.candidates[0].normalizationAudit?.normalizedAt || now,
+        lineage: ["candidate-business-status"]
+      });
+    }
+    const businessStatusField = this.buildCanonicalField(
+      statusAlternatives.length > 0 ? statusAlternatives : [{
+        value: "OPERATIONAL",
+        source: "LEADNORIA",
+        provenance: "LEADNORIA_DERIVED",
+        observedAt: now
+      }],
+      "businessStatus",
+      now,
+      maxAgeDays,
+      statusAlternatives.length === 1 ? statusAlternatives[0].value : void 0
+    );
+    const descriptionAlternatives = [];
+    if (input.websiteResult?.description?.text) {
+      descriptionAlternatives.push({
+        value: input.websiteResult.description.text,
+        source: "WEBSITE",
+        provenance: "WEBSITE_DERIVED",
+        observedAt: input.websiteResult.observedAt || now,
+        sourceUrl: input.websiteResult.identity?.canonicalUrl,
+        lineage: ["website-meta-description"]
+      });
+    }
+    const descriptionField = this.buildCanonicalField(
+      descriptionAlternatives.length > 0 ? descriptionAlternatives : [{
+        value: "",
+        source: "LEADNORIA",
+        provenance: "LEADNORIA_DERIVED",
+        observedAt: now
+      }],
+      "description",
+      now,
+      maxAgeDays,
+      descriptionAlternatives[0]?.value
+    );
+    const servicesList = (input.websiteResult?.services || []).map((s) => s.name).sort();
+    const servicesField = this.buildCanonicalField(
+      [{
+        value: servicesList,
+        source: "WEBSITE",
+        provenance: "WEBSITE_DERIVED",
+        observedAt: input.websiteResult?.observedAt || now
+      }],
+      "services",
+      now,
+      maxAgeDays,
+      servicesList
+    );
+    const serviceAreasField = this.buildCanonicalField(
+      [{
+        value: [],
+        source: "LEADNORIA",
+        provenance: "LEADNORIA_DERIVED",
+        observedAt: now
+      }],
+      "serviceAreas",
+      now,
+      maxAgeDays,
+      []
+    );
+    const hoursStr = input.websiteResult?.businessHours || "";
+    const businessHoursField = this.buildCanonicalField(
+      [{
+        value: hoursStr,
+        source: "WEBSITE",
+        provenance: "WEBSITE_DERIVED",
+        observedAt: input.websiteResult?.observedAt || now
+      }],
+      "businessHours",
+      now,
+      maxAgeDays,
+      hoursStr
+    );
+    const addressAlternatives = [];
+    if (input.userOverride?.address) {
+      addressAlternatives.push({
+        value: input.userOverride.address,
+        source: "USER_PROVIDED",
+        provenance: "USER_PROVIDED",
+        observedAt: input.userOverride.providedAt || now
+      });
+    }
+    if (input.googleCandidate?.address) {
+      addressAlternatives.push({
+        value: input.googleCandidate.address,
+        source: "GOOGLE_MAPS",
+        provenance: "GOOGLE_DERIVED",
+        observedAt: input.googleCandidate.observedAt || now,
+        sourceUrl: input.googleCandidate.mapsUrl
+      });
+    }
+    if (input.websiteResult?.address) {
+      const siteAddr = input.websiteResult.address.rawAddress || input.websiteResult.address.normalizedAddress;
+      if (siteAddr) {
+        addressAlternatives.push({
+          value: siteAddr,
+          source: "WEBSITE",
+          provenance: "WEBSITE_DERIVED",
+          observedAt: input.websiteResult.observedAt || now
+        });
+      }
+    }
+    if (entityGroup?.addresses) {
+      entityGroup.addresses.forEach((addr) => {
+        addressAlternatives.push({
+          value: addr,
+          source: "LEADNORIA",
+          provenance: "LEADNORIA_DERIVED",
+          observedAt: entityGroup.createdAt || now
+        });
+      });
+    }
+    const preferredAddress = input.userOverride?.applyAsPreferred ? input.userOverride.address : void 0;
+    const normalizedAddressField = this.buildCanonicalField(
+      addressAlternatives,
+      "address",
+      now,
+      maxAgeDays,
+      preferredAddress,
+      (a, b) => normalizeForIdentityComparison(a) === normalizeForIdentityComparison(b)
+    );
+    const addressesField = this.buildCanonicalField(
+      [{
+        value: Array.from(new Set(addressAlternatives.map((a) => a.value))).sort(),
+        source: "LEADNORIA",
+        provenance: allProvenances.length > 1 ? "MIXED" : allProvenances[0] || "LEADNORIA_DERIVED",
+        observedAt: now
+      }],
+      "addresses",
+      now,
+      maxAgeDays,
+      Array.from(new Set(addressAlternatives.map((a) => a.value))).sort()
+    );
+    const cityStr = input.websiteResult?.address?.city || input.metaCandidate?.city || input.candidates?.[0]?.geographicObservations?.[0]?.city || "";
+    const cityField = this.buildCanonicalField(
+      [{ value: cityStr, source: "LEADNORIA", provenance: "LEADNORIA_DERIVED", observedAt: now }],
+      "city",
+      now,
+      maxAgeDays,
+      cityStr
+    );
+    const regionField = this.buildCanonicalField(
+      [{ value: "", source: "LEADNORIA", provenance: "LEADNORIA_DERIVED", observedAt: now }],
+      "region",
+      now,
+      maxAgeDays,
+      ""
+    );
+    const countryStr = input.websiteResult?.address?.country || input.metaCandidate?.country || input.candidates?.[0]?.geographicObservations?.[0]?.country || "";
+    const countryField = this.buildCanonicalField(
+      [{ value: countryStr, source: "LEADNORIA", provenance: "LEADNORIA_DERIVED", observedAt: now }],
+      "country",
+      now,
+      maxAgeDays,
+      countryStr
+    );
+    const socialFactList = (input.websiteResult?.socialProfiles || []).map((s) => ({
+      platform: s.platform,
+      url: sanitizeUrl(s.normalizedUrl || s.rawUrl),
+      handle: s.handleOrPath
+    }));
+    const socialProfilesField = this.buildCanonicalField(
+      [{
+        value: socialFactList,
+        source: "WEBSITE",
+        provenance: "WEBSITE_DERIVED",
+        observedAt: input.websiteResult?.observedAt || now
+      }],
+      "socialProfiles",
+      now,
+      maxAgeDays,
+      socialFactList
+    );
+    const { canonicalEmails, canonicalPhones } = this.assembleContacts(
+      input,
+      now,
+      maxAgeDays,
+      policySummary
+    );
+    const canonicalPeople = this.assemblePeople(
+      input,
+      now,
+      maxAgeDays,
+      policySummary
+    );
+    const corroborations = [];
+    const googlePhone = input.googleCandidate?.phone;
+    const websitePhones = (input.websiteResult?.phones || []).map((p) => p.nationalFormat || p.normalizedValue || p.e164Format || p.rawValue || "");
+    if (googlePhone && websitePhones.length > 0) {
+      const gDigits = normalizePhoneForComparison(googlePhone);
+      const matches = websitePhones.some((wp) => normalizePhoneForComparison(wp) === gDigits);
+      if (matches && gDigits.length >= 7) {
+        corroborations.push({
+          field: "phone",
+          corroboratedValue: googlePhone,
+          sources: ["GOOGLE_MAPS", "WEBSITE"],
+          corroborationCount: 2,
+          corroboratingReferences: [
+            {
+              source: "GOOGLE_MAPS",
+              observedValue: googlePhone,
+              sourceUrl: input.googleCandidate?.mapsUrl,
+              observedAt: input.googleCandidate?.observedAt || now
+            },
+            {
+              source: "WEBSITE",
+              observedValue: googlePhone,
+              sourceUrl: input.websiteResult?.identity?.canonicalUrl,
+              observedAt: input.websiteResult?.observedAt || now
+            }
+          ]
+        });
+      }
+    }
+    if (input.googleCandidate?.websiteUrl && input.websiteResult?.identity?.domain) {
+      try {
+        const listingHost = new URL(input.googleCandidate.websiteUrl.startsWith("http") ? input.googleCandidate.websiteUrl : "https://" + input.googleCandidate.websiteUrl).hostname.replace(/^www\./, "").toLowerCase();
+        const siteDomain = input.websiteResult.identity.domain.replace(/^www\./, "").toLowerCase();
+        if (listingHost === siteDomain) {
+          corroborations.push({
+            field: "domain",
+            corroboratedValue: siteDomain,
+            sources: ["GOOGLE_MAPS", "WEBSITE"],
+            corroborationCount: 2,
+            corroboratingReferences: [
+              {
+                source: "GOOGLE_MAPS",
+                observedValue: input.googleCandidate.websiteUrl,
+                observedAt: input.googleCandidate.observedAt || now
+              },
+              {
+                source: "WEBSITE",
+                observedValue: siteDomain,
+                observedAt: input.websiteResult.observedAt || now
+              }
+            ]
+          });
+        }
+      } catch {
+      }
+    }
+    if (input.metaCandidate?.businessName && input.googleCandidate?.businessName) {
+      if (normalizeForIdentityComparison(input.metaCandidate.businessName) === normalizeForIdentityComparison(input.googleCandidate.businessName)) {
+        corroborations.push({
+          field: "businessName",
+          corroboratedValue: input.metaCandidate.businessName,
+          sources: ["META_AD_LIBRARY", "GOOGLE_MAPS"],
+          corroborationCount: 2,
+          corroboratingReferences: [
+            { source: "META_AD_LIBRARY", observedValue: input.metaCandidate.businessName, observedAt: input.metaCandidate.observedAt || now },
+            { source: "GOOGLE_MAPS", observedValue: input.googleCandidate.businessName, observedAt: input.googleCandidate.observedAt || now }
+          ]
+        });
+      }
+    }
+    const allConflicts = [
+      ...canonicalBusinessName.conflicts,
+      ...verifiedWebsite.conflicts,
+      ...normalizedAddressField.conflicts,
+      ...canonicalPhones.flatMap((p) => p.conflicts),
+      ...canonicalEmails.flatMap((e) => e.conflicts)
+    ];
+    const qDecision = input.qualificationDecision;
+    const qualificationAttachment = {
+      qualificationDecision: qDecision,
+      qualificationProfileId: qDecision?.profileId,
+      reasonGraph: qDecision?.reasonGraph,
+      finalState: qDecision?.status,
+      blockingCriteria: qDecision?.blockingReasons || [],
+      contradictoryCriteria: qDecision?.contradictionReasons || [],
+      explanation: qDecision?.reasonGraph?.primaryRationale || qDecision?.reasonGraph?.summaryText || ""
+    };
+    const evidencePack = this.buildCompactEvidencePack(
+      entityId,
+      input,
+      allConflicts,
+      corroborations,
+      now
+    );
+    const quality = this.computeQualitySummary(
+      canonicalBusinessName,
+      verifiedWebsite,
+      normalizedAddressField,
+      canonicalEmails,
+      canonicalPhones,
+      canonicalPeople,
+      corroborations,
+      allConflicts
+    );
+    let entityType = "LOCAL_BUSINESS";
+    let branchRelationship = void 0;
+    if (entityGroup) {
+      const hasBranches = (entityGroup.branchEntityIds || []).length > 0;
+      const isBranch = Boolean(entityGroup.parentEntityId);
+      if (hasBranches) {
+        entityType = "PARENT_ORGANIZATION";
+      } else if (isBranch) {
+        entityType = "BRANCH";
+      }
+      branchRelationship = {
+        isBranch,
+        isParent: hasBranches,
+        parentEntityId: entityGroup.parentEntityId,
+        branchEntityIds: [...entityGroup.branchEntityIds || []].sort(),
+        branchSignals: (entityGroup.branchSignals || []).map((b) => ({ type: b.type, token: b.token }))
+      };
+    }
+    const cmsVal = (input.websiteResult?.technologySignals || []).find((t) => t.category === "CMS")?.name;
+    return {
+      schemaVersion: CURRENT_LEAD_RECORD_SCHEMA_VERSION,
+      canonicalEntityId: entityId,
+      canonicalBusinessName,
+      aliases: [...entityGroup?.aliases || []].sort(),
+      entityType,
+      branchRelationship,
+      business: {
+        categories: categoriesField,
+        businessStatus: businessStatusField,
+        description: descriptionField,
+        services: servicesField,
+        serviceAreas: serviceAreasField,
+        businessHours: businessHoursField
+      },
+      location: {
+        addresses: addressesField,
+        normalizedAddress: normalizedAddressField,
+        city: cityField,
+        region: regionField,
+        country: countryField,
+        latitude: void 0,
+        longitude: void 0
+      },
+      digital: {
+        verifiedWebsite,
+        domains: domainsField,
+        socialProfiles: socialProfilesField,
+        cms: cmsVal,
+        technologySignals: input.websiteResult?.technologySignals || [],
+        booking: (input.websiteResult?.technologySignals || []).some((t) => t.category === "BOOKING"),
+        ecommerce: (input.websiteResult?.technologySignals || []).some((t) => t.category === "ECOMMERCE"),
+        chat: (input.websiteResult?.technologySignals || []).some((t) => t.category === "CHAT_WIDGET"),
+        analytics: (input.websiteResult?.technologySignals || []).filter((t) => t.category === "ANALYTICS").map((t) => t.name).sort()
+      },
+      contacts: {
+        emails: canonicalEmails,
+        phones: canonicalPhones,
+        contactForms: (input.websiteResult?.contactForms || []).map((f) => f.formAction || f.pageUrl).filter(Boolean).sort()
+      },
+      people: {
+        publicPeople: canonicalPeople,
+        titles: Array.from(new Set(canonicalPeople.flatMap((p) => p.titles))).sort(),
+        personContactAssociations: canonicalPeople.flatMap(
+          (p) => p.emails.map((email) => ({
+            personName: p.name,
+            email,
+            associationStrength: "DIRECT_LINK"
+          }))
+        )
+      },
+      sourceSignals,
+      evidence: {
+        sourceContributions: [
+          ...entityGroup?.sourceContributions || [],
+          ...input.candidates?.[0]?.sourceContributions || []
+        ],
+        evidenceReferences: evidencePack.items,
+        conflicts: allConflicts,
+        corroborations,
+        evidencePack
+      },
+      qualification: qualificationAttachment,
+      freshness: freshnessModel,
+      quality,
+      policy: policySummary,
+      createdAt: firstObservedAt,
+      updatedAt: lastObservedAt
+    };
+  }
+  /**
+   * Builds a CanonicalField<T> with explicit alternative lineage, conflict detection,
+   * and deterministic precedence semantics.
+   */
+  buildCanonicalField(alternatives, fieldName, now, maxAgeDays, policyPreferredValue, equalityFn = (a, b) => a === b) {
+    if (alternatives.length === 0) {
+      return {
+        value: void 0,
+        preferredObservedValue: void 0,
+        hasConflict: false,
+        alternatives: [],
+        conflicts: [],
+        corroboratedBySources: [],
+        corroborationCount: 0,
+        provenance: "LEADNORIA_DERIVED",
+        sourceContributions: [],
+        firstObservedAt: now,
+        lastObservedAt: now,
+        freshnessState: "UNKNOWN",
+        changeState: "UNKNOWN"
+      };
+    }
+    const distinctAlternatives = [];
+    for (const alt of alternatives) {
+      if (!distinctAlternatives.some((da) => equalityFn(da.value, alt.value))) {
+        distinctAlternatives.push(alt);
+      }
+    }
+    const hasConflict = distinctAlternatives.length > 1;
+    const conflicts = [];
+    if (hasConflict) {
+      conflicts.push({
+        field: fieldName,
+        conflictingValues: distinctAlternatives.map((da) => ({
+          value: da.value,
+          source: String(da.source),
+          provenance: da.provenance,
+          observedAt: da.observedAt,
+          sourceUrl: da.sourceUrl
+        })),
+        reason: `Conflicting observations across sources for '${fieldName}' without identical matching values.`
+      });
+    }
+    let preferredObservedValue = void 0;
+    if (policyPreferredValue !== void 0) {
+      preferredObservedValue = policyPreferredValue;
+    } else if (distinctAlternatives.length === 1) {
+      preferredObservedValue = distinctAlternatives[0].value;
+    } else {
+      preferredObservedValue = void 0;
+    }
+    const value = preferredObservedValue !== void 0 ? preferredObservedValue : alternatives[0].value;
+    const sources = Array.from(new Set(alternatives.map((a) => a.source)));
+    const provenances = Array.from(new Set(alternatives.map((a) => a.provenance)));
+    const timestamps = alternatives.map((a) => a.observedAt).sort();
+    const firstObservedAt = timestamps[0] || now;
+    const lastObservedAt = timestamps[timestamps.length - 1] || now;
+    return {
+      value,
+      preferredObservedValue,
+      hasConflict,
+      alternatives,
+      conflicts,
+      corroboratedBySources: sources,
+      corroborationCount: sources.length,
+      provenance: provenances.length > 1 ? "MIXED" : provenances[0] || "LEADNORIA_DERIVED",
+      sourceContributions: alternatives.map((a) => ({
+        source: a.source,
+        provenance: a.provenance,
+        fieldName,
+        acquisitionContext: "LEADNORIA_INTERNAL",
+        restrictionBasis: a.provenance === "GOOGLE_DERIVED" ? "GOOGLE_CONSUMER_WEB_RESTRICTED" : "NONE",
+        isRestricted: a.provenance === "GOOGLE_DERIVED"
+      })),
+      firstObservedAt,
+      lastObservedAt,
+      freshnessState: this.computeFreshnessState(lastObservedAt, now, maxAgeDays),
+      changeState: "OBSERVED"
+    };
+  }
+  /**
+   * Assembles canonical contacts, preserving field-level provenance and restrictions.
+   */
+  assembleContacts(input, now, maxAgeDays, globalPolicy) {
+    const canonicalEmails = [];
+    const canonicalPhones = [];
+    if (input.googleCandidate?.phone) {
+      const rawGPhone = input.googleCandidate.phone;
+      const gDigits = normalizePhoneForComparison(rawGPhone);
+      canonicalPhones.push({
+        type: "PHONE",
+        value: rawGPhone,
+        normalizedValue: gDigits,
+        preferredObservedValue: rawGPhone,
+        hasConflict: false,
+        alternatives: [{
+          value: rawGPhone,
+          source: "GOOGLE_MAPS",
+          provenance: "GOOGLE_DERIVED",
+          observedAt: input.googleCandidate.observedAt || now,
+          sourceUrl: input.googleCandidate.mapsUrl,
+          lineage: ["google-maps-raw-phone"]
+        }],
+        conflicts: [],
+        isCorroborated: false,
+        corroboratedBySources: ["GOOGLE_MAPS"],
+        corroborationCount: 1,
+        provenance: "GOOGLE_DERIVED",
+        sourceContributions: [{
+          source: "GOOGLE_MAPS",
+          provenance: "GOOGLE_DERIVED",
+          fieldName: "phone",
+          acquisitionContext: "GOOGLE_CONSUMER_WEB",
+          restrictionBasis: "GOOGLE_CONSUMER_WEB_RESTRICTED",
+          isRestricted: true
+        }],
+        firstObservedAt: input.googleCandidate.observedAt || now,
+        lastObservedAt: input.googleCandidate.observedAt || now,
+        freshnessState: this.computeFreshnessState(input.googleCandidate.observedAt, now, maxAgeDays),
+        changeState: "OBSERVED",
+        isRestricted: true,
+        exportEligible: false,
+        persistenceEligible: false,
+        associatedPersonNames: []
+      });
+    }
+    const websitePhones = [
+      ...(input.contactResult?.contacts || []).filter((c) => c.contactType === "PHONE"),
+      ...(input.websiteResult?.phones || []).map((p) => ({
+        rawValue: p.rawValue,
+        normalizedValue: p.normalizedValue || p.rawValue,
+        firstObservedAt: input.websiteResult?.observedAt || now,
+        lastObservedAt: input.websiteResult?.observedAt || now,
+        associatedPersonIds: []
+      }))
+    ];
+    for (const wp of websitePhones) {
+      const phoneVal = wp.rawValue || wp.normalizedValue;
+      const digits = normalizePhoneForComparison(wp.normalizedValue || wp.rawValue);
+      const existingGooglePhone = canonicalPhones.find((p) => p.normalizedValue === digits);
+      if (existingGooglePhone) {
+        existingGooglePhone.isCorroborated = true;
+        if (!existingGooglePhone.corroboratedBySources.includes("WEBSITE")) {
+          existingGooglePhone.corroboratedBySources.push("WEBSITE");
+          existingGooglePhone.corroborationCount = existingGooglePhone.corroboratedBySources.length;
+        }
+        existingGooglePhone.alternatives.push({
+          value: phoneVal,
+          source: "WEBSITE",
+          provenance: "WEBSITE_DERIVED",
+          observedAt: wp.lastObservedAt || now,
+          lineage: ["website-contact-fact"]
+        });
+      } else {
+        canonicalPhones.push({
+          type: "PHONE",
+          value: phoneVal,
+          normalizedValue: digits,
+          preferredObservedValue: phoneVal,
+          hasConflict: false,
+          alternatives: [{
+            value: phoneVal,
+            source: "WEBSITE",
+            provenance: "WEBSITE_DERIVED",
+            observedAt: wp.lastObservedAt || now,
+            lineage: ["website-contact-fact"]
+          }],
+          conflicts: [],
+          isCorroborated: false,
+          corroboratedBySources: ["WEBSITE"],
+          corroborationCount: 1,
+          provenance: "WEBSITE_DERIVED",
+          sourceContributions: [{
+            source: "WEBSITE",
+            provenance: "WEBSITE_DERIVED",
+            fieldName: "phone",
+            acquisitionContext: "WEBSITE_DIRECT",
+            restrictionBasis: "NONE",
+            isRestricted: false
+          }],
+          firstObservedAt: wp.firstObservedAt || now,
+          lastObservedAt: wp.lastObservedAt || now,
+          freshnessState: this.computeFreshnessState(wp.lastObservedAt, now, maxAgeDays),
+          changeState: "OBSERVED",
+          isRestricted: false,
+          exportEligible: true,
+          persistenceEligible: true,
+          associatedPersonNames: wp.associatedPersonIds || []
+        });
+      }
+    }
+    if (input.userOverride?.phone) {
+      const userPhone = input.userOverride.phone;
+      const uDigits = normalizePhoneForComparison(userPhone);
+      canonicalPhones.unshift({
+        type: "PHONE",
+        value: userPhone,
+        normalizedValue: uDigits,
+        preferredObservedValue: userPhone,
+        hasConflict: false,
+        alternatives: [{
+          value: userPhone,
+          source: "USER_PROVIDED",
+          provenance: "USER_PROVIDED",
+          observedAt: input.userOverride.providedAt || now,
+          lineage: ["user-override"]
+        }],
+        conflicts: [],
+        isCorroborated: false,
+        corroboratedBySources: ["USER_PROVIDED"],
+        corroborationCount: 1,
+        provenance: "USER_PROVIDED",
+        sourceContributions: [{
+          source: "USER_PROVIDED",
+          provenance: "USER_PROVIDED",
+          fieldName: "phone",
+          acquisitionContext: "USER_INPUT",
+          restrictionBasis: "NONE",
+          isRestricted: false
+        }],
+        firstObservedAt: input.userOverride.providedAt || now,
+        lastObservedAt: input.userOverride.providedAt || now,
+        freshnessState: "CURRENT",
+        changeState: "OBSERVED",
+        isRestricted: false,
+        exportEligible: true,
+        persistenceEligible: true,
+        associatedPersonNames: []
+      });
+    }
+    const websiteEmails = [
+      ...(input.contactResult?.contacts || []).filter((c) => c.contactType === "EMAIL"),
+      ...(input.websiteResult?.emails || []).map((e) => ({
+        rawValue: e.rawValue,
+        normalizedValue: e.normalizedEmail || e.rawValue,
+        firstObservedAt: input.websiteResult?.observedAt || now,
+        lastObservedAt: input.websiteResult?.observedAt || now
+      }))
+    ];
+    for (const we of websiteEmails) {
+      const emailVal = we.rawValue || we.normalizedValue;
+      canonicalEmails.push({
+        type: "EMAIL",
+        value: emailVal,
+        normalizedValue: emailVal.toLowerCase().trim(),
+        preferredObservedValue: emailVal,
+        hasConflict: false,
+        alternatives: [{
+          value: emailVal,
+          source: "WEBSITE",
+          provenance: "WEBSITE_DERIVED",
+          observedAt: we.lastObservedAt || now,
+          lineage: ["website-contact-discovery"]
+        }],
+        conflicts: [],
+        isCorroborated: false,
+        corroboratedBySources: ["WEBSITE"],
+        corroborationCount: 1,
+        provenance: "WEBSITE_DERIVED",
+        sourceContributions: [{
+          source: "WEBSITE",
+          provenance: "WEBSITE_DERIVED",
+          fieldName: "email",
+          acquisitionContext: "WEBSITE_DIRECT",
+          restrictionBasis: "NONE",
+          isRestricted: false
+        }],
+        firstObservedAt: we.firstObservedAt || now,
+        lastObservedAt: we.lastObservedAt || now,
+        freshnessState: this.computeFreshnessState(we.lastObservedAt, now, maxAgeDays),
+        changeState: "OBSERVED",
+        isRestricted: false,
+        exportEligible: true,
+        persistenceEligible: true,
+        category: we.emailClassification === "ROLE_ACCOUNT" ? "OPERATIONAL_ROLE" : we.emailClassification === "PERSON_NAMED" ? "NAMED_INDIVIDUAL" : "GENERAL_INQUIRY",
+        associatedPersonNames: we.associatedPersonIds || []
+      });
+    }
+    if (input.userOverride?.email) {
+      const uEmail = input.userOverride.email;
+      canonicalEmails.unshift({
+        type: "EMAIL",
+        value: uEmail,
+        normalizedValue: uEmail.toLowerCase().trim(),
+        preferredObservedValue: uEmail,
+        hasConflict: false,
+        alternatives: [{
+          value: uEmail,
+          source: "USER_PROVIDED",
+          provenance: "USER_PROVIDED",
+          observedAt: input.userOverride.providedAt || now,
+          lineage: ["user-override"]
+        }],
+        conflicts: [],
+        isCorroborated: false,
+        corroboratedBySources: ["USER_PROVIDED"],
+        corroborationCount: 1,
+        provenance: "USER_PROVIDED",
+        sourceContributions: [{
+          source: "USER_PROVIDED",
+          provenance: "USER_PROVIDED",
+          fieldName: "email",
+          acquisitionContext: "USER_INPUT",
+          restrictionBasis: "NONE",
+          isRestricted: false
+        }],
+        firstObservedAt: input.userOverride.providedAt || now,
+        lastObservedAt: input.userOverride.providedAt || now,
+        freshnessState: "CURRENT",
+        changeState: "OBSERVED",
+        isRestricted: false,
+        exportEligible: true,
+        persistenceEligible: true,
+        associatedPersonNames: []
+      });
+    }
+    if (canonicalPhones.length > 1) {
+      const uniqueDigits = Array.from(new Set(canonicalPhones.map((p) => p.normalizedValue)));
+      if (uniqueDigits.length > 1) {
+        const conflictRecord = {
+          field: "phone",
+          conflictingValues: canonicalPhones.map((p) => ({
+            value: p.value,
+            source: String(p.alternatives[0]?.source || "UNKNOWN"),
+            provenance: p.provenance,
+            observedAt: p.lastObservedAt
+          })),
+          reason: "Multiple conflicting phone numbers discovered across active sources."
+        };
+        for (const p of canonicalPhones) {
+          p.hasConflict = true;
+          p.conflicts.push(conflictRecord);
+          if (!input.userOverride?.applyAsPreferred) {
+            p.preferredObservedValue = void 0;
+          }
+        }
+      }
+    }
+    if (input.previousSnapshot) {
+      this.reconcileContactChanges(canonicalPhones, input.previousSnapshot.contacts.phones);
+      this.reconcileContactChanges(canonicalEmails, input.previousSnapshot.contacts.emails);
+    }
+    return {
+      canonicalEmails,
+      canonicalPhones
+    };
+  }
+  /**
+   * Reconciles contacts against a previous snapshot to tag new, changed, or stale states.
+   */
+  reconcileContactChanges(currentContacts, previousContacts) {
+    const prevMap = /* @__PURE__ */ new Map();
+    for (const p of previousContacts) {
+      prevMap.set(p.normalizedValue, p);
+    }
+    for (const c of currentContacts) {
+      const prev = prevMap.get(c.normalizedValue);
+      if (!prev) {
+        c.changeState = "OBSERVED";
+      } else {
+        if (prev.value !== c.value) {
+          c.changeState = "CHANGED";
+        } else {
+          c.changeState = "OBSERVED";
+        }
+      }
+    }
+    const currentValues = new Set(currentContacts.map((c) => c.normalizedValue));
+    for (const prev of previousContacts) {
+      if (!currentValues.has(prev.normalizedValue)) {
+        currentContacts.push({
+          ...prev,
+          changeState: "NOT_OBSERVED_THIS_RUN",
+          freshnessState: "STALE"
+        });
+      }
+    }
+  }
+  /**
+   * Assembles canonical people records from Phase 22 ContactIntelligenceResult.
+   */
+  assemblePeople(input, now, maxAgeDays, globalPolicy) {
+    const peopleList = [];
+    const sourcePeople = input.contactResult?.people || [];
+    for (const sp of sourcePeople) {
+      peopleList.push({
+        personId: sp.personId,
+        name: sp.fullName,
+        canonicalName: sp.normalizedName,
+        titles: sp.jobTitle ? [sp.jobTitle] : [],
+        emails: [...sp.emailRefs || []],
+        phones: [...sp.phoneRefs || []],
+        linkedInUrl: void 0,
+        socialUrls: (sp.socialRefs || []).map(sanitizeUrl).filter(Boolean).sort(),
+        provenance: sp.provenance || "WEBSITE_DERIVED",
+        sourceContributions: [...sp.sourceContributions || []],
+        firstObservedAt: sp.firstObservedAt || now,
+        lastObservedAt: sp.lastObservedAt || now,
+        freshnessState: this.computeFreshnessState(sp.lastObservedAt, now, maxAgeDays),
+        changeState: "OBSERVED",
+        isRestricted: false,
+        exportEligible: true,
+        persistenceEligible: true
+      });
+    }
+    if (input.previousSnapshot?.people?.publicPeople) {
+      const currentIds = new Set(peopleList.map((p) => p.personId));
+      for (const prevPerson of input.previousSnapshot.people.publicPeople) {
+        if (!currentIds.has(prevPerson.personId)) {
+          peopleList.push({
+            ...prevPerson,
+            changeState: "NOT_OBSERVED_THIS_RUN",
+            freshnessState: "STALE"
+          });
+        }
+      }
+    }
+    return peopleList.sort((a, b) => a.canonicalName.localeCompare(b.canonicalName));
+  }
+  /**
+   * Constructs a compact, bounded evidence pack without storing raw HTML or dumps.
+   */
+  buildCompactEvidencePack(entityId, input, conflicts, corroborations, now) {
+    const items = [];
+    const sourceUrls = [];
+    const sourceTypes = [];
+    const addSource = (st, url) => {
+      if (!sourceTypes.includes(st)) sourceTypes.push(st);
+      if (url && !sourceUrls.includes(url)) sourceUrls.push(url);
+    };
+    if (input.googleCandidate) {
+      addSource("GOOGLE_MAPS", input.googleCandidate.mapsUrl);
+      items.push({
+        evidenceId: `ev_google_${entityId}`,
+        sourceType: "GOOGLE_MAPS",
+        factType: "BUSINESS_LISTING",
+        factSummary: `Google listing observed: ${input.googleCandidate.businessName || ""}`,
+        sourceUrl: input.googleCandidate.mapsUrl,
+        observedAt: input.googleCandidate.observedAt || now,
+        provenance: "GOOGLE_DERIVED",
+        isRestricted: true,
+        fieldReferences: ["businessName", "address", "phone", "website"]
+      });
+    }
+    if (input.metaCandidate) {
+      addSource("META_AD_LIBRARY", input.metaCandidate.pageUrl);
+      items.push({
+        evidenceId: `ev_meta_${entityId}`,
+        sourceType: "META_AD_LIBRARY",
+        factType: "ADVERTISING_SIGNAL",
+        factSummary: `Meta Ad Library observation with ${input.metaCandidate.adCount ?? 0} active ads`,
+        sourceUrl: input.metaCandidate.pageUrl,
+        observedAt: input.metaCandidate.observedAt || now,
+        provenance: "META_DERIVED",
+        isRestricted: false,
+        fieldReferences: ["businessName", "pageUrl"]
+      });
+    }
+    if (input.websiteResult) {
+      addSource("WEBSITE", input.websiteResult.identity?.canonicalUrl);
+      const pagesCount = input.websiteResult.crawlStats?.pagesVisited?.length || input.websiteResult.crawlStats?.pagesDiscovered || 1;
+      items.push({
+        evidenceId: `ev_web_${entityId}`,
+        sourceType: "WEBSITE",
+        factType: "WEBSITE_INTELLIGENCE",
+        factSummary: `Website crawl: ${input.websiteResult.identity?.domain || ""}, ${pagesCount} pages verified`,
+        sourceUrl: input.websiteResult.identity?.canonicalUrl,
+        observedAt: input.websiteResult.observedAt || now,
+        provenance: "WEBSITE_DERIVED",
+        isRestricted: false,
+        fieldReferences: ["website", "email", "phone", "services", "socialProfiles"]
+      });
+    }
+    return {
+      totalEvidenceCount: items.length,
+      items,
+      sourceUrls,
+      sourceTypes,
+      conflictCount: conflicts.length,
+      corroborationCount: corroborations.length,
+      entityResolutionId: entityId,
+      qualificationProfileId: input.qualificationDecision?.profileId
+    };
+  }
+  /**
+   * Computes deterministic, descriptive completeness metrics (0.0 - 1.0).
+   * Strictly no AI scoring, buyer scores, or intent probabilities.
+   */
+  computeQualitySummary(businessName, website, address, emails, phones, people, corroborations, conflicts) {
+    let identityScore = 0;
+    if (businessName.value) identityScore += 0.4;
+    if (website.value) identityScore += 0.3;
+    if (address.value) identityScore += 0.3;
+    const businessScore = (businessName.value ? 0.5 : 0) + (address.value ? 0.5 : 0);
+    let contactScore = 0;
+    if (emails.length > 0) contactScore += 0.4;
+    if (phones.length > 0) contactScore += 0.4;
+    if (emails.length + phones.length > 2) contactScore += 0.2;
+    const websiteScore = website.value ? 1 : 0;
+    let personScore = 0;
+    if (people.length > 0) personScore += 0.5;
+    if (people.some((p) => p.titles.length > 0)) personScore += 0.25;
+    if (people.some((p) => p.emails.length > 0 || p.phones.length > 0)) personScore += 0.25;
+    const coverageScore = corroborations.length > 0 ? Math.min(1, 0.4 + corroborations.length * 0.3) : 0.4;
+    return {
+      identityCompleteness: Number(identityScore.toFixed(2)),
+      businessCompleteness: Number(businessScore.toFixed(2)),
+      contactCompleteness: Number(contactScore.toFixed(2)),
+      websiteCompleteness: Number(websiteScore.toFixed(2)),
+      evidenceCoverage: Number(coverageScore.toFixed(2)),
+      publicPersonCompleteness: Number(personScore.toFixed(2)),
+      contradictionCount: conflicts.length,
+      corroborationCount: corroborations.length
+    };
+  }
+  /**
+   * Helper to compute freshness state based on maximum age days.
+   */
+  computeFreshnessState(timestamp, now = (/* @__PURE__ */ new Date()).toISOString(), maxAgeDays = 90) {
+    if (!timestamp) return "UNKNOWN";
+    try {
+      const ts = new Date(timestamp).getTime();
+      const current = new Date(now).getTime();
+      if (isNaN(ts) || isNaN(current)) return "UNKNOWN";
+      const ageDays = (current - ts) / (1e3 * 60 * 60 * 24);
+      return ageDays <= maxAgeDays ? "CURRENT" : "STALE";
+    } catch {
+      return "UNKNOWN";
+    }
+  }
+  /**
+   * Converts a CanonicalLeadRecord into a UnifiedResearchRecord for Phase 16 ExportPolicy evaluation.
+   */
+  toUnifiedResearchRecord(record) {
+    const isRestricted = record.policy.isRestricted;
+    const persistenceEligible = record.policy.persistenceEligible;
+    const exportEligible = record.policy.exportEligible;
+    const sourceRecords = [];
+    if (record.sourceSignals.googleEvidence) {
+      sourceRecords.push({
+        sourceType: "GOOGLE_MAPS",
+        sourceNamespace: "google",
+        sourceRecordId: record.sourceSignals.googleEvidence.placeId || record.canonicalEntityId
+      });
+    }
+    if (record.sourceSignals.metaEvidence) {
+      sourceRecords.push({
+        sourceType: "META_AD_LIBRARY",
+        sourceNamespace: "meta",
+        sourceRecordId: record.sourceSignals.metaEvidence.pageId || record.canonicalEntityId
+      });
+    }
+    if (record.sourceSignals.websiteEvidence) {
+      sourceRecords.push({
+        sourceType: "WEBSITE",
+        sourceNamespace: "website",
+        sourceRecordId: record.sourceSignals.websiteEvidence.domain
+      });
+    }
+    if (sourceRecords.length === 0) {
+      sourceRecords.push({
+        sourceType: "USER_PROVIDED",
+        sourceNamespace: "user",
+        sourceRecordId: record.canonicalEntityId
+      });
+    }
+    const fieldEligibility = {
+      businessName: {
+        isEligible: !isRestricted,
+        sourceProvenance: record.canonicalBusinessName.provenance,
+        restrictionBasis: isRestricted ? "GOOGLE_CONSUMER_WEB_RESTRICTED" : void 0
+      },
+      website: {
+        isEligible: !isRestricted,
+        sourceProvenance: record.digital.verifiedWebsite.provenance,
+        restrictionBasis: isRestricted ? "GOOGLE_CONSUMER_WEB_RESTRICTED" : void 0
+      },
+      phone: {
+        isEligible: !isRestricted,
+        sourceProvenance: record.contacts.phones[0]?.provenance || "LEADNORIA_DERIVED",
+        restrictionBasis: isRestricted ? "GOOGLE_CONSUMER_WEB_RESTRICTED" : void 0
+      },
+      email: {
+        isEligible: !isRestricted,
+        sourceProvenance: record.contacts.emails[0]?.provenance || "WEBSITE_DERIVED",
+        restrictionBasis: isRestricted ? "GOOGLE_CONSUMER_WEB_RESTRICTED" : void 0
+      },
+      address: {
+        isEligible: !isRestricted,
+        sourceProvenance: record.location.normalizedAddress.provenance,
+        restrictionBasis: isRestricted ? "GOOGLE_CONSUMER_WEB_RESTRICTED" : void 0
+      }
+    };
+    const restrictions = {
+      isRestricted,
+      persistenceEligible,
+      exportEligible,
+      displayEligible: true,
+      qualificationEligible: true,
+      restrictionBasis: record.policy.restrictionBasis
+    };
+    const validPipelineSources = record.evidence.evidencePack.sourceTypes.filter((s) => s !== "LEADNORIA");
+    return {
+      recordId: `rec_${record.canonicalEntityId}`,
+      entityId: record.canonicalEntityId,
+      canonicalDisplayName: record.canonicalBusinessName.value || "",
+      sourceRecords,
+      primarySource: sourceRecords[0]?.sourceType || "USER_PROVIDED",
+      sourceContributions: record.evidence.sourceContributions,
+      provenance: record.policy.overallProvenance,
+      restrictions,
+      fieldEligibility,
+      corroborationSources: validPipelineSources,
+      corroborationCount: record.evidence.corroborations.length,
+      stageStates: {
+        SOURCE_PLANNING: "COMPLETED",
+        SOURCE_EXECUTION: "COMPLETED",
+        NORMALIZATION: "COMPLETED",
+        ENTITY_RESOLUTION: "COMPLETED",
+        EVIDENCE: "COMPLETED",
+        RELEVANCE: "COMPLETED",
+        WEBSITE_VERIFICATION: "COMPLETED",
+        CONTACT_ENRICHMENT: "COMPLETED",
+        QUALIFICATION: "COMPLETED",
+        GEOGRAPHIC_ACCOUNTING: "COMPLETED",
+        PERSISTENCE: persistenceEligible ? "COMPLETED" : "BLOCKED",
+        EXPORT: exportEligible ? "COMPLETED" : "BLOCKED"
+      },
+      evidence: record.evidence.evidenceReferences,
+      qualificationDecision: record.qualification.qualificationDecision,
+      qualificationState: record.qualification.finalState,
+      geographicObservations: [],
+      diagnostics: {
+        warnings: [],
+        errors: [],
+        notes: []
+      },
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt
+    };
+  }
+  /**
+   * Evaluates export eligibility for a CanonicalLeadRecord using the existing Phase 16 ExportPolicy.
+   */
+  evaluateExport(record) {
+    const unifiedRecord = this.toUnifiedResearchRecord(record);
+    return this.exportPolicy.evaluateRecord(unifiedRecord);
+  }
+  /**
+   * Projects a CanonicalLeadRecord to export projection using the existing Phase 16 ExportProjection.
+   */
+  projectExport(record, evaluation) {
+    const unifiedRecord = this.toUnifiedResearchRecord(record);
+    const evalResult = evaluation || this.exportPolicy.evaluateRecord(unifiedRecord);
+    return this.exportProjection.projectRecord(unifiedRecord, evalResult);
+  }
+};
+
 // src/extension/service-worker.ts
+var canonicalRecordAssembler = new RecordAssembler();
 console.log("[Meta Ad Library Scraper] Service Worker initializing...");
 var SCHEMA_VERSION = 1;
 var STALE_JOB_THRESHOLD_MS = 5 * 60 * 1e3;
@@ -6392,6 +9893,46 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
       });
       return true;
     }
+    if (message.type === "EVALUATE_BUSINESS_QUALIFICATION") {
+      try {
+        const payload = message.payload || {};
+        const profiles = {
+          CANONICAL_DEFAULT_PROFILE,
+          LOCAL_SERVICE_BUSINESS_PROFILE,
+          B2B_PROSPECT_PROFILE,
+          DIGITAL_COMMERCE_BUSINESS_PROFILE,
+          HIGH_CONTACTABILITY_PROFILE
+        };
+        const profile = payload.profile || typeof payload.profileId === "string" && profiles[payload.profileId] || CANONICAL_DEFAULT_PROFILE;
+        const bi = payload.businessIntelligence || (payload.buildParams ? buildBusinessIntelligenceProfile(payload.buildParams) : void 0);
+        const context = {
+          entityId: payload.entityId || "entity_direct",
+          businessIntelligence: bi,
+          websiteState: payload.websiteState,
+          sourceContributions: payload.sourceContributions
+        };
+        const decision = evaluateLeadQualification(context, profile);
+        sendResponse({ success: true, decision, businessIntelligence: bi });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message });
+      }
+      return true;
+    }
+    if (message.type === "ASSEMBLE_CANONICAL_LEAD") {
+      try {
+        const payload = message.payload || {};
+        const canonicalRecord = canonicalRecordAssembler.assemble(payload);
+        const exportEvaluation = canonicalRecordAssembler.evaluateExport(canonicalRecord);
+        sendResponse({
+          success: true,
+          canonicalRecord,
+          exportEvaluation
+        });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message });
+      }
+      return true;
+    }
     return false;
   });
 }
@@ -6401,4 +9942,3 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onInstalle
   });
 }
 checkStaleJobs().catch((err) => console.error("[service-worker] checkStaleJobs error:", err));
-//# sourceMappingURL=service-worker.js.map

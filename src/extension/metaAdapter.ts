@@ -519,6 +519,9 @@ export function sanitizeCsvField(val: unknown): string {
   if (val === null || val === undefined) return '';
   let str = String(val).trim();
 
+  // Neutralize tabs and carriage returns
+  str = str.replace(/\t/g, ' ').replace(/\r/g, '');
+
   // Protect against spreadsheet formula injection
   if (/^[=+\-@\t\r]/.test(str)) {
     str = `'${str}`;

@@ -69,7 +69,8 @@ export function deriveCompositeRestrictions(
     ...(context.sourceContributions || []),
     ...(context.relevanceResult?.sourceContributions || []),
     ...(context.mapsVerificationResult?.sourceContributions || []),
-    ...(context.contactEnrichment?.sourceContributions || [])
+    ...(context.contactEnrichment?.sourceContributions || []),
+    ...(context.businessIntelligence?.sourceContributions || [])
   ];
 
   // Deduplicate contributions by fieldName + source + provenance
@@ -88,13 +89,17 @@ export function deriveCompositeRestrictions(
     ...(context.derivedFrom || []),
     ...(context.relevanceResult?.derivedFrom || []),
     ...(context.mapsVerificationResult?.derivedFrom || []),
-    ...(context.contactEnrichment?.derivedFrom || [])
+    ...(context.contactEnrichment?.derivedFrom || []),
+    ...(context.businessIntelligence?.derivedFrom || [])
   ]);
 
   // Check if any underlying source contribution is restricted
-  const hasRestrictedGoogle = dedupedContributions.some(
-    c => c.provenance === 'GOOGLE_DERIVED' || c.restrictionBasis === 'GOOGLE_CONSUMER_WEB_RESTRICTED'
-  );
+  const hasRestrictedGoogle =
+    context.businessIntelligence?.hasRestrictedGoogleEvidence === true ||
+    context.businessIntelligence?.sourceRestrictions?.isRestricted === true ||
+    dedupedContributions.some(
+      c => c.provenance === 'GOOGLE_DERIVED' || c.restrictionBasis === 'GOOGLE_CONSUMER_WEB_RESTRICTED'
+    );
 
   const hasRestrictedAPI = dedupedContributions.some(
     c => c.restrictionBasis === 'GOOGLE_API_SERVICE_SPECIFIC'

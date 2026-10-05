@@ -15,6 +15,7 @@ fs.cpSync(extDir, tempDir, { recursive: true });
 console.log('Testing extension from path without spaces:', tempDir);
 
 const context = await chromium.launchPersistentContext('', {
+  executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   headless: false,
   args: [
     '--headless=new',

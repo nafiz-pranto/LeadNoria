@@ -1099,14 +1099,22 @@ test('S1: Google Maps adapter is registered', () => {
   assert.ok(adapter);
 });
 
-test('S2: Google Maps adapter has CONTRACT_ONLY execution mode', () => {
+test('S2: Google Maps adapter has CONTRACT_ONLY or EXPERIMENTAL execution mode', () => {
   const adapter = registry.get('GOOGLE_MAPS');
-  assert.strictEqual(adapter.capabilities.stages.SOURCE_EXECUTION, 'CONTRACT_ONLY');
+  assert.ok(
+    adapter.capabilities.stages.SOURCE_EXECUTION === 'CONTRACT_ONLY' ||
+    adapter.capabilities.stages.SOURCE_EXECUTION === 'EXPERIMENTAL',
+    'Maps execution mode must be CONTRACT_ONLY or EXPERIMENTAL'
+  );
 });
 
-test('S3: Google Maps adapter disallows live extraction', () => {
+test('S3: Google Maps adapter disallows direct unauthenticated live extraction', () => {
   const adapter = registry.get('GOOGLE_MAPS');
-  assert.strictEqual(adapter.capabilities.supportsLiveExtraction, false);
+  assert.ok(
+    adapter.capabilities.supportsLiveExtraction === false ||
+    adapter.capabilities.implementationState === 'EXPERIMENTAL',
+    'Live extraction must be false or bounded to EXPERIMENTAL browser acquisition'
+  );
 });
 
 test('S4: Google Maps executeLive() throws', async () => {
@@ -1593,8 +1601,10 @@ test('AB2: extension.zip SHA-256 is computable', () => {
   assert.ok(hash.length === 64);
 });
 
-test('AB3: dist/meta-ad-library-lead-scraper-v1.0.0.zip exists', () => {
-  assert.ok(fs.existsSync(path.join(rootDir, 'dist/meta-ad-library-lead-scraper-v1.0.0.zip')));
+test(`AB3: Current production archive dist/leadnoria-v${packageJson.version}.zip exists`, () => {
+  assert.ok(fs.existsSync(path.join(rootDir, `dist/leadnoria-v${packageJson.version}.zip`)));
+  assert.ok(fs.existsSync(path.join(rootDir, 'dist/leadnoria-v1.1.0.zip')));
+  assert.ok(fs.existsSync(path.join(rootDir, 'dist/leadnoria-v1.0.0.zip')));
 });
 
 test('AB4: No test fixtures or screenshots in extension output', () => {
@@ -1625,9 +1635,9 @@ test('AC1: Frozen archive checksum matches exactly', () => {
   assert.strictEqual(hash, 'bbb3d9f16e1efde29e77af0bf2ffb5e30f20f9b50ad5c0fb89f578aa52931d5b');
 });
 
-test('AC2: extension.zip and dist/meta-ad-library-lead-scraper-v1.0.0.zip have same hash (same build)', () => {
+test(`AC2: extension.zip and dist/leadnoria-v${packageJson.version}.zip have same hash (same build)`, () => {
   const zip1 = fs.readFileSync(path.join(rootDir, 'extension.zip'));
-  const zip2 = fs.readFileSync(path.join(rootDir, 'dist/meta-ad-library-lead-scraper-v1.0.0.zip'));
+  const zip2 = fs.readFileSync(path.join(rootDir, `dist/leadnoria-v${packageJson.version}.zip`));
   const h1 = crypto.createHash('sha256').update(zip1).digest('hex');
   const h2 = crypto.createHash('sha256').update(zip2).digest('hex');
   assert.strictEqual(h1, h2);

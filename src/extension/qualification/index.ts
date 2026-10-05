@@ -16,3 +16,7 @@ export * from './criterionEvaluator.ts';
 export * from './qualificationScorer.ts';
 export * from './qualificationExplainer.ts';
 export * from './qualificationEvaluator.ts';
+
+// Phase 23 Business Intelligence Exports
+export * from './businessIntelligence.ts';
+

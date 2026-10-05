@@ -46,7 +46,8 @@ import {
   toResultRowViewModel,
   toResultDetailViewModel,
   toRunStatusViewModel,
-  toExportPreviewViewModel
+  toExportPreviewViewModel,
+  isCanonicalLeadRecord
 } from './viewModelMappers.ts';
 import { exportLeadsToCsv } from '../metaAdapter.ts';
 import { ExtensionResearchRun, ExtensionLead, StartResearchPayload } from '../types.ts';
@@ -203,6 +204,10 @@ export const ExtensionApp: React.FC = () => {
   // Convert raw leads to ResultRowViewModel list
   const resultsVM: ResultRowViewModel[] = useMemo(() => {
     return rawLeads.map((item, idx) => {
+      if (isCanonicalLeadRecord(item)) {
+        return toResultRowViewModel(item);
+      }
+
       // Compatibility wrapper for Phase 1-13 leads
       const candidateEnv = {
         candidateId: item.leadId || `cand_${idx}`,
@@ -386,8 +391,18 @@ export const ExtensionApp: React.FC = () => {
 
   // Inspect Row in Detail Drawer
   const handleInspectRecord = (recordId: string) => {
-    const raw = rawLeads.find(l => (l.leadId || l.pageId) === recordId) || rawLeads[0];
+    const raw = rawLeads.find(l =>
+      (l.canonicalEntityId || l.entityId || l.leadId || l.pageId) === recordId ||
+      (`rec_${l.canonicalEntityId}`) === recordId
+    ) || rawLeads[0];
+
     if (raw) {
+      if (isCanonicalLeadRecord(raw)) {
+        setInspectedLead(toResultDetailViewModel(raw));
+        setIsDetailDrawerOpen(true);
+        return;
+      }
+
       const uRecord = {
         recordId,
         entityId: raw.entityId || recordId,
@@ -468,22 +483,28 @@ export const ExtensionApp: React.FC = () => {
   // Export Preview & Execution
   const exportPreviewVM: ExportPreviewViewModel = useMemo(() => {
     const selectedLeads = selectedRecordIds.size > 0
-      ? resultsVM.filter(r => selectedRecordIds.has(r.recordId))
+      ? resultsVM.filter(r => selectedRecordIds.has(r.entityId) || selectedRecordIds.has(r.recordId))
       : resultsVM;
 
+    const totalSelected = selectedLeads.length;
+    const exportableCount = selectedLeads.filter(r => r.isExportable && !r.isRestricted).length;
+    const restrictedCount = selectedLeads.filter(r => r.isRestricted || !r.isExportable).length;
+
+    const policyNotice = restrictedCount > 0
+      ? `You selected ${totalSelected} records. ${restrictedCount} are unavailable for export due to source restrictions. ${exportableCount} are eligible.`
+      : 'All selected records satisfy public source export policy.';
+
     return {
-      totalSelectedRecords: selectedLeads.length,
-      exportableRecordsCount: selectedLeads.filter(r => r.isExportable).length,
-      restrictedRecordsCount: selectedLeads.filter(r => r.isRestricted).length,
-      blockedDueToComplianceCount: selectedLeads.filter(r => !r.isExportable).length,
-      eligibleFields: ['displayName', 'primarySource', 'provenance', 'websiteUrl', 'businessEmail', 'businessPhone'],
-      restrictedFieldsOmitted: ['Google consumer-web raw search entries'],
-      policyNotice: selectedSource === 'GOOGLE_MAPS'
-        ? 'Google consumer-web provenance is strictly protected. Records are excluded from CSV export.'
-        : 'All selected records satisfy public source export policy.',
-      isExportReady: selectedLeads.some(r => r.isExportable)
+      totalSelectedRecords: totalSelected,
+      exportableRecordsCount: exportableCount,
+      restrictedRecordsCount: restrictedCount,
+      blockedDueToComplianceCount: restrictedCount,
+      eligibleFields: ['displayName', 'category', 'location', 'websiteUrl', 'businessEmail', 'businessPhone', 'qualificationState'],
+      restrictedFieldsOmitted: ['Google consumer-web raw search entries', 'Google consumer-web place identifiers'],
+      policyNotice,
+      isExportReady: exportableCount > 0
     };
-  }, [resultsVM, selectedRecordIds, selectedSource]);
+  }, [resultsVM, selectedRecordIds]);
 
   const handleConfirmExport = () => {
     if (isExporting) return;
@@ -491,8 +512,12 @@ export const ExtensionApp: React.FC = () => {
 
     const eligibleLeads = rawLeads.filter((_, idx) => {
       const row = resultsVM[idx];
-      const isSelected = selectedRecordIds.size === 0 || (row && selectedRecordIds.has(row.recordId));
-      return isSelected && row && row.isExportable;
+      if (!row) return false;
+      const isSelected = selectedRecordIds.size === 0 ||
+        selectedRecordIds.has(row.entityId) ||
+        selectedRecordIds.has(row.recordId);
+      // Strictly prevent export of restricted or non-exportable records
+      return isSelected && row.isExportable && !row.isRestricted;
     });
 
     if (eligibleLeads.length > 0) {
@@ -521,7 +546,7 @@ export const ExtensionApp: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-[800px] h-full min-h-[600px] max-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans select-none">
+    <div className="min-w-[360px] w-full max-w-[800px] h-full min-h-[600px] max-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans select-none">
       {/* Global Navigation Header */}
       <Header
         activeTab={activeTab}

@@ -32,6 +32,18 @@ import {
   MAX_QUERIES_PER_RESEARCH_RUN
 } from './queryPlanner.ts';
 import { verifyLeadWebsite } from './websiteVerifier.ts';
+import {
+  evaluateLeadQualification,
+  buildBusinessIntelligenceProfile,
+  CANONICAL_DEFAULT_PROFILE,
+  LOCAL_SERVICE_BUSINESS_PROFILE,
+  B2B_PROSPECT_PROFILE,
+  DIGITAL_COMMERCE_BUSINESS_PROFILE,
+  HIGH_CONTACTABILITY_PROFILE
+} from './qualification/index.ts';
+import { RecordAssembler } from './leadIntelligence/index.ts';
+
+const canonicalRecordAssembler = new RecordAssembler();
 
 console.log('[Meta Ad Library Scraper] Service Worker initializing...');
 
@@ -820,6 +832,48 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
           sendResponse({ success: false, error: err.message });
         }
       });
+      return true;
+    }
+
+    if (message.type === 'EVALUATE_BUSINESS_QUALIFICATION') {
+      try {
+        const payload = (message as any).payload || {};
+        const profiles: Record<string, any> = {
+          CANONICAL_DEFAULT_PROFILE,
+          LOCAL_SERVICE_BUSINESS_PROFILE,
+          B2B_PROSPECT_PROFILE,
+          DIGITAL_COMMERCE_BUSINESS_PROFILE,
+          HIGH_CONTACTABILITY_PROFILE
+        };
+        const profile = payload.profile || (typeof payload.profileId === 'string' && profiles[payload.profileId]) || CANONICAL_DEFAULT_PROFILE;
+        const bi = payload.businessIntelligence || (payload.buildParams ? buildBusinessIntelligenceProfile(payload.buildParams) : undefined);
+        const context = {
+          entityId: payload.entityId || 'entity_direct',
+          businessIntelligence: bi,
+          websiteState: payload.websiteState,
+          sourceContributions: payload.sourceContributions
+        };
+        const decision = evaluateLeadQualification(context, profile);
+        sendResponse({ success: true, decision, businessIntelligence: bi });
+      } catch (err: any) {
+        sendResponse({ success: false, error: err.message });
+      }
+      return true;
+    }
+
+    if (message.type === 'ASSEMBLE_CANONICAL_LEAD') {
+      try {
+        const payload = (message as any).payload || {};
+        const canonicalRecord = canonicalRecordAssembler.assemble(payload);
+        const exportEvaluation = canonicalRecordAssembler.evaluateExport(canonicalRecord);
+        sendResponse({
+          success: true,
+          canonicalRecord,
+          exportEvaluation
+        });
+      } catch (err: any) {
+        sendResponse({ success: false, error: err.message });
+      }
       return true;
     }
 

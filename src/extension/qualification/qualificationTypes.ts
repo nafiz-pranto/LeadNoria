@@ -58,7 +58,31 @@ export type CriterionType =
   | 'NEGATIVE_EVIDENCE'
   | 'SOURCE_EVIDENCE_REQUIREMENT'
   | 'COMPLETENESS_THRESHOLD'
-  | 'CUSTOM_FIELD';
+  | 'CUSTOM_FIELD'
+  // Phase 23 Business Intelligence Additions:
+  | 'VERIFIED_BUSINESS_WEBSITE'
+  | 'PUBLISHED_SERVICES'
+  | 'SERVICE_AREA_MATCH'
+  | 'BUSINESS_HOURS_PRESENT'
+  | 'DIGITAL_BOOKING_PRESENT'
+  | 'DIGITAL_ECOMMERCE_PRESENT'
+  | 'DIGITAL_CHAT_PRESENT'
+  | 'DIGITAL_ANALYTICS_PRESENT'
+  | 'DIGITAL_CMS_DETECTED'
+  | 'PUBLIC_EMAIL_AVAILABLE'
+  | 'ROLE_EMAIL_AVAILABLE'
+  | 'PERSON_EMAIL_AVAILABLE'
+  | 'PUBLIC_PHONE_AVAILABLE'
+  | 'PERSON_PHONE_AVAILABLE'
+  | 'PUBLIC_PERSON_AVAILABLE'
+  | 'PERSON_WITH_TITLE_AVAILABLE'
+  | 'CROSS_SOURCE_CORROBORATION'
+  | 'CORROBORATED_PHONE'
+  | 'CORROBORATED_IDENTITY'
+  | 'META_AD_ACTIVE'
+  | 'EVIDENCE_COVERAGE_THRESHOLD'
+  | 'BUSINESS_COMPLETENESS_THRESHOLD'
+  | 'TEMPORAL_FRESHNESS';
 
 // ==========================================
 // 3. Rule Operators
@@ -134,6 +158,11 @@ export interface QualificationProfile {
   metadata?: Record<string, any>;
 }
 
+import type {
+  BusinessIntelligenceProfile,
+  BusinessCompletenessMetrics
+} from './businessIntelligence.ts';
+
 // ==========================================
 // 6. Evaluation Context
 // ==========================================
@@ -151,6 +180,10 @@ export interface CandidateEvaluationContext {
   sourceContributions?: SourceContribution[];
   derivedFrom?: string[];
   evaluatedAt?: string;
+  // Phase 23 Additions:
+  businessIntelligence?: BusinessIntelligenceProfile;
+  websiteIntelligence?: any;
+  contactIntelligence?: any;
 }
 
 // ==========================================
@@ -177,6 +210,30 @@ export interface QualificationScoreSummary {
   maxPossibleScore: number;
   threshold: number;
   thresholdPassed: boolean;
+}
+
+export interface QualificationReasonNode {
+  criterionId: string;
+  criterionType: CriterionType;
+  outcome: CriterionOutcome;
+  mandatory: boolean;
+  weight: number;
+  scoreContribution: number;
+  explanation: string;
+  evidenceCount: number;
+  sources: string[];
+}
+
+export interface QualificationReasonGraph {
+  finalStatus: AdvancedQualificationState;
+  primaryRationale: string;
+  summaryText: string;
+  nodes: QualificationReasonNode[];
+  passingFactors: string[];
+  failingFactors: string[];
+  uncertainFactors: string[];
+  contradictoryFactors: string[];
+  blockingFactors: string[];
 }
 
 export interface QualificationDecision {
@@ -208,4 +265,7 @@ export interface QualificationDecision {
     warnings: string[];
     notices: string[];
   };
+  // Phase 23 Additions:
+  reasonGraph?: QualificationReasonGraph;
+  completenessMetrics?: BusinessCompletenessMetrics;
 }

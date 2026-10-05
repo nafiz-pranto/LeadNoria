@@ -85,7 +85,11 @@ export type SourceType =
   | 'META_AD_LIBRARY'
   | 'GOOGLE_MAPS'
   | 'USER_PROVIDED_DOMAIN'
-  | 'FUTURE_SOURCE';
+  | 'FUTURE_SOURCE'
+  | 'WEBSITE'
+  | 'META'
+  | 'USER_PROVIDED'
+  | 'LEADNORIA';
 
 export type ImplementationStatus =
   | 'IMPLEMENTED'       // Production or operational adapter

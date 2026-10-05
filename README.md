@@ -3,7 +3,7 @@
 > **Discover. Verify. Connect.**  
 > Business lead research from real public signals — built as a Manifest V3 Chrome Extension.
 
-[![Version](https://img.shields.io/badge/version-1.1.0-blue)](RELEASE-NOTES-v1.1.0.md)
+[![Version](https://img.shields.io/badge/version-1.2.1-blue)](RELEASE-NOTES-v1.2.1.md)
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)](#testing)
 [![License](https://img.shields.io/badge/license-MIT-green)](#license)
 [![Manifest](https://img.shields.io/badge/Manifest-V3-orange)](extension/manifest.json)
@@ -35,14 +35,15 @@ It automates a multi-stage research pipeline:
 
 | Property | Value |
 |---|---|
-| **Version** | `1.1.0` |
-| **Build** | Post-Release Full-System Audit Verified |
+| **Version** | `1.2.1` |
+| **Build** | Production Verified Release Candidate |
 | **Manifest Version** | Manifest V3 |
-| **Release Artifact** | `dist/leadnoria-v1.1.0.zip` |
-| **SHA-256** | `c17610fc1b22773cfe8ed282f6ddf40be31d0a38488999dff27bd3831e985e94` |
-| **Total Tests** | 1,270 (all passing) |
+| **Release Artifact** | `dist/leadnoria-v1.2.1.zip` |
+| **Artifact SHA-256** | `1c1327049ae85c47e77015e6dadd1bf1c9c31924613807efbfebc942b5ee0419` |
+| **Manifest SHA-256** | `17b567cbc4daf3c77b1a982e7a877d86d8b788855d65feb4d495ac15e042a215` |
+| **Total Tests** | 1,890 across 20 suites (all passing) |
 
-See [RELEASE-NOTES-v1.1.0.md](RELEASE-NOTES-v1.1.0.md) for the full changelog.
+See [RELEASE-NOTES-v1.2.1.md](RELEASE-NOTES-v1.2.1.md) for the full release notes and changelog.
 
 ---
 
@@ -144,7 +145,9 @@ leadnoria/
 ├── scripts/                    # Build, verification, regression runner
 ├── dist/                       # Release archives
 │   ├── leadnoria-v1.0.0.zip    # Frozen historical baseline
-│   └── leadnoria-v1.1.0.zip    # Current production release
+│   ├── leadnoria-v1.1.0.zip    # Historical release archive
+│   ├── leadnoria-v1.2.0.zip    # Preserved previous release candidate
+│   └── leadnoria-v1.2.1.zip    # Current production release
 └── docs/                       # Engineering phase reports & release documentation
 ```
 
@@ -180,6 +183,7 @@ node scripts/build-extension.mjs
 This compiles all TypeScript source, bundles the extension via Vite, and packages the output into:
 - `extension/` — unpacked extension directory (load directly into Chrome)
 - `extension.zip` — distributable archive
+- `dist/leadnoria-v1.2.1.zip` — production release archive
 
 ### 4. Load into Chrome
 
@@ -190,14 +194,14 @@ This compiles all TypeScript source, bundles the extension via Vite, and package
 
 ### 5. Use the release archive
 
-A pre-built release archive is available at `dist/leadnoria-v1.1.0.zip`.  
-SHA-256: `c17610fc1b22773cfe8ed282f6ddf40be31d0a38488999dff27bd3831e985e94`
+A pre-built release archive is available at `dist/leadnoria-v1.2.1.zip`.  
+SHA-256: `1c1327049ae85c47e77015e6dadd1bf1c9c31924613807efbfebc942b5ee0419`
 
 ---
 
 ## Testing
 
-LeadNoria has **1,270 automated tests** across 17 suites covering all phases from extraction through post-release audit.
+LeadNoria has **1,890 automated checks and assertions** across 20 suites covering all phases from extraction through production pilot and release operations.
 
 ### Run all tests
 

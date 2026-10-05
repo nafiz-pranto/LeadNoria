@@ -464,7 +464,9 @@ export interface ExtensionMessage {
     | 'CHALLENGE_DETECTED'
     | 'CONTENT_SCRIPT_READY'
     | 'VERIFY_WEBSITE'
-    | 'GET_WEBSITE_VERIFICATION';
+    | 'GET_WEBSITE_VERIFICATION'
+    | 'EVALUATE_BUSINESS_QUALIFICATION'
+    | 'ASSEMBLE_CANONICAL_LEAD';
   payload?: any;
 }
 

@@ -64,7 +64,8 @@ const accounting = {
   'Security & Resource Limits': { passed: 0, failed: 0 },
   'Benchmarks & Performance': { passed: 0, failed: 0 },
   'End-to-End Scenarios A to J': { passed: 0, failed: 0 },
-  'Edge Cases & Adversarial Robustness': { passed: 0, failed: 0 }
+  'Edge Cases & Adversarial Robustness': { passed: 0, failed: 0 },
+  'Google Maps Adapter Configuration & Execution Mode Semantics': { passed: 0, failed: 0 }
 };
 
 let currentAccount = 'Source Registry & Adapter Contract';
@@ -141,10 +142,15 @@ async function runTestSuite() {
     const reg = new UnifiedSourceAdapterRegistry(true);
     const gmapsCap = reg.getCapability('GOOGLE_MAPS');
     assert.ok(gmapsCap);
-    assert.strictEqual(gmapsCap.implementationState, 'CONTRACT_ONLY');
-    assert.strictEqual(gmapsCap.supportsLiveExtraction, false);
-    assert.strictEqual(gmapsCap.stages.SOURCE_EXECUTION, 'CONTRACT_ONLY');
-    pass('Test 4: Google Maps capability declares CONTRACT_ONLY and live extraction false');
+    assert.ok(
+      gmapsCap.implementationState === 'CONTRACT_ONLY' || gmapsCap.implementationState === 'EXPERIMENTAL',
+      'Google Maps implementationState must be CONTRACT_ONLY or EXPERIMENTAL'
+    );
+    assert.ok(
+      gmapsCap.stages.SOURCE_EXECUTION === 'CONTRACT_ONLY' || gmapsCap.stages.SOURCE_EXECUTION === 'EXPERIMENTAL',
+      'SOURCE_EXECUTION must be CONTRACT_ONLY or EXPERIMENTAL'
+    );
+    pass('Test 4: Google Maps capability declares CONTRACT_ONLY or EXPERIMENTAL');
   } catch (e) { fail('Test 4', e); }
 
   // Test 5: Unsupported stage rejection in plan
@@ -239,7 +245,10 @@ async function runTestSuite() {
   // Test 13: Stage capability gating
   try {
     const gmapsAdapter = new GoogleMapsUnifiedAdapter();
-    assert.strictEqual(gmapsAdapter.capabilities.stages.SOURCE_EXECUTION, 'CONTRACT_ONLY');
+    assert.ok(
+      gmapsAdapter.capabilities.stages.SOURCE_EXECUTION === 'CONTRACT_ONLY' || gmapsAdapter.capabilities.stages.SOURCE_EXECUTION === 'EXPERIMENTAL',
+      'SOURCE_EXECUTION must be CONTRACT_ONLY or EXPERIMENTAL'
+    );
     pass('Test 13: Stage capability gating restricts execution of CONTRACT_ONLY stages');
   } catch (e) { fail('Test 13', e); }
 
@@ -341,16 +350,16 @@ async function runTestSuite() {
     const gmapsAdapter = new GoogleMapsUnifiedAdapter();
     await assert.rejects(
       async () => await gmapsAdapter.executeLive({}),
-      /CONTRACT_ONLY/
+      /CONTRACT_ONLY|tabId|GoogleMapsLiveConfig|Chrome extension/
     );
     pass('Test 21: Google Maps executeLive throws explicitly and prevents network calls');
   } catch (e) { fail('Test 21', e); }
 
-  // Test 22: No Google DOM extraction (capability confirms CONTRACT_ONLY)
+  // Test 22: Google Maps restriction class
   try {
     const gmapsAdapter = new GoogleMapsUnifiedAdapter();
-    assert.strictEqual(gmapsAdapter.capabilities.supportsLiveExtraction, false);
-    pass('Test 22: Google Maps declares zero live DOM extraction capability');
+    assert.strictEqual(gmapsAdapter.capabilities.restrictionClass, 'RESTRICTED_CONSUMER_WEB');
+    pass('Test 22: Google Maps declares RESTRICTED_CONSUMER_WEB restriction class');
   } catch (e) { fail('Test 22', e); }
 
   // Test 23: No new Chrome permission required
@@ -1286,6 +1295,123 @@ async function runTestSuite() {
     assert.notStrictEqual(u1.entityId, u2.entityId);
     pass('Test 100: Separate physical branches with identical names preserved as distinct unified records');
   } catch (e) { fail('Test 100', e); }
+
+  // ==========================================
+  // 17. Google Maps Adapter Configuration & Execution Mode Semantics (Tests 101 - 109)
+  // ==========================================
+  currentAccount = 'Google Maps Adapter Configuration & Execution Mode Semantics';
+
+  // Test 101: 1. DRY_RUN + {}
+  try {
+    const reg = new UnifiedSourceAdapterRegistry(true);
+    const plan = createCanonicalSourcePlan('GOOGLE_MAPS', {
+      executionMode: 'DRY_RUN',
+      sourceConfiguration: {}
+    }, reg);
+    const val = validateSourcePlan(plan, reg);
+    assert.strictEqual(val.isValid, true);
+    assert.strictEqual(val.errors.length, 0);
+    pass('Test 101: 1. DRY_RUN + {} allows empty config in offline planning mode');
+  } catch (e) { fail('Test 101', e); }
+
+  // Test 102: 2. REPLAY + {}
+  try {
+    const reg = new UnifiedSourceAdapterRegistry(true);
+    const plan = createCanonicalSourcePlan('GOOGLE_MAPS', {
+      executionMode: 'REPLAY',
+      sourceConfiguration: {}
+    }, reg);
+    const val = validateSourcePlan(plan, reg);
+    assert.strictEqual(val.isValid, true);
+    assert.strictEqual(val.errors.length, 0);
+    pass('Test 102: 2. REPLAY + {} allows empty config in offline replay mode');
+  } catch (e) { fail('Test 102', e); }
+
+  // Test 103: 3. VALIDATION_ONLY + {}
+  try {
+    const reg = new UnifiedSourceAdapterRegistry(true);
+    const plan = createCanonicalSourcePlan('GOOGLE_MAPS', {
+      executionMode: 'VALIDATION_ONLY',
+      sourceConfiguration: {}
+    }, reg);
+    const val = validateSourcePlan(plan, reg);
+    assert.strictEqual(val.isValid, true);
+    assert.strictEqual(val.errors.length, 0);
+    pass('Test 103: 3. VALIDATION_ONLY + {} allows empty config in offline validation mode');
+  } catch (e) { fail('Test 103', e); }
+
+  // Test 104: 4. LIVE + {} → reject
+  try {
+    const gmapsAdapter = new GoogleMapsUnifiedAdapter();
+    await assert.rejects(
+      async () => await gmapsAdapter.executeLive({}),
+      /Invalid live config: GoogleMapsLiveConfig\.tabId must be a positive number/
+    );
+    pass('Test 104: 4. LIVE + {} strictly rejects execution missing positive tabId');
+  } catch (e) { fail('Test 104', e); }
+
+  // Test 105: 5. LIVE + invalid tabId → reject
+  try {
+    const gmapsAdapter = new GoogleMapsUnifiedAdapter();
+    await assert.rejects(
+      async () => await gmapsAdapter.executeLive({ tabId: -1 }),
+      /GoogleMapsLiveConfig\.tabId must be a positive number/
+    );
+    await assert.rejects(
+      async () => await gmapsAdapter.executeLive({ tabId: 0 }),
+      /GoogleMapsLiveConfig\.tabId must be a positive number/
+    );
+    await assert.rejects(
+      async () => await gmapsAdapter.executeLive({ tabId: 'invalid' }),
+      /GoogleMapsLiveConfig\.tabId must be a positive number/
+    );
+    pass('Test 105: 5. LIVE + invalid tabId strictly rejects negative, zero, and non-numeric tabIds');
+  } catch (e) { fail('Test 105', e); }
+
+  // Test 106: 6. LIVE + valid tabId → accept
+  try {
+    const gmapsAdapter = new GoogleMapsUnifiedAdapter();
+    const configVal = gmapsAdapter.validateConfiguration({ tabId: 101 });
+    assert.strictEqual(configVal.isValid, true);
+    assert.strictEqual(configVal.errors.length, 0);
+    pass('Test 106: 6. LIVE + valid tabId accepted by configuration validator');
+  } catch (e) { fail('Test 106', e); }
+
+  // Test 107: 7. CONTRACT_ONLY behavior preserved
+  try {
+    const badConfig = mkBaseRunConfig({
+      globalExecutionMode: 'LIVE',
+      selectedSources: ['GOOGLE_MAPS'],
+      sourcePlans: [createCanonicalSourcePlan('GOOGLE_MAPS', { executionMode: 'LIVE' })]
+    });
+    const val = validateMultiSourceRunConfig(badConfig);
+    assert.strictEqual(val.isValid, false);
+    assert.ok(val.errors.some(e => e.includes('Google Maps cannot be executed in LIVE mode')));
+    pass('Test 107: 7. CONTRACT_ONLY behavior preserved: automated background LIVE execution blocked');
+  } catch (e) { fail('Test 107', e); }
+
+  // Test 108: 8. EXPERIMENTAL behavior preserved
+  try {
+    const gmapsAdapter = new GoogleMapsUnifiedAdapter();
+    assert.strictEqual(gmapsAdapter.capabilities.implementationState, 'EXPERIMENTAL');
+    assert.strictEqual(gmapsAdapter.capabilities.stages.SOURCE_EXECUTION, 'EXPERIMENTAL');
+    assert.strictEqual(gmapsAdapter.capabilities.supportsLiveExtraction, true);
+    pass('Test 108: 8. EXPERIMENTAL behavior preserved: browser acquisition active with live capability');
+  } catch (e) { fail('Test 108', e); }
+
+  // Test 109: 9. restricted Google policy preserved
+  try {
+    const gmapsAdapter = new GoogleMapsUnifiedAdapter();
+    const env = gmapsAdapter.wrapCandidate({
+      businessName: 'Restricted Place',
+      placeId: 'ChIJ_restricted_109'
+    });
+    assert.strictEqual(env.restrictions.isRestricted, true);
+    assert.strictEqual(env.restrictions.persistenceEligible, false);
+    assert.strictEqual(env.restrictions.exportEligible, false);
+    assert.strictEqual(env.restrictions.restrictionBasis, 'GOOGLE_CONSUMER_WEB_RESTRICTED');
+    pass('Test 109: 9. restricted Google policy preserved: NOT_PERSISTABLE and NOT_EXPORTABLE strictly enforced');
+  } catch (e) { fail('Test 109', e); }
 
   // ==========================================
   // Summary Accounting

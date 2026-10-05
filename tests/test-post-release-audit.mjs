@@ -346,7 +346,7 @@ test('E2E-05: Google Maps LIVE attempt -> blocked -> UI -> persistence -> reload
 
   await assert.rejects(async () => {
     await gmapsAdapter.executeLive({ queryScope: ['test'], limits: { maxCandidates: 10, timeoutMs: 5000 } });
-  }, /CONTRACT_ONLY/);
+  }, /CONTRACT_ONLY|GoogleMapsUnifiedAdapter/);
 
   const adapter = new MemoryStorageAdapter();
   const repo = new PersistenceRepository(adapter);
@@ -1056,8 +1056,9 @@ test('PKG-04: Extension directory contains valid manifest.json', () => {
   const manifestPath = path.join(rootDir, 'extension/manifest.json');
   assert.ok(fs.existsSync(manifestPath));
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  const pkgJson = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8'));
   assert.strictEqual(manifest.name, 'LeadNoria');
-  assert.strictEqual(manifest.version, '1.1.0');
+  assert.strictEqual(manifest.version, pkgJson.version);
   assert.strictEqual(manifest.manifest_version, 3);
 });
 

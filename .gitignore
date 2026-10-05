@@ -6,6 +6,8 @@ build/
 dist/*
 !dist/leadnoria-v1.0.0.zip
 !dist/leadnoria-v1.1.0.zip
+!dist/leadnoria-v1.2.0.zip
+!dist/leadnoria-v1.2.1.zip
 
 # Coverage
 coverage/

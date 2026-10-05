@@ -145,7 +145,31 @@ export interface ResultRowViewModel {
   isPersistable: boolean;
   restrictionBadgeText?: string;
   corroborationCount: number;
+
+  // Phase 25 Unified Lead Intelligence extensions
+  category?: string;
+  sourceBadges?: Array<{ sourceType: SourceType | string; label: string; isRestricted: boolean }>;
+  dataSignals?: {
+    websiteVerified: boolean;
+    contactAvailable: boolean;
+    publicPersonAvailable: boolean;
+    advertisingEvidence: boolean;
+    freshness: 'CURRENT' | 'STALE' | 'UNKNOWN';
+    freshnessLabel: string;
+  };
+  qualityMetrics?: {
+    completenessPercent: number;
+    contactCompletenessPercent: number;
+    evidenceCoveragePercent: number;
+    corroborationCount: number;
+    contradictionCount: number;
+  };
+  friendlyQualificationState?: string;
+  friendlyFreshnessState?: string;
+  lastObservedText?: string;
+  canonicalRecord?: any;
 }
+export type LeadResultRowViewModel = ResultRowViewModel;
 
 export interface EvidenceItemViewModel {
   id: string;
@@ -228,6 +252,139 @@ export interface ResultDetailViewModel {
   runId: string;
   createdAt: string;
   updatedAt: string;
+
+  // Phase 25 Unified Detail Sections
+  category?: string;
+  sourceBadges?: Array<{ sourceType: SourceType | string; label: string; isRestricted: boolean }>;
+  identityDetails?: {
+    canonicalBusinessName: string;
+    aliases: string[];
+    entityType: string;
+    entityTypeLabel: string;
+    branchInfo?: {
+      isBranch: boolean;
+      isParent: boolean;
+      parentEntityId?: string;
+      branchSignals: string[];
+    };
+  };
+  businessDetails?: {
+    categories: string[];
+    services: string[];
+    description?: string;
+    hours?: string;
+    serviceAreas: string[];
+    businessStatus?: string;
+  };
+  locationDetails?: {
+    address?: string;
+    city?: string;
+    region?: string;
+    country?: string;
+    coordinates?: string;
+    addresses: string[];
+  };
+  digitalPresence?: {
+    websiteUrl?: string;
+    domain?: string;
+    cms?: string;
+    booking?: boolean;
+    ecommerce?: boolean;
+    chat?: boolean;
+    analytics?: string[];
+    technologySignals?: string[];
+    socialLinks: Array<{ platform: string; url: string }>;
+  };
+  contactsDetails?: {
+    emails: Array<{
+      address: string;
+      classification?: string;
+      source?: string;
+      isRestricted?: boolean;
+      observedAt?: string;
+      hasConflict?: boolean;
+      alternatives?: any[];
+    }>;
+    phones: Array<{
+      number: string;
+      type?: string;
+      source?: string;
+      isRestricted?: boolean;
+      observedAt?: string;
+      hasConflict?: boolean;
+      alternatives?: any[];
+    }>;
+    forms: string[];
+  };
+  peopleDetails?: Array<{
+    name: string;
+    canonicalName?: string;
+    titles: string[];
+    emails: string[];
+    phones: string[];
+    linkedInUrl?: string;
+    isRestricted?: boolean;
+    associatedContacts?: string[];
+  }>;
+  qualificationDetails?: {
+    finalState: string;
+    friendlyFinalState: string;
+    profileId?: string;
+    profileName?: string;
+    explanation?: string;
+    whyReasons: Array<{ label: string; passed: boolean; explanation?: string }>;
+    potentialIssues: Array<{ label: string; explanation?: string }>;
+    criteria: Array<{
+      criterionId: string;
+      name: string;
+      isMandatory: boolean;
+      status: string;
+      friendlyStatus: string;
+      scoreAwarded?: number;
+      maxScore?: number;
+      explanation: string;
+      reasonCode: string;
+    }>;
+  };
+  evidenceDetails?: {
+    totalCount: number;
+    items: Array<{
+      id: string;
+      fact: string;
+      source: string;
+      sourceUrl?: string;
+      observedAt: string;
+      corroboration?: string[];
+      isRestricted: boolean;
+    }>;
+    fieldEvidence?: Array<{
+      fieldName: string;
+      value: string;
+      sources: string[];
+      observedAt: string;
+      evidenceNote?: string;
+    }>;
+    conflicts?: Array<{
+      field: string;
+      description: string;
+      conflictingValues: Array<{ value: string; source: string; observedAt: string }>;
+    }>;
+  };
+  freshnessDetails?: {
+    overallState: 'CURRENT' | 'STALE' | 'UNKNOWN';
+    friendlyLabel: string;
+    firstObservedAt?: string;
+    lastObservedAt?: string;
+    perSource: Array<{ source: string; state: string; friendlyState: string; lastObservedAt: string; count?: number }>;
+  };
+  qualityDetails?: {
+    completenessPercent: number;
+    contactCompletenessPercent: number;
+    evidenceCoveragePercent: number;
+    corroborationCount: number;
+    contradictionCount: number;
+  };
+  canonicalRecord?: any;
 }
 
 export interface ExportPreviewViewModel {

@@ -693,6 +693,187 @@ try {
 }
 
 // ============================================================================
+// 13. PHASE 20 CORRECTION: CANDIDATE CONSUMPTION & WEAK-COLLISION VERIFICATION
+// ============================================================================
+console.log('\n--- 13. PHASE 20 CORRECTION: CANDIDATE CONSUMPTION & WEAK-COLLISION VERIFICATION ---');
+
+// Test P20-1: Normal Google candidate consumed cleanly
+try {
+  const normalCand = normalizeMapsCandidate({
+    sourceId: 'ChIJ_p20_norm', source: 'GOOGLE_MAPS', acquisitionContext: 'GOOGLE_CONSUMER_WEB',
+    provenance: 'GOOGLE_DERIVED', businessName: 'Summit Peak Dental',
+    street: '100 Summit Way', locality: 'Denver', countryCode: 'US',
+    phone: '+1 303-555-0100', website: 'https://summitpeakdental.com', candidateId: 'p20_norm_1'
+  });
+  const res = resolveCandidates([normalCand]);
+  assert.equal(res.entities.length, 1);
+  assert.equal(res.entities[0].sourceRecords.length, 1);
+  pass('P20-1: Normal Google candidate consumed cleanly by Phase 8');
+} catch (e) {
+  fail('P20-1: Normal Google candidate consumed cleanly by Phase 8', e);
+}
+
+// Test P20-2: Candidate with isPotentialDuplicate = true consumed cleanly
+try {
+  const potDupCand = normalizeMapsCandidate({
+    sourceId: 'ChIJ_p20_potdup', source: 'GOOGLE_MAPS', acquisitionContext: 'GOOGLE_CONSUMER_WEB',
+    provenance: 'GOOGLE_DERIVED', businessName: 'Summit Peak Dental',
+    street: '200 Mountain Ave', locality: 'Denver', countryCode: 'US',
+    phone: '+1 303-555-0100', website: 'https://summitpeakdental.com', candidateId: 'p20_potdup_2'
+  });
+  // Attach Phase 20 isPotentialDuplicate flag
+  potDupCand.isPotentialDuplicate = true;
+  const res = resolveCandidates([potDupCand]);
+  assert.equal(res.entities.length, 1);
+  pass('P20-2: Candidate with isPotentialDuplicate = true consumed cleanly by Phase 8');
+} catch (e) {
+  fail('P20-2: Candidate with isPotentialDuplicate = true consumed cleanly by Phase 8', e);
+}
+
+// Test P20-3: Candidate containing collisionEvidence consumed cleanly
+try {
+  const evidenceCand = normalizeMapsCandidate({
+    sourceId: 'ChIJ_p20_ev', source: 'GOOGLE_MAPS', acquisitionContext: 'GOOGLE_CONSUMER_WEB',
+    provenance: 'GOOGLE_DERIVED', businessName: 'Summit Peak Dental North',
+    street: '300 North Way', locality: 'Denver', countryCode: 'US',
+    phone: '+1 303-555-0100', website: 'https://summitpeakdental.com', candidateId: 'p20_ev_3'
+  });
+  // Attach Phase 20 collisionEvidence
+  evidenceCand.collisionEvidence = [{
+    key: 'fp:name+phone:summit peak dental:+13035550100',
+    type: 'NAME_PHONE',
+    primaryCandidateId: 'p20_norm_1',
+    matchedFields: ['name', 'phone']
+  }];
+  const res = resolveCandidates([evidenceCand]);
+  assert.equal(res.entities.length, 1);
+  pass('P20-3: Candidate containing collisionEvidence consumed cleanly by Phase 8');
+} catch (e) {
+  fail('P20-3: Candidate containing collisionEvidence consumed cleanly by Phase 8', e);
+}
+
+// Test P20-4: Weak-key collision (name+phone) evaluated by Phase 8 with branch differentiation
+try {
+  const branchA = normalizeMapsCandidate({
+    sourceId: 'ChIJ_p20_brA', source: 'GOOGLE_MAPS', acquisitionContext: 'GOOGLE_CONSUMER_WEB',
+    provenance: 'GOOGLE_DERIVED', businessName: 'Beacon Cafe Downtown',
+    street: '123 Market St', locality: 'Seattle', countryCode: 'US',
+    phone: '+1 206-555-8888', candidateId: 'p20_brA'
+  });
+  branchA.collisionEvidence = [{
+    key: 'fp:name+phone:beacon cafe:+12065558888',
+    type: 'NAME_PHONE',
+    primaryCandidateId: 'p20_brB',
+    matchedFields: ['name', 'phone']
+  }];
+  const branchB = normalizeMapsCandidate({
+    sourceId: 'ChIJ_p20_brB', source: 'GOOGLE_MAPS', acquisitionContext: 'GOOGLE_CONSUMER_WEB',
+    provenance: 'GOOGLE_DERIVED', businessName: 'Beacon Cafe Uptown',
+    street: '456 Queen Anne Ave', locality: 'Seattle', countryCode: 'US',
+    phone: '+1 206-555-8888', candidateId: 'p20_brB'
+  });
+  const res = resolveCandidates([branchA, branchB]);
+  // Different branch indicators (Downtown vs Uptown) and different streets: must NOT be merged as SAME_ENTITY
+  assert.equal(res.entities.length, 2, 'Branches with weak collision must remain separate entities');
+  pass('P20-4: Weak-key collision evaluated by Phase 8: branches preserved separately');
+} catch (e) {
+  fail('P20-4: Weak-key collision evaluated by Phase 8: branches preserved separately', e);
+}
+
+// Test P20-5: Candidate with weak-key collision followed by later strong identifier merges authoritatively
+try {
+  const candOriginal = normalizeMapsCandidate({
+    sourceId: 'ChIJ_strong_place_999', source: 'GOOGLE_MAPS', acquisitionContext: 'GOOGLE_CONSUMER_WEB',
+    provenance: 'GOOGLE_DERIVED', businessName: 'Pacific Auto Care',
+    street: '500 Pacific Hwy', locality: 'San Diego', countryCode: 'US',
+    phone: '+1 619-555-9999', candidateId: 'p20_orig'
+  });
+  const candLater = normalizeMapsCandidate({
+    sourceId: 'ChIJ_strong_place_999', source: 'GOOGLE_MAPS', acquisitionContext: 'GOOGLE_CONSUMER_WEB',
+    provenance: 'GOOGLE_DERIVED', businessName: 'Pacific Auto Care',
+    street: '500 Pacific Hwy', locality: 'San Diego', countryCode: 'US',
+    phone: '+1 619-555-9999', candidateId: 'p20_later'
+  });
+  // candLater had weak collision recorded during acquisition
+  candLater.isPotentialDuplicate = true;
+  candLater.collisionEvidence = [{
+    key: 'fp:name+address:pacific auto care:500 pacific hwy',
+    type: 'NAME_ADDRESS',
+    primaryCandidateId: 'p20_orig',
+    matchedFields: ['name', 'address']
+  }];
+  const res = resolveCandidates([candOriginal, candLater]);
+  assert.equal(res.entities.length, 1, 'Exact Place ID authoritatively merges the records');
+  assert.equal(res.entities[0].sourceRecords.length, 2, 'Both candidate records clustered into entity');
+  pass('P20-5: Weak collision candidate with identical strong Place ID merges authoritatively in Phase 8');
+} catch (e) {
+  fail('P20-5: Weak collision candidate with identical strong Place ID merges authoritatively in Phase 8', e);
+}
+
+// Test P20-6: Multiple branches sharing corporate domain
+try {
+  const dental1 = normalizeMapsCandidate({
+    sourceId: 'ChIJ_dental_1', source: 'GOOGLE_MAPS', acquisitionContext: 'GOOGLE_CONSUMER_WEB',
+    provenance: 'GOOGLE_DERIVED', businessName: 'ABC Dental',
+    street: '123 Main St', locality: 'Dallas', countryCode: 'US',
+    website: 'https://abc-dental.com', candidateId: 'p20_d1'
+  });
+  const dental2 = normalizeMapsCandidate({
+    sourceId: 'ChIJ_dental_2', source: 'GOOGLE_MAPS', acquisitionContext: 'GOOGLE_CONSUMER_WEB',
+    provenance: 'GOOGLE_DERIVED', businessName: 'ABC Dental',
+    street: '456 Oak St', locality: 'Fort Worth', countryCode: 'US',
+    website: 'https://abc-dental.com', candidateId: 'p20_d2'
+  });
+  const res = resolveCandidates([dental1, dental2]);
+  assert.equal(res.entities.length, 2, 'Branches in different cities sharing domain must remain 2 entities');
+  pass('P20-6: Multiple branches sharing domain preserved as separate entities in Phase 8');
+} catch (e) {
+  fail('P20-6: Multiple branches sharing domain preserved as separate entities in Phase 8', e);
+}
+
+// Test P20-7: Multiple branches sharing central call-center phone
+try {
+  const callCenter1 = normalizeMapsCandidate({
+    sourceId: 'ChIJ_cc_1', source: 'GOOGLE_MAPS', acquisitionContext: 'GOOGLE_CONSUMER_WEB',
+    provenance: 'GOOGLE_DERIVED', businessName: 'ABC Cafe Branch A',
+    street: '10 First St', locality: 'Portland', countryCode: 'US',
+    phone: '+1 503-555-0000', candidateId: 'p20_cc1'
+  });
+  const callCenter2 = normalizeMapsCandidate({
+    sourceId: 'ChIJ_cc_2', source: 'GOOGLE_MAPS', acquisitionContext: 'GOOGLE_CONSUMER_WEB',
+    provenance: 'GOOGLE_DERIVED', businessName: 'ABC Cafe Branch B',
+    street: '20 Second St', locality: 'Portland', countryCode: 'US',
+    phone: '+1 503-555-0000', candidateId: 'p20_cc2'
+  });
+  const res = resolveCandidates([callCenter1, callCenter2]);
+  assert.equal(res.entities.length, 2, 'Distinct branches with same phone must remain separate entities');
+  pass('P20-7: Multiple branches sharing central phone preserved as separate entities in Phase 8');
+} catch (e) {
+  fail('P20-7: Multiple branches sharing central phone preserved as separate entities in Phase 8', e);
+}
+
+// Test P20-8: Nearby same-name businesses without corroboration
+try {
+  const nearby1 = normalizeMapsCandidate({
+    sourceId: 'ChIJ_near_1', source: 'GOOGLE_MAPS', acquisitionContext: 'GOOGLE_CONSUMER_WEB',
+    provenance: 'GOOGLE_DERIVED', businessName: 'Golden Dragon Restaurant',
+    street: '100 Chinatown Way', locality: 'San Francisco', countryCode: 'US',
+    phone: '+1 415-555-0101', candidateId: 'p20_near1'
+  });
+  const nearby2 = normalizeMapsCandidate({
+    sourceId: 'ChIJ_near_2', source: 'GOOGLE_MAPS', acquisitionContext: 'GOOGLE_CONSUMER_WEB',
+    provenance: 'GOOGLE_DERIVED', businessName: 'Golden Dragon Restaurant',
+    street: '500 Chinatown Way', locality: 'San Francisco', countryCode: 'US',
+    phone: '+1 415-555-0202', candidateId: 'p20_near2'
+  });
+  const res = resolveCandidates([nearby1, nearby2]);
+  assert.equal(res.entities.length, 2, 'Nearby businesses with different phones/street numbers must not be merged');
+  pass('P20-8: Nearby same-name businesses with distinct signals preserved as separate entities in Phase 8');
+} catch (e) {
+  fail('P20-8: Nearby same-name businesses with distinct signals preserved as separate entities in Phase 8', e);
+}
+
+// ============================================================================
 // SUMMARY
 // ============================================================================
 console.log('\n================================================================');
