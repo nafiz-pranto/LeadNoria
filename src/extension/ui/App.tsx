@@ -45,6 +45,8 @@ import { RecoveryBanner } from './components/RecoveryBanner.tsx';
 import { AnalyticsView } from './components/AnalyticsView.tsx';
 import { computeRunAnalytics } from '../analytics/analyticsEngine.ts';
 import { RunAnalyticsSnapshot } from '../analytics/types.ts';
+import { computeResearchOptimization } from '../optimization/optimizationEngine.ts';
+import { ResearchOptimizationSnapshot } from '../optimization/types.ts';
 import {
   toResultRowViewModel,
   toResultDetailViewModel,
@@ -517,6 +519,16 @@ export const ExtensionApp: React.FC = () => {
     });
   }, [rawLeads, activeRun, selectedSource]);
 
+  const optimizationSnapshot: ResearchOptimizationSnapshot | null = useMemo(() => {
+    if (!rawLeads || rawLeads.length === 0) return null;
+    const canonical = rawLeads.filter(isCanonicalLeadRecord);
+    return computeResearchOptimization(
+      historyRuns.length > 0 ? historyRuns : [{ runId: activeRun?.runId || 'current-run', searchUnits: [] }],
+      canonical.length > 0 ? canonical : rawLeads as any,
+      []
+    );
+  }, [rawLeads, historyRuns, activeRun]);
+
   const handleConfirmExport = () => {
     if (isExporting) return;
     setIsExporting(true);
@@ -649,9 +661,13 @@ export const ExtensionApp: React.FC = () => {
           <div role="tabpanel" id="tabpanel-ANALYTICS" aria-labelledby="tab-ANALYTICS" className="flex-1 flex flex-col min-h-0">
             <AnalyticsView
               currentSnapshot={analyticsSnapshot}
+              optimizationSnapshot={optimizationSnapshot}
               rawRecords={rawLeads}
               onNavigateToResultsWithFilter={() => {
                 setActiveTab('RESULTS');
+              }}
+              onPrefillResearchConfig={() => {
+                setActiveTab('RESEARCH');
               }}
             />
           </div>

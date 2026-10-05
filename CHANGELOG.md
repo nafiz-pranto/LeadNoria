@@ -2,6 +2,21 @@
 
 All notable changes to the **LeadNoria** Chrome Extension are documented in this file.
 
+## [1.4.0] - 2026-10-06
+
+### Added
+- **Research Optimization & Saturation Intelligence Engine:** Deterministic, evidence-based optimization layer evaluating search unit performance, observed coverage, saturation states, marginal yield trends, and duplicate acquisition pressure (`src/extension/optimization/`).
+- **Explainable Recommendation Generation:** Actionable next-step research recommendations with triggering metrics, mathematical thresholds, and sample sufficiency ratings (`NO_DATA`, `LOW_SAMPLE`, `MODERATE_SAMPLE`, `STRONG_SAMPLE`).
+- **Optimization UI (`ResearchOptimizationView`):** Interactive optimization dashboard integrated directly inside the Analytics tab featuring 5 sub-views: Next Recommendations, Search Unit Performance Matrix, Saturation Breakdown, Marginal Yield & Duplicates, and Unit Comparison.
+- **Run-to-Run Comparison for Planning:** Deterministic side-by-side run comparisons calculating absolute change, percentage change, sample freshness, and entity overlap ratios.
+- **Optimization Persistence:** Dedicated repository persistence via `StorageAdapter` under the `research_optimization_snapshots` collection with complete provenance reconstruction.
+
+### Security & Governance
+- **Strict Observational Boundaries:** 100% derived from observed historical runs; strictly prohibits predictive lead scoring, conversion prediction, buyer intent claims, and sales forecasting.
+- **Data Firewall & Sanitization:** XSS sanitization of all query strings, category names, and geographic labels; Google Maps lineage strictly quarantined from public-facing recommendations and exports.
+
+---
+
 ## [1.3.0] - 2026-10-06
 
 ### Added

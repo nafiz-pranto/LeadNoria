@@ -794,7 +794,7 @@ var require_scheduler = __commonJS({
 var require_react_dom_production = __commonJS({
   "node_modules/react-dom/cjs/react-dom.production.js"(exports) {
     "use strict";
-    var React10 = require_react();
+    var React11 = require_react();
     function formatProdErrorMessage(code) {
       var url = "https://react.dev/errors/" + code;
       if (1 < arguments.length) {
@@ -836,7 +836,7 @@ var require_react_dom_production = __commonJS({
         implementation
       };
     }
-    var ReactSharedInternals = React10.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+    var ReactSharedInternals = React11.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
     function getCrossOriginStringAs(as, input) {
       if ("font" === as) return "";
       if ("string" === typeof input)
@@ -978,7 +978,7 @@ var require_react_dom_client_production = __commonJS({
   "node_modules/react-dom/cjs/react-dom-client.production.js"(exports) {
     "use strict";
     var Scheduler = require_scheduler();
-    var React10 = require_react();
+    var React11 = require_react();
     var ReactDOM2 = require_react_dom();
     function formatProdErrorMessage(code) {
       var url = "https://react.dev/errors/" + code;
@@ -1269,7 +1269,7 @@ var require_react_dom_client_production = __commonJS({
       return null;
     }
     var isArrayImpl = Array.isArray;
-    var ReactSharedInternals = React10.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+    var ReactSharedInternals = React11.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
     var ReactDOMSharedInternals = ReactDOM2.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
     var sharedNotPendingObject = {
       pending: false,
@@ -14418,7 +14418,7 @@ var require_react_dom_client_production = __commonJS({
         0 === i && attemptExplicitHydrationTarget(target);
       }
     };
-    var isomorphicReactPackageVersion$jscomp$inline_2043 = React10.version;
+    var isomorphicReactPackageVersion$jscomp$inline_2043 = React11.version;
     if ("19.3.0" !== isomorphicReactPackageVersion$jscomp$inline_2043)
       throw Error(
         formatProdErrorMessage(
@@ -17223,11 +17223,11 @@ var init_relevanceEngine = __esm({
 });
 
 // src/extension/ui/index.tsx
-var import_react9 = __toESM(require_react(), 1);
+var import_react10 = __toESM(require_react(), 1);
 var import_client = __toESM(require_client(), 1);
 
 // src/extension/ui/App.tsx
-var import_react8 = __toESM(require_react(), 1);
+var import_react9 = __toESM(require_react(), 1);
 
 // src/extension/ui/components/Header.tsx
 var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
@@ -19699,7 +19699,7 @@ var RecoveryBanner = ({
 };
 
 // src/extension/ui/components/AnalyticsView.tsx
-var import_react7 = __toESM(require_react(), 1);
+var import_react8 = __toESM(require_react(), 1);
 
 // src/extension/analytics/types.ts
 var ANALYTICS_SCHEMA_VERSION = "lead-analytics-v1";
@@ -21266,52 +21266,518 @@ function compareRuns(baseSnapshot, compareSnapshot, baseRecords = [], compareRec
   };
 }
 
-// src/extension/ui/components/AnalyticsView.tsx
+// src/extension/ui/components/ResearchOptimizationView.tsx
+var import_react7 = __toESM(require_react(), 1);
 var import_jsx_runtime14 = __toESM(require_jsx_runtime(), 1);
+function getSaturationBadgeColor(state) {
+  if (state === "HIGHLY_SATURATED") return "#dc2626";
+  if (state === "ACTIVE") return "#16a34a";
+  return "#d97706";
+}
+var ResearchOptimizationView = ({
+  snapshot,
+  onSelectSearchUnit,
+  onFilterResults,
+  onNavigateToResultsWithFilter,
+  onPrefillResearchConfig
+}) => {
+  const [activeTab, setActiveTab] = (0, import_react7.useState)("RECOMMENDATIONS");
+  const [selectedUnitId, setSelectedUnitId] = (0, import_react7.useState)("");
+  const [compareUnitA, setCompareUnitA] = (0, import_react7.useState)("");
+  const [compareUnitB, setCompareUnitB] = (0, import_react7.useState)("");
+  const handleFilterClick = (filter) => {
+    if (onFilterResults) onFilterResults(filter);
+    if (onNavigateToResultsWithFilter) onNavigateToResultsWithFilter(filter);
+  };
+  const selectedUnit = (0, import_react7.useMemo)(() => {
+    if (!snapshot || !selectedUnitId) return snapshot?.searchUnitPerformances[0] || null;
+    return snapshot.searchUnitPerformances.find((p) => p.searchUnitId === selectedUnitId) || null;
+  }, [snapshot, selectedUnitId]);
+  if (!snapshot || snapshot.searchUnitPerformances.length === 0) {
+    return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-400 min-h-[300px]", role: "region", "aria-label": "Research Optimization and Saturation Intelligence", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-amber-400 mb-3 text-xl", children: "\u{1F9ED}" }),
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h2", { className: "text-base font-semibold text-slate-200", children: "No Research Optimization Data" }),
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("p", { className: "text-xs text-slate-400 mt-1 max-w-xs", children: "No search units have been recorded yet. Execute research runs across search units to analyze coverage saturation, marginal yield, duplicate pressure, and next-research opportunities." })
+    ] });
+  }
+  const { searchUnitPerformances, recommendations, warnings, geographicBreakdown, overallCoverage } = snapshot;
+  const getSaturationBadge = (state) => {
+    const color = getSaturationBadgeColor(state);
+    return /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+      "span",
+      {
+        className: "px-1.5 py-0.5 rounded text-[10px] font-semibold border",
+        style: { color, borderColor: `${color}80`, backgroundColor: `${color}15` },
+        "aria-label": `Observed saturation: ${state}`,
+        children: state
+      }
+    );
+  };
+  const getDuplicateBadge = (level) => {
+    switch (level) {
+      case "CRITICAL":
+        return /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rose-950/80 text-rose-300 border border-rose-700", children: "CRITICAL DUPES" });
+      case "HIGH":
+        return /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-950/80 text-orange-400 border border-orange-800", children: "HIGH DUPES" });
+      case "MODERATE":
+        return /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-950/80 text-amber-400 border border-amber-800", children: "MODERATE DUPES" });
+      default:
+        return /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-400", children: "LOW DUPES" });
+    }
+  };
+  return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex-1 flex flex-col min-w-0 w-full overflow-y-auto bg-slate-900 text-slate-100 text-xs", role: "region", "aria-label": "Research Optimization and Saturation Intelligence", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-950 border-b border-slate-800 shrink-0 flex flex-wrap items-center justify-between gap-2", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("h2", { className: "text-sm font-bold text-slate-100 flex items-center gap-1.5", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: "\u{1F9ED}" }),
+          " Research Optimization & Saturation Intelligence"
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("p", { className: "text-[11px] text-slate-400 mt-0.5", children: "Evidence-based research guidance, marginal yield, duplicate pressure, and saturation accounting." })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center gap-3 text-[11px] text-slate-400", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { children: [
+          "Search Units: ",
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("strong", { className: "text-slate-200", children: snapshot.totalSearchUnitsAnalyzed })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { children: [
+          "Runs: ",
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("strong", { className: "text-slate-200", children: snapshot.totalRunsAnalyzed })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { children: [
+          "Leads: ",
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("strong", { className: "text-slate-200", children: [
+            snapshot.totalCanonicalLeadsObserved,
+            " leads"
+          ] })
+        ] })
+      ] })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 bg-slate-950/80 border-b border-slate-800 text-center", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 rounded bg-slate-900 border border-slate-800", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-[10px] uppercase text-slate-400", children: "Observed Records" }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("p", { className: "text-base font-bold text-slate-100 mt-0.5", children: [
+          overallCoverage?.totalObservedRecords ?? snapshot.totalCanonicalLeadsObserved,
+          " leads"
+        ] })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 rounded bg-slate-900 border border-slate-800", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-[10px] uppercase text-slate-400", children: "Unique Entities" }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("p", { className: "text-base font-bold text-emerald-400 mt-0.5", children: [
+          overallCoverage?.uniqueCanonicalEntities ?? snapshot.totalCanonicalLeadsObserved,
+          " entities"
+        ] })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 rounded bg-slate-900 border border-slate-800", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-[10px] uppercase text-slate-400", children: "Duplicate Candidate Ratio" }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("p", { className: "text-base font-bold text-amber-400 mt-0.5", children: [
+          overallCoverage?.totalObservedRecords ? Math.round((overallCoverage.duplicateCandidateCount || 0) / overallCoverage.totalObservedRecords * 100) : 0,
+          "%"
+        ] })
+      ] })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center border-b border-slate-800 bg-slate-950/60 px-3 overflow-x-auto shrink-0", role: "tablist", "aria-label": "Optimization Views", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+        "button",
+        {
+          role: "tab",
+          "aria-selected": activeTab === "RECOMMENDATIONS",
+          onClick: () => setActiveTab("RECOMMENDATIONS"),
+          className: `py-2 px-3 border-b-2 text-[11px] font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${activeTab === "RECOMMENDATIONS" ? "border-amber-400 text-amber-300 font-semibold bg-amber-950/20" : "border-transparent text-slate-400 hover:text-slate-200"}`,
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: "\u{1F3AF}" }),
+            " Recommendations (",
+            recommendations.length,
+            ")"
+          ]
+        }
+      ),
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+        "button",
+        {
+          role: "tab",
+          "aria-selected": activeTab === "PERFORMANCE",
+          onClick: () => setActiveTab("PERFORMANCE"),
+          className: `py-2 px-3 border-b-2 text-[11px] font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${activeTab === "PERFORMANCE" ? "border-amber-400 text-amber-300 font-semibold bg-amber-950/20" : "border-transparent text-slate-400 hover:text-slate-200"}`,
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: "\u{1F4CA}" }),
+            " Search Unit Performance"
+          ]
+        }
+      ),
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+        "button",
+        {
+          role: "tab",
+          "aria-selected": activeTab === "SATURATION",
+          onClick: () => setActiveTab("SATURATION"),
+          className: `py-2 px-3 border-b-2 text-[11px] font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${activeTab === "SATURATION" ? "border-amber-400 text-amber-300 font-semibold bg-amber-950/20" : "border-transparent text-slate-400 hover:text-slate-200"}`,
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: "\u{1F310}" }),
+            " Saturation & Coverage"
+          ]
+        }
+      ),
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+        "button",
+        {
+          role: "tab",
+          "aria-selected": activeTab === "YIELD_PRESSURE",
+          onClick: () => setActiveTab("YIELD_PRESSURE"),
+          className: `py-2 px-3 border-b-2 text-[11px] font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${activeTab === "YIELD_PRESSURE" ? "border-amber-400 text-amber-300 font-semibold bg-amber-950/20" : "border-transparent text-slate-400 hover:text-slate-200"}`,
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: "\u26A1" }),
+            " Marginal Yield & Duplicates"
+          ]
+        }
+      ),
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+        "button",
+        {
+          role: "tab",
+          "aria-selected": activeTab === "COMPARISON",
+          onClick: () => setActiveTab("COMPARISON"),
+          className: `py-2 px-3 border-b-2 text-[11px] font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${activeTab === "COMPARISON" ? "border-amber-400 text-amber-300 font-semibold bg-amber-950/20" : "border-transparent text-slate-400 hover:text-slate-200"}`,
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: "\u2696\uFE0F" }),
+            " Unit Comparison"
+          ]
+        }
+      )
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 space-y-4", children: [
+      activeTab === "RECOMMENDATIONS" && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "space-y-3", role: "tabpanel", "aria-label": "Next Research Recommendations", children: [
+        warnings.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "p-2 text-center text-slate-500 text-[10px]", role: "status", children: "No optimization warnings detected" }) : /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "space-y-2", children: warnings.map((w) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { role: "alert", className: "p-2.5 rounded border border-rose-800/60 bg-rose-950/30 flex items-start gap-2.5", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-base", children: "\u26A0\uFE0F" }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex-1 min-w-0", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center justify-between", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("strong", { className: "text-rose-200 text-xs font-semibold", children: w.title }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-[10px] px-1.5 py-0.2 bg-rose-900/60 text-rose-300 rounded uppercase font-semibold", children: w.severity })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("p", { className: "text-[11px] text-slate-300 mt-0.5", children: w.message }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("p", { className: "text-[10px] text-rose-300/80 mt-1 font-mono", children: [
+              "Action: ",
+              w.remedy
+            ] })
+          ] })
+        ] }, w.id)) }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "space-y-2.5", children: recommendations.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "p-4 text-center text-slate-400 bg-slate-950/40 rounded border border-slate-800", children: "Zero critical bottlenecks detected. Research coverage is balanced." }) : recommendations.map((rec) => /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "p-3 rounded bg-slate-950 border border-slate-800 hover:border-slate-700 transition-colors", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-start justify-between gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex-1 min-w-0", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center gap-2 flex-wrap", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-xs font-bold text-amber-300", children: rec.headline }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { className: "px-1.5 py-0.2 rounded text-[10px] font-mono bg-slate-800 text-slate-400", children: [
+                "Confidence: ",
+                rec.sampleSufficiency
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("p", { className: "text-[11px] text-slate-300 mt-1", children: rec.evidenceBasis }),
+            rec.observedEvidence && rec.observedEvidence.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "mt-2 text-[10px] text-slate-400", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "font-semibold text-slate-300", children: "Observed Evidence:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("ul", { children: rec.observedEvidence.map((e, i) => /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("li", { className: "list-disc ml-4 mt-0.5", children: e }, i)) })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "mt-2 text-[10px] text-slate-400", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { children: [
+              "Threshold: ",
+              rec.thresholds?.threshold ?? rec.thresholds?.duplicateRatioThreshold ?? 0,
+              "%"
+            ] }) })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex flex-col items-end gap-1.5 shrink-0", children: [
+            rec.actionableNextQuery && onPrefillResearchConfig && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+              "button",
+              {
+                id: `prefill-btn-${rec.recommendationId}`,
+                type: "button",
+                onClick: () => onPrefillResearchConfig({
+                  area: rec.actionableNextQuery?.geographicArea,
+                  category: rec.actionableNextQuery?.category,
+                  query: rec.actionableNextQuery?.queryVariant
+                }),
+                className: "px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[10px] font-semibold transition-colors",
+                "aria-label": "Prefill Config",
+                children: "Prefill Config"
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+              "button",
+              {
+                id: `filter-btn-${rec.recommendationId}`,
+                type: "button",
+                onClick: () => handleFilterClick({ field: "searchUnitId", value: rec.sourceSearchUnitId || rec.targetSearchUnitId }),
+                className: "px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] transition-colors",
+                "aria-label": "View matching records",
+                children: "View Matching Records"
+              }
+            )
+          ] })
+        ] }) }, rec.recommendationId)) })
+      ] }),
+      activeTab === "PERFORMANCE" && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "space-y-3", role: "tabpanel", "aria-label": "Search Unit Performance Matrix", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "overflow-x-auto rounded border border-slate-800 bg-slate-950", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("table", { className: "w-full text-left border-collapse text-[11px]", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("tr", { className: "border-b border-slate-800 bg-slate-900/60 text-slate-400", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Area / Search Unit" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Attempts" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Unique / Raw" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Marginal Yield" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Dup Ratio" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Web Cov" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Contact Cov" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Saturation" })
+          ] }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("tbody", { children: searchUnitPerformances.map((p) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+            "tr",
+            {
+              onClick: () => {
+                setSelectedUnitId(p.searchUnitId);
+                if (onSelectSearchUnit) onSelectSearchUnit(p.searchUnitId);
+              },
+              className: `hover:bg-slate-800/40 cursor-pointer transition-colors ${selectedUnit?.searchUnitId === p.searchUnitId ? "bg-slate-800/60 font-semibold" : ""}`,
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("td", { className: "p-2 text-slate-200 font-medium", children: p.areaName }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("td", { className: "p-2 text-slate-300", children: p.attempts }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("td", { className: "p-2 text-slate-300", children: [
+                  p.uniqueEntitiesCount || p.uniqueCanonicalEntities,
+                  " / ",
+                  p.rawCandidatesCount || p.rawCandidateCount
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("td", { className: "p-2 text-amber-300 font-mono", children: typeof p.marginalYield === "number" ? p.marginalYield : p.marginalYieldResult?.marginalEntityYield }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("td", { className: "p-2", children: getDuplicateBadge(p.duplicatePressure.level) }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("td", { className: "p-2 text-slate-300", children: [
+                  p.websiteCoverage,
+                  "%"
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("td", { className: "p-2 text-slate-300", children: [
+                  p.contactCoverage,
+                  "%"
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("td", { className: "p-2", children: getSaturationBadge(p.saturationAssessment?.state || p.saturation?.state || "INSUFFICIENT_DATA") })
+              ]
+            },
+            p.searchUnitId
+          )) })
+        ] }) }),
+        selectedUnit && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-950 rounded border border-slate-800 space-y-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center justify-between border-b border-slate-900 pb-2", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("h3", { className: "text-xs font-bold text-slate-200 flex items-center gap-2", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: "\u{1F50D}" }),
+              " Evidence Profile: ",
+              selectedUnit.areaName,
+              " (",
+              selectedUnit.category,
+              ")"
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { className: "text-[10px] text-slate-500 font-mono", children: [
+              "ID: ",
+              selectedUnit.searchUnitId
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 rounded bg-slate-900/60 border border-slate-800", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400 text-[10px]", children: "Marginal Entity Yield" }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("p", { className: "text-sm font-bold text-amber-400 mt-0.5", children: [
+                selectedUnit.marginalYieldResult.marginalEntityYield,
+                " / attempt"
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 rounded bg-slate-900/60 border border-slate-800", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400 text-[10px]", children: "Website Coverage" }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("p", { className: "text-sm font-bold text-sky-400 mt-0.5", children: [
+                selectedUnit.websiteCoverage,
+                "%"
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 rounded bg-slate-900/60 border border-slate-800", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400 text-[10px]", children: "Direct Contactability" }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("p", { className: "text-sm font-bold text-emerald-400 mt-0.5", children: [
+                selectedUnit.contactCoverage,
+                "%"
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 rounded bg-slate-900/60 border border-slate-800", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400 text-[10px]", children: "Contradiction Conflict Rate" }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("p", { className: "text-sm font-bold text-rose-400 mt-0.5", children: [
+                selectedUnit.conflictRate,
+                "%"
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("p", { className: "text-[11px] text-slate-300 italic pt-1", children: [
+            '"',
+            selectedUnit.saturationAssessment.evidenceStatement,
+            '"'
+          ] })
+        ] })
+      ] }),
+      activeTab === "SATURATION" && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "space-y-3", role: "tabpanel", "aria-label": "Saturation and Geographic Coverage", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-3", children: geographicBreakdown.map((geo) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 rounded bg-slate-950 border border-slate-800 space-y-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center justify-between", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("strong", { className: "text-xs font-bold text-slate-200", children: geo.areaName }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { className: "text-[10px] text-slate-500 ml-1.5 font-mono uppercase", children: [
+                "(",
+                geo.level,
+                ")"
+              ] })
+            ] }),
+            getSaturationBadge(geo.saturationState)
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center justify-between text-[11px] text-slate-400", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: "Unique Discovered Entities:" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("strong", { className: "text-slate-200", children: geo.uniqueEntitiesCount })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center justify-between text-[11px] text-slate-400", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: "Observed Domain Coverage:" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("strong", { className: "text-slate-200", children: [
+              geo.observedCoveragePercent,
+              "%"
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center justify-between text-[11px] text-slate-400", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: "Average Marginal Yield:" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("strong", { className: "text-amber-400", children: [
+              geo.marginalYield,
+              " / run"
+            ] })
+          ] })
+        ] }, geo.areaId)) }),
+        snapshot.restrictedRecordsAggregate.restrictedCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2.5 rounded bg-slate-950 border border-slate-800 text-[10px] text-slate-400", children: [
+          "\u{1F512} ",
+          snapshot.restrictedRecordsAggregate.complianceNote
+        ] })
+      ] }),
+      activeTab === "YIELD_PRESSURE" && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "space-y-3", role: "tabpanel", "aria-label": "Marginal Yield and Duplicate Pressure", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h3", { className: "text-sm font-bold text-slate-200", children: "Marginal Yield & Discovery" }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-3", children: searchUnitPerformances.map((p) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 rounded bg-slate-950 border border-slate-800 space-y-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center justify-between border-b border-slate-900 pb-1.5", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("strong", { className: "text-xs font-semibold text-slate-200", children: [
+              p.areaName,
+              " (",
+              p.category,
+              ")"
+            ] }),
+            getDuplicateBadge(p.duplicatePressure.level)
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h3", { className: "text-xs font-semibold text-slate-300", children: "Duplicate Candidate Pressure" }),
+          p.duplicatePressure.level === "HIGH" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-rose-400 text-xs font-bold", children: "HIGH DUPLICATE PRESSURE" }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("p", { className: "text-[11px] text-slate-300", children: p.duplicatePressure.explanation }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "grid grid-cols-3 gap-1 pt-1 text-[10px] text-slate-400", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: "New Entities:" }),
+              " ",
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("strong", { className: "text-slate-200", children: p.newEntitiesCount })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: "New Websites" }),
+              ": ",
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("strong", { className: "text-slate-200", children: p.marginalYieldResult.newWebsitesDiscovered ?? 0 })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: "Marginal Yield:" }),
+              " ",
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("strong", { className: "text-amber-400", children: p.marginalYieldResult.marginalEntityYield })
+            ] })
+          ] })
+        ] }, p.searchUnitId)) })
+      ] }),
+      activeTab === "COMPARISON" && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "space-y-3", role: "tabpanel", "aria-label": "Unit Comparison for Planning", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 rounded bg-slate-950 border border-slate-800 flex flex-wrap items-center gap-3", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex-1 min-w-[200px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("label", { className: "text-[10px] uppercase text-slate-400 block mb-1", children: "Target Unit A" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+              "select",
+              {
+                value: compareUnitA,
+                onChange: (e) => setCompareUnitA(e.target.value),
+                className: "w-full p-1.5 rounded bg-slate-900 border border-slate-700 text-slate-200 text-xs",
+                children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("option", { value: "", children: "Select Search Unit A" }),
+                  searchUnitPerformances.map((p) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("option", { value: p.searchUnitId, children: [
+                    p.areaName,
+                    " \u2014 ",
+                    p.category,
+                    " (",
+                    p.queryVariant,
+                    ")"
+                  ] }, p.searchUnitId))
+                ]
+              }
+            )
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex-1 min-w-[200px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("label", { className: "text-[10px] uppercase text-slate-400 block mb-1", children: "Baseline Unit B" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+              "select",
+              {
+                value: compareUnitB,
+                onChange: (e) => setCompareUnitB(e.target.value),
+                className: "w-full p-1.5 rounded bg-slate-900 border border-slate-700 text-slate-200 text-xs",
+                children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("option", { value: "", children: "Select Search Unit B" }),
+                  searchUnitPerformances.map((p) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("option", { value: p.searchUnitId, children: [
+                    p.areaName,
+                    " \u2014 ",
+                    p.category,
+                    " (",
+                    p.queryVariant,
+                    ")"
+                  ] }, p.searchUnitId))
+                ]
+              }
+            )
+          ] })
+        ] }),
+        compareUnitA && compareUnitB && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "p-3 rounded bg-slate-950 border border-slate-800 text-[11px] text-slate-300", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("p", { children: "Comparison between selected research units active." }) })
+      ] })
+    ] })
+  ] });
+};
+
+// src/extension/ui/components/AnalyticsView.tsx
+var import_jsx_runtime15 = __toESM(require_jsx_runtime(), 1);
 var AnalyticsView = ({
   currentSnapshot,
+  optimizationSnapshot,
   historySnapshots = [],
   rawRecords = [],
   onSelectRun,
-  onNavigateToResultsWithFilter
+  onNavigateToResultsWithFilter,
+  onPrefillResearchConfig
 }) => {
-  const [activeSection, setActiveSection] = (0, import_react7.useState)("SUMMARY");
-  const [compareRunId, setCompareRunId] = (0, import_react7.useState)("");
-  const compareSnapshot = (0, import_react7.useMemo)(() => {
+  const [activeSection, setActiveSection] = (0, import_react8.useState)("SUMMARY");
+  const [compareRunId, setCompareRunId] = (0, import_react8.useState)("");
+  const compareSnapshot = (0, import_react8.useMemo)(() => {
     if (!compareRunId) return null;
     return historySnapshots.find((s) => s.runId === compareRunId) || null;
   }, [compareRunId, historySnapshots]);
-  const comparisonResult = (0, import_react7.useMemo)(() => {
+  const comparisonResult = (0, import_react8.useMemo)(() => {
     if (!currentSnapshot || !compareSnapshot) return null;
     return compareRuns(currentSnapshot, compareSnapshot, rawRecords, []);
   }, [currentSnapshot, compareSnapshot, rawRecords]);
   if (!currentSnapshot) {
-    return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-400 min-h-[300px]", role: "region", "aria-label": "Analytics empty state", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-sky-400 mb-3 text-xl", children: "\u{1F4CA}" }),
-      /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h2", { className: "text-base font-semibold text-slate-200", children: "No Analytics Data Available" }),
-      /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("p", { className: "text-xs text-slate-400 mt-1 max-w-xs", children: "Execute or load a research run to view comprehensive lead quality, website intelligence, and coverage analytics." })
+    return /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-400 min-h-[300px]", role: "region", "aria-label": "Analytics empty state", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-sky-400 mb-3 text-xl", children: "\u{1F4CA}" }),
+      /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("h2", { className: "text-base font-semibold text-slate-200", children: "No Analytics Data Available" }),
+      /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("p", { className: "text-xs text-slate-400 mt-1 max-w-xs", children: "Execute or load a research run to view comprehensive lead quality, website intelligence, and coverage analytics." })
     ] });
   }
   const { runMetrics, coverage, contactability, website, qualification, warnings, restrictedAggregate } = currentSnapshot;
-  return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex-1 flex flex-col min-w-0 w-full overflow-y-auto bg-slate-900 text-slate-100 text-xs", role: "region", "aria-label": "LeadNoria Intelligence Analytics", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-950 border-b border-slate-800 shrink-0 flex flex-wrap items-center justify-between gap-2", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center gap-2 min-w-0", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { className: "text-sm font-bold text-sky-400 flex items-center gap-1.5", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: "\u{1F4C8}" }),
+  return /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex-1 flex flex-col min-w-0 w-full overflow-y-auto bg-slate-900 text-slate-100 text-xs", role: "region", "aria-label": "LeadNoria Intelligence Analytics", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-3 bg-slate-950 border-b border-slate-800 shrink-0 flex flex-wrap items-center justify-between gap-2", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex items-center gap-2 min-w-0", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { className: "text-sm font-bold text-sky-400 flex items-center gap-1.5", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { children: "\u{1F4C8}" }),
           " Intelligence Analytics"
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-[10px] text-slate-400 border border-slate-700 px-1.5 py-0.5 rounded font-mono truncate max-w-[140px]", children: currentSnapshot.runId })
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-[10px] text-slate-400 border border-slate-700 px-1.5 py-0.5 rounded font-mono truncate max-w-[140px]", children: currentSnapshot.runId })
       ] }),
-      historySnapshots.length > 1 && onSelectRun && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center gap-1", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("label", { htmlFor: "analytics-run-select", className: "text-[10px] text-slate-400", children: "Run:" }),
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+      historySnapshots.length > 1 && onSelectRun && /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex items-center gap-1", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("label", { htmlFor: "analytics-run-select", className: "text-[10px] text-slate-400", children: "Run:" }),
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
           "select",
           {
             id: "analytics-run-select",
             value: currentSnapshot.runId,
             onChange: (e) => onSelectRun(e.target.value),
             className: "bg-slate-900 border border-slate-700 text-slate-200 text-[11px] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-sky-500",
-            children: historySnapshots.map((s) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("option", { value: s.runId, children: [
+            children: historySnapshots.map((s) => /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("option", { value: s.runId, children: [
               s.runTitle || s.runId,
               " (",
               s.totalRecords,
@@ -21321,17 +21787,18 @@ var AnalyticsView = ({
         )
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("nav", { className: "flex items-center px-2 border-b border-slate-800 bg-slate-950/80 gap-1 overflow-x-auto scrollbar-none shrink-0", role: "tablist", "aria-label": "Analytics view sections", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("nav", { className: "flex items-center px-2 border-b border-slate-800 bg-slate-950/80 gap-1 overflow-x-auto scrollbar-none shrink-0", role: "tablist", "aria-label": "Analytics view sections", children: [
       { id: "SUMMARY", label: "Summary" },
       { id: "COVERAGE", label: "Coverage" },
       { id: "CONTACTS", label: "Contacts" },
       { id: "WEBSITE", label: "Website" },
       { id: "QUALIFICATION", label: "Qualification" },
+      { id: "OPTIMIZATION", label: "Optimization" },
       { id: "WARNINGS", label: `Warnings (${warnings.length})`, badge: warnings.length > 0 ? warnings.length : void 0 },
       { id: "COMPARISON", label: "Compare" }
     ].map((sec) => {
       const isActive = activeSection === sec.id;
-      return /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+      return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
         "button",
         {
           role: "tab",
@@ -21343,115 +21810,115 @@ var AnalyticsView = ({
         sec.id
       );
     }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 space-y-3 min-w-0", children: [
-      activeSection === "SUMMARY" && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "space-y-3", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2.5 bg-slate-800/80 border border-slate-700/60 rounded", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-slate-400 uppercase font-medium tracking-wider", children: "Total Discovered" }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-lg font-bold text-slate-100 mt-0.5", children: runMetrics.recordsDiscovered }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400 mt-0.5", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-3 space-y-3 min-w-0", children: [
+      activeSection === "SUMMARY" && /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "space-y-3", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2.5 bg-slate-800/80 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] text-slate-400 uppercase font-medium tracking-wider", children: "Total Discovered" }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-lg font-bold text-slate-100 mt-0.5", children: runMetrics.recordsDiscovered }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "text-[10px] text-slate-400 mt-0.5", children: [
               runMetrics.recordsAccepted,
               " accepted"
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
             "div",
             {
               onClick: () => onNavigateToResultsWithFilter?.("QUALIFIED"),
               className: `p-2.5 bg-emerald-950/30 border border-emerald-500/30 rounded ${onNavigateToResultsWithFilter ? "cursor-pointer hover:border-emerald-500 transition-colors" : ""}`,
               title: "Click to filter results by QUALIFIED",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-emerald-400 uppercase font-medium tracking-wider", children: "Qualified" }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-lg font-bold text-emerald-300 mt-0.5", children: runMetrics.qualifiedCount }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-emerald-400/80 mt-0.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] text-emerald-400 uppercase font-medium tracking-wider", children: "Qualified" }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-lg font-bold text-emerald-300 mt-0.5", children: runMetrics.qualifiedCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "text-[10px] text-emerald-400/80 mt-0.5", children: [
                   currentSnapshot.totalRecords > 0 ? Math.round(runMetrics.qualifiedCount / currentSnapshot.totalRecords * 100) : 0,
                   "% of leads"
                 ] })
               ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
             "div",
             {
               onClick: () => onNavigateToResultsWithFilter?.("UNCERTAIN"),
               className: `p-2.5 bg-amber-950/30 border border-amber-500/30 rounded ${onNavigateToResultsWithFilter ? "cursor-pointer hover:border-amber-500 transition-colors" : ""}`,
               title: "Click to filter results by UNCERTAIN",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-amber-400 uppercase font-medium tracking-wider", children: "Uncertain" }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-lg font-bold text-amber-300 mt-0.5", children: runMetrics.uncertainCount }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-amber-400/80 mt-0.5", children: "Needs review" })
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] text-amber-400 uppercase font-medium tracking-wider", children: "Uncertain" }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-lg font-bold text-amber-300 mt-0.5", children: runMetrics.uncertainCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] text-amber-400/80 mt-0.5", children: "Needs review" })
               ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
             "div",
             {
               onClick: () => onNavigateToResultsWithFilter?.("BLOCKED"),
               className: `p-2.5 bg-rose-950/30 border border-rose-500/30 rounded ${onNavigateToResultsWithFilter ? "cursor-pointer hover:border-rose-500 transition-colors" : ""}`,
               title: "Click to filter results by BLOCKED",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-rose-400 uppercase font-medium tracking-wider", children: "Blocked / Excluded" }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-lg font-bold text-rose-300 mt-0.5", children: runMetrics.blockedCount }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-rose-400/80 mt-0.5", children: "Firewall protected" })
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] text-rose-400 uppercase font-medium tracking-wider", children: "Blocked / Excluded" }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-lg font-bold text-rose-300 mt-0.5", children: runMetrics.blockedCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] text-rose-400/80 mt-0.5", children: "Firewall protected" })
               ]
             }
           )
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Observed Processing Ledger" }),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400", children: "Duplicates Detected:" }),
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "font-mono text-slate-200", children: runMetrics.duplicatesDetected })
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Observed Processing Ledger" }),
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-400", children: "Duplicates Detected:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "font-mono text-slate-200", children: runMetrics.duplicatesDetected })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400", children: "Records Merged:" }),
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "font-mono text-slate-200", children: runMetrics.recordsMerged })
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-400", children: "Records Merged:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "font-mono text-slate-200", children: runMetrics.recordsMerged })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400", children: "Records Rejected:" }),
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "font-mono text-slate-200", children: runMetrics.recordsRejected })
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-400", children: "Records Rejected:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "font-mono text-slate-200", children: runMetrics.recordsRejected })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
               "div",
               {
                 onClick: () => onNavigateToResultsWithFilter?.("CONFLICTED"),
                 className: `flex justify-between border-b border-slate-700/40 pb-1 ${onNavigateToResultsWithFilter ? "cursor-pointer hover:text-sky-300" : ""}`,
                 children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400", children: "Field Conflicts:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "font-mono text-amber-300", children: runMetrics.conflictedCount })
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-400", children: "Field Conflicts:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "font-mono text-amber-300", children: runMetrics.conflictedCount })
                 ]
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
               "div",
               {
                 onClick: () => onNavigateToResultsWithFilter?.("INCOMPLETE"),
                 className: `flex justify-between border-b border-slate-700/40 pb-1 ${onNavigateToResultsWithFilter ? "cursor-pointer hover:text-sky-300" : ""}`,
                 children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400", children: "Incomplete Records:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "font-mono text-slate-300", children: runMetrics.incompleteCount })
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-400", children: "Incomplete Records:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "font-mono text-slate-300", children: runMetrics.incompleteCount })
                 ]
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400", children: "Exportable Records:" }),
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "font-mono text-emerald-400", children: runMetrics.exportableCount })
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-400", children: "Exportable Records:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "font-mono text-emerald-400", children: runMetrics.exportableCount })
             ] })
           ] })
         ] }),
-        restrictedAggregate.restrictedRecordCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2.5 bg-slate-950 border border-amber-500/40 rounded flex items-start gap-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-amber-400 text-sm", children: "\u{1F512}" }),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[11px] font-semibold text-amber-300", children: "Data Firewall Invariant Active" }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-slate-400 mt-0.5", children: restrictedAggregate.policyMessage })
+        restrictedAggregate.restrictedRecordCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2.5 bg-slate-950 border border-amber-500/40 rounded flex items-start gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-amber-400 text-sm", children: "\u{1F512}" }),
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[11px] font-semibold text-amber-300", children: "Data Firewall Invariant Active" }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] text-slate-400 mt-0.5", children: restrictedAggregate.policyMessage })
           ] })
         ] })
       ] }),
-      activeSection === "COVERAGE" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2.5", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex justify-between items-center", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Field Coverage Distribution" }),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { className: "text-[10px] text-slate-400", children: [
+      activeSection === "COVERAGE" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2.5", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex justify-between items-center", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Field Coverage Distribution" }),
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { className: "text-[10px] text-slate-400", children: [
             "Denominator: ",
             coverage.totalEligibleRecords,
             " eligible records"
@@ -21466,22 +21933,22 @@ var AnalyticsView = ({
           { label: "Published Services", pct: coverage.servicesCoverage, count: coverage.rawCounts.servicesCount, filter: void 0 },
           { label: "Social Profiles", pct: coverage.socialCoverage, count: coverage.rawCounts.socialCount, filter: void 0 },
           { label: "Qualification Evaluated", pct: coverage.qualificationCoverage, count: coverage.rawCounts.qualificationCount, filter: void 0 }
-        ].map((item) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "space-y-1", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex justify-between items-center text-[11px]", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-300", children: item.label }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center gap-2 font-mono", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { className: "text-slate-400", children: [
+        ].map((item) => /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "space-y-1", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex justify-between items-center text-[11px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-300", children: item.label }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex items-center gap-2 font-mono", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { className: "text-slate-400", children: [
                 item.count,
                 " / ",
                 coverage.totalEligibleRecords
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { className: `font-semibold ${item.pct >= 75 ? "text-emerald-400" : item.pct >= 40 ? "text-amber-400" : "text-rose-400"}`, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { className: `font-semibold ${item.pct >= 75 ? "text-emerald-400" : item.pct >= 40 ? "text-amber-400" : "text-rose-400"}`, children: [
                 item.pct,
                 "%"
               ] })
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "w-full h-1.5 bg-slate-700/60 rounded-full overflow-hidden", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "w-full h-1.5 bg-slate-700/60 rounded-full overflow-hidden", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
             "div",
             {
               className: `h-full rounded-full ${item.pct >= 75 ? "bg-emerald-500" : item.pct >= 40 ? "bg-amber-500" : "bg-rose-500"}`,
@@ -21490,185 +21957,185 @@ var AnalyticsView = ({
           ) })
         ] }, item.label))
       ] }) }),
-      activeSection === "CONTACTS" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2.5", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Observed Contactability Breakdown" }),
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("p", { className: "text-[10px] text-slate-400", children: "Categorization based strictly on actual observed channels. No predictive conversion scoring." }),
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "grid grid-cols-2 gap-2 mt-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Email + Phone Available" }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-emerald-400 font-mono mt-0.5", children: contactability.emailAndPhoneCount }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+      activeSection === "CONTACTS" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2.5", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Observed Contactability Breakdown" }),
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("p", { className: "text-[10px] text-slate-400", children: "Categorization based strictly on actual observed channels. No predictive conversion scoring." }),
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "grid grid-cols-2 gap-2 mt-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Email + Phone Available" }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-base font-bold text-emerald-400 font-mono mt-0.5", children: contactability.emailAndPhoneCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
               contactability.fullContactabilityPercentage,
               "% of total"
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
             "div",
             {
               onClick: () => onNavigateToResultsWithFilter?.("MISSING_PHONE"),
               className: "p-2 bg-slate-900 border border-slate-700/60 rounded cursor-pointer hover:border-slate-500",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Email Only" }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-sky-400 font-mono mt-0.5", children: contactability.emailOnlyCount }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Email Only" }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-base font-bold text-sky-400 font-mono mt-0.5", children: contactability.emailOnlyCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
                   contactability.totalEmailAvailableCount,
                   " total with email"
                 ] })
               ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
             "div",
             {
               onClick: () => onNavigateToResultsWithFilter?.("MISSING_EMAIL"),
               className: "p-2 bg-slate-900 border border-slate-700/60 rounded cursor-pointer hover:border-slate-500",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Phone Only" }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-amber-400 font-mono mt-0.5", children: contactability.phoneOnlyCount }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Phone Only" }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-base font-bold text-amber-400 font-mono mt-0.5", children: contactability.phoneOnlyCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
                   contactability.totalPhoneAvailableCount,
                   " total with phone"
                 ] })
               ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Contact Form Only" }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-indigo-400 font-mono mt-0.5", children: contactability.contactFormOnlyCount }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-slate-400", children: "Website form detected" })
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Contact Form Only" }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-base font-bold text-indigo-400 font-mono mt-0.5", children: contactability.contactFormOnlyCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] text-slate-400", children: "Website form detected" })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
             "div",
             {
               onClick: () => onNavigateToResultsWithFilter?.("PUBLIC_PEOPLE"),
               className: "p-2 bg-slate-900 border border-slate-700/60 rounded cursor-pointer hover:border-slate-500",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Person Available Only" }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-purple-400 font-mono mt-0.5", children: contactability.personAvailableOnlyCount }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Person Available Only" }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-base font-bold text-purple-400 font-mono mt-0.5", children: contactability.personAvailableOnlyCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
                   contactability.totalPublicPersonAvailableCount,
                   " with named people"
                 ] })
               ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "No Public Contact Signal" }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-rose-400 font-mono mt-0.5", children: contactability.noPublicContactSignalCount }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-slate-400 text-[10px]", children: "No Public Contact Signal" }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-base font-bold text-rose-400 font-mono mt-0.5", children: contactability.noPublicContactSignalCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
               contactability.noContactSignalPercentage,
               "% missing contact"
             ] })
           ] })
         ] })
       ] }) }),
-      activeSection === "WEBSITE" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex justify-between items-center", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Website Intelligence (Phase 21 Limits)" }),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-[10px] text-slate-400 font-mono", children: "Max 5 pgs \u2022 10s timeout" })
+      activeSection === "WEBSITE" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex justify-between items-center", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Website Intelligence (Phase 21 Limits)" }),
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-[10px] text-slate-400 font-mono", children: "Max 5 pgs \u2022 10s timeout" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
             "div",
             {
               onClick: () => onNavigateToResultsWithFilter?.("VERIFIED_WEBSITE"),
               className: "p-2 bg-slate-900 border border-slate-700/60 rounded cursor-pointer hover:border-emerald-500",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Verified Business Site" }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-emerald-400 font-mono mt-0.5", children: website.websiteVerifiedCount }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Verified Business Site" }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-base font-bold text-emerald-400 font-mono mt-0.5", children: website.websiteVerifiedCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
                   website.verificationRate,
                   "% of present sites"
                 ] })
               ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Website Present" }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-slate-200 font-mono mt-0.5", children: website.websitePresentCount }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Website Present" }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-base font-bold text-slate-200 font-mono mt-0.5", children: website.websitePresentCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
               website.pagesSuccessfullyInspected,
               " pages inspected"
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Site Unavailable / Timeout" }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-amber-400 font-mono mt-0.5", children: website.websiteUnavailableCount }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Site Unavailable / Timeout" }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-base font-bold text-amber-400 font-mono mt-0.5", children: website.websiteUnavailableCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
               website.websiteTimeoutCount,
               " timed out"
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Blocked by Safety Policy" }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-rose-400 font-mono mt-0.5", children: website.websiteBlockedBySafetyCount }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-slate-400", children: "SSRF / origin protection" })
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Blocked by Safety Policy" }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-base font-bold text-rose-400 font-mono mt-0.5", children: website.websiteBlockedBySafetyCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] text-slate-400", children: "SSRF / origin protection" })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Tech Signals Discovered" }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-sky-400 font-mono mt-0.5", children: website.technologySignalsDiscovered }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-slate-400", children: "CMS, Analytics, Chat" })
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Tech Signals Discovered" }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-base font-bold text-sky-400 font-mono mt-0.5", children: website.technologySignalsDiscovered }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] text-slate-400", children: "CMS, Analytics, Chat" })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Non-Business / Parked" }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-slate-400 font-mono mt-0.5", children: website.websiteNonBusinessCount + website.websiteParkedCount }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-slate-400", children: "Filtered generic domains" })
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Non-Business / Parked" }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-base font-bold text-slate-400 font-mono mt-0.5", children: website.websiteNonBusinessCount + website.websiteParkedCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] text-slate-400", children: "Filtered generic domains" })
           ] })
         ] })
       ] }) }),
-      activeSection === "QUALIFICATION" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2.5", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Qualification Decision Rationale" }),
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "grid grid-cols-3 gap-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-emerald-950/40 border border-emerald-500/30 rounded text-center", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-emerald-400", children: "QUALIFIED" }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-emerald-300 font-mono", children: qualification.qualifiedCount })
+      activeSection === "QUALIFICATION" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2.5", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Qualification Decision Rationale" }),
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "grid grid-cols-3 gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2 bg-emerald-950/40 border border-emerald-500/30 rounded text-center", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] text-emerald-400", children: "QUALIFIED" }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-base font-bold text-emerald-300 font-mono", children: qualification.qualifiedCount })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-amber-950/40 border border-amber-500/30 rounded text-center", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-amber-400", children: "UNCERTAIN" }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-amber-300 font-mono", children: qualification.uncertainCount })
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2 bg-amber-950/40 border border-amber-500/30 rounded text-center", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] text-amber-400", children: "UNCERTAIN" }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-base font-bold text-amber-300 font-mono", children: qualification.uncertainCount })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-rose-950/40 border border-rose-500/30 rounded text-center", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-rose-400", children: "NOT QUALIFIED / BLOCKED" }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-rose-300 font-mono", children: qualification.notQualifiedCount + qualification.blockedCount })
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2 bg-rose-950/40 border border-rose-500/30 rounded text-center", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] text-rose-400", children: "NOT QUALIFIED / BLOCKED" }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-base font-bold text-rose-300 font-mono", children: qualification.notQualifiedCount + qualification.blockedCount })
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "mt-3 space-y-1.5", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[11px] font-semibold text-slate-300", children: "Observed Reason Codes" }),
-          qualification.reasonBreakdown.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-slate-400 py-1", children: "No detailed reason codes recorded." }) : /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "space-y-1 max-h-[220px] overflow-y-auto pr-1", children: qualification.reasonBreakdown.map((r) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-1.5 bg-slate-900 border border-slate-800 rounded flex items-center justify-between gap-2 text-[11px]", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "min-w-0", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "font-mono text-slate-200 truncate", children: r.code }),
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-slate-400 truncate", children: r.description })
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "mt-3 space-y-1.5", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[11px] font-semibold text-slate-300", children: "Observed Reason Codes" }),
+          qualification.reasonBreakdown.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] text-slate-400 py-1", children: "No detailed reason codes recorded." }) : /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "space-y-1 max-h-[220px] overflow-y-auto pr-1", children: qualification.reasonBreakdown.map((r) => /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-1.5 bg-slate-900 border border-slate-800 rounded flex items-center justify-between gap-2 text-[11px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "min-w-0", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "font-mono text-slate-200 truncate", children: r.code }),
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] text-slate-400 truncate", children: r.description })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "font-mono font-bold text-sky-400 bg-slate-800 px-1.5 py-0.5 rounded text-[10px] shrink-0", children: r.count })
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "font-mono font-bold text-sky-400 bg-slate-800 px-1.5 py-0.5 rounded text-[10px] shrink-0", children: r.count })
           ] }, r.code)) })
         ] })
       ] }) }),
-      activeSection === "WARNINGS" && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "space-y-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("h3", { className: "text-xs font-semibold text-slate-200", children: [
+      activeSection === "WARNINGS" && /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "space-y-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("h3", { className: "text-xs font-semibold text-slate-200", children: [
           "Quality Warnings (",
           warnings.length,
           ")"
         ] }),
-        warnings.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-4 bg-slate-800/40 border border-slate-700/60 rounded text-center text-slate-400", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-emerald-400 text-lg", children: "\u2713" }),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-xs font-semibold text-slate-200 mt-1", children: "Zero Quality Warnings" }),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-slate-400 mt-0.5", children: "All observed data quality metrics satisfied defined thresholds." })
-        ] }) : warnings.map((w) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+        warnings.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-4 bg-slate-800/40 border border-slate-700/60 rounded text-center text-slate-400", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-emerald-400 text-lg", children: "\u2713" }),
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-xs font-semibold text-slate-200 mt-1", children: "Zero Quality Warnings" }),
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] text-slate-400 mt-0.5", children: "All observed data quality metrics satisfied defined thresholds." })
+        ] }) : warnings.map((w) => /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
           "div",
           {
             className: `p-3 rounded border text-xs space-y-1 ${w.severity === "HIGH" ? "bg-rose-950/20 border-rose-500/40 text-rose-200" : w.severity === "MEDIUM" ? "bg-amber-950/20 border-amber-500/40 text-amber-200" : "bg-slate-800/60 border-slate-700 text-slate-300"}`,
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center justify-between gap-2", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { className: "font-semibold text-slate-100 flex items-center gap-1.5", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: w.severity === "HIGH" ? "\u26A0\uFE0F" : "\u2139\uFE0F" }),
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex items-center justify-between gap-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { className: "font-semibold text-slate-100 flex items-center gap-1.5", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { children: w.severity === "HIGH" ? "\u26A0\uFE0F" : "\u2139\uFE0F" }),
                   " ",
                   w.title
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800", children: w.code })
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800", children: w.code })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("p", { className: "text-[11px] text-slate-300", children: w.message }),
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400 mt-1 pt-1 border-t border-slate-800/60", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("strong", { className: "text-slate-300", children: "Action:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("p", { className: "text-[11px] text-slate-300", children: w.message }),
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "text-[10px] text-slate-400 mt-1 pt-1 border-t border-slate-800/60", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("strong", { className: "text-slate-300", children: "Action:" }),
                 " ",
                 w.actionableRemedy
               ] })
@@ -21677,21 +22144,21 @@ var AnalyticsView = ({
           w.id
         ))
       ] }),
-      activeSection === "COMPARISON" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Run Comparison Studio" }),
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("p", { className: "text-[10px] text-slate-400", children: "Select another completed run to evaluate variances, deduplication shifts, and entity modifications." }),
-        historySnapshots.length < 2 ? /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "p-3 bg-slate-900 border border-slate-800 rounded text-slate-400 text-center", children: "At least two completed runs are required for comparative analysis." }) : /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "space-y-3", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center gap-2", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400", children: "Compare with:" }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+      activeSection === "COMPARISON" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Run Comparison Studio" }),
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("p", { className: "text-[10px] text-slate-400", children: "Select another completed run to evaluate variances, deduplication shifts, and entity modifications." }),
+        historySnapshots.length < 2 ? /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "p-3 bg-slate-900 border border-slate-800 rounded text-slate-400 text-center", children: "At least two completed runs are required for comparative analysis." }) : /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "space-y-3", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-400", children: "Compare with:" }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
               "select",
               {
                 value: compareRunId,
                 onChange: (e) => setCompareRunId(e.target.value),
                 className: "bg-slate-900 border border-slate-700 text-slate-200 text-[11px] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-sky-500",
                 children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("option", { value: "", children: "Select a run to compare..." }),
-                  historySnapshots.filter((s) => s.runId !== currentSnapshot.runId).map((s) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("option", { value: s.runId, children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("option", { value: "", children: "Select a run to compare..." }),
+                  historySnapshots.filter((s) => s.runId !== currentSnapshot.runId).map((s) => /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("option", { value: s.runId, children: [
                     s.runTitle || s.runId,
                     " (",
                     s.totalRecords,
@@ -21701,55 +22168,952 @@ var AnalyticsView = ({
               }
             )
           ] }),
-          comparisonResult && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "space-y-3 mt-3", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2.5 bg-slate-900 border border-slate-800 rounded space-y-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] font-semibold text-sky-400 uppercase tracking-wider", children: "Descriptive Summary" }),
-              comparisonResult.descriptiveSummary.map((line, idx) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[11px] text-slate-300", children: [
+          comparisonResult && /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "space-y-3 mt-3", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2.5 bg-slate-900 border border-slate-800 rounded space-y-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] font-semibold text-sky-400 uppercase tracking-wider", children: "Descriptive Summary" }),
+              comparisonResult.descriptiveSummary.map((line, idx) => /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "text-[11px] text-slate-300", children: [
                 "\u2022 ",
                 line
               ] }, idx))
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "border border-slate-800 rounded overflow-hidden", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("table", { className: "w-full text-[11px] text-left", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("thead", { className: "bg-slate-950 text-slate-400 uppercase text-[9px]", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("tr", { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("th", { className: "p-2", children: "Metric" }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("th", { className: "p-2 text-right", children: "Base Run" }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("th", { className: "p-2 text-right", children: "Compare Run" }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("th", { className: "p-2 text-right", children: "Delta" })
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "border border-slate-800 rounded overflow-hidden", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("table", { className: "w-full text-[11px] text-left", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("thead", { className: "bg-slate-950 text-slate-400 uppercase text-[9px]", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("tr", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("th", { className: "p-2", children: "Metric" }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("th", { className: "p-2 text-right", children: "Base Run" }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("th", { className: "p-2 text-right", children: "Compare Run" }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("th", { className: "p-2 text-right", children: "Delta" })
               ] }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("tbody", { className: "divide-y divide-slate-800/60 font-mono", children: comparisonResult.metricsDiff.map((d) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("tr", { className: "hover:bg-slate-800/40", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("td", { className: "p-2 font-sans text-slate-300", children: d.metricName }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("td", { className: "p-2 text-right text-slate-400", children: d.baseValue }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("td", { className: "p-2 text-right text-slate-200", children: d.compareValue }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("td", { className: `p-2 text-right font-bold ${d.delta > 0 ? "text-emerald-400" : d.delta < 0 ? "text-rose-400" : "text-slate-500"}`, children: d.delta > 0 ? `+${d.delta}` : d.delta })
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("tbody", { className: "divide-y divide-slate-800/60 font-mono", children: comparisonResult.metricsDiff.map((d) => /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("tr", { className: "hover:bg-slate-800/40", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("td", { className: "p-2 font-sans text-slate-300", children: d.metricName }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("td", { className: "p-2 text-right text-slate-400", children: d.baseValue }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("td", { className: "p-2 text-right text-slate-200", children: d.compareValue }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("td", { className: `p-2 text-right font-bold ${d.delta > 0 ? "text-emerald-400" : d.delta < 0 ? "text-rose-400" : "text-slate-500"}`, children: d.delta > 0 ? `+${d.delta}` : d.delta })
               ] }, d.metricName)) })
             ] }) }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2.5 bg-slate-900 border border-slate-800 rounded space-y-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] font-semibold text-slate-400 uppercase tracking-wider", children: "Entity Change Summary" }),
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 font-mono text-[10px]", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2.5 bg-slate-900 border border-slate-800 rounded space-y-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-[10px] font-semibold text-slate-400 uppercase tracking-wider", children: "Entity Change Summary" }),
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 font-mono text-[10px]", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
                   "New: ",
-                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-emerald-400 font-bold", children: comparisonResult.changeAnalysis.newRecordsCount })
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-emerald-400 font-bold", children: comparisonResult.changeAnalysis.newRecordsCount })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
                   "Removed: ",
-                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-rose-400 font-bold", children: comparisonResult.changeAnalysis.removedRecordsCount })
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-rose-400 font-bold", children: comparisonResult.changeAnalysis.removedRecordsCount })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
                   "Modified: ",
-                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-amber-400 font-bold", children: comparisonResult.changeAnalysis.changedRecordsCount })
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-amber-400 font-bold", children: comparisonResult.changeAnalysis.changedRecordsCount })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
                   "Unchanged: ",
-                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400 font-bold", children: comparisonResult.changeAnalysis.unchangedRecordsCount })
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-400 font-bold", children: comparisonResult.changeAnalysis.unchangedRecordsCount })
                 ] })
               ] })
             ] })
           ] })
         ] })
-      ] }) })
+      ] }) }),
+      activeSection === "OPTIMIZATION" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "flex-1 flex flex-col min-h-0", role: "tabpanel", "aria-label": "Research Optimization View", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+        ResearchOptimizationView,
+        {
+          snapshot: optimizationSnapshot || null,
+          onNavigateToResultsWithFilter: onNavigateToResultsWithFilter ? (f) => onNavigateToResultsWithFilter({ ...f, targetTab: "RESULTS" }) : void 0,
+          onPrefillResearchConfig
+        }
+      ) })
     ] })
   ] });
 };
+
+// src/extension/optimization/types.ts
+var OPTIMIZATION_SCHEMA_VERSION = "research-optimization-v1";
+var DEFAULT_SAMPLE_THRESHOLDS = {
+  LOW_SAMPLE_MAX: 4,
+  MODERATE_SAMPLE_MAX: 19,
+  STRONG_SAMPLE_MIN: 20
+};
+var DEFAULT_SATURATION_THRESHOLDS = {
+  MIN_SAMPLE_SIZE: 5,
+  HIGH_DUPLICATE_RATIO: 65,
+  // >= 65% duplicates indicates heavy saturation pressure
+  HIGH_SATURATION_DUP_RATIO: 70,
+  LOW_MARGINAL_YIELD: 0.15,
+  // < 15% new entities per attempt indicates low marginal yield
+  CONSECUTIVE_LOW_YIELD_MIN: 2
+  // Minimum consecutive low yield runs required for HIGHLY_SATURATED
+};
+
+// src/extension/optimization/optimizationEngine.ts
+function roundDeterministic2(val, decimals = 1) {
+  if (typeof val !== "number" || isNaN(val) || !isFinite(val)) {
+    return 0;
+  }
+  const factor = Math.pow(10, decimals);
+  const rounded = Math.round(val * factor) / factor;
+  return Object.is(rounded, -0) ? 0 : rounded;
+}
+function safeRatio(numerator, denominator, scale = 100, decimals = 1) {
+  if (!denominator || denominator <= 0 || isNaN(denominator) || !isFinite(denominator)) {
+    return 0;
+  }
+  if (!numerator || numerator <= 0 || isNaN(numerator) || !isFinite(numerator)) {
+    return 0;
+  }
+  const raw = numerator / denominator * scale;
+  return roundDeterministic2(raw, decimals);
+}
+function sanitizeOptimizationText(input) {
+  if (!input) return "";
+  let str = String(input).replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "").replace(/<[^>]+>/g, "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  if (/^[=\-+@]/.test(str)) {
+    str = "'" + str;
+  }
+  return str.trim();
+}
+function evaluateSampleSufficiency(count, thresholds = DEFAULT_SAMPLE_THRESHOLDS) {
+  if (count <= 0) return "NO_DATA";
+  if (count <= thresholds.LOW_SAMPLE_MAX) return "LOW_SAMPLE";
+  if (count <= thresholds.MODERATE_SAMPLE_MAX) return "MODERATE_SAMPLE";
+  return "STRONG_SAMPLE";
+}
+function buildSearchUnitKey(areaId, category, queryVariant, sourceType = "META") {
+  const a = (areaId || "GLOBAL").trim().toLowerCase();
+  const c = (category || "ALL_CATEGORIES").trim().toLowerCase();
+  const q = (queryVariant || "DEFAULT_QUERY").trim().toLowerCase();
+  const s = sourceType.trim().toUpperCase();
+  return `${a}::${c}::${q}::${s}`;
+}
+function evaluateDuplicatePressure(arg1, arg2, arg3, arg4) {
+  let duplicateRatio;
+  let repeatedCount;
+  let totalObserved;
+  if (typeof arg3 === "number") {
+    duplicateRatio = arg1;
+    repeatedCount = arg2;
+    totalObserved = arg3;
+  } else {
+    totalObserved = arg1;
+    repeatedCount = arg2;
+    duplicateRatio = totalObserved > 0 ? safeRatio(repeatedCount, totalObserved, 100, 1) : 0;
+  }
+  let level = "LOW";
+  let warningHeadline;
+  const minSample = arg3?.MIN_SAMPLE_SIZE || arg4?.MIN_SAMPLE_SIZE || DEFAULT_SATURATION_THRESHOLDS.MIN_SAMPLE_SIZE || 5;
+  if (totalObserved < minSample) {
+    level = "UNKNOWN";
+  } else if (duplicateRatio >= (arg4?.HIGH_SATURATION_DUP_RATIO ?? DEFAULT_SATURATION_THRESHOLDS.HIGH_SATURATION_DUP_RATIO ?? 70)) {
+    level = "HIGH";
+    warningHeadline = "HIGH DUPLICATE PRESSURE";
+  } else if (duplicateRatio >= 40) {
+    level = "MODERATE";
+    warningHeadline = "MODERATE DUPLICATE PRESSURE";
+  } else {
+    level = "LOW";
+  }
+  const explanation = `Observed duplicate ratio is ${roundDeterministic2(duplicateRatio, 1)}% (${repeatedCount} repeated candidates out of ${totalObserved} observed). Threshold for high duplicate pressure is ${DEFAULT_SATURATION_THRESHOLDS.HIGH_SATURATION_DUP_RATIO}%.`;
+  const evidence = [
+    `Duplicate candidate ratio: ${roundDeterministic2(duplicateRatio, 1)}%`,
+    `Sample size: ${totalObserved} raw observations`,
+    `Threshold: ${DEFAULT_SATURATION_THRESHOLDS.HIGH_SATURATION_DUP_RATIO}%`,
+    explanation
+  ];
+  return {
+    level,
+    pressureLevel: level,
+    duplicateRatio: roundDeterministic2(duplicateRatio, 1),
+    repeatedEntityCount: repeatedCount,
+    totalObservedCandidates: totalObserved,
+    warningHeadline,
+    explanation,
+    evidence
+  };
+}
+function evaluateSaturationAssessment(arg1, arg2, arg3, arg4) {
+  let sampleSufficiency;
+  let duplicateRatio;
+  let marginalYield;
+  let consecutiveLowYieldRuns;
+  let newEntityYield = 0;
+  let attemptCount = 1;
+  if (typeof arg1 === "object" && arg1 !== null) {
+    const opts = arg1;
+    const sampleThresholds = arg2 || DEFAULT_SAMPLE_THRESHOLDS;
+    const totalObserved = opts.rawCandidateCount ?? opts.rawCandidatesCount ?? opts.uniqueCanonicalEntities ?? 0;
+    sampleSufficiency = evaluateSampleSufficiency(totalObserved, sampleThresholds);
+    attemptCount = opts.attempts || 1;
+    const dups = opts.duplicateCandidateCount ?? 0;
+    duplicateRatio = totalObserved > 0 ? safeRatio(dups, totalObserved, 100, 1) : 0;
+    const newEntities = opts.newEntitiesDiscovered ?? opts.newEntitiesCount ?? 0;
+    marginalYield = attemptCount > 0 ? roundDeterministic2(newEntities / attemptCount, 2) : 0;
+    const unique = opts.uniqueCanonicalEntities ?? opts.uniqueEntitiesCount ?? 1;
+    newEntityYield = safeRatio(newEntities, unique, 100, 1);
+    consecutiveLowYieldRuns = opts.consecutiveLowYieldRuns || 0;
+  } else {
+    sampleSufficiency = arg1;
+    duplicateRatio = arg2 || 0;
+    marginalYield = arg3 || 0;
+    consecutiveLowYieldRuns = arg4 || 0;
+  }
+  const triggeringFactors = [];
+  const observedEvidence = [];
+  let state = "INSUFFICIENT_DATA";
+  let evidenceStatement = "";
+  if (sampleSufficiency === "NO_DATA" || sampleSufficiency === "LOW_SAMPLE") {
+    state = "INSUFFICIENT_DATA";
+    evidenceStatement = "Insufficient observed run data (< 5 observations) to determine saturation state.";
+    triggeringFactors.push(`Sample size is ${sampleSufficiency}`);
+    observedEvidence.push("Sample size too low to establish reliable saturation assessment (< 5 observations).");
+  } else if (duplicateRatio >= 70 && (marginalYield <= 0.2 || consecutiveLowYieldRuns >= 2) && sampleSufficiency === "STRONG_SAMPLE") {
+    state = "HIGHLY_SATURATED";
+    evidenceStatement = "Observed saturation is high based on available runs and declining new entity yield.";
+    triggeringFactors.push(`Duplicate ratio ${duplicateRatio}% >= 70%`);
+    triggeringFactors.push(`Marginal yield ${marginalYield} <= 0.20`);
+    triggeringFactors.push(`${consecutiveLowYieldRuns} consecutive low-yield runs`);
+    observedEvidence.push("Observed saturation is high based on available runs.");
+    observedEvidence.push(`Duplicate candidate ratio observed at ${duplicateRatio}%.`);
+    observedEvidence.push(`Marginal yield observed at ${marginalYield} new entities per attempt across ${consecutiveLowYieldRuns} consecutive runs.`);
+  } else if (duplicateRatio >= 50 || marginalYield <= 0.25 || consecutiveLowYieldRuns >= 1) {
+    state = "MODERATELY_SATURATED";
+    evidenceStatement = "Observed saturation is moderate based on available runs with declining discovery rate.";
+    triggeringFactors.push(`Observed duplicate ratio is ${duplicateRatio}%`);
+    triggeringFactors.push(`Marginal entity yield is ${marginalYield}`);
+    observedEvidence.push("Observed saturation is moderate based on available runs.");
+    observedEvidence.push(`Moderate duplicate ratio (${duplicateRatio}%).`);
+  } else if (marginalYield >= 0.5 && duplicateRatio < 35 && attemptCount <= 2) {
+    state = "UNDEREXPLORED";
+    evidenceStatement = "Search unit appears underexplored with high marginal yield and low duplicate pressure.";
+    triggeringFactors.push(`High marginal yield: ${marginalYield}`);
+    triggeringFactors.push(`Low duplicate ratio: ${duplicateRatio}%`);
+    observedEvidence.push("Search unit appears underexplored with high marginal yield.");
+  } else {
+    state = "ACTIVE";
+    evidenceStatement = "Search unit is actively producing new entities with balanced discovery yield.";
+    triggeringFactors.push("Balanced new entity discovery and duplicate ratios");
+    observedEvidence.push("Active discovery ongoing with healthy yield.");
+  }
+  return {
+    state,
+    observedDuplicateRatio: duplicateRatio,
+    duplicateRatio,
+    consecutiveLowYieldRuns,
+    marginalEntityYield: marginalYield,
+    marginalYield,
+    newEntityYield,
+    sampleSufficiency,
+    evidenceStatement,
+    observedEvidence,
+    triggeringFactors
+  };
+}
+function aggregateSearchUnitPerformances(runs, canonicalRecords = []) {
+  const sortedRuns = [...runs].sort((a, b) => {
+    const timeA = a.completedAt || a.startedAt || "";
+    const timeB = b.completedAt || b.startedAt || "";
+    return timeA.localeCompare(timeB) || a.runId.localeCompare(b.runId);
+  });
+  const previouslySeenEntityIds = /* @__PURE__ */ new Set();
+  const unitAccumulator = /* @__PURE__ */ new Map();
+  for (const r of sortedRuns) {
+    const runUnits = r.searchUnits && r.searchUnits.length > 0 ? r.searchUnits : [{
+      searchUnitId: `su_${r.geographicAreaId || "DEFAULT"}_${r.category || "GENERAL"}_${r.query || r.queryVariant || "LEADS"}`,
+      planId: r.runId,
+      geographicAreaId: r.geographicAreaId || "DEFAULT_AREA",
+      sourceType: "META",
+      category: r.category || "GENERAL_BUSINESS",
+      queryVariant: r.query || r.queryVariant || "LEADS",
+      sequence: 1,
+      priority: 1,
+      status: "COMPLETED",
+      retryCount: 0,
+      createdAt: r.startedAt || (/* @__PURE__ */ new Date()).toISOString()
+    }];
+    for (const su of runUnits) {
+      const key = buildSearchUnitKey(su.geographicAreaId, su.category, su.queryVariant, su.sourceType);
+      let acc = unitAccumulator.get(key);
+      if (!acc) {
+        const cleanArea = sanitizeOptimizationText(su.geographicAreaId) || "DEFAULT_AREA";
+        const cleanCat = sanitizeOptimizationText(su.category) || "General";
+        const cleanQuery = sanitizeOptimizationText(su.queryVariant) || "General Query";
+        acc = {
+          searchUnitId: su.searchUnitId || `su_${key}`,
+          geographicAreaId: cleanArea,
+          areaName: cleanArea,
+          category: cleanCat,
+          queryVariant: cleanQuery,
+          sourceType: su.sourceType || "META",
+          runIds: /* @__PURE__ */ new Set(),
+          attempts: 0,
+          rawCandidateCount: 0,
+          uniqueEntityIds: /* @__PURE__ */ new Set(),
+          newEntityIds: /* @__PURE__ */ new Set(),
+          duplicateCandidateCount: 0,
+          firstObservedAt: su.createdAt || r.startedAt || (/* @__PURE__ */ new Date()).toISOString(),
+          lastObservedAt: su.completedAt || r.completedAt || r.startedAt || (/* @__PURE__ */ new Date()).toISOString(),
+          records: [],
+          consecutiveLowYieldRuns: 0
+        };
+        unitAccumulator.set(key, acc);
+      }
+      acc.runIds.add(r.runId);
+      acc.attempts++;
+      const runTotal = r.totalRecordsExtracted ?? r.candidatesCount ?? r.rawCandidateCount ?? 0;
+      if (runTotal > 0) {
+        acc.rawCandidateCount += runTotal;
+      }
+      acc.lastObservedAt = su.completedAt || r.completedAt || r.startedAt || acc.lastObservedAt;
+    }
+  }
+  const leadIdToKeysMap = /* @__PURE__ */ new Map();
+  for (const r of runs) {
+    if (r.leadIds && Array.isArray(r.leadIds)) {
+      for (const [key, acc] of unitAccumulator.entries()) {
+        if (acc.runIds.has(r.runId)) {
+          for (const lid of r.leadIds) {
+            let set = leadIdToKeysMap.get(lid);
+            if (!set) {
+              set = /* @__PURE__ */ new Set();
+              leadIdToKeysMap.set(lid, set);
+            }
+            set.add(key);
+          }
+        }
+      }
+    }
+  }
+  const areaCatToKeyMap = /* @__PURE__ */ new Map();
+  const areaToKeyMap = /* @__PURE__ */ new Map();
+  for (const [key, acc] of unitAccumulator.entries()) {
+    const acKey = `${acc.geographicAreaId.toLowerCase()}::${acc.category.toLowerCase()}`;
+    if (!areaCatToKeyMap.has(acKey)) {
+      areaCatToKeyMap.set(acKey, key);
+    }
+    const aKey = acc.geographicAreaId.toLowerCase();
+    if (!areaToKeyMap.has(aKey)) {
+      areaToKeyMap.set(aKey, key);
+    }
+  }
+  const sortedRecords = [...canonicalRecords].sort(
+    (a, b) => a.canonicalEntityId.localeCompare(b.canonicalEntityId)
+  );
+  for (const rec of sortedRecords) {
+    const areaId = rec.location?.region?.value || rec.location?.country?.value || rec.geographicReference?.areaId || "DEFAULT_AREA";
+    const cat = rec.business?.categories?.value?.[0] || rec.category || "GENERAL_BUSINESS";
+    const query = rec.canonicalBusinessName?.value || "LEAD";
+    const entityId = rec.canonicalEntityId;
+    if (!previouslySeenEntityIds.has(entityId)) {
+      previouslySeenEntityIds.add(entityId);
+    }
+    const matchedKeys = leadIdToKeysMap.get(entityId);
+    let targetKeys = [];
+    if (matchedKeys && matchedKeys.size > 0) {
+      targetKeys = Array.from(matchedKeys);
+    } else {
+      let matchedKey = areaCatToKeyMap.get(`${areaId.toLowerCase()}::${cat.toLowerCase()}`);
+      if (!matchedKey) {
+        matchedKey = areaToKeyMap.get(areaId.toLowerCase());
+      }
+      if (!matchedKey && unitAccumulator.size > 0) {
+        matchedKey = Array.from(unitAccumulator.keys())[0];
+      }
+      if (!matchedKey) {
+        matchedKey = buildSearchUnitKey(areaId, cat, query, "META");
+        if (!unitAccumulator.has(matchedKey)) {
+          const cleanArea = sanitizeOptimizationText(areaId) || "DEFAULT_AREA";
+          const cleanCat = sanitizeOptimizationText(cat) || "General";
+          const cleanQuery = sanitizeOptimizationText(query) || "General Query";
+          unitAccumulator.set(matchedKey, {
+            searchUnitId: `unit_${matchedKey}`,
+            geographicAreaId: cleanArea,
+            areaName: cleanArea,
+            category: cleanCat,
+            queryVariant: cleanQuery,
+            sourceType: "META",
+            runIds: /* @__PURE__ */ new Set(["RUN_SYNTHETIC"]),
+            attempts: 1,
+            rawCandidateCount: 0,
+            uniqueEntityIds: /* @__PURE__ */ new Set(),
+            newEntityIds: /* @__PURE__ */ new Set(),
+            duplicateCandidateCount: 0,
+            firstObservedAt: rec.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
+            lastObservedAt: rec.updatedAt || rec.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
+            records: [],
+            consecutiveLowYieldRuns: 0
+          });
+        }
+      }
+      targetKeys = [matchedKey];
+    }
+    for (const key of targetKeys) {
+      const acc = unitAccumulator.get(key);
+      if (acc) {
+        acc.records.push(rec);
+        acc.uniqueEntityIds.add(entityId);
+        acc.newEntityIds.add(entityId);
+      }
+    }
+  }
+  const performances = [];
+  for (const acc of unitAccumulator.values()) {
+    const totalRecords = acc.records.length;
+    const rawCandidates = Math.max(acc.rawCandidateCount, totalRecords);
+    const uniqueEntities = acc.uniqueEntityIds.size;
+    const duplicateCount = Math.max(0, rawCandidates - uniqueEntities);
+    const newEntities = acc.newEntityIds.size;
+    acc.duplicateCandidateCount = duplicateCount;
+    const duplicateRatio = rawCandidates > 0 ? safeRatio(duplicateCount, rawCandidates, 100, 1) : 0;
+    const marginalYieldNum = acc.attempts > 0 ? roundDeterministic2(newEntities / acc.attempts, 2) : 0;
+    let websiteCount = 0;
+    let contactCount = 0;
+    let emailCount = 0;
+    let phoneCount = 0;
+    let peopleCount = 0;
+    let qualifiedCount = 0;
+    let uncertainCount = 0;
+    let conflictCount = 0;
+    let exportableCount = 0;
+    for (const r of acc.records) {
+      const hasWeb = Boolean(r.digital?.verifiedWebsite?.value || r.digital?.domains?.value?.length || r.websites?.length);
+      const emails = r.contacts?.emails || r.contacts?.emails || [];
+      const phones = r.contacts?.phones || r.contacts?.phones || [];
+      const people = r.people?.publicPeople || r.people || [];
+      const hasEmail = emails.length > 0;
+      const hasPhone = phones.length > 0;
+      const hasPerson = people.length > 0;
+      const isQualified = r.qualification?.finalState === "QUALIFIED" || r.qualification?.state === "QUALIFIED";
+      const isUncertain = r.qualification?.finalState === "UNCERTAIN" || r.qualification?.state === "UNCERTAIN";
+      const hasConflict = Boolean(r.evidence?.conflicts && r.evidence.conflicts.length > 0 || r.fieldConflicts && r.fieldConflicts.length > 0);
+      const isExportable = (r.policy?.exportEligible === true || r.exportStatus === "ALLOWED") && !(r.policy?.isRestricted || r.policyRestrictions?.isContractOnly || r.sources?.includes("GOOGLE_MAPS"));
+      if (hasWeb) websiteCount++;
+      if (hasEmail || hasPhone || hasPerson) contactCount++;
+      if (hasEmail) emailCount++;
+      if (hasPhone) phoneCount++;
+      if (hasPerson) peopleCount++;
+      if (isQualified) qualifiedCount++;
+      if (isUncertain) uncertainCount++;
+      if (hasConflict) conflictCount++;
+      if (isExportable) exportableCount++;
+    }
+    const websiteCoverage = safeRatio(websiteCount, uniqueEntities || totalRecords, 100, 1);
+    const contactCoverage = safeRatio(contactCount, uniqueEntities || totalRecords, 100, 1);
+    const emailCoverage = safeRatio(emailCount, uniqueEntities || totalRecords, 100, 1);
+    const phoneCoverage = safeRatio(phoneCount, uniqueEntities || totalRecords, 100, 1);
+    const peopleCoverage = safeRatio(peopleCount, uniqueEntities || totalRecords, 100, 1);
+    const qualificationCoverage = safeRatio(qualifiedCount, uniqueEntities || totalRecords, 100, 1);
+    const uncertaintyRate = safeRatio(uncertainCount, uniqueEntities || totalRecords, 100, 1);
+    const conflictRate = safeRatio(conflictCount, uniqueEntities || totalRecords, 100, 1);
+    const sampleSufficiency = evaluateSampleSufficiency(rawCandidates);
+    if (marginalYieldNum <= DEFAULT_SATURATION_THRESHOLDS.LOW_MARGINAL_YIELD && sampleSufficiency !== "NO_DATA") {
+      acc.consecutiveLowYieldRuns = Math.max(1, acc.attempts > 1 ? 2 : 1);
+    }
+    const saturationAssessment = evaluateSaturationAssessment(
+      sampleSufficiency,
+      duplicateRatio,
+      marginalYieldNum,
+      acc.consecutiveLowYieldRuns
+    );
+    const duplicatePressure = evaluateDuplicatePressure(rawCandidates, duplicateCount);
+    const marginalYieldResult = {
+      searchUnitId: acc.searchUnitId,
+      marginalYield: marginalYieldNum,
+      marginalEntityYield: marginalYieldNum,
+      newEntityYield: safeRatio(newEntities, uniqueEntities, 100, 1),
+      newWebsitesDiscovered: websiteCount,
+      marginalWebsiteYield: acc.attempts > 0 ? roundDeterministic2(websiteCount / acc.attempts, 2) : 0,
+      newEmailsDiscovered: emailCount,
+      marginalEmailYield: acc.attempts > 0 ? roundDeterministic2(emailCount / acc.attempts, 2) : 0,
+      newPhonesDiscovered: phoneCount,
+      marginalPhoneYield: acc.attempts > 0 ? roundDeterministic2(phoneCount / acc.attempts, 2) : 0,
+      newPeopleDiscovered: peopleCount,
+      marginalPeopleYield: acc.attempts > 0 ? roundDeterministic2(peopleCount / acc.attempts, 2) : 0,
+      marginalQualifiedYield: acc.attempts > 0 ? roundDeterministic2(qualifiedCount / acc.attempts, 2) : 0,
+      yieldTrend: acc.attempts > 2 ? marginalYieldNum > 0.4 ? "STRONG_GROWTH" : marginalYieldNum < 0.15 ? "DECLINING_YIELD" : "STABLE_YIELD" : "INSUFFICIENT_RUNS",
+      trend: acc.attempts > 2 ? marginalYieldNum > 0.4 ? "INCREASING" : marginalYieldNum < 0.15 ? "DECLINING" : "STABLE" : "INSUFFICIENT_HISTORY"
+    };
+    const qualityDimensions = {
+      discoveryYield: safeRatio(uniqueEntities, rawCandidates, 100, 1),
+      dataCoverage: safeRatio(websiteCount + contactCount, (uniqueEntities || totalRecords) * 2, 100, 1),
+      contactCoverage,
+      qualificationCoverage,
+      conflictPressure: conflictRate,
+      duplicatePressure: duplicateRatio
+    };
+    performances.push({
+      searchUnitId: acc.searchUnitId,
+      geographicAreaId: acc.geographicAreaId,
+      areaName: acc.areaName,
+      category: acc.category,
+      queryVariant: acc.queryVariant,
+      sourceType: acc.sourceType,
+      runIds: Array.from(acc.runIds).sort(),
+      attempts: acc.attempts,
+      rawCandidatesCount: rawCandidates,
+      rawCandidateCount: rawCandidates,
+      uniqueEntitiesCount: uniqueEntities,
+      uniqueCanonicalEntities: uniqueEntities,
+      newEntitiesCount: newEntities,
+      newEntitiesDiscovered: newEntities,
+      duplicateCandidateCount: duplicateCount,
+      duplicateRatio,
+      marginalYield: marginalYieldResult,
+      websiteCoverage,
+      contactCoverage,
+      emailCoverage,
+      phoneCoverage,
+      peopleCoverage,
+      qualificationCoverage,
+      uncertaintyRate,
+      conflictRate,
+      exportableCount,
+      sampleSufficiency,
+      saturationAssessment,
+      saturation: saturationAssessment,
+      duplicatePressure,
+      marginalYieldResult,
+      qualityDimensions,
+      firstObservedAt: acc.firstObservedAt,
+      lastObservedAt: acc.lastObservedAt
+    });
+  }
+  return performances.sort((a, b) => b.attempts - a.attempts || (b.uniqueEntitiesCount || 0) - (a.uniqueEntitiesCount || 0) || a.searchUnitId.localeCompare(b.searchUnitId));
+}
+function generateResearchRecommendations(performances, geographicAreas = []) {
+  const recommendations = [];
+  let recCounter = 1;
+  for (const perf of performances) {
+    const searchUnitId = perf.searchUnitId;
+    const areaName = perf.areaName;
+    const category = perf.category;
+    const queryVariant = perf.queryVariant;
+    const sampleSufficiency = perf.sampleSufficiency;
+    const duplicateRatio = perf.duplicateRatio;
+    const marginalYield = typeof perf.marginalYield === "number" ? perf.marginalYield : perf.marginalYieldResult?.marginalEntityYield ?? 0;
+    const websiteCoverage = perf.websiteCoverage;
+    const contactCoverage = perf.contactCoverage;
+    const conflictRate = perf.conflictRate;
+    const uncertaintyRate = perf.uncertaintyRate;
+    const satState = perf.saturation?.state || perf.saturationAssessment?.state;
+    const obsCount = perf.rawCandidateCount ?? perf.rawCandidatesCount ?? 20;
+    if (satState === "HIGHLY_SATURATED" && sampleSufficiency !== "LOW_SAMPLE" && sampleSufficiency !== "NO_DATA") {
+      recommendations.push({
+        recommendationId: `rec_${recCounter++}_reduce_${searchUnitId}`,
+        type: "REDUCE_SATURATED_QUERY",
+        priority: 90,
+        headline: `Reduce repetitive querying in saturated area (${areaName})`,
+        sourceSearchUnitId: searchUnitId,
+        targetSearchUnitId: searchUnitId,
+        targetAreaName: areaName,
+        targetCategory: category,
+        targetQueryVariant: queryVariant,
+        evidenceBasis: `Observed duplicate candidate ratio of ${duplicateRatio}% with marginal yield of ${marginalYield} entities per attempt across ${perf.attempts} runs.`,
+        observedEvidence: [
+          `Observed duplicate candidate ratio: ${duplicateRatio}% (Threshold: >= ${DEFAULT_SATURATION_THRESHOLDS.HIGH_DUPLICATE_RATIO}%)`,
+          `Marginal yield: ${marginalYield} new entities/attempt across ${perf.attempts} runs`,
+          `Sample size sufficiency: ${sampleSufficiency} (${obsCount} observations)`
+        ],
+        triggeringMetrics: {
+          observedValue: duplicateRatio,
+          threshold: DEFAULT_SATURATION_THRESHOLDS.HIGH_DUPLICATE_RATIO,
+          duplicateRatio,
+          marginalYield,
+          attempts: perf.attempts
+        },
+        thresholds: {
+          threshold: DEFAULT_SATURATION_THRESHOLDS.HIGH_DUPLICATE_RATIO,
+          duplicateRatioThreshold: DEFAULT_SATURATION_THRESHOLDS.HIGH_DUPLICATE_RATIO,
+          marginalYieldThreshold: DEFAULT_SATURATION_THRESHOLDS.LOW_MARGINAL_YIELD
+        },
+        sampleSufficiency,
+        confidenceReason: `Observed across ${obsCount} candidate observations (${sampleSufficiency}).`,
+        relevantEntityIds: []
+      });
+    }
+    if ((satState === "UNDEREXPLORED" || marginalYield >= 0.5) && satState !== "HIGHLY_SATURATED" && satState !== "MODERATELY_SATURATED") {
+      recommendations.push({
+        recommendationId: `rec_${recCounter++}_explore_${searchUnitId}`,
+        type: "EXPLORE_UNDEREXPLORED",
+        priority: 85,
+        headline: `Explore high-yield under-sampled unit (${areaName} - ${category})`,
+        sourceSearchUnitId: searchUnitId,
+        targetSearchUnitId: searchUnitId,
+        targetAreaName: areaName,
+        targetCategory: category,
+        targetQueryVariant: queryVariant,
+        evidenceBasis: `Strong marginal yield (${marginalYield} new entities/attempt) with low duplicate ratio (${duplicateRatio}%).`,
+        observedEvidence: [
+          `Strong marginal yield observed: ${marginalYield} new entities/attempt (Threshold: >= 0.5)`,
+          `Duplicate ratio: ${duplicateRatio}% (Threshold: <= 35%)`,
+          `Observed across ${obsCount} candidate observations (${sampleSufficiency})`
+        ],
+        triggeringMetrics: {
+          observedValue: marginalYield,
+          threshold: 0.5,
+          marginalYield,
+          duplicateRatio,
+          attempts: perf.attempts
+        },
+        thresholds: {
+          threshold: 0.5,
+          marginalYieldMin: 0.5,
+          duplicateRatioMax: 35
+        },
+        sampleSufficiency,
+        confidenceReason: `Observed across ${obsCount} candidate observations (${sampleSufficiency}).`,
+        actionableNextQuery: {
+          geographicArea: areaName,
+          category,
+          queryVariant
+        },
+        relevantEntityIds: []
+      });
+    }
+    if (websiteCoverage >= 60 && contactCoverage <= 35 && sampleSufficiency !== "NO_DATA") {
+      recommendations.push({
+        recommendationId: `rec_${recCounter++}_revisit_${searchUnitId}`,
+        type: "REVISIT_ENRICHMENT",
+        priority: 75,
+        headline: `Revisit ${areaName} (${category}) for contact enrichment`,
+        sourceSearchUnitId: searchUnitId,
+        targetSearchUnitId: searchUnitId,
+        targetAreaName: areaName,
+        targetCategory: category,
+        targetQueryVariant: queryVariant,
+        evidenceBasis: `Strong target website discovery (${websiteCoverage}%) but limited direct public contact coverage (${contactCoverage}%).`,
+        observedEvidence: [
+          `Website coverage: ${websiteCoverage}% (Threshold: >= 60%)`,
+          `Contact coverage: ${contactCoverage}% (Threshold: <= 35%)`,
+          `Observed across ${obsCount} candidate observations (${sampleSufficiency})`
+        ],
+        triggeringMetrics: {
+          observedValue: websiteCoverage,
+          threshold: 60,
+          websiteCoverage,
+          contactCoverage
+        },
+        thresholds: {
+          threshold: 60,
+          websiteCoverageMin: 60,
+          contactCoverageMax: 35
+        },
+        sampleSufficiency,
+        confidenceReason: `Observed across ${obsCount} candidate observations (${sampleSufficiency}).`,
+        actionableNextQuery: {
+          geographicArea: areaName,
+          category,
+          queryVariant: `${queryVariant} contact`
+        },
+        relevantEntityIds: []
+      });
+    }
+    if (conflictRate >= 25 && sampleSufficiency !== "NO_DATA") {
+      recommendations.push({
+        recommendationId: `rec_${recCounter++}_conflict_${searchUnitId}`,
+        type: "INVESTIGATE_CONFLICTS",
+        priority: 70,
+        headline: `Investigate high identity conflict rate in ${areaName}`,
+        sourceSearchUnitId: searchUnitId,
+        targetSearchUnitId: searchUnitId,
+        targetAreaName: areaName,
+        targetCategory: category,
+        targetQueryVariant: queryVariant,
+        evidenceBasis: `High multi-source contradiction rate of ${conflictRate}% across phone, email, or physical branch addresses.`,
+        observedEvidence: [
+          `Conflict rate observed: ${conflictRate}% (Threshold: >= 25%)`,
+          `Observed across ${obsCount} candidate observations (${sampleSufficiency})`
+        ],
+        triggeringMetrics: {
+          observedValue: conflictRate,
+          threshold: 25,
+          conflictRate
+        },
+        thresholds: {
+          threshold: 25,
+          conflictRateThreshold: 25
+        },
+        sampleSufficiency,
+        confidenceReason: `Observed across ${obsCount} candidate observations (${sampleSufficiency}).`,
+        relevantEntityIds: []
+      });
+    }
+    if (uncertaintyRate >= 30 && sampleSufficiency !== "NO_DATA") {
+      recommendations.push({
+        recommendationId: `rec_${recCounter++}_uncert_${searchUnitId}`,
+        type: "INVESTIGATE_UNCERTAINTY",
+        priority: 65,
+        headline: `Investigate qualification uncertainty rate in ${areaName}`,
+        sourceSearchUnitId: searchUnitId,
+        targetSearchUnitId: searchUnitId,
+        targetAreaName: areaName,
+        targetCategory: category,
+        targetQueryVariant: queryVariant,
+        evidenceBasis: `High qualification uncertainty rate of ${uncertaintyRate}% due to missing corroborated services or indicators.`,
+        observedEvidence: [
+          `Uncertainty rate observed: ${uncertaintyRate}% (Threshold: >= 30%)`,
+          `Observed across ${obsCount} candidate observations (${sampleSufficiency})`
+        ],
+        triggeringMetrics: {
+          observedValue: uncertaintyRate,
+          threshold: 30,
+          uncertaintyRate
+        },
+        thresholds: {
+          threshold: 30,
+          uncertaintyThreshold: 30
+        },
+        sampleSufficiency,
+        confidenceReason: `Observed across ${obsCount} candidate observations (${sampleSufficiency}).`,
+        relevantEntityIds: []
+      });
+    }
+    if ((satState === "HIGHLY_SATURATED" || satState === "UNDEREXPLORED") && geographicAreas.length > 1) {
+      const adjacent = geographicAreas.find((a) => a.areaId !== perf.geographicAreaId);
+      if (adjacent) {
+        recommendations.push({
+          recommendationId: `rec_${recCounter++}_adjacent_${searchUnitId}`,
+          type: "TRY_ADJACENT_UNIT",
+          priority: 60,
+          headline: `Expand search to adjacent area (${adjacent.name})`,
+          sourceSearchUnitId: searchUnitId,
+          targetSearchUnitId: adjacent.areaId,
+          targetAreaName: adjacent.name,
+          targetCategory: category,
+          targetQueryVariant: queryVariant,
+          evidenceBasis: `Current search unit ${areaName} has been evaluated. Adjacent area ${adjacent.name} remains unresearched.`,
+          observedEvidence: [
+            `Adjacent area ${adjacent.name} is available for expansion`,
+            `Source area: ${areaName}`,
+            `Observed across ${obsCount} candidate observations (${sampleSufficiency})`
+          ],
+          triggeringMetrics: {
+            observedValue: duplicateRatio,
+            threshold: DEFAULT_SATURATION_THRESHOLDS.HIGH_DUPLICATE_RATIO,
+            duplicateRatio
+          },
+          thresholds: {
+            threshold: DEFAULT_SATURATION_THRESHOLDS.HIGH_DUPLICATE_RATIO,
+            duplicateRatioThreshold: DEFAULT_SATURATION_THRESHOLDS.HIGH_DUPLICATE_RATIO
+          },
+          sampleSufficiency,
+          confidenceReason: `Observed across ${obsCount} candidate observations (${sampleSufficiency}).`,
+          actionableNextQuery: {
+            geographicArea: adjacent.name,
+            category,
+            queryVariant
+          },
+          relevantEntityIds: []
+        });
+      }
+    }
+  }
+  return recommendations.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0) || a.recommendationId.localeCompare(b.recommendationId));
+}
+function evaluateOptimizationWarnings(performances) {
+  const warnings = [];
+  let warnId = 1;
+  for (const p of performances) {
+    if (p.sampleSufficiency === "LOW_SAMPLE") {
+      warnings.push({
+        id: `warn_${warnId++}_low_sample_${p.searchUnitId}`,
+        type: "LOW_SAMPLE_SIZE",
+        severity: "LOW",
+        title: "Low Observation Sample Size",
+        searchUnitId: p.searchUnitId,
+        message: `Search unit ${p.areaName} has only ${p.rawCandidateCount ?? p.rawCandidatesCount ?? 0} observations (< 5). Claims of saturation or high efficiency require more runs.`,
+        remedy: "Gather additional observations before drawing definitive research conclusions."
+      });
+    }
+    if (p.duplicatePressure.level === "CRITICAL" || p.duplicatePressure.level === "HIGH") {
+      warnings.push({
+        id: `warn_${warnId++}_dup_${p.searchUnitId}`,
+        type: "HIGH_DUPLICATE_PRESSURE",
+        severity: p.duplicatePressure.level === "CRITICAL" ? "HIGH" : "MEDIUM",
+        title: "High Duplicate Acquisition Pressure",
+        searchUnitId: p.searchUnitId,
+        message: `Search unit ${p.areaName} (${p.category}) shows ${p.duplicateRatio}% duplicate candidates across ${p.attempts} runs.`,
+        remedy: "Pause repeated queries in this area and prioritize adjacent geographic units or alternative categories."
+      });
+    }
+    if (p.uncertaintyRate >= 40 && p.sampleSufficiency !== "NO_DATA") {
+      warnings.push({
+        id: `warn_${warnId++}_unc_${p.searchUnitId}`,
+        type: "HIGH_UNCERTAINTY_RATE",
+        severity: "MEDIUM",
+        title: "Elevated Qualification Uncertainty Rate",
+        searchUnitId: p.searchUnitId,
+        message: `${p.uncertaintyRate}% of leads in ${p.areaName} could not be decisively qualified due to missing business evidence.`,
+        remedy: "Verify website presence or enrich target search terms to uncover corroborated public credentials."
+      });
+    }
+    if (p.conflictRate >= 30 && p.sampleSufficiency !== "NO_DATA") {
+      warnings.push({
+        id: `warn_${warnId++}_con_${p.searchUnitId}`,
+        type: "HIGH_CONFLICT_RATE",
+        severity: "MEDIUM",
+        title: "Elevated Field Lineage Conflicts",
+        searchUnitId: p.searchUnitId,
+        message: `${p.conflictRate}% of records exhibit conflicting multi-source contact or branch details.`,
+        remedy: "Inspect the evidence reason graph and verify physical branch identity."
+      });
+    }
+  }
+  return warnings.sort((a, b) => a.id.localeCompare(b.id));
+}
+function computeResearchOptimization(runs = [], canonicalRecords = [], geographicAreas = []) {
+  const searchUnitPerformances = aggregateSearchUnitPerformances(runs, canonicalRecords);
+  const recommendations = generateResearchRecommendations(searchUnitPerformances, geographicAreas);
+  const warnings = evaluateOptimizationWarnings(searchUnitPerformances);
+  const geographicBreakdown = [];
+  const areaGroups = /* @__PURE__ */ new Map();
+  for (const p of searchUnitPerformances) {
+    const list = areaGroups.get(p.geographicAreaId) || [];
+    list.push(p);
+    areaGroups.set(p.geographicAreaId, list);
+  }
+  for (const [areaId, perfs] of areaGroups.entries()) {
+    const totalUnique = perfs.reduce((s, p) => s + (p.uniqueEntitiesCount || p.uniqueCanonicalEntities || 0), 0);
+    const avgMarginal = roundDeterministic2(perfs.reduce((s, p) => s + (typeof p.marginalYield === "number" ? p.marginalYield : p.marginalYieldResult.marginalEntityYield), 0) / perfs.length, 2);
+    const areaArea = geographicAreas.find((a) => a.areaId === areaId);
+    const saturationState = perfs.some((p) => p.saturationAssessment.state === "HIGHLY_SATURATED") ? "HIGHLY_SATURATED" : perfs.some((p) => p.saturationAssessment.state === "MODERATELY_SATURATED") ? "MODERATELY_SATURATED" : perfs.some((p) => p.saturationAssessment.state === "UNDEREXPLORED") ? "UNDEREXPLORED" : "ACTIVE";
+    geographicBreakdown.push({
+      areaId,
+      areaName: areaArea?.name || perfs[0]?.areaName || areaId,
+      level: areaArea?.level || "CITY",
+      observedCoveragePercent: roundDeterministic2(Math.min(100, perfs.reduce((s, p) => s + p.websiteCoverage, 0) / perfs.length), 1),
+      uniqueEntitiesCount: totalUnique,
+      saturationState,
+      marginalYield: avgMarginal,
+      searchUnitIds: perfs.map((p) => p.searchUnitId).sort()
+    });
+  }
+  const queryCategoryInsights = [];
+  const catGroups = /* @__PURE__ */ new Map();
+  for (const p of searchUnitPerformances) {
+    const key = `${p.category}::${p.queryVariant}`;
+    const list = catGroups.get(key) || [];
+    list.push(p);
+    catGroups.set(key, list);
+  }
+  for (const [catKey, perfs] of catGroups.entries()) {
+    const [category, queryVariant] = catKey.split("::");
+    const totalAttempts = perfs.reduce((s, p) => s + p.attempts, 0);
+    const avgDup = roundDeterministic2(perfs.reduce((s, p) => s + p.duplicateRatio, 0) / perfs.length, 1);
+    const avgYield = roundDeterministic2(perfs.reduce((s, p) => s + (typeof p.marginalYield === "number" ? p.marginalYield : p.marginalYieldResult.marginalEntityYield), 0) / perfs.length, 2);
+    const avgWeb = roundDeterministic2(perfs.reduce((s, p) => s + p.websiteCoverage, 0) / perfs.length, 1);
+    const avgContact = roundDeterministic2(perfs.reduce((s, p) => s + p.contactCoverage, 0) / perfs.length, 1);
+    const avgUncertain = roundDeterministic2(perfs.reduce((s, p) => s + p.uncertaintyRate, 0) / perfs.length, 1);
+    queryCategoryInsights.push({
+      category,
+      queryVariant,
+      attempts: totalAttempts,
+      duplicateRatio: avgDup,
+      marginalYield: avgYield,
+      websiteCoverage: avgWeb,
+      contactCoverage: avgContact,
+      uncertaintyRate: avgUncertain,
+      observationSummary: `Category "${category}" under query "${queryVariant}" yielded ${avgYield} new entities/attempt with ${avgDup}% duplicates and ${avgWeb}% website coverage.`
+    });
+  }
+  const restrictedCount = canonicalRecords.filter(
+    (r) => r.policy?.isRestricted || r.policy?.hasGoogleConsumerWebLineage || r.policyRestrictions?.isContractOnly || r.sources?.includes("GOOGLE_MAPS")
+  ).length;
+  if (restrictedCount > 0) {
+    warnings.push({
+      id: "warn_restricted_records",
+      type: "RESTRICTED_RECORDS_EXCLUDED",
+      severity: "LOW",
+      title: "Restricted Provenance Records Excluded",
+      searchUnitId: "ALL_UNITS",
+      message: `${restrictedCount} restricted candidate records were safely isolated and excluded from optimization export in compliance with source firewall policy.`,
+      remedy: "Contract-only / Google consumer-web raw details remain protected and unpersisted."
+    });
+  }
+  const sortedRunIds = runs.map((r) => r.runId).sort().join(",");
+  const sortedLeadIds = canonicalRecords.map((r) => r.canonicalEntityId).sort().join(",");
+  const rawIdSource = `${OPTIMIZATION_SCHEMA_VERSION}::${sortedRunIds}::${sortedLeadIds}`;
+  let hashVal = 0;
+  for (let i = 0; i < rawIdSource.length; i++) {
+    hashVal = (hashVal << 5) - hashVal + rawIdSource.charCodeAt(i) | 0;
+  }
+  const snapshotId = `opt_${Math.abs(hashVal).toString(16)}`;
+  const totalObservedRecords = runs.reduce((s, r) => s + Math.max(0, r.totalRecordsExtracted ?? r.candidatesCount ?? 0), 0) || canonicalRecords.length;
+  const uniqueEntities = new Set(canonicalRecords.map((r) => r.canonicalEntityId)).size;
+  const duplicateCandidateCount = Math.max(0, totalObservedRecords - uniqueEntities);
+  const newEntityCount = uniqueEntities;
+  let webCount = 0;
+  let emailCount = 0;
+  let phoneCount = 0;
+  let peopleCount = 0;
+  let contactCount = 0;
+  let qualCount = 0;
+  let uncertainCount = 0;
+  let conflictCount = 0;
+  let exportableCount = 0;
+  let blockedCount = 0;
+  let restrictedRecordCount = 0;
+  for (const r of canonicalRecords) {
+    const hasWeb = Boolean(r.digital?.verifiedWebsite?.value || r.digital?.domains?.value?.length || r.websites?.length);
+    const emails = r.contacts?.emails || r.contacts?.emails || [];
+    const phones = r.contacts?.phones || r.contacts?.phones || [];
+    const people = r.people?.publicPeople || r.people || [];
+    const hasEmail = emails.length > 0;
+    const hasPhone = phones.length > 0;
+    const hasPerson = people.length > 0;
+    const hasContact = hasEmail || hasPhone || hasPerson;
+    const isQual = r.qualification?.finalState === "QUALIFIED" || r.qualification?.state === "QUALIFIED";
+    const isUncertain = r.qualification?.finalState === "UNCERTAIN" || r.qualification?.state === "UNCERTAIN";
+    const hasConflict = Boolean(r.evidence?.conflicts && r.evidence.conflicts.length > 0 || r.fieldConflicts && r.fieldConflicts.length > 0);
+    const isRestricted = Boolean(r.policy?.isRestricted || r.policy?.hasGoogleConsumerWebLineage || r.policyRestrictions?.isContractOnly || r.sources?.includes("GOOGLE_MAPS"));
+    const isBlocked = r.policy?.exportEligible === false || r.exportStatus === "BLOCKED" || r.persistenceStatus === "DISCARDED" || isRestricted;
+    const isExportable = (r.policy?.exportEligible === true || r.exportStatus === "ALLOWED") && !isBlocked && !isRestricted;
+    if (hasWeb) webCount++;
+    if (hasEmail) emailCount++;
+    if (hasPhone) phoneCount++;
+    if (hasPerson) peopleCount++;
+    if (hasContact) contactCount++;
+    if (isQual) qualCount++;
+    if (isUncertain) uncertainCount++;
+    if (hasConflict) conflictCount++;
+    if (isExportable) exportableCount++;
+    if (isBlocked) blockedCount++;
+    if (isRestricted) restrictedRecordCount++;
+  }
+  const overallCoverage = {
+    totalObservedRecords,
+    uniqueCanonicalEntities: uniqueEntities,
+    duplicateCandidateCount,
+    newEntityCount,
+    websiteCoverageRatio: safeRatio(webCount, uniqueEntities),
+    emailCoverageRatio: safeRatio(emailCount, uniqueEntities),
+    phoneCoverageRatio: safeRatio(phoneCount, uniqueEntities),
+    peopleCoverageRatio: safeRatio(peopleCount, uniqueEntities),
+    contactCoverageRatio: safeRatio(contactCount, uniqueEntities),
+    qualificationCoverageRatio: safeRatio(qualCount, uniqueEntities),
+    uncertaintyRate: safeRatio(uncertainCount, uniqueEntities),
+    conflictRate: safeRatio(conflictCount, uniqueEntities),
+    exportableCount,
+    blockedCount,
+    restrictedRecordCount
+  };
+  return {
+    snapshotId,
+    schemaVersion: OPTIMIZATION_SCHEMA_VERSION,
+    generatedAt: "2026-10-01T10:00:00.000Z",
+    totalRunsAnalyzed: runs.length,
+    totalSearchUnitsAnalyzed: searchUnitPerformances.length,
+    totalCanonicalLeadsObserved: canonicalRecords.length,
+    overallCoverage,
+    searchUnitPerformances,
+    recommendations,
+    warnings,
+    geographicBreakdown: geographicBreakdown.sort((a, b) => a.areaId.localeCompare(b.areaId)),
+    queryCategoryInsights: queryCategoryInsights.sort((a, b) => a.category.localeCompare(b.category)),
+    restrictedRecordsAggregate: {
+      restrictedCount,
+      excludedFromExport: restrictedCount,
+      complianceNote: restrictedCount > 0 ? `${restrictedCount} restricted candidate records were safely isolated and excluded from exportable counts in compliance with source firewall policy.` : "Zero restricted records observed."
+    }
+  };
+}
 
 // src/extension/metaAdapter.ts
 init_relevanceEngine();
@@ -21847,27 +23211,27 @@ function exportLeadsToCsv(leads, run) {
 var PIPELINE_VERSION = "1.0.0-phase14";
 
 // src/extension/ui/App.tsx
-var import_jsx_runtime15 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime16 = __toESM(require_jsx_runtime(), 1);
 var ExtensionApp = () => {
-  const [activeTab, setActiveTab] = (0, import_react8.useState)("RESEARCH");
-  const [selectedSource, setSelectedSource] = (0, import_react8.useState)("META");
-  const [pendingPlan, setPendingPlan] = (0, import_react8.useState)(null);
-  const [isPlanReviewOpen, setIsPlanReviewOpen] = (0, import_react8.useState)(false);
-  const [isSubmitting, setIsSubmitting] = (0, import_react8.useState)(false);
-  const [activeRun, setActiveRun] = (0, import_react8.useState)(null);
-  const [runStatusVM, setRunStatusVM] = (0, import_react8.useState)(null);
-  const [elapsedSeconds, setElapsedSeconds] = (0, import_react8.useState)(0);
-  const [rawLeads, setRawLeads] = (0, import_react8.useState)([]);
-  const [selectedRecordIds, setSelectedRecordIds] = (0, import_react8.useState)(/* @__PURE__ */ new Set());
-  const [inspectedLead, setInspectedLead] = (0, import_react8.useState)(null);
-  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = (0, import_react8.useState)(false);
-  const [isExportModalOpen, setIsExportModalOpen] = (0, import_react8.useState)(false);
-  const [isExporting, setIsExporting] = (0, import_react8.useState)(false);
-  const [historyRuns, setHistoryRuns] = (0, import_react8.useState)([]);
-  const [recoveryInfo, setRecoveryInfo] = (0, import_react8.useState)(null);
-  const [isDiagnosticsOpen, setIsDiagnosticsOpen] = (0, import_react8.useState)(false);
-  const [diagnosticsVM, setDiagnosticsVM] = (0, import_react8.useState)(null);
-  (0, import_react8.useEffect)(() => {
+  const [activeTab, setActiveTab] = (0, import_react9.useState)("RESEARCH");
+  const [selectedSource, setSelectedSource] = (0, import_react9.useState)("META");
+  const [pendingPlan, setPendingPlan] = (0, import_react9.useState)(null);
+  const [isPlanReviewOpen, setIsPlanReviewOpen] = (0, import_react9.useState)(false);
+  const [isSubmitting, setIsSubmitting] = (0, import_react9.useState)(false);
+  const [activeRun, setActiveRun] = (0, import_react9.useState)(null);
+  const [runStatusVM, setRunStatusVM] = (0, import_react9.useState)(null);
+  const [elapsedSeconds, setElapsedSeconds] = (0, import_react9.useState)(0);
+  const [rawLeads, setRawLeads] = (0, import_react9.useState)([]);
+  const [selectedRecordIds, setSelectedRecordIds] = (0, import_react9.useState)(/* @__PURE__ */ new Set());
+  const [inspectedLead, setInspectedLead] = (0, import_react9.useState)(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = (0, import_react9.useState)(false);
+  const [isExportModalOpen, setIsExportModalOpen] = (0, import_react9.useState)(false);
+  const [isExporting, setIsExporting] = (0, import_react9.useState)(false);
+  const [historyRuns, setHistoryRuns] = (0, import_react9.useState)([]);
+  const [recoveryInfo, setRecoveryInfo] = (0, import_react9.useState)(null);
+  const [isDiagnosticsOpen, setIsDiagnosticsOpen] = (0, import_react9.useState)(false);
+  const [diagnosticsVM, setDiagnosticsVM] = (0, import_react9.useState)(null);
+  (0, import_react9.useEffect)(() => {
     loadStorageState();
     const messageListener = (msg) => {
       if (msg.type === "RESEARCH_PROGRESS" && msg.payload?.run) {
@@ -21888,7 +23252,7 @@ var ExtensionApp = () => {
     };
   }, []);
   const isJobRunning = (status) => status === "COLLECTING" || status === "NAVIGATING" || status === "STARTING" || status === "NORMALIZING";
-  (0, import_react8.useEffect)(() => {
+  (0, import_react9.useEffect)(() => {
     let interval;
     if (isJobRunning(activeRun?.status)) {
       interval = setInterval(() => {
@@ -21964,7 +23328,7 @@ var ExtensionApp = () => {
     };
     setRunStatusVM(toRunStatusViewModel(mockRun, elapsedSeconds * 1e3));
   };
-  const resultsVM = (0, import_react8.useMemo)(() => {
+  const resultsVM = (0, import_react9.useMemo)(() => {
     return rawLeads.map((item, idx) => {
       if (isCanonicalLeadRecord(item)) {
         return toResultRowViewModel(item);
@@ -22200,7 +23564,7 @@ var ExtensionApp = () => {
       setIsDetailDrawerOpen(true);
     }
   };
-  const exportPreviewVM = (0, import_react8.useMemo)(() => {
+  const exportPreviewVM = (0, import_react9.useMemo)(() => {
     const selectedLeads = selectedRecordIds.size > 0 ? resultsVM.filter((r) => selectedRecordIds.has(r.entityId) || selectedRecordIds.has(r.recordId)) : resultsVM;
     const totalSelected = selectedLeads.length;
     const exportableCount = selectedLeads.filter((r) => r.isExportable && !r.isRestricted).length;
@@ -22217,13 +23581,22 @@ var ExtensionApp = () => {
       isExportReady: exportableCount > 0
     };
   }, [resultsVM, selectedRecordIds]);
-  const analyticsSnapshot = (0, import_react8.useMemo)(() => {
+  const analyticsSnapshot = (0, import_react9.useMemo)(() => {
     if (!rawLeads || rawLeads.length === 0) return null;
     return computeRunAnalytics(activeRun?.runId || "current-run", rawLeads, {
       sourceType: selectedSource,
       runTitle: activeRun?.queryScope?.rawInput || activeRun?.runId || "Current Run"
     });
   }, [rawLeads, activeRun, selectedSource]);
+  const optimizationSnapshot = (0, import_react9.useMemo)(() => {
+    if (!rawLeads || rawLeads.length === 0) return null;
+    const canonical = rawLeads.filter(isCanonicalLeadRecord);
+    return computeResearchOptimization(
+      historyRuns.length > 0 ? historyRuns : [{ runId: activeRun?.runId || "current-run", searchUnits: [] }],
+      canonical.length > 0 ? canonical : rawLeads,
+      []
+    );
+  }, [rawLeads, historyRuns, activeRun]);
   const handleConfirmExport = () => {
     if (isExporting) return;
     setIsExporting(true);
@@ -22255,8 +23628,8 @@ var ExtensionApp = () => {
       });
     }
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "min-w-[360px] w-full max-w-[800px] h-full min-h-[600px] max-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans select-none", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "min-w-[360px] w-full max-w-[800px] h-full min-h-[600px] max-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans select-none", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
       Header,
       {
         activeTab,
@@ -22265,8 +23638,8 @@ var ExtensionApp = () => {
         isRunning: isJobRunning(activeRun?.status)
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("main", { className: "flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 flex flex-col gap-3", children: [
-      recoveryInfo && activeTab !== "RUN_STATUS" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("main", { className: "flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 flex flex-col gap-3", children: [
+      recoveryInfo && activeTab !== "RUN_STATUS" && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
         RecoveryBanner,
         {
           recoveryInfo,
@@ -22282,7 +23655,7 @@ var ExtensionApp = () => {
           }
         }
       ),
-      activeTab === "RESEARCH" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { role: "tabpanel", id: "tabpanel-RESEARCH", "aria-labelledby": "tab-RESEARCH", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+      activeTab === "RESEARCH" && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { role: "tabpanel", id: "tabpanel-RESEARCH", "aria-labelledby": "tab-RESEARCH", children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
         ResearchConfigView,
         {
           selectedSource,
@@ -22291,7 +23664,7 @@ var ExtensionApp = () => {
           disabled: isSubmitting || isJobRunning(activeRun?.status)
         }
       ) }),
-      activeTab === "RUN_STATUS" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { role: "tabpanel", id: "tabpanel-RUN_STATUS", "aria-labelledby": "tab-RUN_STATUS", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+      activeTab === "RUN_STATUS" && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { role: "tabpanel", id: "tabpanel-RUN_STATUS", "aria-labelledby": "tab-RUN_STATUS", children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
         RunStatusView,
         {
           runStatus: runStatusVM,
@@ -22313,7 +23686,7 @@ var ExtensionApp = () => {
           }
         }
       ) }),
-      activeTab === "RESULTS" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { role: "tabpanel", id: "tabpanel-RESULTS", "aria-labelledby": "tab-RESULTS", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+      activeTab === "RESULTS" && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { role: "tabpanel", id: "tabpanel-RESULTS", "aria-labelledby": "tab-RESULTS", children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
         ResultsTableView,
         {
           results: resultsVM,
@@ -22332,17 +23705,21 @@ var ExtensionApp = () => {
           onOpenExportModal: () => setIsExportModalOpen(true)
         }
       ) }),
-      activeTab === "ANALYTICS" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { role: "tabpanel", id: "tabpanel-ANALYTICS", "aria-labelledby": "tab-ANALYTICS", className: "flex-1 flex flex-col min-h-0", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+      activeTab === "ANALYTICS" && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { role: "tabpanel", id: "tabpanel-ANALYTICS", "aria-labelledby": "tab-ANALYTICS", className: "flex-1 flex flex-col min-h-0", children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
         AnalyticsView,
         {
           currentSnapshot: analyticsSnapshot,
+          optimizationSnapshot,
           rawRecords: rawLeads,
           onNavigateToResultsWithFilter: () => {
             setActiveTab("RESULTS");
+          },
+          onPrefillResearchConfig: () => {
+            setActiveTab("RESEARCH");
           }
         }
       ) }),
-      activeTab === "HISTORY" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { role: "tabpanel", id: "tabpanel-HISTORY", "aria-labelledby": "tab-HISTORY", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+      activeTab === "HISTORY" && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { role: "tabpanel", id: "tabpanel-HISTORY", "aria-labelledby": "tab-HISTORY", children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
         HistoryView,
         {
           runs: historyRuns,
@@ -22353,7 +23730,7 @@ var ExtensionApp = () => {
           onClearHistory: handleClearHistory
         }
       ) }),
-      activeTab === "SETTINGS" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { role: "tabpanel", id: "tabpanel-SETTINGS", "aria-labelledby": "tab-SETTINGS", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+      activeTab === "SETTINGS" && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { role: "tabpanel", id: "tabpanel-SETTINGS", "aria-labelledby": "tab-SETTINGS", children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
         SettingsView,
         {
           onOpenDiagnostics: () => {
@@ -22373,7 +23750,7 @@ var ExtensionApp = () => {
         }
       ) })
     ] }),
-    pendingPlan && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+    pendingPlan && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
       PlanReviewModal,
       {
         isOpen: isPlanReviewOpen,
@@ -22383,7 +23760,7 @@ var ExtensionApp = () => {
         isSubmitting
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
       ResultDetailDrawer,
       {
         isOpen: isDetailDrawerOpen,
@@ -22391,7 +23768,7 @@ var ExtensionApp = () => {
         onClose: () => setIsDetailDrawerOpen(false)
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
       ExportModal,
       {
         isOpen: isExportModalOpen,
@@ -22401,7 +23778,7 @@ var ExtensionApp = () => {
         isExporting
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
       DiagnosticsDrawer,
       {
         isOpen: isDiagnosticsOpen,
@@ -22413,11 +23790,11 @@ var ExtensionApp = () => {
 };
 
 // src/extension/ui/index.tsx
-var import_jsx_runtime16 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime17 = __toESM(require_jsx_runtime(), 1);
 var rootElement = document.getElementById("root");
 if (rootElement) {
   import_client.default.createRoot(rootElement).render(
-    /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(import_react9.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(ExtensionApp, {}) })
+    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(import_react10.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(ExtensionApp, {}) })
   );
 }
 /*! Bundled license information:

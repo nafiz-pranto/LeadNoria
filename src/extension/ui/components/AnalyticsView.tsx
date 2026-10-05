@@ -17,23 +17,29 @@ import {
   QualityWarning
 } from '../../analytics/types.ts';
 import { compareRuns } from '../../analytics/analyticsEngine.ts';
+import { ResearchOptimizationView } from './ResearchOptimizationView.tsx';
+import { ResearchOptimizationSnapshot } from '../../optimization/types.ts';
 
 export interface AnalyticsViewProps {
   currentSnapshot: RunAnalyticsSnapshot | null;
+  optimizationSnapshot?: ResearchOptimizationSnapshot | null;
   historySnapshots?: RunAnalyticsSnapshot[];
   rawRecords?: any[];
   onSelectRun?: (runId: string) => void;
   onNavigateToResultsWithFilter?: (filter: AnalyticsFilterTarget) => void;
+  onPrefillResearchConfig?: (config: { area?: string; category?: string; query?: string }) => void;
 }
 
 export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   currentSnapshot,
+  optimizationSnapshot,
   historySnapshots = [],
   rawRecords = [],
   onSelectRun,
-  onNavigateToResultsWithFilter
+  onNavigateToResultsWithFilter,
+  onPrefillResearchConfig
 }) => {
-  const [activeSection, setActiveSection] = useState<'SUMMARY' | 'COVERAGE' | 'CONTACTS' | 'WEBSITE' | 'QUALIFICATION' | 'WARNINGS' | 'COMPARISON'>('SUMMARY');
+  const [activeSection, setActiveSection] = useState<'SUMMARY' | 'COVERAGE' | 'CONTACTS' | 'WEBSITE' | 'QUALIFICATION' | 'WARNINGS' | 'COMPARISON' | 'OPTIMIZATION'>('SUMMARY');
   const [compareRunId, setCompareRunId] = useState<string>('');
 
   // Selected compare snapshot
@@ -105,6 +111,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           { id: 'CONTACTS', label: 'Contacts' },
           { id: 'WEBSITE', label: 'Website' },
           { id: 'QUALIFICATION', label: 'Qualification' },
+          { id: 'OPTIMIZATION', label: 'Optimization' },
           { id: 'WARNINGS', label: `Warnings (${warnings.length})`, badge: warnings.length > 0 ? warnings.length : undefined },
           { id: 'COMPARISON', label: 'Compare' }
         ].map(sec => {
@@ -548,6 +555,17 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* SECTION 8: RESEARCH OPTIMIZATION & SATURATION INTELLIGENCE */}
+        {activeSection === 'OPTIMIZATION' && (
+          <div className="flex-1 flex flex-col min-h-0" role="tabpanel" aria-label="Research Optimization View">
+            <ResearchOptimizationView
+              snapshot={optimizationSnapshot || null}
+              onNavigateToResultsWithFilter={onNavigateToResultsWithFilter ? f => onNavigateToResultsWithFilter({ ...f, targetTab: 'RESULTS' } as any) : undefined}
+              onPrefillResearchConfig={onPrefillResearchConfig}
+            />
           </div>
         )}
       </div>
