@@ -65,7 +65,7 @@
        │      └── diagnostic_issues_v1 (Max 100)
        │
        └──► [Compliance Export Firewall]
-              ├── CSV Export (RFC-4180 escaped, Google fields dropped)
+              ├── CSV Export (Formula-injection mitigated, Google fields dropped)
               └── JSON Export (Restricted records quarantined)
 ```
 

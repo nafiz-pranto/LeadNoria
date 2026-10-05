@@ -65,7 +65,7 @@ Website signal enrichment operates within strict client-side safety guardrails:
 
 * **Zero `eval()` Policy:** Prohibits `eval()`, `new Function()`, and inline script strings.
 * **Zero Telemetry Guarantee:** Zero integration with remote telemetry platforms (no Mixpanel, Segment, Google Analytics, Sentry, or custom pingbacks). Diagnostic reports are user-initiated and exported locally.
-* **Spreadsheet Formula Injection Defense:** CSV exports escape command tokens (`=`, `+`, `-`, `@`) pursuant to RFC-4180 to prevent remote formula execution in spreadsheet software.
+* **Spreadsheet Formula Injection Defense:** CSV formula-injection mitigation is applied before CSV serialization, prefix-escaping command tokens (`=`, `+`, `-`, `@`) with a single quote to prevent arbitrary formula execution in spreadsheet viewers.
 * **XSS Sanitization:** All untrusted public strings (business names, categories, error text, user queries) are sanitized through HTML tag stripping and attribute escaping before rendering into the React DOM.
 
 ---
@@ -76,16 +76,16 @@ Website signal enrichment operates within strict client-side safety guardrails:
 |---|---|---|---|---|---|
 | **T1** | **Malicious Source Text** | Adversary inputs HTML/JS in ad creative or business title | DOM text node rendering via React, `sanitizePassiveText()` | Low | Tag-stripping regex enforced in normalization and UI |
 | **T2** | **Malicious Website Text** | Target domain injects payload into website body | Document parsing in sandboxed DOMParser; text content extraction only | Negligible | Script tags stripped prior to regex parsing |
-| **T3** | **Unsafe URL Schemes** | Website links `javascript:` or `data:` in href | `getSafeExternalUrl()` validates against `http:` / `https:` | Zero | All other protocols resolved to `undefined` or `#` |
+| **T3** | **Unsafe URL Schemes** | Website links `javascript:` or `data:` in href | `getSafeExternalUrl()` validates against `http:` / `https:` | Low residual risk; protected by layered URL scheme validation rejecting non-http(s) targets | All other protocols resolved to `undefined` or `#` |
 | **T4** | **SSRF via Website Probe** | User seeds private network address | Pre-request IP and hostname validation blocks loopback and RFC 1918 ranges | Low | Fetch dispatches only to public internet hostnames |
-| **T5** | **Cross-Site Scripting (XSS)** | Error message injects script in DiagnosticsView | `normalizeErrorMessage()` strips `<script>` tags; React escapes bindings | Zero | No `dangerouslySetInnerHTML` in codebase |
-| **T6** | **CSV Formula Injection** | Public business name begins with `=cmd|...` | RFC-4180 single-quote prefix escaping applied on export | Zero | Verified by dedicated export test suites |
+| **T5** | **Cross-Site Scripting (XSS)** | Error message injects script in DiagnosticsView | `normalizeErrorMessage()` strips `<script>` tags; React escapes bindings | Controlled residual risk; no known exploitable path identified under script-tag stripping and React auto-escaping | No `dangerouslySetInnerHTML` in codebase |
+| **T6** | **CSV Formula Injection** | Public business name begins with `=cmd|...` | Single-quote prefix escaping applied prior to CSV serialization | Controlled residual risk; formula-injection prefixes neutralized prior to CSV serialization | Verified by dedicated export test suites |
 | **T7** | **Malformed Local Storage** | Corrupted JSON or quota error in Chrome storage | Defensive JSON parsing with fallback defaults; error catching | Low | Corrupted diagnostic store returns empty collection safely |
 | **T8** | **Worker Suspension / Restart** | Service worker suspended mid-research run | Active state checkpointed to local storage; resume flag set | Low | Pipeline recovers from latest durable checkpoint |
 | **T9** | **Race Conditions / Locks** | Concurrent operations attempt conflicting writes | Mutex operation lock with 60-second automatic staleness eviction | Low | Prevents duplicate run execution |
-| **T10** | **Policy Laundering** | Merging Google Maps candidate into Meta record | Bi-directional policy inheritance marks canonical record restricted | Zero | Lineage tracks all contributing source families |
-| **T11** | **Restricted Data Persistence** | Google records accidentally written to history | StorageAdapter checks `isRestricted` flag before writing collections | Zero | Enforced at repository write boundary |
-| **T12** | **Restricted Data Export** | Google records exported via CSV / JSON | ExportPolicy projection drops non-exportable records and fields | Zero | Strict projection filtering enforced |
-| **T13** | **Diagnostic Data Leakage** | Diagnostic report exports PII or credentials | Diagnostic package sanitizes strings, strips PII, and bounds output | Zero | Verified by Phase 32 privacy test assertions |
+| **T10** | **Policy Laundering** | Merging Google Maps candidate into Meta record | Bi-directional policy inheritance marks canonical record restricted | Low residual risk; protected by layered lineage taint-propagation and policy inheritance | Lineage tracks all contributing source families |
+| **T11** | **Restricted Data Persistence** | Google records accidentally written to history | StorageAdapter checks `isRestricted` flag before writing collections | Controlled residual risk; blocked by StorageAdapter write boundary policy enforcement | Enforced at repository write boundary |
+| **T12** | **Restricted Data Export** | Google records exported via CSV / JSON | ExportPolicy projection drops non-exportable records and fields | Low residual risk; protected by strict ExportPolicy projection filtering | Strict projection filtering enforced |
+| **T13** | **Diagnostic Data Leakage** | Diagnostic report exports PII or credentials | Diagnostic package sanitizes strings, strips PII, and bounds output | Controlled residual risk; diagnostic reproduction package strictly sanitizes PII and normalizes dynamic identifiers | Verified by Phase 32 privacy test assertions |
 | **T14** | **Local Storage Saturation** | Unbounded diagnostic or run history fills quota | Hard limits: 100 runs, 100 issues; deterministic eviction of oldest/lowest | Low | Quota alerts triggered at 80% usage |
 | **T15** | **Browser Lifecycle Crashes** | Browser abruptly closed during crawler fetch | Timeouts on all network requests (10s page, 30s domain); no hung handles | Low | Operating system cleans up background sockets |

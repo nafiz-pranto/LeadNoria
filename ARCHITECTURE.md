@@ -34,7 +34,7 @@ LeadNoria is a client-side Chrome Extension designed to research, verify, corrob
 │    ├── Production Analytics Engine (Run-Level Distribution & Quality)                  │
 │    ├── Research Optimization Engine (Search Unit Yield, Coverage, Saturation)          │
 │    ├── Production Reliability Engine (Fingerprinting, Taxonomy, Diagnostics Store)     │
-│    └── Compliance Export Firewall (RFC-4180 Escaped Projections)                       │
+│    └── Compliance Export Firewall (Formula-Secured CSV & JSON Projections)             │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │  [Persistence Subsystem]                                                               │
 │    └── StorageAdapter (Chrome Storage Local / Extension Storage Subsystem)             │
@@ -109,7 +109,7 @@ LeadNoria is a client-side Chrome Extension designed to research, verify, corrob
 
 ### 2.13 Compliance Export Firewall (`src/extension/export/`)
 * *Status:* **PRODUCTION**
-* *Capabilities:* Enforces field-level export eligibility. Restricts unverified or contract-quarantined sources. Sanitizes CSV output against formula injection attacks (`=`, `+`, `-`, `@`) pursuant to RFC-4180.
+* *Capabilities:* Enforces field-level export eligibility. Restricts unverified or contract-quarantined sources. Provides CSV serialization with formula-injection mitigation (prefix-escaping `=`, `+`, `-`, `@` command characters) and JSON export through the existing ExportPolicy.
 
 ### 2.14 User Interface (`src/extension/ui/`)
 * *Status:* **PRODUCTION**
