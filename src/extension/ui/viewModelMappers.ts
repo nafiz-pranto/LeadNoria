@@ -59,12 +59,12 @@ export function canonicalLeadToResultRowViewModel(record: CanonicalLeadRecord): 
     record.canonicalBusinessName.value ||
     'Unknown Business';
 
-  const category = record.business.categories.value?.[0] || undefined;
-  const rawWeb = record.digital.verifiedWebsite.value || record.digital.domains.value?.[0];
+  const category = record.business?.categories?.value?.[0] || undefined;
+  const rawWeb = record.digital?.verifiedWebsite?.value || record.digital?.domains?.value?.[0];
   const safeWeb = getSafeExternalUrl(rawWeb);
 
-  const phones = record.contacts.phones || [];
-  const emails = record.contacts.emails || [];
+  const phones = record.contacts?.phones || [];
+  const emails = record.contacts?.emails || [];
   const hasPhone = phones.length > 0;
   const hasEmail = emails.length > 0;
   const phoneText = phones[0]?.preferredObservedValue || phones[0]?.normalizedValue || phones[0]?.value;
@@ -74,19 +74,19 @@ export function canonicalLeadToResultRowViewModel(record: CanonicalLeadRecord): 
   const sourceBadges: Array<{ sourceType: SourceType | string; label: string; isRestricted: boolean }> = [];
   const seenSources = new Set<string>();
 
-  if (record.policy.hasMetaLineage) {
+  if (record.policy?.hasMetaLineage) {
     sourceBadges.push(getSourceBadgeInfo('META'));
     seenSources.add('META');
   }
-  if (record.policy.hasWebsiteLineage) {
+  if (record.policy?.hasWebsiteLineage) {
     sourceBadges.push(getSourceBadgeInfo('WEBSITE'));
     seenSources.add('WEBSITE');
   }
-  if (record.policy.hasGoogleConsumerWebLineage) {
+  if (record.policy?.hasGoogleConsumerWebLineage) {
     sourceBadges.push(getSourceBadgeInfo('GOOGLE_MAPS'));
     seenSources.add('GOOGLE_MAPS');
   }
-  if (record.policy.hasUserProvidedLineage && !seenSources.has('USER_PROVIDED')) {
+  if (record.policy?.hasUserProvidedLineage && !seenSources.has('USER_PROVIDED')) {
     sourceBadges.push(getSourceBadgeInfo('USER_PROVIDED'));
     seenSources.add('USER_PROVIDED');
   }
@@ -98,20 +98,20 @@ export function canonicalLeadToResultRowViewModel(record: CanonicalLeadRecord): 
     }
   }
 
-  const primarySource: SourceType = record.policy.hasMetaLineage
+  const primarySource: SourceType = record.policy?.hasMetaLineage
     ? 'META'
-    : (record.policy.hasGoogleConsumerWebLineage ? 'GOOGLE_MAPS' : 'META');
+    : (record.policy?.hasGoogleConsumerWebLineage ? 'GOOGLE_MAPS' : 'META');
 
-  const isMixedProvenance = record.policy.overallProvenance === 'MIXED' || sourceBadges.length > 1;
+  const isMixedProvenance = record.policy?.overallProvenance === 'MIXED' || sourceBadges.length > 1;
 
   // Qualification State
-  const rawQState = (record.qualification.finalState || record.qualification.qualificationDecision?.status || 'NOT_STARTED').toUpperCase();
+  const rawQState = (record.qualification?.finalState || record.qualification?.qualificationDecision?.status || 'NOT_STARTED').toUpperCase();
   const qualificationState = (['QUALIFIED', 'NOT_QUALIFIED', 'UNCERTAIN', 'BLOCKED', 'NOT_STARTED'].includes(rawQState)
     ? rawQState
     : 'NOT_STARTED') as any;
 
   // Freshness
-  const freshnessEntries = Object.values(record.freshness.perSourceFreshness || {});
+  const freshnessEntries = Object.values(record.freshness?.perSourceFreshness || {});
   let overallFreshness: 'CURRENT' | 'STALE' | 'UNKNOWN' = 'UNKNOWN';
   if (freshnessEntries.some(f => f.state === 'CURRENT')) {
     overallFreshness = 'CURRENT';
@@ -135,14 +135,14 @@ export function canonicalLeadToResultRowViewModel(record: CanonicalLeadRecord): 
     contactCompletenessPercent: Math.round(q.contactCompleteness * 100) || 0,
     evidenceCoveragePercent: Math.round(q.evidenceCoverage * 100) || 0,
     corroborationCount: q.corroborationCount || (record.evidence?.corroborations?.length ?? 0) || (sourceBadges.length > 1 ? sourceBadges.length : 1),
-    contradictionCount: q.contradictionCount || record.evidence.conflicts?.length || 0
+    contradictionCount: q.contradictionCount || record.evidence?.conflicts?.length || 0
   };
 
   // Data signals
   const dataSignals = {
-    websiteVerified: Boolean(record.digital.verifiedWebsite.value),
+    websiteVerified: Boolean(record.digital?.verifiedWebsite?.value),
     contactAvailable: hasPhone || hasEmail,
-    publicPersonAvailable: (record.people.publicPeople || []).length > 0,
+    publicPersonAvailable: (record.people?.publicPeople || []).length > 0,
     advertisingEvidence: Boolean(record.sourceSignals?.metaEvidence && record.sourceSignals.metaEvidence.adCount > 0),
     freshness: overallFreshness,
     freshnessLabel: toFriendlyStatus(overallFreshness)
@@ -158,27 +158,27 @@ export function canonicalLeadToResultRowViewModel(record: CanonicalLeadRecord): 
     entityId,
     displayName: sanitizePassiveText(displayName, 120),
     primarySource,
-    provenance: record.policy.overallProvenance,
+    provenance: record.policy?.overallProvenance ?? 'SINGLE_SOURCE',
     isMixedProvenance,
     relevanceDecision: 'RELEVANT',
-    websiteState: record.digital.verifiedWebsite.value ? 'VERIFIED_BUSINESS_WEBSITE' : (rawWeb ? 'WEBSITE_PRESENT_UNVERIFIED' : 'NOT_OBSERVED'),
+    websiteState: record.digital?.verifiedWebsite?.value ? 'VERIFIED_BUSINESS_WEBSITE' : (rawWeb ? 'WEBSITE_PRESENT_UNVERIFIED' : 'NOT_OBSERVED'),
     websiteUrl: safeWeb || undefined,
     contactSummary: {
       hasPhone,
       hasEmail,
-      hasAddress: (record.location.addresses.value || []).length > 0,
-      hasContactForm: (record.contacts.contactForms || []).length > 0,
-      hasSocialLinks: (record.digital.socialProfiles.value || []).length > 0,
+      hasAddress: (record.location?.addresses?.value || []).length > 0,
+      hasContactForm: (record.contacts?.contactForms || []).length > 0,
+      hasSocialLinks: (record.digital?.socialProfiles?.value || []).length > 0,
       phoneText,
       emailText
     },
     qualificationState,
     qualificationScore: undefined, // no opaque scores exposed
     geographicContext: locationDisplay,
-    isRestricted: record.policy.isRestricted,
-    isExportable: record.policy.exportEligible,
-    isPersistable: record.policy.persistenceEligible,
-    restrictionBadgeText: record.policy.isRestricted ? (record.policy.restrictionBasis || 'RESTRICTED_SOURCE') : undefined,
+    isRestricted: Boolean(record.policy?.isRestricted),
+    isExportable: Boolean(record.policy?.exportEligible ?? true),
+    isPersistable: Boolean(record.policy?.persistenceEligible ?? true),
+    restrictionBadgeText: record.policy?.isRestricted ? (record.policy?.restrictionBasis || 'RESTRICTED_SOURCE') : undefined,
     corroborationCount: qualityMetrics.corroborationCount,
 
     // Phase 25 Unified UI fields
@@ -188,7 +188,7 @@ export function canonicalLeadToResultRowViewModel(record: CanonicalLeadRecord): 
     qualityMetrics,
     friendlyQualificationState: toFriendlyStatus(qualificationState),
     friendlyFreshnessState: toFriendlyStatus(overallFreshness),
-    lastObservedText: record.freshness.lastObservedAt,
+    lastObservedText: record.freshness?.lastObservedAt,
     canonicalRecord: record
   };
 }
@@ -201,7 +201,7 @@ export function canonicalLeadToResultDetailViewModel(record: CanonicalLeadRecord
 
   // 1. Identity Details
   const identityDetails = {
-    canonicalBusinessName: record.canonicalBusinessName.preferredObservedValue || record.canonicalBusinessName.value || 'Unknown Business',
+    canonicalBusinessName: record.canonicalBusinessName?.preferredObservedValue || record.canonicalBusinessName?.value || 'Unknown Business',
     aliases: record.aliases || [],
     entityType: record.entityType,
     entityTypeLabel: toFriendlyStatus(record.entityType),
@@ -215,35 +215,35 @@ export function canonicalLeadToResultDetailViewModel(record: CanonicalLeadRecord
 
   // 2. Business Details
   const businessDetails = {
-    categories: record.business.categories.value || [],
-    services: record.business.services.value || [],
-    description: record.business.description.value || undefined,
-    hours: record.business.businessHours.value || undefined,
-    serviceAreas: record.business.serviceAreas.value || [],
-    businessStatus: toFriendlyStatus(record.business.businessStatus.value)
+    categories: record.business?.categories?.value || [],
+    services: record.business?.services?.value || [],
+    description: record.business?.description?.value || undefined,
+    hours: record.business?.businessHours?.value || undefined,
+    serviceAreas: record.business?.serviceAreas?.value || [],
+    businessStatus: toFriendlyStatus(record.business?.businessStatus?.value)
   };
 
   // 3. Location Details
   const locationDetails = {
-    address: record.location.normalizedAddress.value || record.location.addresses.value?.[0],
-    city: record.location.city.value,
-    region: record.location.region.value,
-    country: record.location.country.value,
-    coordinates: record.location.latitude && record.location.longitude ? `${record.location.latitude}, ${record.location.longitude}` : undefined,
-    addresses: record.location.addresses.value || []
+    address: record.location?.normalizedAddress?.value || record.location?.addresses?.value?.[0],
+    city: record.location?.city?.value,
+    region: record.location?.region?.value,
+    country: record.location?.country?.value,
+    coordinates: record.location?.latitude && record.location?.longitude ? `${record.location.latitude}, ${record.location.longitude}` : undefined,
+    addresses: record.location?.addresses?.value || []
   };
 
   // 4. Digital Presence
   const digitalPresence = {
-    websiteUrl: getSafeExternalUrl(record.digital.verifiedWebsite.value) || undefined,
-    domain: record.digital.domains.value?.[0],
-    cms: record.digital.cms,
-    booking: record.digital.booking,
-    ecommerce: record.digital.ecommerce,
-    chat: record.digital.chat,
-    analytics: record.digital.analytics,
-    technologySignals: (record.digital.technologySignals || []).map(t => `${t.name} (${t.category})`),
-    socialLinks: (record.digital.socialProfiles.value || []).map(s => ({
+    websiteUrl: getSafeExternalUrl(record.digital?.verifiedWebsite?.value) || undefined,
+    domain: record.digital?.domains?.value?.[0],
+    cms: record.digital?.cms,
+    booking: record.digital?.booking,
+    ecommerce: record.digital?.ecommerce,
+    chat: record.digital?.chat,
+    analytics: record.digital?.analytics,
+    technologySignals: (record.digital?.technologySignals || []).map(t => `${t.name} (${t.category})`),
+    socialLinks: (record.digital?.socialProfiles?.value || []).map(s => ({
       platform: s.platform,
       url: getSafeExternalUrl(s.url) || '#'
     }))
@@ -251,7 +251,7 @@ export function canonicalLeadToResultDetailViewModel(record: CanonicalLeadRecord
 
   // 5. Contacts Details
   const contactsDetails = {
-    emails: (record.contacts.emails || []).map(e => ({
+    emails: (record.contacts?.emails || []).map(e => ({
       address: e.value,
       classification: toFriendlyStatus(e.category),
       source: toFriendlyStatus(e.provenance),
@@ -260,7 +260,7 @@ export function canonicalLeadToResultDetailViewModel(record: CanonicalLeadRecord
       hasConflict: e.hasConflict,
       alternatives: e.alternatives
     })),
-    phones: (record.contacts.phones || []).map(p => ({
+    phones: (record.contacts?.phones || []).map(p => ({
       number: p.value,
       type: toFriendlyStatus(p.category),
       source: toFriendlyStatus(p.provenance),
@@ -269,11 +269,11 @@ export function canonicalLeadToResultDetailViewModel(record: CanonicalLeadRecord
       hasConflict: p.hasConflict,
       alternatives: p.alternatives
     })),
-    forms: record.contacts.contactForms || []
+    forms: record.contacts?.contactForms || []
   };
 
   // 6. People Details
-  const peopleDetails = (record.people.publicPeople || []).map(p => ({
+  const peopleDetails = (record.people?.publicPeople || []).map(p => ({
     name: p.name,
     canonicalName: p.canonicalName,
     titles: p.titles || [],
@@ -281,11 +281,11 @@ export function canonicalLeadToResultDetailViewModel(record: CanonicalLeadRecord
     phones: p.phones || [],
     linkedInUrl: getSafeExternalUrl(p.linkedInUrl) || undefined,
     isRestricted: p.isRestricted,
-    associatedContacts: [...p.emails, ...p.phones]
+    associatedContacts: [...(p.emails || []), ...(p.phones || [])]
   }));
 
   // 7. Qualification Details (Phase 23 Reason Graph Integration)
-  const qDec = record.qualification.qualificationDecision;
+  const qDec = record.qualification?.qualificationDecision;
   const whyReasons: Array<{ label: string; passed: boolean; explanation?: string }> = [];
   const potentialIssues: Array<{ label: string; explanation?: string }> = [];
 
@@ -322,7 +322,7 @@ export function canonicalLeadToResultDetailViewModel(record: CanonicalLeadRecord
   }
 
   // Contradiction potential issues
-  for (const conf of record.evidence.conflicts || []) {
+  for (const conf of record.evidence?.conflicts || []) {
     potentialIssues.push({
       label: `Conflicting ${conf.field}`,
       explanation: conf.reason || 'Different sources observed conflicting values.'
@@ -332,9 +332,9 @@ export function canonicalLeadToResultDetailViewModel(record: CanonicalLeadRecord
   const qualificationDetails = {
     finalState: row.qualificationState,
     friendlyFinalState: toFriendlyStatus(row.qualificationState),
-    profileId: record.qualification.qualificationProfileId,
+    profileId: record.qualification?.qualificationProfileId,
     profileName: qDec?.profileId || 'Commercial Qualification Profile',
-    explanation: record.qualification.explanation || (qDec as any)?.summaryExplanation || 'Qualification evaluated from verified public signals.',
+    explanation: record.qualification?.explanation || (qDec as any)?.summaryExplanation || 'Qualification evaluated from verified public signals.',
     whyReasons,
     potentialIssues,
     criteria
@@ -350,23 +350,23 @@ export function canonicalLeadToResultDetailViewModel(record: CanonicalLeadRecord
   }> = [];
 
   if (row.contactSummary.phoneText) {
-    const ph = record.contacts.phones[0];
+    const ph = record.contacts?.phones?.[0];
     fieldEvidence.push({
       fieldName: 'Business Phone',
       value: row.contactSummary.phoneText,
       sources: ph ? ph.corroboratedBySources.map(String) : [row.primarySource],
-      observedAt: ph?.lastObservedAt || record.updatedAt,
+      observedAt: ph?.lastObservedAt || record.updatedAt || '',
       evidenceNote: ph?.isCorroborated ? 'Corroborated across multiple public sources' : 'Observed from public source'
     });
   }
 
   if (row.contactSummary.emailText) {
-    const em = record.contacts.emails[0];
+    const em = record.contacts?.emails?.[0];
     fieldEvidence.push({
       fieldName: 'Business Email',
       value: row.contactSummary.emailText,
       sources: em ? em.corroboratedBySources.map(String) : [row.primarySource],
-      observedAt: em?.lastObservedAt || record.updatedAt,
+      observedAt: em?.lastObservedAt || record.updatedAt || '',
       evidenceNote: em?.isCorroborated ? 'Corroborated across multiple public sources' : 'Publicly listed business email'
     });
   }
@@ -375,13 +375,13 @@ export function canonicalLeadToResultDetailViewModel(record: CanonicalLeadRecord
     fieldEvidence.push({
       fieldName: 'Website',
       value: row.websiteUrl,
-      sources: record.digital.verifiedWebsite.corroboratedBySources.map(String),
-      observedAt: record.digital.verifiedWebsite.lastObservedAt || record.updatedAt,
+      sources: (record.digital?.verifiedWebsite?.corroboratedBySources || []).map(String),
+      observedAt: record.digital?.verifiedWebsite?.lastObservedAt || record.updatedAt || '',
       evidenceNote: 'Verified public domain'
     });
   }
 
-  const conflicts = (record.evidence.conflicts || []).map(c => ({
+  const conflicts = (record.evidence?.conflicts || []).map(c => ({
     field: c.field,
     description: c.reason,
     conflictingValues: (c.conflictingValues || []).map(cv => ({
@@ -391,7 +391,7 @@ export function canonicalLeadToResultDetailViewModel(record: CanonicalLeadRecord
     }))
   }));
 
-  const evidenceItems: EvidenceItemViewModel[] = (record.evidence.evidenceReferences || []).map((ev, idx) => ({
+  const evidenceItems: EvidenceItemViewModel[] = (record.evidence?.evidenceReferences || []).map((ev, idx) => ({
     id: ev.evidenceId || `ev_${idx + 1}`,
     fact: ev.factSummary || 'Observed fact',
     sourceFamily: ev.sourceType,
@@ -404,13 +404,13 @@ export function canonicalLeadToResultDetailViewModel(record: CanonicalLeadRecord
   }));
 
   const evidenceDetails = {
-    totalCount: record.evidence.evidencePack?.totalEvidenceCount || evidenceItems.length,
+    totalCount: record.evidence?.evidencePack?.totalEvidenceCount || evidenceItems.length,
     items: evidenceItems.map(e => ({
       id: e.id,
       fact: e.fact,
       source: e.sourceFamily,
       sourceUrl: e.pageOrSourceReference,
-      observedAt: record.updatedAt,
+      observedAt: record.updatedAt || '',
       isRestricted: e.isRestricted
     })),
     fieldEvidence,
@@ -418,7 +418,7 @@ export function canonicalLeadToResultDetailViewModel(record: CanonicalLeadRecord
   };
 
   // 9. Freshness Details
-  const perSource = Object.entries(record.freshness.perSourceFreshness || {}).map(([src, val]) => ({
+  const perSource = Object.entries(record.freshness?.perSourceFreshness || {}).map(([src, val]) => ({
     source: toFriendlyStatus(src),
     state: val.state,
     friendlyState: toFriendlyStatus(val.state),
@@ -429,8 +429,8 @@ export function canonicalLeadToResultDetailViewModel(record: CanonicalLeadRecord
   const freshnessDetails = {
     overallState: row.dataSignals!.freshness,
     friendlyLabel: toFriendlyStatus(row.dataSignals!.freshness),
-    firstObservedAt: record.freshness.firstObservedAt,
-    lastObservedAt: record.freshness.lastObservedAt,
+    firstObservedAt: record.freshness?.firstObservedAt,
+    lastObservedAt: record.freshness?.lastObservedAt,
     perSource
   };
 
@@ -441,8 +441,8 @@ export function canonicalLeadToResultDetailViewModel(record: CanonicalLeadRecord
     contradictionFlags: conflicts.map(c => c.field),
     primarySource: row.primarySource,
     contributingSources: row.sourceBadges?.map(b => b.sourceType as SourceType) || [row.primarySource],
-    provenanceLineage: record.policy.overallProvenance,
-    provenanceClassification: record.policy.overallProvenance === 'MIXED' ? 'MIXED' : 'DERIVED',
+    provenanceLineage: record.policy?.overallProvenance ?? 'SINGLE_SOURCE',
+    provenanceClassification: record.policy?.overallProvenance === 'MIXED' ? 'MIXED' : 'DERIVED',
     relevanceDecision: row.relevanceDecision,
     relevanceConfidence: 'HIGH',
     relevanceExplanation: 'Entity matches research requirements',

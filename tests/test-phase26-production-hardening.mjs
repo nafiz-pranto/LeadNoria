@@ -149,7 +149,7 @@ const srcManifest = JSON.parse(fs.readFileSync(path.join(rootDir, 'src/extension
 const builtManifest = JSON.parse(fs.readFileSync(path.join(rootDir, 'extension/manifest.json'), 'utf8'));
 
 try {
-  assert.ok(['1.2.0', '1.2.1', '1.3.0', '1.4.0'].includes(pkgJson.version));
+  assert.ok(['1.2.0', '1.2.1', '1.3.0', '1.4.0', '1.5.0'].includes(pkgJson.version));
   assert.ok(/^\d+\.\d+\.\d+$/.test(pkgJson.version));
   pass(`Test 1: package.json version is authoritative immutable release version ${pkgJson.version}`);
 } catch (e) { fail('Test 1', e); }
@@ -1397,7 +1397,7 @@ try {
 
 try {
   const manifestInExt = JSON.parse(fs.readFileSync(path.join(extDir, 'manifest.json'), 'utf8'));
-  assert.ok(['1.2.0', '1.2.1', '1.3.0', '1.4.0'].includes(manifestInExt.version));
+  assert.ok(['1.2.0', '1.2.1', '1.3.0', '1.4.0', '1.5.0'].includes(manifestInExt.version));
   assert.strictEqual(manifestInExt.manifest_version, 3);
   pass(`Test 115: Built manifest inside packaged directory is valid JSON with version ${manifestInExt.version}`);
 } catch (e) { fail('Test 115', e); }

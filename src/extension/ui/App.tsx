@@ -57,6 +57,8 @@ import {
 import { exportLeadsToCsv } from '../metaAdapter.ts';
 import { ExtensionResearchRun, ExtensionLead, StartResearchPayload } from '../types.ts';
 import { PIPELINE_VERSION } from '../pipeline/pipelineTypes.ts';
+import { computeReliabilityMetrics, evaluateOperationalGuardrails, aggregateProductionIssues } from '../reliability/reliabilityEngine.ts';
+import { ReliabilityMetrics, OperationalGuardrailAlert, AggregatedIssue, StorageHealthSummary, IssueResolutionState } from '../reliability/types.ts';
 
 export const ExtensionApp: React.FC = () => {
   // Navigation State
@@ -90,6 +92,23 @@ export const ExtensionApp: React.FC = () => {
   // Technical Diagnostics State
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState(false);
   const [diagnosticsVM, setDiagnosticsVM] = useState<DiagnosticsViewModel | null>(null);
+
+  // Phase 32: Production Reliability & Diagnostics State
+  const [reliabilityMetrics, setReliabilityMetrics] = useState<ReliabilityMetrics>({
+    totalRuns: 0, successfulRuns: 0, failedRuns: 0, partialRuns: 0, cancelledRuns: 0,
+    recoveryCount: 0, retryCount: 0, exportSuccesses: 0, exportFailures: 0,
+    persistenceFailures: 0, websiteTimeoutCount: 0, acquisitionFailureCount: 0,
+    averageRunDurationMs: 0, p95RunDurationMs: 0,
+    runSuccessRate: 100.0, issueRatePerRun: 0.0, recoveryRate: 100.0,
+    sampleSufficiency: 'NO_DATA'
+  });
+  const [guardrailAlerts, setGuardrailAlerts] = useState<OperationalGuardrailAlert[]>([]);
+  const [aggregatedIssues, setAggregatedIssues] = useState<AggregatedIssue[]>([]);
+  const [storageHealth, setStorageHealth] = useState<StorageHealthSummary>({
+    collectionCounts: {}, estimatedBytes: 0,
+    quotaLimitBytes: 50 * 1024 * 1024,
+    quotaUsagePercent: 0.0, isPressureHigh: false, retentionPolicies: {}
+  });
 
   // Initial Sync with Chrome Runtime and Storage
   useEffect(() => {
@@ -168,6 +187,11 @@ export const ExtensionApp: React.FC = () => {
         const hist = (res.researchHistory || res.meta_scraper_history) as ExtensionResearchRun[] | undefined;
         if (Array.isArray(hist)) {
           setHistoryRuns(hist);
+          // Phase 32: Recompute reliability metrics from history
+          const metrics = computeReliabilityMetrics(hist);
+          const alerts = evaluateOperationalGuardrails(metrics);
+          setReliabilityMetrics(metrics);
+          setGuardrailAlerts(alerts);
         }
       });
     }
@@ -564,8 +588,27 @@ export const ExtensionApp: React.FC = () => {
     if (typeof chrome !== 'undefined' && chrome.storage?.local) {
       chrome.storage.local.set({ researchHistory: [] }, () => {
         setHistoryRuns([]);
+        // Phase 32: Reset reliability metrics when history cleared
+        const emptyMetrics = computeReliabilityMetrics([]);
+        setReliabilityMetrics(emptyMetrics);
+        setGuardrailAlerts([]);
       });
     }
+  };
+
+  // Phase 32: Diagnostic resolution update handler
+  const handleUpdateIssueResolution = (fingerprint: string, state: IssueResolutionState) => {
+    setAggregatedIssues(prev =>
+      prev.map(issue =>
+        issue.fingerprint === fingerprint ? { ...issue, resolutionState: state } : issue
+      )
+    );
+  };
+
+  // Phase 32: Clear diagnostic history handler (never clears research data)
+  const handleClearDiagnostics = () => {
+    setAggregatedIssues([]);
+    // In production this would call diagnosticsRepository.clearDiagnosticHistory()
   };
 
   return (
@@ -705,6 +748,13 @@ export const ExtensionApp: React.FC = () => {
                 setIsDiagnosticsOpen(true);
               }}
               onClearLocalHistory={handleClearHistory}
+              version="1.5.0"
+              reliabilityMetrics={reliabilityMetrics}
+              guardrailAlerts={guardrailAlerts}
+              issues={aggregatedIssues}
+              storageHealth={storageHealth}
+              onUpdateIssueResolution={handleUpdateIssueResolution}
+              onClearDiagnostics={handleClearDiagnostics}
             />
           </div>
         )}

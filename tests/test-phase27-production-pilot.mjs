@@ -1975,7 +1975,7 @@ try {
   const manifestPath = path.join(rootDir, 'extension', 'manifest.json');
   assert.ok(fs.existsSync(manifestPath), 'extension/manifest.json must exist');
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-  assert.ok(['1.2.1', '1.3.0', '1.4.0'].includes(manifest.version));
+  assert.ok(['1.2.1', '1.3.0', '1.4.0', '1.5.0'].includes(manifest.version));
   pass(`Built extension manifest declares release version ${manifest.version}`);
 } catch (e) { fail('Test 147 failed', e); }
 
@@ -2041,7 +2041,7 @@ try {
   assert.ok(fs.existsSync(extZip), 'extension.zip must exist');
   const hash121 = crypto.createHash('sha256').update(fs.readFileSync(v121Zip)).digest('hex');
   const hashExt = crypto.createHash('sha256').update(fs.readFileSync(extZip)).digest('hex');
-  assert.ok(hash121 === hashExt || fs.existsSync(path.join(rootDir, 'dist', 'leadnoria-v1.3.0.zip')) || fs.existsSync(path.join(rootDir, 'dist', 'leadnoria-v1.4.0.zip')), 'Release candidate v1.2.1 and extension.zip must match or progress to v1.3.0/v1.4.0');
+  assert.ok(hash121 === hashExt || fs.existsSync(path.join(rootDir, 'dist', 'leadnoria-v1.3.0.zip')) || fs.existsSync(path.join(rootDir, 'dist', 'leadnoria-v1.4.0.zip')) || fs.existsSync(path.join(rootDir, 'dist', 'leadnoria-v1.5.0.zip')), 'Release candidate v1.2.1 and extension.zip must match or progress to v1.3.0/v1.4.0');
   pass('Release candidate dist/leadnoria-v1.2.1.zip exists and v1.2.0/v1.3.0/v1.4.0 archives are verified');
 } catch (e) { fail('Test 154 failed', e); }
 
@@ -2057,7 +2057,7 @@ try {
 try {
   // Test 156: Package.json version matches manifest 1.2.1
   const pkg = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8'));
-  assert.ok(['1.2.1', '1.3.0', '1.4.0'].includes(pkg.version));
+  assert.ok(['1.2.1', '1.3.0', '1.4.0', '1.5.0'].includes(pkg.version));
   pass(`Package metadata version synchronized with manifest version ${pkg.version}`);
 } catch (e) { fail('Test 156 failed', e); }
 

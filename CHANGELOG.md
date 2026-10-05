@@ -2,6 +2,22 @@
 
 All notable changes to the **LeadNoria** Chrome Extension are documented in this file.
 
+## [1.5.0] - 2026-10-06
+
+### Added
+- **Production Reliability & Diagnostics Engine:** Typed local issue model (`ProductionIssue`), deterministic issue fingerprinting (`generateIssueFingerprint`), transparent 13-category error taxonomy (`ERROR_TAXONOMY`), and O(N) issue aggregation (`aggregateProductionIssues`) (`src/extension/reliability/`).
+- **Local Diagnostics Persistence (`DiagnosticsRepository`):** Bounded local persistence using existing `StorageAdapter` with deterministic pruning (lowest occurrence -> oldest last seen -> fingerprint tie-breaker) capped at 100 distinct issues.
+- **Operational Reliability Metrics & Internal Guardrails:** Evidence-derived mathematical computation of `runSuccessRate`, `failureRate`, `partialRate`, `recoveryRate`, `retryRate`, `averageRunDurationMs`, and `p95RunDurationMs` with sample sufficiency ratings and descriptive operational alerts (`evaluateOperationalGuardrails`).
+- **Diagnostics UI (`DiagnosticsView`):** Fully accessible (WCAG AA) diagnostics dashboard embedded inside Settings tab featuring operational metrics, active guardrail alerts, filterable issues table, storage health meter, manual diagnostic report export, and safe diagnostic history clearing.
+- **Defensive View-Model Hardening:** Comprehensive optional chaining and nullish fallback across `canonicalLeadToResultRowViewModel` and `canonicalLeadToResultDetailViewModel` preventing unhandled exceptions on sparse or corrupted records.
+
+### Security & Governance
+- **Zero Telemetry Guarantee:** Strictly local-first diagnostics; zero remote telemetry, zero third-party analytics (no Mixpanel, Segment, or GA), zero tracking beacons.
+- **Sanitized Diagnostic Reproduction Packages:** Diagnostic exports strip all PII, emails, phones, tokens, and query strings; Google Maps contract firewall strictly enforced (accounting count only, no raw Google data).
+- **Storage Pressure Management:** Bounded diagnostic retention without risking lead record data or active run state.
+
+---
+
 ## [1.4.0] - 2026-10-06
 
 ### Added

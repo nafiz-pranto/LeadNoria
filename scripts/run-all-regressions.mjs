@@ -29,7 +29,8 @@ const suites = [
   { phase: 'Phase 28', file: 'tests/test-phase28-release-operations.mjs', baseline: 118 },
   { phase: 'Phase 29', file: 'tests/test-phase29-production-validation.mjs', baseline: 160 },
   { phase: 'Phase 30', file: 'tests/test-phase30-production-analytics.mjs', baseline: 180 },
-  { phase: 'Phase 31', file: 'tests/test-phase31-research-optimization.mjs', baseline: 216 }
+  { phase: 'Phase 31', file: 'tests/test-phase31-research-optimization.mjs', baseline: 216 },
+  { phase: 'Phase 32', file: 'tests/test-phase32-reliability-growth-readiness.mjs', baseline: 222 }
 ];
 
 console.log('Starting full suite execution...');

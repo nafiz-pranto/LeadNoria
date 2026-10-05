@@ -2,14 +2,14 @@
   "product": "LeadNoria",
   "tagline": "Discover. Verify. Connect.",
   "descriptor": "Business lead research from real public signals.",
-  "version": "1.4.0",
-  "releaseCandidate": "Production Verified Release Candidate Build (Phase 31 Research Optimization & Saturation Intelligence)",
+  "version": "1.5.0",
+  "releaseCandidate": "Production Verified Release Candidate Build (Phase 32 Production Feedback & Reliability)",
   "releaseArtifact": {
-    "path": "dist/leadnoria-v1.4.0.zip",
-    "byteSize": 339489,
-    "sha256": "18d0d38a3b70bf9e699d0dc7a64a63ebe2845b39630ce83d4a4637d826d70881",
-    "fileCount": 14,
-    "manifestSha256": "ce2dd0e7b10d9e464f0b521e090ea7f4a8299a81aa53a18e591d17272386eba3"
+    "path": "dist/leadnoria-v1.5.0.zip",
+    "byteSize": 348474,
+    "sha256": "1a55ad80ed3e400b88c7f6d9c36d3dcbccd697737df39cb95c4e0dd4c11c4544",
+    "fileCount": 13,
+    "manifestSha256": "b228fa22542404cbe44b1753f1d3371356396eefbc057de41e76bfb7e331faa3"
   },
   "historicalPreservedBaselines": [
     {
@@ -48,17 +48,25 @@
       "sha256": "ff05215288e3723367ed8951fc16bb674ec323deaf5a2fb3cfb590a14edb0df2",
       "status": "PRESERVED_HISTORICAL_RELEASE",
       "manifestSha256": "af78fd566c5a2ab3211d96509dcf2e96a69280af7262dd37e769d707287742ef"
+    },
+    {
+      "version": "1.4.0",
+      "path": "dist/leadnoria-v1.4.0.zip",
+      "byteSize": 339489,
+      "sha256": "18d0d38a3b70bf9e699d0dc7a64a63ebe2845b39630ce83d4a4637d826d70881",
+      "status": "IMMUTABLE_PRESERVED_HISTORICAL_RELEASE",
+      "manifestSha256": "ce2dd0e7b10d9e464f0b521e090ea7f4a8299a81aa53a18e591d17272386eba3"
     }
   ],
   "buildCommand": "node scripts/build-extension.mjs",
   "typecheckCommand": "node node_modules/typescript/bin/tsc --noEmit",
   "regressionCommand": "node scripts/run-all-regressions.mjs",
   "testAccounting": {
-    "totalHistoricalAndCurrentTests": 2446,
-    "totalPassed": 2446,
+    "totalHistoricalAndCurrentTests": 2732,
+    "totalPassed": 2732,
     "totalFailed": 0,
     "totalSkipped": 0,
-    "suiteCount": 23
+    "suiteCount": 24
   },
   "runtimeEnvironment": {
     "nodeVersion": "v22.14.0",

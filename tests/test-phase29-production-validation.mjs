@@ -1695,7 +1695,7 @@ try {
 
 try {
   const metadata = JSON.parse(fs.readFileSync(path.join(rootDir, 'LEADNORIA-RELEASE-METADATA.json'), 'utf8'));
-  assert.ok(['1.2.1', '1.3.0', '1.4.0'].includes(metadata.version));
+  assert.ok(['1.2.1', '1.3.0', '1.4.0', '1.5.0'].includes(metadata.version));
   assert.ok(metadata.releaseArtifact.sha256 === AUTHORITATIVE_ZIP_HASH || metadata.historicalPreservedBaselines?.some(b => b.version === '1.2.1' && b.sha256 === AUTHORITATIVE_ZIP_HASH));
   pass(157, 'LEADNORIA-RELEASE-METADATA.json declares authoritative build and environment info');
 } catch (e) { fail(157, 'Metadata json check failed', e); }

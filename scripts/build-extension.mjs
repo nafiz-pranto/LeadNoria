@@ -108,7 +108,7 @@ const manifest = {
   manifest_version: 3,
   name: "LeadNoria",
   short_name: "LeadNoria",
-  version: "1.4.0",
+  version: "1.5.0",
   description: "Business lead research from real public signals.",
   permissions: [
     "storage",
@@ -310,10 +310,17 @@ const releaseZipPath5 = path.join(rootDir, 'dist/leadnoria-v1.2.0.zip');
 const releaseZipPath6 = path.join(rootDir, 'dist/leadnoria-v1.2.1.zip');
 const releaseZipPath7 = path.join(rootDir, 'dist/leadnoria-v1.3.0.zip');
 const releaseZipPath8 = path.join(rootDir, 'dist/leadnoria-v1.4.0.zip');
+const releaseZipPath9 = path.join(rootDir, 'dist/leadnoria-v1.5.0.zip');
 
 await createZipArchive(outDir, releaseZipPath1);
-await createZipArchive(outDir, releaseZipPath8);
+await createZipArchive(outDir, releaseZipPath9);
 
+// v1.4.0 is IMMUTABLE — never overwrite
+if (!fs.existsSync(releaseZipPath8)) {
+  await createZipArchive(outDir, releaseZipPath8);
+} else {
+  console.log('[build-extension] Preserved IMMUTABLE V1.4.0 release archive: dist/leadnoria-v1.4.0.zip');
+}
 if (!fs.existsSync(releaseZipPath7)) {
   await createZipArchive(outDir, releaseZipPath7);
 } else {
@@ -341,4 +348,5 @@ if (!fs.existsSync(releaseZipPath5)) {
 }
 
 console.log('[build-extension] Extension build completed successfully in ./extension');
-console.log('[build-extension] Release distribution packages ready in ./extension.zip and ./dist/leadnoria-v1.4.0.zip');
+console.log('[build-extension] Release distribution packages ready in ./extension.zip and ./dist/leadnoria-v1.5.0.zip');
+console.log('[build-extension] v1.4.0 artifact preserved as immutable: dist/leadnoria-v1.4.0.zip');

@@ -1,12 +1,13 @@
 # LeadNoria Production Release Checksums (SHA-256)
-# Generated: 2026-10-06T02:00:00Z
-# Build: LeadNoria v1.4.0 Production Release Candidate (Phase 31 Research Optimization)
+# Generated: 2026-10-06T03:30:00Z
+# Build: LeadNoria v1.5.0 Production Release Candidate (Phase 32 Production Feedback & Reliability)
 
-18d0d38a3b70bf9e699d0dc7a64a63ebe2845b39630ce83d4a4637d826d70881  dist/leadnoria-v1.4.0.zip
-18d0d38a3b70bf9e699d0dc7a64a63ebe2845b39630ce83d4a4637d826d70881  extension.zip
-ce2dd0e7b10d9e464f0b521e090ea7f4a8299a81aa53a18e591d17272386eba3  extension/manifest.json
+1a55ad80ed3e400b88c7f6d9c36d3dcbccd697737df39cb95c4e0dd4c11c4544  dist/leadnoria-v1.5.0.zip
+1a55ad80ed3e400b88c7f6d9c36d3dcbccd697737df39cb95c4e0dd4c11c4544  extension.zip
+b228fa22542404cbe44b1753f1d3371356396eefbc057de41e76bfb7e331faa3  extension/manifest.json
 
 # Historical Preserved Release Artifacts
+18d0d38a3b70bf9e699d0dc7a64a63ebe2845b39630ce83d4a4637d826d70881  dist/leadnoria-v1.4.0.zip
 ff05215288e3723367ed8951fc16bb674ec323deaf5a2fb3cfb590a14edb0df2  dist/leadnoria-v1.3.0.zip
 1c1327049ae85c47e77015e6dadd1bf1c9c31924613807efbfebc942b5ee0419  dist/leadnoria-v1.2.1.zip
 bbb3d9f16e1efde29e77af0bf2ffb5e30f20f9b50ad5c0fb89f578aa52931d5b  dist/leadnoria-v1.0.0.zip

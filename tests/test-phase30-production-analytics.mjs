@@ -610,7 +610,7 @@ check(169, 'Built extension/manifest.json exists', fs.existsSync(manifestPath));
 if (fs.existsSync(manifestPath)) {
   const actualManifestHash = crypto.createHash('sha256').update(fs.readFileSync(manifestPath)).digest('hex');
   const manJson = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-  check(170, 'extension/manifest.json verified (v1.2.1 hash or v1.3.0/v1.4.0 semver progression)', actualManifestHash === AUTHORITATIVE_MANIFEST_HASH || manJson.version === '1.3.0' || manJson.version === '1.4.0', `actual: ${actualManifestHash}, version: ${manJson.version}`);
+  check(170, 'extension/manifest.json verified (v1.2.1 hash or v1.3.0/v1.4.0 semver progression)', actualManifestHash === AUTHORITATIVE_MANIFEST_HASH || manJson.version === '1.3.0' || manJson.version === '1.4.0' || manJson.version === '1.5.0', `actual: ${actualManifestHash}, version: ${manJson.version}`);
 } else {
   check(170, 'extension/manifest.json verified', false, 'File missing');
 }

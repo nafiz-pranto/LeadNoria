@@ -3,8 +3,8 @@
 > **Discover. Verify. Connect.**  
 > Business lead research from real public signals — built as a Manifest V3 Chrome Extension.
 
-[![Version](https://img.shields.io/badge/version-1.3.0-blue)](RELEASE-NOTES-v1.3.0.md)
-[![Previous](https://img.shields.io/badge/version-1.2.1-gray)](RELEASE-NOTES-v1.2.1.md)
+[![Version](https://img.shields.io/badge/version-1.5.0-blue)](RELEASE-NOTES-v1.5.0.md)
+[![Previous](https://img.shields.io/badge/version-1.4.0-gray)](RELEASE-NOTES-v1.4.0.md)
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)](#testing)
 [![License](https://img.shields.io/badge/license-MIT-green)](#license)
 [![Manifest](https://img.shields.io/badge/Manifest-V3-orange)](extension/manifest.json)
@@ -29,7 +29,9 @@ It automates a multi-stage research pipeline:
 10. **Geographic Accounting** — tracks coverage and saturation by area
 11. **Persistence** — durably stores run state, entities, and checkpoints
 12. **Production Analytics** — calculates local run-level quality, coverage, contactability, and comparative insights
-13. **Export** — exports qualified leads as CSV or JSON with field-level policy enforcement
+13. **Research Optimization** — evaluates saturation, marginal yield, and search unit efficiency
+14. **Production Reliability & Diagnostics** — local issue capture, fingerprinting, quantitative reliability metrics, and accessible system health
+15. **Export** — exports qualified leads as CSV or JSON with field-level policy enforcement
 
 ---
 
@@ -37,16 +39,16 @@ It automates a multi-stage research pipeline:
 
 | Property | Value |
 |---|---|
-| **Version** | `1.3.0` |
-| **Build** | Production Verified Release Candidate (Phase 30 Analytics) |
+| **Version** | `1.5.0` |
+| **Build** | Production Verified Release Candidate (Phase 32 Reliability & Growth Readiness) |
 | **Manifest Version** | Manifest V3 |
-| **Release Artifact** | `dist/leadnoria-v1.3.0.zip` |
-| **Artifact SHA-256** | `ff05215288e3723367ed8951fc16bb674ec323deaf5a2fb3cfb590a14edb0df2` |
-| **Manifest SHA-256** | `af78fd566c5a2ab3211d96509dcf2e96a69280af7262dd37e769d707287742ef` |
-| **Total Tests** | 2,230 across 22 suites (all passing) |
-| **Historical Baseline** | `1.2.1` (`dist/leadnoria-v1.2.1.zip` - SHA `1c1327049ae85c47...`, immutable) |
+| **Release Artifact** | `dist/leadnoria-v1.5.0.zip` |
+| **Artifact SHA-256** | `1a55ad80ed3e400b88c7f6d9c36d3dcbccd697737df39cb95c4e0dd4c11c4544` |
+| **Manifest SHA-256** | `b228fa22542404cbe44b1753f1d3371356396eefbc057de41e76bfb7e331faa3` |
+| **Total Tests** | 2,732 across 24 suites (all passing) |
+| **Historical Baseline** | `1.4.0` (`dist/leadnoria-v1.4.0.zip` - SHA `18d0d38a3b70bf9e...`, immutable) |
 
-See [RELEASE-NOTES-v1.3.0.md](RELEASE-NOTES-v1.3.0.md) and historical [RELEASE-NOTES-v1.2.1.md](RELEASE-NOTES-v1.2.1.md) for full release notes and changelog.
+See [RELEASE-NOTES-v1.5.0.md](RELEASE-NOTES-v1.5.0.md) and historical [RELEASE-NOTES-v1.4.0.md](RELEASE-NOTES-v1.4.0.md), [RELEASE-NOTES-v1.3.0.md](RELEASE-NOTES-v1.3.0.md), [RELEASE-NOTES-v1.2.1.md](RELEASE-NOTES-v1.2.1.md) for full release notes and changelog.
 
 ---
 
