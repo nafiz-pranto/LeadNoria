@@ -2,14 +2,14 @@
   "product": "LeadNoria",
   "tagline": "Discover. Verify. Connect.",
   "descriptor": "Business lead research from real public signals.",
-  "version": "1.2.1",
-  "releaseCandidate": "Production Verified Release Candidate Build",
+  "version": "1.3.0",
+  "releaseCandidate": "Production Verified Release Candidate Build (Phase 30 Analytics)",
   "releaseArtifact": {
-    "path": "dist/leadnoria-v1.2.1.zip",
-    "byteSize": 313456,
-    "sha256": "1c1327049ae85c47e77015e6dadd1bf1c9c31924613807efbfebc942b5ee0419",
-    "fileCount": 13,
-    "manifestSha256": "17b567cbc4daf3c77b1a982e7a877d86d8b788855d65feb4d495ac15e042a215"
+    "path": "dist/leadnoria-v1.3.0.zip",
+    "byteSize": 326170,
+    "sha256": "ff05215288e3723367ed8951fc16bb674ec323deaf5a2fb3cfb590a14edb0df2",
+    "fileCount": 14,
+    "manifestSha256": "af78fd566c5a2ab3211d96509dcf2e96a69280af7262dd37e769d707287742ef"
   },
   "historicalPreservedBaselines": [
     {
@@ -32,17 +32,25 @@
       "byteSize": 313448,
       "sha256": "3b68968eba2cfd08f0b5ce99f8831c3495158067dd37bce5099ed6f070db0497",
       "status": "PRESERVED_HISTORICAL_RC"
+    },
+    {
+      "version": "1.2.1",
+      "path": "dist/leadnoria-v1.2.1.zip",
+      "byteSize": 313456,
+      "sha256": "1c1327049ae85c47e77015e6dadd1bf1c9c31924613807efbfebc942b5ee0419",
+      "status": "PRESERVED_HISTORICAL_RELEASE",
+      "manifestSha256": "17b567cbc4daf3c77b1a982e7a877d86d8b788855d65feb4d495ac15e042a215"
     }
   ],
   "buildCommand": "node scripts/build-extension.mjs",
   "typecheckCommand": "node node_modules/typescript/bin/tsc --noEmit",
   "regressionCommand": "node scripts/run-all-regressions.mjs",
   "testAccounting": {
-    "totalHistoricalAndCurrentTests": 1890,
-    "totalPassed": 1890,
+    "totalHistoricalAndCurrentTests": 2230,
+    "totalPassed": 2230,
     "totalFailed": 0,
     "totalSkipped": 0,
-    "suiteCount": 20
+    "suiteCount": 22
   },
   "runtimeEnvironment": {
     "nodeVersion": "v22.14.0",

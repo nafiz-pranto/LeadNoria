@@ -794,7 +794,7 @@ var require_scheduler = __commonJS({
 var require_react_dom_production = __commonJS({
   "node_modules/react-dom/cjs/react-dom.production.js"(exports) {
     "use strict";
-    var React9 = require_react();
+    var React10 = require_react();
     function formatProdErrorMessage(code) {
       var url = "https://react.dev/errors/" + code;
       if (1 < arguments.length) {
@@ -836,7 +836,7 @@ var require_react_dom_production = __commonJS({
         implementation
       };
     }
-    var ReactSharedInternals = React9.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+    var ReactSharedInternals = React10.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
     function getCrossOriginStringAs(as, input) {
       if ("font" === as) return "";
       if ("string" === typeof input)
@@ -978,7 +978,7 @@ var require_react_dom_client_production = __commonJS({
   "node_modules/react-dom/cjs/react-dom-client.production.js"(exports) {
     "use strict";
     var Scheduler = require_scheduler();
-    var React9 = require_react();
+    var React10 = require_react();
     var ReactDOM2 = require_react_dom();
     function formatProdErrorMessage(code) {
       var url = "https://react.dev/errors/" + code;
@@ -1269,7 +1269,7 @@ var require_react_dom_client_production = __commonJS({
       return null;
     }
     var isArrayImpl = Array.isArray;
-    var ReactSharedInternals = React9.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+    var ReactSharedInternals = React10.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
     var ReactDOMSharedInternals = ReactDOM2.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
     var sharedNotPendingObject = {
       pending: false,
@@ -14418,7 +14418,7 @@ var require_react_dom_client_production = __commonJS({
         0 === i && attemptExplicitHydrationTarget(target);
       }
     };
-    var isomorphicReactPackageVersion$jscomp$inline_2043 = React9.version;
+    var isomorphicReactPackageVersion$jscomp$inline_2043 = React10.version;
     if ("19.3.0" !== isomorphicReactPackageVersion$jscomp$inline_2043)
       throw Error(
         formatProdErrorMessage(
@@ -17223,11 +17223,11 @@ var init_relevanceEngine = __esm({
 });
 
 // src/extension/ui/index.tsx
-var import_react8 = __toESM(require_react(), 1);
+var import_react9 = __toESM(require_react(), 1);
 var import_client = __toESM(require_client(), 1);
 
 // src/extension/ui/App.tsx
-var import_react7 = __toESM(require_react(), 1);
+var import_react8 = __toESM(require_react(), 1);
 
 // src/extension/ui/components/Header.tsx
 var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
@@ -17241,6 +17241,7 @@ var Header = ({
     { id: "RESEARCH", label: "Research" },
     { id: "RUN_STATUS", label: "Run Status", badge: isRunning ? "LIVE" : void 0 },
     { id: "RESULTS", label: "Results", badge: resultsCount > 0 ? resultsCount : void 0 },
+    { id: "ANALYTICS", label: "Analytics" },
     { id: "HISTORY", label: "History" },
     { id: "SETTINGS", label: "Settings" }
   ];
@@ -19697,6 +19698,28 @@ var RecoveryBanner = ({
   );
 };
 
+// src/extension/ui/components/AnalyticsView.tsx
+var import_react7 = __toESM(require_react(), 1);
+
+// src/extension/analytics/types.ts
+var ANALYTICS_SCHEMA_VERSION = "lead-analytics-v1";
+var AUTHORITATIVE_WEBSITE_LIMITS = {
+  MAX_PAGES_PER_DOMAIN: 5,
+  PAGE_TIMEOUT_MS: 1e4,
+  DOMAIN_TIMEOUT_MS: 3e4,
+  MAX_DOCUMENT_SIZE_BYTES: 512e3
+  // 500 KB
+};
+var DEFAULT_QUALITY_THRESHOLDS = {
+  highMissingEmailRateThreshold: 60,
+  lowWebsiteVerificationThreshold: 40,
+  highUncertaintyRateThreshold: 25,
+  highConflictRateThreshold: 15,
+  highBlockedRateThreshold: 10,
+  lowPeopleCoverageThreshold: 20,
+  highDuplicateCandidateRatioThreshold: 30
+};
+
 // src/extension/ui/viewModelMappers.ts
 function isCanonicalLeadRecord(record) {
   return Boolean(
@@ -20507,6 +20530,1227 @@ function toRunStatusViewModel(run, elapsedMs = 0) {
   };
 }
 
+// src/extension/analytics/analyticsEngine.ts
+function roundDeterministic(val, precision = 1) {
+  if (isNaN(val) || !isFinite(val)) return 0;
+  const factor = Math.pow(10, precision);
+  return Math.round(val * factor) / factor;
+}
+function sanitizeAnalyticsText(input) {
+  if (input == null) return "";
+  const str = String(input);
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function normalizeToView(record) {
+  if (isCanonicalLeadRecord(record)) {
+    const r = record;
+    const isVerified2 = r.qualification?.qualificationDecision?.criterionResults?.some(
+      (c) => (c.criterionType === "VERIFIED_BUSINESS_WEBSITE" || c.criterionType === "WEBSITE_STATUS") && c.outcome === "PASS"
+    ) || Boolean(r.digital?.verifiedWebsite?.value);
+    const qualState2 = r.qualification?.finalState || r.qualification?.qualificationDecision?.status || ((r.quality?.identityCompleteness || 0) > 0.6 ? "QUALIFIED" : "UNCERTAIN");
+    const qualReasons2 = [];
+    if (r.qualification?.qualificationDecision?.criterionResults) {
+      for (const cr of r.qualification.qualificationDecision.criterionResults) {
+        qualReasons2.push({
+          code: cr.reasonCode || cr.criterionType,
+          mandatory: cr.mandatory,
+          outcome: cr.outcome,
+          explanation: cr.explanation
+        });
+      }
+    }
+    const emails2 = (r.contacts?.emails || []).map((e) => e.value).filter(Boolean);
+    const phones2 = (r.contacts?.phones || []).map((p) => p.value).filter(Boolean);
+    const forms2 = r.contacts?.contactForms || [];
+    const people = (r.people?.publicPeople || []).map((p) => p.name).filter(Boolean);
+    const services = r.business?.services?.value || [];
+    const socials = (r.digital?.socialProfiles?.value || []).map((s) => s.url).filter(Boolean);
+    const categories = r.business?.categories?.value || [];
+    const isRestricted2 = r.policy?.isRestricted === true;
+    const isExportable2 = r.policy?.exportEligible === true && !isRestricted2;
+    const conflicts = (r.evidence?.conflicts || []).length;
+    const corroborations = (r.evidence?.corroborations || []).length;
+    const sources2 = (r.evidence?.sourceContributions || []).map((s) => String(s.source));
+    const website = r.digital?.verifiedWebsite?.value || (r.digital?.domains?.value?.[0] ? `https://${r.digital.domains.value[0]}` : "");
+    return {
+      entityId: r.canonicalEntityId,
+      businessName: r.canonicalBusinessName?.value || "Unknown Business",
+      website,
+      isWebsiteVerified: isVerified2,
+      websiteState: isVerified2 ? "WEBSITE_VERIFIED_BUSINESS_SITE" : website ? "WEBSITE_PRESENT" : "WEBSITE_NOT_FOUND",
+      emails: emails2,
+      phones: phones2,
+      contactForms: forms2,
+      publicPeople: people,
+      services,
+      socialLinks: socials,
+      categories,
+      city: r.location?.city?.value || "",
+      country: r.location?.country?.value || "",
+      qualificationState: qualState2,
+      qualificationReasons: qualReasons2,
+      isRestricted: isRestricted2,
+      isExportable: isExportable2,
+      conflictsCount: conflicts,
+      corroborationsCount: corroborations,
+      sourceContributions: sources2,
+      freshnessTimestamp: r.freshness?.lastObservedAt || r.updatedAt || r.createdAt,
+      pagesInspected: Math.min(AUTHORITATIVE_WEBSITE_LIMITS.MAX_PAGES_PER_DOMAIN, r.digital?.technologySignals?.length ? 2 : 1),
+      technologySignalsCount: r.digital?.technologySignals?.length || 0
+    };
+  }
+  const urr = record;
+  const webRes = urr.websiteVerificationResult;
+  const isVerified = webRes?.status === "VERIFIED_BUSINESS_WEBSITE";
+  const qualState = urr.qualificationState || urr.qualificationDecision?.status || "UNCERTAIN";
+  const qualReasons = [];
+  if (urr.qualificationDecision?.criterionResults) {
+    for (const cr of urr.qualificationDecision.criterionResults) {
+      qualReasons.push({
+        code: cr.reasonCode || cr.criterionType,
+        mandatory: cr.mandatory,
+        outcome: cr.outcome,
+        explanation: cr.explanation
+      });
+    }
+  }
+  const emails = urr.contactEnrichmentResult?.emails?.map((e) => e.normalizedEmail || e.rawValue).filter(Boolean) || [];
+  const phones = urr.contactEnrichmentResult?.phones?.map((p) => p.normalizedValue || p.rawValue).filter(Boolean) || [];
+  const forms = urr.contactEnrichmentResult?.contactForms?.filter((f) => f.present).map((f) => f.pageUrl).filter(Boolean) || [];
+  const isRestricted = urr.restrictions?.isRestricted === true;
+  const isExportable = !isRestricted;
+  const sources = (urr.sourceContributions || []).map((s) => String(s.source));
+  const webUrl = webRes?.finalUrl || webRes?.originalUrl || "";
+  return {
+    entityId: urr.entityId || urr.recordId,
+    businessName: urr.canonicalDisplayName || "Unknown Business",
+    website: webUrl,
+    isWebsiteVerified: isVerified,
+    websiteState: isVerified ? "WEBSITE_VERIFIED_BUSINESS_SITE" : webUrl ? "WEBSITE_PRESENT" : "WEBSITE_NOT_FOUND",
+    websiteUnavailableReason: webRes?.blockedReason || webRes?.errorCode,
+    emails,
+    phones,
+    contactForms: forms,
+    publicPeople: [],
+    services: [],
+    socialLinks: [],
+    categories: [],
+    city: urr.geographicObservations?.[0]?.name || "",
+    country: urr.geographicObservations?.[0]?.countryCode || "",
+    qualificationState: qualState,
+    qualificationReasons: qualReasons,
+    isRestricted,
+    isExportable,
+    conflictsCount: 0,
+    corroborationsCount: urr.corroborationCount || 0,
+    sourceContributions: sources,
+    freshnessTimestamp: urr.updatedAt || urr.createdAt,
+    pagesInspected: Math.min(AUTHORITATIVE_WEBSITE_LIMITS.MAX_PAGES_PER_DOMAIN, webRes?.pagesVisited?.length || 1),
+    technologySignalsCount: 0
+  };
+}
+function computeRunAnalytics(runId, records, options = {}) {
+  const safeRunId = sanitizeAnalyticsText(runId || "run-default");
+  const safeTitle = sanitizeAnalyticsText(options.runTitle || safeRunId);
+  const totalAccepted = records.length;
+  let withWebsite = 0;
+  let withVerifiedWebsite = 0;
+  let withEmail = 0;
+  let withPhone = 0;
+  let withPeople = 0;
+  let withSocial = 0;
+  let withServices = 0;
+  let qualified = 0;
+  let notQualified = 0;
+  let uncertain = 0;
+  let blocked = 0;
+  let conflicted = 0;
+  let incomplete = 0;
+  let exportable = 0;
+  let emailAndPhoneCount = 0;
+  let emailOnlyCount = 0;
+  let phoneOnlyCount = 0;
+  let contactFormOnlyCount = 0;
+  let personAvailableOnlyCount = 0;
+  let noPublicContactSignalCount = 0;
+  let websitePresentCount = 0;
+  let websiteUnavailableCount = 0;
+  let websiteTimeoutCount = 0;
+  let websiteBlockedBySafetyCount = 0;
+  let websiteNonBusinessCount = 0;
+  let websiteParkedCount = 0;
+  let totalPagesInspected = 0;
+  let totalTechSignals = 0;
+  let mandatoryFailureCount = 0;
+  let missingEvidenceCount = 0;
+  let contradictoryEvidenceCount = 0;
+  let insufficientCompletenessCount = 0;
+  let corroborationWeaknessCount = 0;
+  let freshnessIssueCount = 0;
+  const reasonCodeMap = /* @__PURE__ */ new Map();
+  let metaRecords = 0;
+  let websiteEnrichmentRecords = 0;
+  let mixedSourceRecords = 0;
+  let restrictedSourceRecords = 0;
+  let duplicatesDetected = options.duplicatesDetected || 0;
+  let recordsMerged = 0;
+  for (const raw of records) {
+    const lead = normalizeToView(raw);
+    const hasWebsite = Boolean(lead.website && lead.website.trim().length > 0);
+    const hasEmail = lead.emails.length > 0;
+    const hasPhone = lead.phones.length > 0;
+    const hasForm = lead.contactForms.length > 0;
+    const hasPeople = lead.publicPeople.length > 0;
+    const hasSocial = lead.socialLinks.length > 0;
+    const hasServices = lead.services.length > 0;
+    if (hasWebsite) withWebsite++;
+    if (lead.isWebsiteVerified) withVerifiedWebsite++;
+    if (hasEmail) withEmail++;
+    if (hasPhone) withPhone++;
+    if (hasPeople) withPeople++;
+    if (hasSocial) withSocial++;
+    if (hasServices) withServices++;
+    const qState = lead.qualificationState;
+    if (lead.isRestricted || qState === "BLOCKED") blocked++;
+    else if (qState === "QUALIFIED") qualified++;
+    else if (qState === "NOT_QUALIFIED" || qState === "DISQUALIFIED") notQualified++;
+    else uncertain++;
+    if (lead.conflictsCount > 0) conflicted++;
+    if (lead.isExportable) exportable++;
+    if (!hasWebsite && !hasEmail && !hasPhone) {
+      incomplete++;
+    }
+    if (hasEmail && hasPhone) {
+      emailAndPhoneCount++;
+    } else if (hasEmail) {
+      emailOnlyCount++;
+    } else if (hasPhone) {
+      phoneOnlyCount++;
+    } else if (hasForm) {
+      contactFormOnlyCount++;
+    } else if (hasPeople) {
+      personAvailableOnlyCount++;
+    } else {
+      noPublicContactSignalCount++;
+    }
+    if (hasWebsite) {
+      websitePresentCount++;
+      totalPagesInspected += lead.pagesInspected;
+      totalTechSignals += lead.technologySignalsCount;
+      const ws = lead.websiteState;
+      if (ws === "WEBSITE_UNAVAILABLE") {
+        websiteUnavailableCount++;
+        if (lead.websiteUnavailableReason === "PAGE_TIMEOUT" || lead.websiteUnavailableReason === "DOMAIN_TIMEOUT") {
+          websiteTimeoutCount++;
+        }
+      } else if (ws === "WEBSITE_INVALID") {
+        websiteBlockedBySafetyCount++;
+      } else if (ws === "WEBSITE_NON_BUSINESS") {
+        websiteNonBusinessCount++;
+      } else if (ws === "WEBSITE_PARKED") {
+        websiteParkedCount++;
+      }
+    }
+    for (const qr of lead.qualificationReasons) {
+      const code = qr.code;
+      const mandatory = qr.mandatory === true;
+      const outcome = qr.outcome;
+      let cat = "PASS";
+      if (outcome === "FAIL" && mandatory) {
+        cat = "MANDATORY_FAIL";
+        mandatoryFailureCount++;
+      } else if (outcome === "CONTRADICTORY" || code.includes("CONTRADICTION")) {
+        cat = "CONTRADICTION";
+        contradictoryEvidenceCount++;
+      } else if (outcome === "UNKNOWN" || code.includes("UNCERTAIN") || code.includes("NOT_FOUND")) {
+        cat = "MISSING_EVIDENCE";
+        missingEvidenceCount++;
+      } else if (code.includes("COMPLETENESS") || code.includes("THRESHOLD")) {
+        cat = "INSUFFICIENT";
+        insufficientCompletenessCount++;
+      } else if (code.includes("CORROBORATION") || code.includes("CROSS_SOURCE")) {
+        cat = "CORROBORATION";
+        corroborationWeaknessCount++;
+      } else if (code.includes("FRESHNESS") || code.includes("TEMPORAL")) {
+        cat = "FRESHNESS";
+        freshnessIssueCount++;
+      }
+      const existing = reasonCodeMap.get(code);
+      if (existing) {
+        existing.count++;
+      } else {
+        reasonCodeMap.set(code, {
+          count: 1,
+          category: cat,
+          description: qr.explanation || code
+        });
+      }
+    }
+    const sources = lead.sourceContributions;
+    const hasMeta = sources.some((s) => s === "META" || s.includes("META"));
+    const hasWeb = sources.some((s) => s === "WEBSITE" || s.includes("WEBSITE"));
+    if (hasMeta) metaRecords++;
+    if (hasWeb) websiteEnrichmentRecords++;
+    if (hasMeta && hasWeb) mixedSourceRecords++;
+    if (lead.isRestricted || sources.some((s) => s === "GOOGLE_MAPS" || s.includes("GOOGLE"))) {
+      restrictedSourceRecords++;
+    }
+    if (sources.length > 1 || lead.corroborationsCount > 1) {
+      recordsMerged++;
+    }
+  }
+  const denom = totalAccepted > 0 ? totalAccepted : 1;
+  const recordsDiscovered = options.recordsDiscovered || totalAccepted + duplicatesDetected;
+  const recordsRejected = options.recordsRejected || 0;
+  const runMetrics = {
+    recordsDiscovered,
+    recordsAccepted: totalAccepted,
+    duplicatesDetected,
+    recordsMerged,
+    recordsRejected,
+    recordsWithWebsite: withWebsite,
+    recordsWithVerifiedWebsite: withVerifiedWebsite,
+    recordsWithEmail: withEmail,
+    recordsWithPhone: withPhone,
+    recordsWithPublicPeople: withPeople,
+    recordsWithSocialLinks: withSocial,
+    recordsWithServices: withServices,
+    qualifiedCount: qualified,
+    notQualifiedCount: notQualified,
+    uncertainCount: uncertain,
+    blockedCount: blocked,
+    conflictedCount: conflicted,
+    incompleteCount: incomplete,
+    exportableCount: exportable
+  };
+  const coverage = {
+    totalEligibleRecords: totalAccepted,
+    identityCoverage: roundDeterministic((totalAccepted > 0 ? totalAccepted - incomplete : 0) / denom * 100),
+    businessCoverage: roundDeterministic((withServices > 0 ? withServices : withWebsite) / denom * 100),
+    locationCoverage: roundDeterministic(totalAccepted > 0 ? 100 : 0),
+    websiteCoverage: roundDeterministic(withWebsite / denom * 100),
+    emailCoverage: roundDeterministic(withEmail / denom * 100),
+    phoneCoverage: roundDeterministic(withPhone / denom * 100),
+    peopleCoverage: roundDeterministic(withPeople / denom * 100),
+    servicesCoverage: roundDeterministic(withServices / denom * 100),
+    socialCoverage: roundDeterministic(withSocial / denom * 100),
+    qualificationCoverage: roundDeterministic((qualified + notQualified + uncertain + blocked) / denom * 100),
+    evidenceCoverage: roundDeterministic((metaRecords + websiteEnrichmentRecords > 0 ? totalAccepted : 0) / denom * 100),
+    freshnessCoverage: roundDeterministic(totalAccepted > 0 ? 100 : 0),
+    rawCounts: {
+      identityCount: totalAccepted,
+      businessCount: withServices > 0 ? withServices : withWebsite,
+      locationCount: totalAccepted,
+      websiteCount: withWebsite,
+      emailCount: withEmail,
+      phoneCount: withPhone,
+      peopleCount: withPeople,
+      servicesCount: withServices,
+      socialCount: withSocial,
+      qualificationCount: qualified + notQualified + uncertain + blocked,
+      evidenceCount: totalAccepted,
+      freshnessCount: totalAccepted
+    }
+  };
+  const contactability = {
+    totalRecords: totalAccepted,
+    emailAndPhoneCount,
+    emailOnlyCount,
+    phoneOnlyCount,
+    contactFormOnlyCount,
+    personAvailableOnlyCount,
+    noPublicContactSignalCount,
+    totalEmailAvailableCount: withEmail,
+    totalPhoneAvailableCount: withPhone,
+    totalPublicPersonAvailableCount: withPeople,
+    totalContactFormAvailableCount: contactFormOnlyCount,
+    emailPercentage: roundDeterministic(withEmail / denom * 100),
+    phonePercentage: roundDeterministic(withPhone / denom * 100),
+    fullContactabilityPercentage: roundDeterministic(emailAndPhoneCount / denom * 100),
+    noContactSignalPercentage: roundDeterministic(noPublicContactSignalCount / denom * 100)
+  };
+  const websiteVerificationRate = withWebsite > 0 ? roundDeterministic(withVerifiedWebsite / withWebsite * 100) : 0;
+  const website = {
+    limits: AUTHORITATIVE_WEBSITE_LIMITS,
+    websitePresentCount: withWebsite,
+    websiteVerifiedCount: withVerifiedWebsite,
+    websiteUnavailableCount,
+    websiteTimeoutCount,
+    websiteBlockedBySafetyCount,
+    websiteNonBusinessCount,
+    websiteParkedCount,
+    pagesSuccessfullyInspected: totalPagesInspected,
+    contactSignalsDiscovered: withEmail + withPhone + contactFormOnlyCount,
+    technologySignalsDiscovered: totalTechSignals,
+    socialSignalsDiscovered: withSocial,
+    personSignalsDiscovered: withPeople,
+    verificationRate: websiteVerificationRate
+  };
+  const reasonBreakdown = Array.from(reasonCodeMap.entries()).map(([code, data]) => ({
+    code,
+    count: data.count,
+    category: data.category,
+    description: data.description
+  })).sort((a, b) => b.count - a.count || a.code.localeCompare(b.code));
+  const qualification = {
+    qualifiedCount: qualified,
+    notQualifiedCount: notQualified,
+    uncertainCount: uncertain,
+    blockedCount: blocked,
+    mandatoryFailureCount,
+    missingEvidenceCount,
+    contradictoryEvidenceCount,
+    insufficientCompletenessCount,
+    corroborationWeaknessCount,
+    freshnessIssueCount,
+    reasonBreakdown
+  };
+  const source = {
+    primarySource: options.sourceType || "META",
+    sourceRecordCount: metaRecords,
+    sourceContributionCount: metaRecords,
+    websiteEnrichmentContributionCount: websiteEnrichmentRecords,
+    mixedSourceRecordCount: mixedSourceRecords,
+    restrictedSourceRecordCount: restrictedSourceRecords,
+    googleMapsStatus: "INTERNAL_EXPERIMENTAL_RESTRICTED",
+    restrictedPolicyNote: "Google Maps lineage is restricted for internal experimental validation only and excluded from production export."
+  };
+  const restrictedAggregate = {
+    restrictedRecordCount: restrictedSourceRecords,
+    excludedFromExportCount: restrictedSourceRecords,
+    policyMessage: restrictedSourceRecords > 0 ? `${restrictedSourceRecords} restricted Google lineage record(s) excluded from export per data firewall policy.` : "All records conform to production export policy."
+  };
+  const thresholds = { ...DEFAULT_QUALITY_THRESHOLDS, ...options.thresholds };
+  const warnings = evaluateQualityWarnings(
+    {
+      schemaVersion: ANALYTICS_SCHEMA_VERSION,
+      runId: safeRunId,
+      runTitle: safeTitle,
+      sourceType: source.primarySource,
+      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      totalRecords: totalAccepted,
+      runMetrics,
+      coverage,
+      contactability,
+      website,
+      qualification,
+      source,
+      restrictedAggregate,
+      warnings: []
+    },
+    thresholds
+  );
+  return {
+    schemaVersion: ANALYTICS_SCHEMA_VERSION,
+    runId: safeRunId,
+    runTitle: safeTitle,
+    sourceType: source.primarySource,
+    createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+    totalRecords: totalAccepted,
+    runMetrics,
+    coverage,
+    contactability,
+    website,
+    qualification,
+    source,
+    restrictedAggregate,
+    warnings
+  };
+}
+function evaluateQualityWarnings(snapshot, thresholds = DEFAULT_QUALITY_THRESHOLDS) {
+  const warnings = [];
+  const total = snapshot.totalRecords;
+  if (total === 0) return warnings;
+  const missingEmailRate = roundDeterministic(100 - snapshot.coverage.emailCoverage);
+  if (missingEmailRate > thresholds.highMissingEmailRateThreshold) {
+    warnings.push({
+      id: "WARN-MISSING-EMAIL",
+      code: "HIGH_MISSING_EMAIL_RATE",
+      severity: "MEDIUM",
+      title: "High Missing-Email Rate",
+      message: `${missingEmailRate}% of records lack an observed email address (threshold: ${thresholds.highMissingEmailRateThreshold}%).`,
+      metricName: "missingEmailRate",
+      observedValue: missingEmailRate,
+      threshold: thresholds.highMissingEmailRateThreshold,
+      actionableRemedy: "Enable website intelligence enrichment or review ad creative text for public contact details."
+    });
+  }
+  if (snapshot.website.websitePresentCount > 0) {
+    const verifRate = snapshot.website.verificationRate;
+    if (verifRate < thresholds.lowWebsiteVerificationThreshold) {
+      warnings.push({
+        id: "WARN-LOW-WEBSITE-VERIF",
+        code: "LOW_WEBSITE_VERIFICATION",
+        severity: "HIGH",
+        title: "Low Website Verification Rate",
+        message: `Only ${verifRate}% of observed websites were verified as authentic target business sites (threshold: ${thresholds.lowWebsiteVerificationThreshold}%).`,
+        metricName: "websiteVerificationRate",
+        observedValue: verifRate,
+        threshold: thresholds.lowWebsiteVerificationThreshold,
+        actionableRemedy: "Inspect unavailable/parked domains or check network timeout limits."
+      });
+    }
+  }
+  const uncertaintyRate = roundDeterministic(snapshot.qualification.uncertainCount / total * 100);
+  if (uncertaintyRate > thresholds.highUncertaintyRateThreshold) {
+    warnings.push({
+      id: "WARN-HIGH-UNCERTAINTY",
+      code: "HIGH_UNCERTAINTY_RATE",
+      severity: "HIGH",
+      title: "High Lead Uncertainty Rate",
+      message: `${uncertaintyRate}% of records are classified as UNCERTAIN due to missing corroborating signals (threshold: ${thresholds.highUncertaintyRateThreshold}%).`,
+      metricName: "uncertaintyRate",
+      observedValue: uncertaintyRate,
+      threshold: thresholds.highUncertaintyRateThreshold,
+      actionableRemedy: "Review Qualification Profile criteria or verify website requirement settings."
+    });
+  }
+  const conflictRate = roundDeterministic(snapshot.runMetrics.conflictedCount / total * 100);
+  if (conflictRate > thresholds.highConflictRateThreshold) {
+    warnings.push({
+      id: "WARN-HIGH-CONFLICT",
+      code: "HIGH_CONFLICT_RATE",
+      severity: "HIGH",
+      title: "Elevated Field Conflict Rate",
+      message: `${conflictRate}% of records exhibit identity or contact discrepancies across sources (threshold: ${thresholds.highConflictRateThreshold}%).`,
+      metricName: "conflictRate",
+      observedValue: conflictRate,
+      threshold: thresholds.highConflictRateThreshold,
+      actionableRemedy: "Audit entity resolution clustering or run manual reviewer resolution."
+    });
+  }
+  const blockedRate = roundDeterministic(snapshot.runMetrics.blockedCount / total * 100);
+  if (blockedRate > thresholds.highBlockedRateThreshold) {
+    warnings.push({
+      id: "WARN-HIGH-BLOCKED",
+      code: "HIGH_BLOCKED_RATE",
+      severity: "HIGH",
+      title: "High Policy Blocked Rate",
+      message: `${blockedRate}% of records are blocked from export by policy firewalls (threshold: ${thresholds.highBlockedRateThreshold}%).`,
+      metricName: "blockedRate",
+      observedValue: blockedRate,
+      threshold: thresholds.highBlockedRateThreshold,
+      actionableRemedy: "Check for restricted Google Maps candidate injection or policy exclusions."
+    });
+  }
+  const peopleRate = snapshot.coverage.peopleCoverage;
+  if (peopleRate < thresholds.lowPeopleCoverageThreshold) {
+    warnings.push({
+      id: "WARN-LOW-PEOPLE",
+      code: "LOW_PEOPLE_COVERAGE",
+      severity: "LOW",
+      title: "Low Public People Coverage",
+      message: `Only ${peopleRate}% of records have identified public team members or owners (threshold: ${thresholds.lowPeopleCoverageThreshold}%).`,
+      metricName: "peopleCoverage",
+      observedValue: peopleRate,
+      threshold: thresholds.lowPeopleCoverageThreshold,
+      actionableRemedy: "Expand website intelligence to crawl About Us / Team pages within the 5-page ceiling."
+    });
+  }
+  if (snapshot.runMetrics.recordsDiscovered > 0) {
+    const dupRatio = roundDeterministic(snapshot.runMetrics.duplicatesDetected / snapshot.runMetrics.recordsDiscovered * 100);
+    if (dupRatio > thresholds.highDuplicateCandidateRatioThreshold) {
+      warnings.push({
+        id: "WARN-HIGH-DUPLICATES",
+        code: "HIGH_DUPLICATE_RATIO",
+        severity: "MEDIUM",
+        title: "Large Duplicate Candidate Ratio",
+        message: `${dupRatio}% of discovered inputs were deduplicated into existing entities (threshold: ${thresholds.highDuplicateCandidateRatioThreshold}%).`,
+        metricName: "duplicateRatio",
+        observedValue: dupRatio,
+        threshold: thresholds.highDuplicateCandidateRatioThreshold,
+        actionableRemedy: "Broaden search terms or adjust geographic radius to reduce search unit overlap."
+      });
+    }
+  }
+  return warnings;
+}
+function detectRecordChanges(baseRecords, compareRecords) {
+  const baseMap = /* @__PURE__ */ new Map();
+  for (const r of baseRecords) {
+    const v = normalizeToView(r);
+    baseMap.set(v.entityId, v);
+  }
+  const compareMap = /* @__PURE__ */ new Map();
+  for (const r of compareRecords) {
+    const v = normalizeToView(r);
+    compareMap.set(v.entityId, v);
+  }
+  let newCount = 0;
+  let removedCount = 0;
+  let unchangedCount = 0;
+  let changedCount = 0;
+  let changedWebsiteCount = 0;
+  let changedContactCount = 0;
+  let changedPeopleCount = 0;
+  let changedQualificationCount = 0;
+  let changedFreshnessCount = 0;
+  let newlyConflictingCount = 0;
+  let newlyResolvedCount = 0;
+  const detailedChanges = [];
+  for (const [id, comp] of compareMap.entries()) {
+    const base = baseMap.get(id);
+    if (!base) {
+      newCount++;
+      detailedChanges.push({
+        entityId: id,
+        businessName: comp.businessName,
+        changeType: "NEW",
+        fieldDeltas: [{ field: "entity", oldValue: null, newValue: comp.businessName, description: "Newly discovered record" }]
+      });
+      continue;
+    }
+    const deltas = [];
+    if (base.website !== comp.website) {
+      changedWebsiteCount++;
+      deltas.push({
+        field: "website",
+        oldValue: base.website || "(empty)",
+        newValue: comp.website || "(empty)",
+        description: "Website URL changed"
+      });
+    }
+    const baseEmails = base.emails.sort().join(",");
+    const compEmails = comp.emails.sort().join(",");
+    const basePhones = base.phones.sort().join(",");
+    const compPhones = comp.phones.sort().join(",");
+    if (baseEmails !== compEmails || basePhones !== compPhones) {
+      changedContactCount++;
+      deltas.push({
+        field: "contact",
+        oldValue: `Emails: ${baseEmails || "none"} | Phones: ${basePhones || "none"}`,
+        newValue: `Emails: ${compEmails || "none"} | Phones: ${compPhones || "none"}`,
+        description: "Contact channels updated"
+      });
+    }
+    const basePeople = base.publicPeople.sort().join(",");
+    const compPeople = comp.publicPeople.sort().join(",");
+    if (basePeople !== compPeople) {
+      changedPeopleCount++;
+      deltas.push({
+        field: "people",
+        oldValue: basePeople || "none",
+        newValue: compPeople || "none",
+        description: "Public people updated"
+      });
+    }
+    if (base.qualificationState !== comp.qualificationState) {
+      changedQualificationCount++;
+      deltas.push({
+        field: "qualification",
+        oldValue: base.qualificationState,
+        newValue: comp.qualificationState,
+        description: `Qualification shifted from ${base.qualificationState} to ${comp.qualificationState}`
+      });
+    }
+    if (base.conflictsCount === 0 && comp.conflictsCount > 0) {
+      newlyConflictingCount++;
+      deltas.push({
+        field: "conflicts",
+        oldValue: "0",
+        newValue: String(comp.conflictsCount),
+        description: "New field conflict detected"
+      });
+    } else if (base.conflictsCount > 0 && comp.conflictsCount === 0) {
+      newlyResolvedCount++;
+      deltas.push({
+        field: "conflicts",
+        oldValue: String(base.conflictsCount),
+        newValue: "0",
+        description: "Field conflict resolved"
+      });
+    }
+    if (base.freshnessTimestamp !== comp.freshnessTimestamp) {
+      changedFreshnessCount++;
+    }
+    if (deltas.length > 0) {
+      changedCount++;
+      detailedChanges.push({
+        entityId: id,
+        businessName: comp.businessName,
+        changeType: "MODIFIED",
+        fieldDeltas: deltas
+      });
+    } else {
+      unchangedCount++;
+      detailedChanges.push({
+        entityId: id,
+        businessName: comp.businessName,
+        changeType: "UNCHANGED",
+        fieldDeltas: []
+      });
+    }
+  }
+  for (const [id, base] of baseMap.entries()) {
+    if (!compareMap.has(id)) {
+      removedCount++;
+      detailedChanges.push({
+        entityId: id,
+        businessName: base.businessName,
+        changeType: "REMOVED",
+        fieldDeltas: [{ field: "entity", oldValue: base.businessName, newValue: null, description: "Record omitted in compare run" }]
+      });
+    }
+  }
+  detailedChanges.sort((a, b) => a.entityId.localeCompare(b.entityId));
+  return {
+    baseRunId: "base",
+    compareRunId: "compare",
+    newRecordsCount: newCount,
+    removedRecordsCount: removedCount,
+    unchangedRecordsCount: unchangedCount,
+    changedRecordsCount: changedCount,
+    changedWebsiteCount,
+    changedContactCount,
+    changedPeopleCount,
+    changedQualificationCount,
+    changedFreshnessCount,
+    newlyConflictingCount,
+    newlyResolvedCount,
+    detailedChanges
+  };
+}
+function compareRuns(baseSnapshot, compareSnapshot, baseRecords = [], compareRecords = []) {
+  const metricsDiff = [];
+  const descriptiveSummary = [];
+  const metricsToCompare = [
+    { name: "Total Records", getBase: (s) => s.totalRecords, getComp: (s) => s.totalRecords, unit: "records" },
+    { name: "Website Coverage", getBase: (s) => s.coverage.websiteCoverage, getComp: (s) => s.coverage.websiteCoverage, unit: "%" },
+    { name: "Email Coverage", getBase: (s) => s.coverage.emailCoverage, getComp: (s) => s.coverage.emailCoverage, unit: "%" },
+    { name: "Phone Coverage", getBase: (s) => s.coverage.phoneCoverage, getComp: (s) => s.coverage.phoneCoverage, unit: "%" },
+    { name: "People Coverage", getBase: (s) => s.coverage.peopleCoverage, getComp: (s) => s.coverage.peopleCoverage, unit: "%" },
+    { name: "Qualified Records", getBase: (s) => s.qualification.qualifiedCount, getComp: (s) => s.qualification.qualifiedCount, unit: "records" },
+    { name: "Uncertain Records", getBase: (s) => s.qualification.uncertainCount, getComp: (s) => s.qualification.uncertainCount, unit: "records" },
+    { name: "Blocked Records", getBase: (s) => s.runMetrics.blockedCount, getComp: (s) => s.runMetrics.blockedCount, unit: "records" },
+    { name: "Field Conflicts", getBase: (s) => s.runMetrics.conflictedCount, getComp: (s) => s.runMetrics.conflictedCount, unit: "records" },
+    { name: "Exportable Records", getBase: (s) => s.runMetrics.exportableCount, getComp: (s) => s.runMetrics.exportableCount, unit: "records" }
+  ];
+  for (const m of metricsToCompare) {
+    const baseVal = m.getBase(baseSnapshot);
+    const compVal = m.getComp(compareSnapshot);
+    const delta = roundDeterministic(compVal - baseVal);
+    const pctChange = baseVal > 0 ? roundDeterministic((compVal - baseVal) / baseVal * 100) : 0;
+    let note = "";
+    if (delta > 0) {
+      note = `Run '${compareSnapshot.runId}' contained ${delta}${m.unit === "%" ? "%" : " more"} ${m.name.toLowerCase()} than Run '${baseSnapshot.runId}'.`;
+    } else if (delta < 0) {
+      note = `Run '${compareSnapshot.runId}' contained ${Math.abs(delta)}${m.unit === "%" ? "%" : " fewer"} ${m.name.toLowerCase()} than Run '${baseSnapshot.runId}'.`;
+    } else {
+      note = `Both runs demonstrated identical ${m.name.toLowerCase()} (${baseVal}${m.unit === "%" ? "%" : ""}).`;
+    }
+    metricsDiff.push({
+      metricName: m.name,
+      baseValue: baseVal,
+      compareValue: compVal,
+      delta,
+      percentageChange: pctChange,
+      descriptiveNote: note
+    });
+    if (delta !== 0) {
+      descriptiveSummary.push(note);
+    }
+  }
+  if (descriptiveSummary.length === 0) {
+    descriptiveSummary.push(`No metric variances observed between Run '${baseSnapshot.runId}' and Run '${compareSnapshot.runId}'.`);
+  }
+  const changeAnalysis = detectRecordChanges(baseRecords, compareRecords);
+  changeAnalysis.baseRunId = baseSnapshot.runId;
+  changeAnalysis.compareRunId = compareSnapshot.runId;
+  return {
+    baseRunId: baseSnapshot.runId,
+    compareRunId: compareSnapshot.runId,
+    generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+    metricsDiff,
+    descriptiveSummary,
+    changeAnalysis
+  };
+}
+
+// src/extension/ui/components/AnalyticsView.tsx
+var import_jsx_runtime14 = __toESM(require_jsx_runtime(), 1);
+var AnalyticsView = ({
+  currentSnapshot,
+  historySnapshots = [],
+  rawRecords = [],
+  onSelectRun,
+  onNavigateToResultsWithFilter
+}) => {
+  const [activeSection, setActiveSection] = (0, import_react7.useState)("SUMMARY");
+  const [compareRunId, setCompareRunId] = (0, import_react7.useState)("");
+  const compareSnapshot = (0, import_react7.useMemo)(() => {
+    if (!compareRunId) return null;
+    return historySnapshots.find((s) => s.runId === compareRunId) || null;
+  }, [compareRunId, historySnapshots]);
+  const comparisonResult = (0, import_react7.useMemo)(() => {
+    if (!currentSnapshot || !compareSnapshot) return null;
+    return compareRuns(currentSnapshot, compareSnapshot, rawRecords, []);
+  }, [currentSnapshot, compareSnapshot, rawRecords]);
+  if (!currentSnapshot) {
+    return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-400 min-h-[300px]", role: "region", "aria-label": "Analytics empty state", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-sky-400 mb-3 text-xl", children: "\u{1F4CA}" }),
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h2", { className: "text-base font-semibold text-slate-200", children: "No Analytics Data Available" }),
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("p", { className: "text-xs text-slate-400 mt-1 max-w-xs", children: "Execute or load a research run to view comprehensive lead quality, website intelligence, and coverage analytics." })
+    ] });
+  }
+  const { runMetrics, coverage, contactability, website, qualification, warnings, restrictedAggregate } = currentSnapshot;
+  return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex-1 flex flex-col min-w-0 w-full overflow-y-auto bg-slate-900 text-slate-100 text-xs", role: "region", "aria-label": "LeadNoria Intelligence Analytics", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-950 border-b border-slate-800 shrink-0 flex flex-wrap items-center justify-between gap-2", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center gap-2 min-w-0", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { className: "text-sm font-bold text-sky-400 flex items-center gap-1.5", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: "\u{1F4C8}" }),
+          " Intelligence Analytics"
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-[10px] text-slate-400 border border-slate-700 px-1.5 py-0.5 rounded font-mono truncate max-w-[140px]", children: currentSnapshot.runId })
+      ] }),
+      historySnapshots.length > 1 && onSelectRun && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center gap-1", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("label", { htmlFor: "analytics-run-select", className: "text-[10px] text-slate-400", children: "Run:" }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+          "select",
+          {
+            id: "analytics-run-select",
+            value: currentSnapshot.runId,
+            onChange: (e) => onSelectRun(e.target.value),
+            className: "bg-slate-900 border border-slate-700 text-slate-200 text-[11px] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-sky-500",
+            children: historySnapshots.map((s) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("option", { value: s.runId, children: [
+              s.runTitle || s.runId,
+              " (",
+              s.totalRecords,
+              " leads)"
+            ] }, s.runId))
+          }
+        )
+      ] })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("nav", { className: "flex items-center px-2 border-b border-slate-800 bg-slate-950/80 gap-1 overflow-x-auto scrollbar-none shrink-0", role: "tablist", "aria-label": "Analytics view sections", children: [
+      { id: "SUMMARY", label: "Summary" },
+      { id: "COVERAGE", label: "Coverage" },
+      { id: "CONTACTS", label: "Contacts" },
+      { id: "WEBSITE", label: "Website" },
+      { id: "QUALIFICATION", label: "Qualification" },
+      { id: "WARNINGS", label: `Warnings (${warnings.length})`, badge: warnings.length > 0 ? warnings.length : void 0 },
+      { id: "COMPARISON", label: "Compare" }
+    ].map((sec) => {
+      const isActive = activeSection === sec.id;
+      return /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+        "button",
+        {
+          role: "tab",
+          "aria-selected": isActive,
+          onClick: () => setActiveSection(sec.id),
+          className: `px-2.5 py-2 text-[11px] font-medium border-b-2 transition-colors whitespace-nowrap focus:outline-none focus:ring-1 focus:ring-sky-400 ${isActive ? "border-sky-500 text-sky-400 font-semibold" : "border-transparent text-slate-400 hover:text-slate-200"}`,
+          children: sec.label
+        },
+        sec.id
+      );
+    }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 space-y-3 min-w-0", children: [
+      activeSection === "SUMMARY" && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "space-y-3", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2.5 bg-slate-800/80 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-slate-400 uppercase font-medium tracking-wider", children: "Total Discovered" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-lg font-bold text-slate-100 mt-0.5", children: runMetrics.recordsDiscovered }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400 mt-0.5", children: [
+              runMetrics.recordsAccepted,
+              " accepted"
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+            "div",
+            {
+              onClick: () => onNavigateToResultsWithFilter?.("QUALIFIED"),
+              className: `p-2.5 bg-emerald-950/30 border border-emerald-500/30 rounded ${onNavigateToResultsWithFilter ? "cursor-pointer hover:border-emerald-500 transition-colors" : ""}`,
+              title: "Click to filter results by QUALIFIED",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-emerald-400 uppercase font-medium tracking-wider", children: "Qualified" }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-lg font-bold text-emerald-300 mt-0.5", children: runMetrics.qualifiedCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-emerald-400/80 mt-0.5", children: [
+                  currentSnapshot.totalRecords > 0 ? Math.round(runMetrics.qualifiedCount / currentSnapshot.totalRecords * 100) : 0,
+                  "% of leads"
+                ] })
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+            "div",
+            {
+              onClick: () => onNavigateToResultsWithFilter?.("UNCERTAIN"),
+              className: `p-2.5 bg-amber-950/30 border border-amber-500/30 rounded ${onNavigateToResultsWithFilter ? "cursor-pointer hover:border-amber-500 transition-colors" : ""}`,
+              title: "Click to filter results by UNCERTAIN",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-amber-400 uppercase font-medium tracking-wider", children: "Uncertain" }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-lg font-bold text-amber-300 mt-0.5", children: runMetrics.uncertainCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-amber-400/80 mt-0.5", children: "Needs review" })
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+            "div",
+            {
+              onClick: () => onNavigateToResultsWithFilter?.("BLOCKED"),
+              className: `p-2.5 bg-rose-950/30 border border-rose-500/30 rounded ${onNavigateToResultsWithFilter ? "cursor-pointer hover:border-rose-500 transition-colors" : ""}`,
+              title: "Click to filter results by BLOCKED",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-rose-400 uppercase font-medium tracking-wider", children: "Blocked / Excluded" }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-lg font-bold text-rose-300 mt-0.5", children: runMetrics.blockedCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-rose-400/80 mt-0.5", children: "Firewall protected" })
+              ]
+            }
+          )
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Observed Processing Ledger" }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400", children: "Duplicates Detected:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "font-mono text-slate-200", children: runMetrics.duplicatesDetected })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400", children: "Records Merged:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "font-mono text-slate-200", children: runMetrics.recordsMerged })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400", children: "Records Rejected:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "font-mono text-slate-200", children: runMetrics.recordsRejected })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+              "div",
+              {
+                onClick: () => onNavigateToResultsWithFilter?.("CONFLICTED"),
+                className: `flex justify-between border-b border-slate-700/40 pb-1 ${onNavigateToResultsWithFilter ? "cursor-pointer hover:text-sky-300" : ""}`,
+                children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400", children: "Field Conflicts:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "font-mono text-amber-300", children: runMetrics.conflictedCount })
+                ]
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+              "div",
+              {
+                onClick: () => onNavigateToResultsWithFilter?.("INCOMPLETE"),
+                className: `flex justify-between border-b border-slate-700/40 pb-1 ${onNavigateToResultsWithFilter ? "cursor-pointer hover:text-sky-300" : ""}`,
+                children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400", children: "Incomplete Records:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "font-mono text-slate-300", children: runMetrics.incompleteCount })
+                ]
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400", children: "Exportable Records:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "font-mono text-emerald-400", children: runMetrics.exportableCount })
+            ] })
+          ] })
+        ] }),
+        restrictedAggregate.restrictedRecordCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2.5 bg-slate-950 border border-amber-500/40 rounded flex items-start gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-amber-400 text-sm", children: "\u{1F512}" }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[11px] font-semibold text-amber-300", children: "Data Firewall Invariant Active" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-slate-400 mt-0.5", children: restrictedAggregate.policyMessage })
+          ] })
+        ] })
+      ] }),
+      activeSection === "COVERAGE" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2.5", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex justify-between items-center", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Field Coverage Distribution" }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { className: "text-[10px] text-slate-400", children: [
+            "Denominator: ",
+            coverage.totalEligibleRecords,
+            " eligible records"
+          ] })
+        ] }),
+        [
+          { label: "Identity (Name & Entity)", pct: coverage.identityCoverage, count: coverage.rawCounts.identityCount, filter: void 0 },
+          { label: "Website Present", pct: coverage.websiteCoverage, count: coverage.rawCounts.websiteCount, filter: "MISSING_WEBSITE" },
+          { label: "Email Address", pct: coverage.emailCoverage, count: coverage.rawCounts.emailCount, filter: "MISSING_EMAIL" },
+          { label: "Phone Number", pct: coverage.phoneCoverage, count: coverage.rawCounts.phoneCount, filter: "MISSING_PHONE" },
+          { label: "Public People", pct: coverage.peopleCoverage, count: coverage.rawCounts.peopleCount, filter: "PUBLIC_PEOPLE" },
+          { label: "Published Services", pct: coverage.servicesCoverage, count: coverage.rawCounts.servicesCount, filter: void 0 },
+          { label: "Social Profiles", pct: coverage.socialCoverage, count: coverage.rawCounts.socialCount, filter: void 0 },
+          { label: "Qualification Evaluated", pct: coverage.qualificationCoverage, count: coverage.rawCounts.qualificationCount, filter: void 0 }
+        ].map((item) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "space-y-1", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex justify-between items-center text-[11px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-300", children: item.label }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center gap-2 font-mono", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { className: "text-slate-400", children: [
+                item.count,
+                " / ",
+                coverage.totalEligibleRecords
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { className: `font-semibold ${item.pct >= 75 ? "text-emerald-400" : item.pct >= 40 ? "text-amber-400" : "text-rose-400"}`, children: [
+                item.pct,
+                "%"
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "w-full h-1.5 bg-slate-700/60 rounded-full overflow-hidden", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+            "div",
+            {
+              className: `h-full rounded-full ${item.pct >= 75 ? "bg-emerald-500" : item.pct >= 40 ? "bg-amber-500" : "bg-rose-500"}`,
+              style: { width: `${Math.min(100, Math.max(0, item.pct))}%` }
+            }
+          ) })
+        ] }, item.label))
+      ] }) }),
+      activeSection === "CONTACTS" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2.5", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Observed Contactability Breakdown" }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("p", { className: "text-[10px] text-slate-400", children: "Categorization based strictly on actual observed channels. No predictive conversion scoring." }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "grid grid-cols-2 gap-2 mt-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Email + Phone Available" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-emerald-400 font-mono mt-0.5", children: contactability.emailAndPhoneCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+              contactability.fullContactabilityPercentage,
+              "% of total"
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+            "div",
+            {
+              onClick: () => onNavigateToResultsWithFilter?.("MISSING_PHONE"),
+              className: "p-2 bg-slate-900 border border-slate-700/60 rounded cursor-pointer hover:border-slate-500",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Email Only" }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-sky-400 font-mono mt-0.5", children: contactability.emailOnlyCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+                  contactability.totalEmailAvailableCount,
+                  " total with email"
+                ] })
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+            "div",
+            {
+              onClick: () => onNavigateToResultsWithFilter?.("MISSING_EMAIL"),
+              className: "p-2 bg-slate-900 border border-slate-700/60 rounded cursor-pointer hover:border-slate-500",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Phone Only" }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-amber-400 font-mono mt-0.5", children: contactability.phoneOnlyCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+                  contactability.totalPhoneAvailableCount,
+                  " total with phone"
+                ] })
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Contact Form Only" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-indigo-400 font-mono mt-0.5", children: contactability.contactFormOnlyCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-slate-400", children: "Website form detected" })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+            "div",
+            {
+              onClick: () => onNavigateToResultsWithFilter?.("PUBLIC_PEOPLE"),
+              className: "p-2 bg-slate-900 border border-slate-700/60 rounded cursor-pointer hover:border-slate-500",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Person Available Only" }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-purple-400 font-mono mt-0.5", children: contactability.personAvailableOnlyCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+                  contactability.totalPublicPersonAvailableCount,
+                  " with named people"
+                ] })
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "No Public Contact Signal" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-rose-400 font-mono mt-0.5", children: contactability.noPublicContactSignalCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+              contactability.noContactSignalPercentage,
+              "% missing contact"
+            ] })
+          ] })
+        ] })
+      ] }) }),
+      activeSection === "WEBSITE" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex justify-between items-center", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Website Intelligence (Phase 21 Limits)" }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-[10px] text-slate-400 font-mono", children: "Max 5 pgs \u2022 10s timeout" })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+            "div",
+            {
+              onClick: () => onNavigateToResultsWithFilter?.("VERIFIED_WEBSITE"),
+              className: "p-2 bg-slate-900 border border-slate-700/60 rounded cursor-pointer hover:border-emerald-500",
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Verified Business Site" }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-emerald-400 font-mono mt-0.5", children: website.websiteVerifiedCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+                  website.verificationRate,
+                  "% of present sites"
+                ] })
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Website Present" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-slate-200 font-mono mt-0.5", children: website.websitePresentCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+              website.pagesSuccessfullyInspected,
+              " pages inspected"
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Site Unavailable / Timeout" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-amber-400 font-mono mt-0.5", children: website.websiteUnavailableCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+              website.websiteTimeoutCount,
+              " timed out"
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Blocked by Safety Policy" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-rose-400 font-mono mt-0.5", children: website.websiteBlockedBySafetyCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-slate-400", children: "SSRF / origin protection" })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Tech Signals Discovered" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-sky-400 font-mono mt-0.5", children: website.technologySignalsDiscovered }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-slate-400", children: "CMS, Analytics, Chat" })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Non-Business / Parked" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-slate-400 font-mono mt-0.5", children: website.websiteNonBusinessCount + website.websiteParkedCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-slate-400", children: "Filtered generic domains" })
+          ] })
+        ] })
+      ] }) }),
+      activeSection === "QUALIFICATION" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2.5", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Qualification Decision Rationale" }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "grid grid-cols-3 gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-emerald-950/40 border border-emerald-500/30 rounded text-center", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-emerald-400", children: "QUALIFIED" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-emerald-300 font-mono", children: qualification.qualifiedCount })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-amber-950/40 border border-amber-500/30 rounded text-center", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-amber-400", children: "UNCERTAIN" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-amber-300 font-mono", children: qualification.uncertainCount })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2 bg-rose-950/40 border border-rose-500/30 rounded text-center", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-rose-400", children: "NOT QUALIFIED / BLOCKED" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-base font-bold text-rose-300 font-mono", children: qualification.notQualifiedCount + qualification.blockedCount })
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "mt-3 space-y-1.5", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[11px] font-semibold text-slate-300", children: "Observed Reason Codes" }),
+          qualification.reasonBreakdown.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-slate-400 py-1", children: "No detailed reason codes recorded." }) : /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "space-y-1 max-h-[220px] overflow-y-auto pr-1", children: qualification.reasonBreakdown.map((r) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-1.5 bg-slate-900 border border-slate-800 rounded flex items-center justify-between gap-2 text-[11px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "min-w-0", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "font-mono text-slate-200 truncate", children: r.code }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-slate-400 truncate", children: r.description })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "font-mono font-bold text-sky-400 bg-slate-800 px-1.5 py-0.5 rounded text-[10px] shrink-0", children: r.count })
+          ] }, r.code)) })
+        ] })
+      ] }) }),
+      activeSection === "WARNINGS" && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "space-y-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("h3", { className: "text-xs font-semibold text-slate-200", children: [
+          "Quality Warnings (",
+          warnings.length,
+          ")"
+        ] }),
+        warnings.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-4 bg-slate-800/40 border border-slate-700/60 rounded text-center text-slate-400", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-emerald-400 text-lg", children: "\u2713" }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-xs font-semibold text-slate-200 mt-1", children: "Zero Quality Warnings" }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] text-slate-400 mt-0.5", children: "All observed data quality metrics satisfied defined thresholds." })
+        ] }) : warnings.map((w) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+          "div",
+          {
+            className: `p-3 rounded border text-xs space-y-1 ${w.severity === "HIGH" ? "bg-rose-950/20 border-rose-500/40 text-rose-200" : w.severity === "MEDIUM" ? "bg-amber-950/20 border-amber-500/40 text-amber-200" : "bg-slate-800/60 border-slate-700 text-slate-300"}`,
+            children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center justify-between gap-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { className: "font-semibold text-slate-100 flex items-center gap-1.5", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: w.severity === "HIGH" ? "\u26A0\uFE0F" : "\u2139\uFE0F" }),
+                  " ",
+                  w.title
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800", children: w.code })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("p", { className: "text-[11px] text-slate-300", children: w.message }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[10px] text-slate-400 mt-1 pt-1 border-t border-slate-800/60", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("strong", { className: "text-slate-300", children: "Action:" }),
+                " ",
+                w.actionableRemedy
+              ] })
+            ]
+          },
+          w.id
+        ))
+      ] }),
+      activeSection === "COMPARISON" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Run Comparison Studio" }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("p", { className: "text-[10px] text-slate-400", children: "Select another completed run to evaluate variances, deduplication shifts, and entity modifications." }),
+        historySnapshots.length < 2 ? /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "p-3 bg-slate-900 border border-slate-800 rounded text-slate-400 text-center", children: "At least two completed runs are required for comparative analysis." }) : /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "space-y-3", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400", children: "Compare with:" }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+              "select",
+              {
+                value: compareRunId,
+                onChange: (e) => setCompareRunId(e.target.value),
+                className: "bg-slate-900 border border-slate-700 text-slate-200 text-[11px] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-sky-500",
+                children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("option", { value: "", children: "Select a run to compare..." }),
+                  historySnapshots.filter((s) => s.runId !== currentSnapshot.runId).map((s) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("option", { value: s.runId, children: [
+                    s.runTitle || s.runId,
+                    " (",
+                    s.totalRecords,
+                    " leads)"
+                  ] }, s.runId))
+                ]
+              }
+            )
+          ] }),
+          comparisonResult && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "space-y-3 mt-3", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2.5 bg-slate-900 border border-slate-800 rounded space-y-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] font-semibold text-sky-400 uppercase tracking-wider", children: "Descriptive Summary" }),
+              comparisonResult.descriptiveSummary.map((line, idx) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "text-[11px] text-slate-300", children: [
+                "\u2022 ",
+                line
+              ] }, idx))
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "border border-slate-800 rounded overflow-hidden", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("table", { className: "w-full text-[11px] text-left", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("thead", { className: "bg-slate-950 text-slate-400 uppercase text-[9px]", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("tr", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("th", { className: "p-2", children: "Metric" }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("th", { className: "p-2 text-right", children: "Base Run" }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("th", { className: "p-2 text-right", children: "Compare Run" }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("th", { className: "p-2 text-right", children: "Delta" })
+              ] }) }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("tbody", { className: "divide-y divide-slate-800/60 font-mono", children: comparisonResult.metricsDiff.map((d) => /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("tr", { className: "hover:bg-slate-800/40", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("td", { className: "p-2 font-sans text-slate-300", children: d.metricName }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("td", { className: "p-2 text-right text-slate-400", children: d.baseValue }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("td", { className: "p-2 text-right text-slate-200", children: d.compareValue }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("td", { className: `p-2 text-right font-bold ${d.delta > 0 ? "text-emerald-400" : d.delta < 0 ? "text-rose-400" : "text-slate-500"}`, children: d.delta > 0 ? `+${d.delta}` : d.delta })
+              ] }, d.metricName)) })
+            ] }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-2.5 bg-slate-900 border border-slate-800 rounded space-y-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: "text-[10px] font-semibold text-slate-400 uppercase tracking-wider", children: "Entity Change Summary" }),
+              /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 font-mono text-[10px]", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+                  "New: ",
+                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-emerald-400 font-bold", children: comparisonResult.changeAnalysis.newRecordsCount })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+                  "Removed: ",
+                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-rose-400 font-bold", children: comparisonResult.changeAnalysis.removedRecordsCount })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+                  "Modified: ",
+                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-amber-400 font-bold", children: comparisonResult.changeAnalysis.changedRecordsCount })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+                  "Unchanged: ",
+                  /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-slate-400 font-bold", children: comparisonResult.changeAnalysis.unchangedRecordsCount })
+                ] })
+              ] })
+            ] })
+          ] })
+        ] })
+      ] }) })
+    ] })
+  ] });
+};
+
 // src/extension/metaAdapter.ts
 init_relevanceEngine();
 function sanitizeCsvField(val) {
@@ -20603,27 +21847,27 @@ function exportLeadsToCsv(leads, run) {
 var PIPELINE_VERSION = "1.0.0-phase14";
 
 // src/extension/ui/App.tsx
-var import_jsx_runtime14 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime15 = __toESM(require_jsx_runtime(), 1);
 var ExtensionApp = () => {
-  const [activeTab, setActiveTab] = (0, import_react7.useState)("RESEARCH");
-  const [selectedSource, setSelectedSource] = (0, import_react7.useState)("META");
-  const [pendingPlan, setPendingPlan] = (0, import_react7.useState)(null);
-  const [isPlanReviewOpen, setIsPlanReviewOpen] = (0, import_react7.useState)(false);
-  const [isSubmitting, setIsSubmitting] = (0, import_react7.useState)(false);
-  const [activeRun, setActiveRun] = (0, import_react7.useState)(null);
-  const [runStatusVM, setRunStatusVM] = (0, import_react7.useState)(null);
-  const [elapsedSeconds, setElapsedSeconds] = (0, import_react7.useState)(0);
-  const [rawLeads, setRawLeads] = (0, import_react7.useState)([]);
-  const [selectedRecordIds, setSelectedRecordIds] = (0, import_react7.useState)(/* @__PURE__ */ new Set());
-  const [inspectedLead, setInspectedLead] = (0, import_react7.useState)(null);
-  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = (0, import_react7.useState)(false);
-  const [isExportModalOpen, setIsExportModalOpen] = (0, import_react7.useState)(false);
-  const [isExporting, setIsExporting] = (0, import_react7.useState)(false);
-  const [historyRuns, setHistoryRuns] = (0, import_react7.useState)([]);
-  const [recoveryInfo, setRecoveryInfo] = (0, import_react7.useState)(null);
-  const [isDiagnosticsOpen, setIsDiagnosticsOpen] = (0, import_react7.useState)(false);
-  const [diagnosticsVM, setDiagnosticsVM] = (0, import_react7.useState)(null);
-  (0, import_react7.useEffect)(() => {
+  const [activeTab, setActiveTab] = (0, import_react8.useState)("RESEARCH");
+  const [selectedSource, setSelectedSource] = (0, import_react8.useState)("META");
+  const [pendingPlan, setPendingPlan] = (0, import_react8.useState)(null);
+  const [isPlanReviewOpen, setIsPlanReviewOpen] = (0, import_react8.useState)(false);
+  const [isSubmitting, setIsSubmitting] = (0, import_react8.useState)(false);
+  const [activeRun, setActiveRun] = (0, import_react8.useState)(null);
+  const [runStatusVM, setRunStatusVM] = (0, import_react8.useState)(null);
+  const [elapsedSeconds, setElapsedSeconds] = (0, import_react8.useState)(0);
+  const [rawLeads, setRawLeads] = (0, import_react8.useState)([]);
+  const [selectedRecordIds, setSelectedRecordIds] = (0, import_react8.useState)(/* @__PURE__ */ new Set());
+  const [inspectedLead, setInspectedLead] = (0, import_react8.useState)(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = (0, import_react8.useState)(false);
+  const [isExportModalOpen, setIsExportModalOpen] = (0, import_react8.useState)(false);
+  const [isExporting, setIsExporting] = (0, import_react8.useState)(false);
+  const [historyRuns, setHistoryRuns] = (0, import_react8.useState)([]);
+  const [recoveryInfo, setRecoveryInfo] = (0, import_react8.useState)(null);
+  const [isDiagnosticsOpen, setIsDiagnosticsOpen] = (0, import_react8.useState)(false);
+  const [diagnosticsVM, setDiagnosticsVM] = (0, import_react8.useState)(null);
+  (0, import_react8.useEffect)(() => {
     loadStorageState();
     const messageListener = (msg) => {
       if (msg.type === "RESEARCH_PROGRESS" && msg.payload?.run) {
@@ -20644,7 +21888,7 @@ var ExtensionApp = () => {
     };
   }, []);
   const isJobRunning = (status) => status === "COLLECTING" || status === "NAVIGATING" || status === "STARTING" || status === "NORMALIZING";
-  (0, import_react7.useEffect)(() => {
+  (0, import_react8.useEffect)(() => {
     let interval;
     if (isJobRunning(activeRun?.status)) {
       interval = setInterval(() => {
@@ -20720,7 +21964,7 @@ var ExtensionApp = () => {
     };
     setRunStatusVM(toRunStatusViewModel(mockRun, elapsedSeconds * 1e3));
   };
-  const resultsVM = (0, import_react7.useMemo)(() => {
+  const resultsVM = (0, import_react8.useMemo)(() => {
     return rawLeads.map((item, idx) => {
       if (isCanonicalLeadRecord(item)) {
         return toResultRowViewModel(item);
@@ -20956,7 +22200,7 @@ var ExtensionApp = () => {
       setIsDetailDrawerOpen(true);
     }
   };
-  const exportPreviewVM = (0, import_react7.useMemo)(() => {
+  const exportPreviewVM = (0, import_react8.useMemo)(() => {
     const selectedLeads = selectedRecordIds.size > 0 ? resultsVM.filter((r) => selectedRecordIds.has(r.entityId) || selectedRecordIds.has(r.recordId)) : resultsVM;
     const totalSelected = selectedLeads.length;
     const exportableCount = selectedLeads.filter((r) => r.isExportable && !r.isRestricted).length;
@@ -20973,6 +22217,13 @@ var ExtensionApp = () => {
       isExportReady: exportableCount > 0
     };
   }, [resultsVM, selectedRecordIds]);
+  const analyticsSnapshot = (0, import_react8.useMemo)(() => {
+    if (!rawLeads || rawLeads.length === 0) return null;
+    return computeRunAnalytics(activeRun?.runId || "current-run", rawLeads, {
+      sourceType: selectedSource,
+      runTitle: activeRun?.queryScope?.rawInput || activeRun?.runId || "Current Run"
+    });
+  }, [rawLeads, activeRun, selectedSource]);
   const handleConfirmExport = () => {
     if (isExporting) return;
     setIsExporting(true);
@@ -21004,8 +22255,8 @@ var ExtensionApp = () => {
       });
     }
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "min-w-[360px] w-full max-w-[800px] h-full min-h-[600px] max-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans select-none", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "min-w-[360px] w-full max-w-[800px] h-full min-h-[600px] max-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans select-none", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
       Header,
       {
         activeTab,
@@ -21014,8 +22265,8 @@ var ExtensionApp = () => {
         isRunning: isJobRunning(activeRun?.status)
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("main", { className: "flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 flex flex-col gap-3", children: [
-      recoveryInfo && activeTab !== "RUN_STATUS" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("main", { className: "flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 flex flex-col gap-3", children: [
+      recoveryInfo && activeTab !== "RUN_STATUS" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
         RecoveryBanner,
         {
           recoveryInfo,
@@ -21031,7 +22282,7 @@ var ExtensionApp = () => {
           }
         }
       ),
-      activeTab === "RESEARCH" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { role: "tabpanel", id: "tabpanel-RESEARCH", "aria-labelledby": "tab-RESEARCH", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+      activeTab === "RESEARCH" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { role: "tabpanel", id: "tabpanel-RESEARCH", "aria-labelledby": "tab-RESEARCH", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
         ResearchConfigView,
         {
           selectedSource,
@@ -21040,7 +22291,7 @@ var ExtensionApp = () => {
           disabled: isSubmitting || isJobRunning(activeRun?.status)
         }
       ) }),
-      activeTab === "RUN_STATUS" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { role: "tabpanel", id: "tabpanel-RUN_STATUS", "aria-labelledby": "tab-RUN_STATUS", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+      activeTab === "RUN_STATUS" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { role: "tabpanel", id: "tabpanel-RUN_STATUS", "aria-labelledby": "tab-RUN_STATUS", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
         RunStatusView,
         {
           runStatus: runStatusVM,
@@ -21062,7 +22313,7 @@ var ExtensionApp = () => {
           }
         }
       ) }),
-      activeTab === "RESULTS" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { role: "tabpanel", id: "tabpanel-RESULTS", "aria-labelledby": "tab-RESULTS", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+      activeTab === "RESULTS" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { role: "tabpanel", id: "tabpanel-RESULTS", "aria-labelledby": "tab-RESULTS", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
         ResultsTableView,
         {
           results: resultsVM,
@@ -21081,7 +22332,17 @@ var ExtensionApp = () => {
           onOpenExportModal: () => setIsExportModalOpen(true)
         }
       ) }),
-      activeTab === "HISTORY" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { role: "tabpanel", id: "tabpanel-HISTORY", "aria-labelledby": "tab-HISTORY", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+      activeTab === "ANALYTICS" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { role: "tabpanel", id: "tabpanel-ANALYTICS", "aria-labelledby": "tab-ANALYTICS", className: "flex-1 flex flex-col min-h-0", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+        AnalyticsView,
+        {
+          currentSnapshot: analyticsSnapshot,
+          rawRecords: rawLeads,
+          onNavigateToResultsWithFilter: () => {
+            setActiveTab("RESULTS");
+          }
+        }
+      ) }),
+      activeTab === "HISTORY" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { role: "tabpanel", id: "tabpanel-HISTORY", "aria-labelledby": "tab-HISTORY", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
         HistoryView,
         {
           runs: historyRuns,
@@ -21092,7 +22353,7 @@ var ExtensionApp = () => {
           onClearHistory: handleClearHistory
         }
       ) }),
-      activeTab === "SETTINGS" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { role: "tabpanel", id: "tabpanel-SETTINGS", "aria-labelledby": "tab-SETTINGS", children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+      activeTab === "SETTINGS" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { role: "tabpanel", id: "tabpanel-SETTINGS", "aria-labelledby": "tab-SETTINGS", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
         SettingsView,
         {
           onOpenDiagnostics: () => {
@@ -21112,7 +22373,7 @@ var ExtensionApp = () => {
         }
       ) })
     ] }),
-    pendingPlan && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+    pendingPlan && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
       PlanReviewModal,
       {
         isOpen: isPlanReviewOpen,
@@ -21122,7 +22383,7 @@ var ExtensionApp = () => {
         isSubmitting
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
       ResultDetailDrawer,
       {
         isOpen: isDetailDrawerOpen,
@@ -21130,7 +22391,7 @@ var ExtensionApp = () => {
         onClose: () => setIsDetailDrawerOpen(false)
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
       ExportModal,
       {
         isOpen: isExportModalOpen,
@@ -21140,7 +22401,7 @@ var ExtensionApp = () => {
         isExporting
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
       DiagnosticsDrawer,
       {
         isOpen: isDiagnosticsOpen,
@@ -21152,11 +22413,11 @@ var ExtensionApp = () => {
 };
 
 // src/extension/ui/index.tsx
-var import_jsx_runtime15 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime16 = __toESM(require_jsx_runtime(), 1);
 var rootElement = document.getElementById("root");
 if (rootElement) {
   import_client.default.createRoot(rootElement).render(
-    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(import_react8.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(ExtensionApp, {}) })
+    /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(import_react9.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(ExtensionApp, {}) })
   );
 }
 /*! Bundled license information:

@@ -42,6 +42,9 @@ import { HistoryView } from './components/HistoryView.tsx';
 import { SettingsView } from './components/SettingsView.tsx';
 import { DiagnosticsDrawer } from './components/DiagnosticsDrawer.tsx';
 import { RecoveryBanner } from './components/RecoveryBanner.tsx';
+import { AnalyticsView } from './components/AnalyticsView.tsx';
+import { computeRunAnalytics } from '../analytics/analyticsEngine.ts';
+import { RunAnalyticsSnapshot } from '../analytics/types.ts';
 import {
   toResultRowViewModel,
   toResultDetailViewModel,
@@ -506,6 +509,14 @@ export const ExtensionApp: React.FC = () => {
     };
   }, [resultsVM, selectedRecordIds]);
 
+  const analyticsSnapshot: RunAnalyticsSnapshot | null = useMemo(() => {
+    if (!rawLeads || rawLeads.length === 0) return null;
+    return computeRunAnalytics(activeRun?.runId || 'current-run', rawLeads, {
+      sourceType: selectedSource,
+      runTitle: activeRun?.queryScope?.rawInput || activeRun?.runId || 'Current Run'
+    });
+  }, [rawLeads, activeRun, selectedSource]);
+
   const handleConfirmExport = () => {
     if (isExporting) return;
     setIsExporting(true);
@@ -633,7 +644,20 @@ export const ExtensionApp: React.FC = () => {
           </div>
         )}
 
-        {/* Tab 4: Persisted History */}
+        {/* Tab 4: Intelligence Analytics */}
+        {activeTab === 'ANALYTICS' && (
+          <div role="tabpanel" id="tabpanel-ANALYTICS" aria-labelledby="tab-ANALYTICS" className="flex-1 flex flex-col min-h-0">
+            <AnalyticsView
+              currentSnapshot={analyticsSnapshot}
+              rawRecords={rawLeads}
+              onNavigateToResultsWithFilter={() => {
+                setActiveTab('RESULTS');
+              }}
+            />
+          </div>
+        )}
+
+        {/* Tab 5: Persisted History */}
         {activeTab === 'HISTORY' && (
           <div role="tabpanel" id="tabpanel-HISTORY" aria-labelledby="tab-HISTORY">
             <HistoryView

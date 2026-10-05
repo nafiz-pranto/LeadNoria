@@ -17,7 +17,7 @@ A simple, beginner-friendly guide to installing and using **LeadNoria** on Googl
 ## 📥 Part 1: How to Install LeadNoria (9 Simple Steps)
 
 ### STEP 1 — Download the Extension ZIP
-Download `dist/leadnoria-v1.2.1.zip` (or `extension.zip`) from the release files to your computer (e.g. into your `Downloads` folder).
+Download `dist/leadnoria-v1.3.0.zip` (or `dist/leadnoria-v1.2.1.zip` / `extension.zip`) from the release files to your computer (e.g. into your `Downloads` folder).
 
 ### STEP 2 — Extract / Unzip the ZIP File
 Before doing anything in Chrome, unzip the downloaded file:

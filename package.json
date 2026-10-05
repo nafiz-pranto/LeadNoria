@@ -1,7 +1,7 @@
 {
   "name": "leadnoria",
   "private": true,
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "Business lead research from real public signals.",
   "type": "module",
   "scripts": {

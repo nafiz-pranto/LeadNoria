@@ -16,7 +16,7 @@
 
 import { SourceType, PipelineStageId, ExecutionMode, StageCompleteness } from '../pipeline/pipelineTypes.ts';
 
-export type NavigationTab = 'RESEARCH' | 'RUN_STATUS' | 'RESULTS' | 'HISTORY' | 'SETTINGS';
+export type NavigationTab = 'RESEARCH' | 'RUN_STATUS' | 'RESULTS' | 'ANALYTICS' | 'HISTORY' | 'SETTINGS';
 
 export type DisplayableSourceState = 
   | 'AVAILABLE'

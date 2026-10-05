@@ -1,0 +1,116 @@
+{
+  "phase": "Phase 29",
+  "title": "LeadNoria v1.2.1 Production Launch & Operational Pilot Log",
+  "recordedAt": "2026-10-05T19:04:21.469Z",
+  "environment": {
+    "node": "v22.14.0",
+    "platform": "win32",
+    "browserEngine": "Playwright Chromium MV3"
+  },
+  "releaseCommit": "8decd0fdd03eed2a602c026cc5f46e15bf4daeb0",
+  "artifactSha256": "1c1327049ae85c47e77015e6dadd1bf1c9c31924613807efbfebc942b5ee0419",
+  "manifestSha256": "17b567cbc4daf3c77b1a982e7a877d86d8b788855d65feb4d495ac15e042a215",
+  "operationalRuns": [
+    {
+      "runId": "RUN-P29-01",
+      "category": "PRODUCTION_WORKFLOW",
+      "query": "Plumbing Services",
+      "country": "GB",
+      "count": 4,
+      "status": "COMPLETED",
+      "export": "SUCCESS",
+      "persistence": "PERSISTED"
+    },
+    {
+      "runId": "RUN-P29-02",
+      "category": "PRODUCTION_WORKFLOW",
+      "query": "Supply Chain Consulting",
+      "country": "US",
+      "count": 2,
+      "status": "COMPLETED",
+      "export": "SUCCESS",
+      "persistence": "PERSISTED"
+    },
+    {
+      "runId": "RUN-P29-03",
+      "category": "PRODUCTION_WORKFLOW",
+      "query": "Sustainable Apparel",
+      "country": "AU",
+      "count": 8,
+      "status": "COMPLETED",
+      "export": "SUCCESS",
+      "persistence": "PERSISTED"
+    },
+    {
+      "runId": "RUN-P29-04",
+      "category": "PRODUCTION_WORKFLOW",
+      "query": "Auto Repair",
+      "country": "US",
+      "count": 1,
+      "status": "COMPLETED",
+      "export": "SUCCESS",
+      "persistence": "PERSISTED"
+    },
+    {
+      "runId": "RUN-P29-05",
+      "category": "PRODUCTION_WORKFLOW",
+      "query": "Artisan Bakery",
+      "country": "GB",
+      "count": 3,
+      "status": "COMPLETED_UNCERTAIN",
+      "export": "SKIPPED",
+      "persistence": "PERSISTED"
+    },
+    {
+      "runId": "RUN-P29-06",
+      "category": "PRODUCTION_WORKFLOW",
+      "query": "Commercial Electrician",
+      "country": "CA",
+      "count": 2,
+      "status": "COMPLETED_CONFLICT_FLAGGED",
+      "export": "SUCCESS",
+      "persistence": "PERSISTED"
+    },
+    {
+      "runId": "RUN-P29-07",
+      "category": "PRODUCTION_WORKFLOW",
+      "query": "Graphic Design Studio",
+      "country": "US",
+      "count": 1,
+      "status": "COMPLETED_NOT_QUALIFIED",
+      "export": "SKIPPED",
+      "persistence": "PERSISTED"
+    },
+    {
+      "runId": "RUN-P29-08",
+      "category": "DATA_FIREWALL_POLICY_VALIDATION",
+      "query": "City Dental Clinic",
+      "country": "US",
+      "count": 0,
+      "status": "BLOCKED_RESTRICTED",
+      "export": "BLOCKED_BY_FIREWALL",
+      "persistence": "REJECTED",
+      "note": "Synthetic Google candidate boundary check; zero live Google acquisition"
+    },
+    {
+      "runId": "RUN-P29-09",
+      "category": "PRODUCTION_WORKFLOW",
+      "query": "HVAC Contractors",
+      "country": "US",
+      "count": 12,
+      "status": "COMPLETED",
+      "export": "SUCCESS",
+      "persistence": "PERSISTED"
+    },
+    {
+      "runId": "RUN-P29-10",
+      "category": "PRODUCTION_WORKFLOW",
+      "query": "Legal Advisory Services",
+      "country": "GB",
+      "count": 6,
+      "status": "COMPLETED",
+      "export": "SUCCESS",
+      "persistence": "PERSISTED"
+    }
+  ]
+}

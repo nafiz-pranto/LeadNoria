@@ -3,7 +3,8 @@
 > **Discover. Verify. Connect.**  
 > Business lead research from real public signals — built as a Manifest V3 Chrome Extension.
 
-[![Version](https://img.shields.io/badge/version-1.2.1-blue)](RELEASE-NOTES-v1.2.1.md)
+[![Version](https://img.shields.io/badge/version-1.3.0-blue)](RELEASE-NOTES-v1.3.0.md)
+[![Previous](https://img.shields.io/badge/version-1.2.1-gray)](RELEASE-NOTES-v1.2.1.md)
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)](#testing)
 [![License](https://img.shields.io/badge/license-MIT-green)](#license)
 [![Manifest](https://img.shields.io/badge/Manifest-V3-orange)](extension/manifest.json)
@@ -27,7 +28,8 @@ It automates a multi-stage research pipeline:
 9. **Qualification** — scores entities against commercial qualification criteria
 10. **Geographic Accounting** — tracks coverage and saturation by area
 11. **Persistence** — durably stores run state, entities, and checkpoints
-12. **Export** — exports qualified leads as CSV or JSON with field-level policy enforcement
+12. **Production Analytics** — calculates local run-level quality, coverage, contactability, and comparative insights
+13. **Export** — exports qualified leads as CSV or JSON with field-level policy enforcement
 
 ---
 
@@ -35,15 +37,16 @@ It automates a multi-stage research pipeline:
 
 | Property | Value |
 |---|---|
-| **Version** | `1.2.1` |
-| **Build** | Production Verified Release Candidate |
+| **Version** | `1.3.0` |
+| **Build** | Production Verified Release Candidate (Phase 30 Analytics) |
 | **Manifest Version** | Manifest V3 |
-| **Release Artifact** | `dist/leadnoria-v1.2.1.zip` |
-| **Artifact SHA-256** | `1c1327049ae85c47e77015e6dadd1bf1c9c31924613807efbfebc942b5ee0419` |
-| **Manifest SHA-256** | `17b567cbc4daf3c77b1a982e7a877d86d8b788855d65feb4d495ac15e042a215` |
-| **Total Tests** | 1,890 across 20 suites (all passing) |
+| **Release Artifact** | `dist/leadnoria-v1.3.0.zip` |
+| **Artifact SHA-256** | `ff05215288e3723367ed8951fc16bb674ec323deaf5a2fb3cfb590a14edb0df2` |
+| **Manifest SHA-256** | `af78fd566c5a2ab3211d96509dcf2e96a69280af7262dd37e769d707287742ef` |
+| **Total Tests** | 2,230 across 22 suites (all passing) |
+| **Historical Baseline** | `1.2.1` (`dist/leadnoria-v1.2.1.zip` - SHA `1c1327049ae85c47...`, immutable) |
 
-See [RELEASE-NOTES-v1.2.1.md](RELEASE-NOTES-v1.2.1.md) for the full release notes and changelog.
+See [RELEASE-NOTES-v1.3.0.md](RELEASE-NOTES-v1.3.0.md) and historical [RELEASE-NOTES-v1.2.1.md](RELEASE-NOTES-v1.2.1.md) for full release notes and changelog.
 
 ---
 

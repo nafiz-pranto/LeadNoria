@@ -2,6 +2,18 @@
 
 All notable changes to the **LeadNoria** Chrome Extension are documented in this file.
 
+## [1.3.0] - 2026-10-06
+
+### Added
+- **Production Intelligence Analytics Engine:** Local, deterministic analytics calculating run-level quality, geographic coverage, contactability rates, website verification statistics, qualification breakdowns, and source attribution (`src/extension/analytics/`).
+- **Interactive Analytics UI (`AnalyticsView`):** Dedicated Analytics tab in extension navigation with stat cards, distribution charts, quality warnings, and side-by-side run comparison diffing.
+- **Analytics Persistence:** Isolated collection persistence via storage adapters (`analytics_snapshots`) with automated run-linking and snapshot retrieval.
+
+### Security & Governance
+- **Zero Telemetry Guarantee:** 100% client-side calculation with zero remote analytics beacons, zero telemetry dependencies, and zero external tracking calls.
+- **Zero Predictive Lead Scoring:** Bounded to mathematical aggregation of verified data; strictly prohibits opaque predictive buyer intent scoring.
+- **Data Firewall Integrity:** Preserved `CONTRACT_ONLY` restriction for experimental Google Maps lineage and strict same-origin website safety boundaries.
+
 ---
 
 ## [1.2.1] - 2026-10-05

@@ -29,6 +29,7 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'RESEARCH', label: 'Research' },
     { id: 'RUN_STATUS', label: 'Run Status', badge: isRunning ? 'LIVE' : undefined },
     { id: 'RESULTS', label: 'Results', badge: resultsCount > 0 ? resultsCount : undefined },
+    { id: 'ANALYTICS', label: 'Analytics' },
     { id: 'HISTORY', label: 'History' },
     { id: 'SETTINGS', label: 'Settings' }
   ];
