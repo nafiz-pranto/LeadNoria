@@ -949,11 +949,11 @@ if (fs.existsSync(v130ZipPath)) {
 
 const pkgJsonPath = path.join(rootDir, 'package.json');
 const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
-check(205, 'package.json version matches release candidate progression', ['1.3.0', '1.4.0', '1.5.0'].includes(pkgJson.version));
+check(205, 'package.json version matches release candidate progression', ['1.3.0', '1.4.0', '1.5.0', '1.6.0'].includes(pkgJson.version));
 
 const srcManPath = path.join(rootDir, 'src/extension/manifest.json');
 const srcMan = JSON.parse(fs.readFileSync(srcManPath, 'utf8'));
-check(206, 'src/extension/manifest.json version matches release candidate progression', ['1.3.0', '1.4.0', '1.5.0'].includes(srcMan.version));
+check(206, 'src/extension/manifest.json version matches release candidate progression', ['1.3.0', '1.4.0', '1.5.0', '1.6.0'].includes(srcMan.version));
 
 const buildScriptContent = fs.readFileSync(path.join(rootDir, 'scripts/build-extension.mjs'), 'utf8');
 check(207, 'build script includes logic to package extension releases',

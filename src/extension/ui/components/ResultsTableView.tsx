@@ -16,6 +16,9 @@ import { ResultRowViewModel } from '../types.ts';
 import { StatusBadge } from './StatusBadge.tsx';
 import { toFriendlyStatus } from '../humanLabels.ts';
 import { getSafeExternalUrl } from '../security.ts';
+import { GoogleMapsFilterControls } from './GoogleMapsFilterControls.tsx';
+import type { RatingFilterOption, WebsiteFilterOption } from '../../acquisition/engine/filterTypes.ts';
+import { metaResultsToTsv, writeClipboardText } from '../../clipboard/index.ts';
 
 export type SortOption =
   | 'NAME_ASC'
@@ -51,6 +54,8 @@ export const ResultsTableView: React.FC<ResultsTableViewProps> = ({
   const [qualificationFilter, setQualificationFilter] = useState<string>('ALL');
   const [freshnessFilter, setFreshnessFilter] = useState<string>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
+  const [ratingFilter, setRatingFilter] = useState<RatingFilterOption>('ANY');
+  const [websiteFilter, setWebsiteFilter] = useState<WebsiteFilterOption>('ANY');
   const [requirePhone, setRequirePhone] = useState(false);
   const [requireEmail, setRequireEmail] = useState(false);
   const [requireWebsite, setRequireWebsite] = useState(false);
@@ -58,6 +63,13 @@ export const ResultsTableView: React.FC<ResultsTableViewProps> = ({
   const [sortBy, setSortBy] = useState<SortOption>('NAME_ASC');
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 50;
+
+  // Copy All State
+  const [isCopying, setIsCopying] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
   // Derive unique categories for filter dropdown
   const availableCategories = useMemo(() => {
@@ -119,6 +131,30 @@ export const ResultsTableView: React.FC<ResultsTableViewProps> = ({
       if (requireWebsite && !r.dataSignals?.websiteVerified) return false;
       if (requirePerson && !r.dataSignals?.publicPersonAvailable) return false;
 
+      // Part 3: Rating filter
+      if (ratingFilter !== 'ANY') {
+        const minRating = ratingFilter === 'MIN_4_5' ? 4.5 : 4.0;
+        if (
+          !r.rating ||
+          r.rating.availability !== 'PRESENT' ||
+          typeof r.rating.parsedValue !== 'number' ||
+          !Number.isFinite(r.rating.parsedValue) ||
+          r.rating.parsedValue < minRating
+        ) {
+          return false;
+        }
+      }
+
+      // Part 3: Website filter
+      if (websiteFilter === 'WITH_WEBSITE') {
+        // PRESENT and has non-empty URL
+        if (r.websiteAvailability !== 'PRESENT') return false;
+        if (!r.websiteUrl || r.websiteUrl.trim() === '') return false;
+      } else if (websiteFilter === 'WITHOUT_WEBSITE') {
+        // Only explicit ABSENT matches. UNKNOWN, AMBIGUOUS, UNSUPPORTED, PRESENT do NOT match
+        if (r.websiteAvailability !== 'ABSENT') return false;
+      }
+
       return true;
     });
   }, [
@@ -128,6 +164,8 @@ export const ResultsTableView: React.FC<ResultsTableViewProps> = ({
     qualificationFilter,
     freshnessFilter,
     categoryFilter,
+    ratingFilter,
+    websiteFilter,
     requirePhone,
     requireEmail,
     requireWebsite,
@@ -202,6 +240,41 @@ export const ResultsTableView: React.FC<ResultsTableViewProps> = ({
     }
   };
 
+  // Copy All Handler
+  const handleCopyAll = async () => {
+    if (filteredResults.length === 0 || isCopying) return;
+    setIsCopying(true);
+    setCopyFeedback(null);
+
+    try {
+      // Consume active structured results through Meta clipboard projection
+      const tsv = metaResultsToTsv(filteredResults);
+      const result = await writeClipboardText(tsv);
+
+      if (result.success) {
+        setCopyFeedback({
+          type: 'success',
+          message: `${filteredResults.length} results copied`
+        });
+        setTimeout(() => {
+          setCopyFeedback(prev => prev?.type === 'success' ? null : prev);
+        }, 3000);
+      } else {
+        setCopyFeedback({
+          type: 'error',
+          message: 'Could not copy results to clipboard.'
+        });
+      }
+    } catch (_err) {
+      setCopyFeedback({
+        type: 'error',
+        message: 'Could not copy results to clipboard.'
+      });
+    } finally {
+      setIsCopying(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-3">
       {/* Controls Bar: Search, Filters, Export */}
@@ -220,6 +293,22 @@ export const ResultsTableView: React.FC<ResultsTableViewProps> = ({
             />
           </div>
 
+          {/* Copy All Button */}
+          <button
+            type="button"
+            id="meta-copy-all-btn"
+            onClick={handleCopyAll}
+            disabled={filteredResults.length === 0 || isCopying}
+            className={`px-3 py-1.5 text-xs font-semibold rounded transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 cursor-pointer ${
+              filteredResults.length > 0 && !isCopying
+                ? 'bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700'
+                : 'bg-slate-900 text-slate-600 cursor-not-allowed border border-slate-800'
+            }`}
+            aria-label={`Copy all ${filteredResults.length} results to clipboard`}
+          >
+            <span>📋</span> {isCopying ? 'Copying...' : `Copy All (${filteredResults.length})`}
+          </button>
+
           {/* Export Button */}
           <button
             type="button"
@@ -234,6 +323,32 @@ export const ResultsTableView: React.FC<ResultsTableViewProps> = ({
             <span>⭳</span> Export ({selectedRecordIds.size > 0 ? selectedRecordIds.size : results.length})
           </button>
         </div>
+
+        {/* Copy All Feedback Notification */}
+        {copyFeedback && (
+          <div
+            role="status"
+            aria-live="polite"
+            className={`px-3 py-1.5 rounded text-xs flex items-center justify-between transition-all ${
+              copyFeedback.type === 'success'
+                ? 'bg-emerald-950/80 border border-emerald-800/80 text-emerald-200'
+                : 'bg-rose-950/80 border border-rose-800/80 text-rose-200'
+            }`}
+          >
+            <div className="flex items-center gap-1.5">
+              <span>{copyFeedback.type === 'success' ? '✓' : '⚠️'}</span>
+              <span>{copyFeedback.message}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCopyFeedback(null)}
+              className="text-slate-400 hover:text-white cursor-pointer ml-2 text-xs"
+              aria-label="Dismiss feedback"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* Filter & Sort Row */}
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -354,6 +469,17 @@ export const ResultsTableView: React.FC<ResultsTableViewProps> = ({
         </div>
       </div>
 
+      {/* LeadNoria Part 3: Rating + Website Filter Controls */}
+      <GoogleMapsFilterControls
+        ratingFilter={ratingFilter}
+        websiteFilter={websiteFilter}
+        onRatingChange={newRating => { setRatingFilter(newRating); setPage(1); }}
+        onWebsiteChange={newWebsite => { setWebsiteFilter(newWebsite); setPage(1); }}
+        onResetFilters={() => { setRatingFilter('ANY'); setWebsiteFilter('ANY'); setPage(1); }}
+        totalObserved={results.length}
+        matchingCount={filteredResults.length}
+      />
+
       {/* Selection & Pagination Status Bar */}
       <div className="flex items-center justify-between px-1 text-xs text-slate-400">
         <div className="flex items-center gap-3">
@@ -369,8 +495,8 @@ export const ResultsTableView: React.FC<ResultsTableViewProps> = ({
           </label>
           <span className="text-[11px] text-slate-500">•</span>
           <span className="text-[11px]">
-            Showing <strong>{paginatedResults.length}</strong> of <strong>{sortedResults.length}</strong> records
-            {results.length !== sortedResults.length && ` (filtered from ${results.length})`}
+            Showing <strong>{paginatedResults.length}</strong> of <strong>{sortedResults.length}</strong> matching leads
+            {results.length !== sortedResults.length && ` (from ${results.length} unique candidates)`}
           </span>
         </div>
 
@@ -395,12 +521,18 @@ export const ResultsTableView: React.FC<ResultsTableViewProps> = ({
         <div className="p-8 text-center bg-slate-900/60 border border-slate-800 rounded-lg">
           <span className="text-2xl block mb-1">🔍</span>
           <p className="text-xs font-semibold text-slate-300 mb-0.5">
-            {results.length === 0 ? 'No Research Results Available' : 'No Matching Businesses Found'}
+            {results.length === 0
+              ? 'No Research Results Available'
+              : (ratingFilter !== 'ANY' || websiteFilter !== 'ANY')
+                ? `0 businesses match ${ratingFilter !== 'ANY' ? ratingFilter : 'Any'} + ${websiteFilter === 'WITH_WEBSITE' ? 'With Website' : websiteFilter === 'WITHOUT_WEBSITE' ? 'Without Website' : 'Any'}`
+                : 'No Matching Businesses Found'}
           </p>
           <p className="text-[11px] text-slate-500">
             {results.length === 0
               ? 'Data not available. Start a research run to discover leads.'
-              : 'Try adjusting your search terms or relaxing your filter criteria.'}
+              : (ratingFilter !== 'ANY' || websiteFilter !== 'ANY')
+                ? 'Try relaxing your rating or website filter criteria to view more candidates.'
+                : 'Try adjusting your search terms or relaxing your filter criteria.'}
           </p>
         </div>
       )}
@@ -472,6 +604,16 @@ export const ResultsTableView: React.FC<ResultsTableViewProps> = ({
                           <span className="font-mono text-slate-500 text-[10px]">{r.primarySource}</span>
                         )}
                       </div>
+
+                      {/* Rating Badge */}
+                      {r.rating && r.rating.availability === 'PRESENT' && typeof r.rating.parsedValue === 'number' && (
+                        <>
+                          <span className="text-slate-600">•</span>
+                          <span className="text-amber-400 font-semibold flex items-center gap-0.5" title={`Observed Rating: ${r.rating.parsedValue.toFixed(1)}`}>
+                            <span>★</span> {r.rating.parsedValue.toFixed(1)}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

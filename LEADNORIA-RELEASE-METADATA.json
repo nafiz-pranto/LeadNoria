@@ -2,14 +2,14 @@
   "product": "LeadNoria",
   "tagline": "Discover. Verify. Connect.",
   "descriptor": "Business lead research from real public signals.",
-  "version": "1.5.0",
-  "releaseCandidate": "Production Verified Release Candidate Build (Phase 32 Production Feedback & Reliability)",
+  "version": "1.6.0",
+  "releaseCandidate": "Production Verified Release (Google Maps Advanced Research & Qualification Engine)",
   "releaseArtifact": {
-    "path": "dist/leadnoria-v1.5.0.zip",
-    "byteSize": 348474,
-    "sha256": "1a55ad80ed3e400b88c7f6d9c36d3dcbccd697737df39cb95c4e0dd4c11c4544",
+    "path": "dist/leadnoria-v1.6.0.zip",
+    "byteSize": 444923,
+    "sha256": "4d110c4f7907d26fdddc53cf4586d32213c3c86bf78f2a9e9675d87eaa37456f",
     "fileCount": 13,
-    "manifestSha256": "b228fa22542404cbe44b1753f1d3371356396eefbc057de41e76bfb7e331faa3"
+    "manifestSha256": "2ac3382120745b7500b02bf1aae6fe51b189bc81a27c4779baefc243fb63ac49"
   },
   "historicalPreservedBaselines": [
     {
@@ -56,6 +56,14 @@
       "sha256": "18d0d38a3b70bf9e699d0dc7a64a63ebe2845b39630ce83d4a4637d826d70881",
       "status": "IMMUTABLE_PRESERVED_HISTORICAL_RELEASE",
       "manifestSha256": "ce2dd0e7b10d9e464f0b521e090ea7f4a8299a81aa53a18e591d17272386eba3"
+    },
+    {
+      "version": "1.5.0",
+      "path": "dist/leadnoria-v1.5.0.zip",
+      "byteSize": 348474,
+      "sha256": "1a55ad80ed3e400b88c7f6d9c36d3dcbccd697737df39cb95c4e0dd4c11c4544",
+      "status": "IMMUTABLE_PRESERVED_HISTORICAL_RELEASE",
+      "manifestSha256": "b228fa22542404cbe44b1753f1d3371356396eefbc057de41e76bfb7e331faa3"
     }
   ],
   "buildCommand": "node scripts/build-extension.mjs",

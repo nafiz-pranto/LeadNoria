@@ -168,6 +168,14 @@ export interface ResultRowViewModel {
   friendlyFreshnessState?: string;
   lastObservedText?: string;
   canonicalRecord?: any;
+
+  // Part 3 Google Maps Rating & Website Filter fields
+  rating?: {
+    availability: string;
+    parsedValue?: number;
+    rawValue?: string;
+  };
+  websiteAvailability?: string;
 }
 export type LeadResultRowViewModel = ResultRowViewModel;
 

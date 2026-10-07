@@ -3,8 +3,8 @@
 > **Discover. Verify. Connect.**  
 > Business lead research from real public signals — built as a Manifest V3 Chrome Extension.
 
-[![Version](https://img.shields.io/badge/version-1.5.0-blue)](RELEASE-NOTES-v1.5.0.md)
-[![Previous](https://img.shields.io/badge/version-1.4.0-gray)](RELEASE-NOTES-v1.4.0.md)
+[![Version](https://img.shields.io/badge/version-1.6.0-blue)](RELEASE-NOTES-v1.6.0.md)
+[![Previous](https://img.shields.io/badge/version-1.5.0-gray)](RELEASE-NOTES-v1.5.0.md)
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)](#testing)
 [![License](https://img.shields.io/badge/license-MIT-green)](#license)
 [![Manifest](https://img.shields.io/badge/Manifest-V3-orange)](extension/manifest.json)
@@ -39,16 +39,13 @@ It automates a multi-stage research pipeline:
 
 | Property | Value |
 |---|---|
-| **Version** | `1.5.0` |
-| **Build** | Production Verified Release Candidate (Phase 32 Reliability & Growth Readiness) |
+| **Version** | `1.6.0` |
+| **Build** | Production Verified Release (Google Maps Advanced Research & Qualification Engine) |
 | **Manifest Version** | Manifest V3 |
-| **Release Artifact** | `dist/leadnoria-v1.5.0.zip` |
-| **Artifact SHA-256** | `1a55ad80ed3e400b88c7f6d9c36d3dcbccd697737df39cb95c4e0dd4c11c4544` |
-| **Manifest SHA-256** | `b228fa22542404cbe44b1753f1d3371356396eefbc057de41e76bfb7e331faa3` |
-| **Total Tests** | 2,732 across 24 suites (all passing) |
-| **Historical Baseline** | `1.4.0` (`dist/leadnoria-v1.4.0.zip` - SHA `18d0d38a3b70bf9e...`, immutable) |
+| **Release Artifact** | `dist/leadnoria-v1.6.0.zip` |
+| **Historical Baseline** | `1.5.0` (`dist/leadnoria-v1.5.0.zip` - SHA `1a55ad80ed3e400b88c7f6d9c36d3dcbccd697737df39cb95c4e0dd4c11c4544`, immutable) |
 
-See [RELEASE-NOTES-v1.5.0.md](RELEASE-NOTES-v1.5.0.md) and historical [RELEASE-NOTES-v1.4.0.md](RELEASE-NOTES-v1.4.0.md), [RELEASE-NOTES-v1.3.0.md](RELEASE-NOTES-v1.3.0.md), [RELEASE-NOTES-v1.2.1.md](RELEASE-NOTES-v1.2.1.md) for full release notes and changelog.
+See [RELEASE-NOTES-v1.6.0.md](RELEASE-NOTES-v1.6.0.md) and historical [RELEASE-NOTES-v1.5.0.md](RELEASE-NOTES-v1.5.0.md), [RELEASE-NOTES-v1.4.0.md](RELEASE-NOTES-v1.4.0.md), [RELEASE-NOTES-v1.3.0.md](RELEASE-NOTES-v1.3.0.md), [RELEASE-NOTES-v1.2.1.md](RELEASE-NOTES-v1.2.1.md) for full release notes and changelog.
 
 ---
 

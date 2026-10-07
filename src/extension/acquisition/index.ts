@@ -77,3 +77,7 @@ export {
   parseCoordinatesFromUrl,
   parsePlaceIdFromUrl
 } from './googleMapsExtractionEngine.ts';
+
+// Part 7: Unified Candidate Review & Qualification Layer
+export * from './review/index.ts';
+

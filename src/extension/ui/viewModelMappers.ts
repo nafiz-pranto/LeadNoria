@@ -664,7 +664,15 @@ export function toResultRowViewModel(record: UnifiedResearchRecord | CandidateEn
     qualityMetrics,
     friendlyQualificationState: toFriendlyStatus(qualificationState),
     friendlyFreshnessState: toFriendlyStatus('CURRENT'),
-    lastObservedText: record.createdAt
+    lastObservedText: record.createdAt,
+
+    // Part 3 Google Maps Rating & Website Filter fields
+    rating: (record as any).rating ? {
+      availability: (record as any).rating.availability || 'UNKNOWN',
+      parsedValue: (record as any).rating.parsedValue,
+      rawValue: (record as any).rating.rawValue
+    } : undefined,
+    websiteAvailability: (record as any).websiteUrl?.availability || ((record as any).digital?.verifiedWebsite?.value || websiteUrl ? 'PRESENT' : 'UNKNOWN')
   };
 }
 

@@ -7581,6 +7581,1944 @@ function buildBusinessIntelligenceProfile(params) {
   };
 }
 
+// src/extension/acquisition/engine/searchUnit.ts
+function hashStringDeterministic(input) {
+  let h1 = 2166136261;
+  let h2 = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    const c = input.charCodeAt(i);
+    h1 = (h1 ^ c) * 16777619;
+    h2 = (h2 ^ c >> 1) * 16777619;
+    h1 = h1 >>> 0;
+    h2 = h2 >>> 0;
+  }
+  return h1.toString(16).padStart(8, "0") + h2.toString(16).padStart(8, "0");
+}
+function normalizeKeyword(raw) {
+  if (!raw || typeof raw !== "string") {
+    throw new Error("Keyword must be a non-empty string");
+  }
+  const cleaned = raw.replace(/[\x00-\x1F\x7F]/g, " ").replace(/\s+/g, " ").trim();
+  if (cleaned.length === 0) {
+    throw new Error("Keyword cannot be empty or pure whitespace");
+  }
+  return cleaned;
+}
+function normalizeLocation(raw) {
+  if (!raw || typeof raw !== "string") return void 0;
+  const cleaned = raw.replace(/[\x00-\x1F\x7F]/g, " ").replace(/\s+/g, " ").trim();
+  return cleaned.length > 0 ? cleaned : void 0;
+}
+function deriveSearchUnitId(normKeyword, normLocation) {
+  const composite = `${normKeyword.toLowerCase()}::${(normLocation || "").toLowerCase()}`;
+  const hash = hashStringDeterministic(composite);
+  return `gsu_${hash}`;
+}
+function buildMapsSearchUrl(query) {
+  const bounded = (query || "").slice(0, 500);
+  return `https://www.google.com/maps/search/${encodeURIComponent(bounded)}`;
+}
+function createSearchUnit(input) {
+  const normKeyword = normalizeKeyword(input.keyword);
+  const normLocation = normalizeLocation(input.location);
+  const normalizedQuery = input.customQuery ? input.customQuery.trim() : normLocation ? `${normKeyword} ${normLocation}` : normKeyword;
+  const searchUnitId = deriveSearchUnitId(normKeyword, normLocation);
+  const navigationUrl = buildMapsSearchUrl(normalizedQuery);
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  return {
+    searchUnitId,
+    rawKeyword: input.keyword,
+    normalizedKeyword: normKeyword,
+    rawLocation: input.location,
+    normalizedLocation: normLocation,
+    normalizedQuery,
+    navigationUrl,
+    status: "PLANNED",
+    createdAt: now,
+    candidateCount: 0,
+    retryCount: 0,
+    maxRetries: input.maxRetries ?? 2,
+    diagnostics: []
+  };
+}
+
+// src/extension/acquisition/engine/candidateNormalizer.ts
+var LEGAL_SUFFIXES2 = [
+  "private limited",
+  "pvt ltd",
+  "pvt. ltd.",
+  "pvt. ltd",
+  "pvt",
+  "pvt.",
+  "limited",
+  "ltd",
+  "ltd.",
+  "llc",
+  "l.l.c.",
+  "inc",
+  "inc.",
+  "incorporated",
+  "corp",
+  "corp.",
+  "corporation",
+  "co",
+  "co.",
+  "company",
+  "plc",
+  "p.l.c.",
+  "gmbh",
+  "enterprise",
+  "enterprises"
+];
+var GENERIC_SHARED_DOMAINS2 = /* @__PURE__ */ new Set([
+  "facebook.com",
+  "web.facebook.com",
+  "m.facebook.com",
+  "l.facebook.com",
+  "instagram.com",
+  "wa.me",
+  "api.whatsapp.com",
+  "whatsapp.com",
+  "t.me",
+  "telegram.me",
+  "youtube.com",
+  "youtu.be",
+  "linktr.ee",
+  "bio.link",
+  "beacons.ai",
+  "campsite.bio",
+  "forms.gle",
+  "docs.google.com",
+  "drive.google.com",
+  "google.com",
+  "typeform.com",
+  "calendly.com",
+  "bit.ly",
+  "tinyurl.com",
+  "ow.ly",
+  "rebrand.ly",
+  "t.co",
+  "amazon.com",
+  "amazon.co.uk",
+  "amazon.in",
+  "ebay.com",
+  "etsy.com",
+  "daraz.com.bd",
+  "daraz.pk",
+  "walmart.com",
+  "target.com",
+  "aliexpress.com",
+  "alibaba.com",
+  "myshopify.com",
+  "shopee.com",
+  "lazada.com",
+  "yelp.com",
+  "tripadvisor.com",
+  "yellowpages.com"
+]);
+var REGIONAL_LOCALITY_TOKENS = [
+  "dhaka",
+  "chattogram",
+  "chittagong",
+  "sylhet",
+  "rajshahi",
+  "khulna",
+  "barishal",
+  "barisal",
+  "rangpur",
+  "mymensingh",
+  "cumilla",
+  "comilla",
+  "gazipur",
+  "narayanganj",
+  "bogura",
+  "bogra",
+  "coxs bazar",
+  "cox's bazar",
+  "uttara",
+  "gulshan",
+  "banani",
+  "dhanmondi",
+  "mirpur",
+  "motijheel",
+  "mohakhali",
+  "bashundhara",
+  "badda",
+  "mohammadpur",
+  "khilgaon"
+];
+function normalizeBusinessNameForIdentity(rawName) {
+  if (!rawName) {
+    return { displayName: "", normalizedName: "", comparisonKey: "" };
+  }
+  const cleaned = rawName.normalize("NFKC").replace(/\s*·\s*Sponsored.*$/i, "").replace(/\s*Sponsored.*$/i, "").replace(/\s+/g, " ").trim();
+  const normalizedName = cleaned.toLowerCase();
+  let comp = normalizedName;
+  let matchedSuffix;
+  const sortedSuffixes = [...LEGAL_SUFFIXES2].sort((a, b) => b.length - a.length);
+  for (const suffix of sortedSuffixes) {
+    const escaped = suffix.replace(/\./g, "\\.");
+    const regex = new RegExp(`(?:\\b|\\s)${escaped}\\.?$`, "i");
+    if (regex.test(comp)) {
+      matchedSuffix = suffix;
+      comp = comp.replace(regex, "").trim();
+      break;
+    }
+  }
+  const comparisonKey = comp.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()'"?–—]/g, " ").replace(/\s+/g, " ").trim();
+  return {
+    displayName: cleaned,
+    normalizedName,
+    comparisonKey: comparisonKey || normalizedName,
+    legalSuffix: matchedSuffix
+  };
+}
+function normalizeAddressForIdentity(rawAddress) {
+  if (!rawAddress) {
+    return { rawAddress: "", normalizedAddress: "", comparisonKey: "" };
+  }
+  const raw = rawAddress.trim();
+  const normalizedAddress = raw.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
+  const comparisonKey = normalizedAddress.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()'"?–—]/g, " ").replace(/\s+/g, " ").trim();
+  let locality;
+  for (const loc of REGIONAL_LOCALITY_TOKENS) {
+    const regex = new RegExp(`\\b${loc}\\b`, "i");
+    if (regex.test(comparisonKey)) {
+      locality = loc;
+      break;
+    }
+  }
+  return {
+    rawAddress: raw,
+    normalizedAddress,
+    comparisonKey,
+    locality
+  };
+}
+function normalizePhoneForIdentity(rawPhone) {
+  if (!rawPhone) {
+    return { rawPhone: "", normalizedPhone: "", nationalDigits: "", isValid: false };
+  }
+  const raw = rawPhone.trim();
+  const hasPlus = raw.startsWith("+");
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length < 6 || digits.length > 15) {
+    return { rawPhone: raw, normalizedPhone: raw, nationalDigits: digits, isValid: false };
+  }
+  let nationalDigits = digits;
+  if (digits.startsWith("880") && digits.length >= 10) {
+    nationalDigits = digits.slice(3);
+  } else if (digits.startsWith("0") && digits.length >= 10) {
+    nationalDigits = digits.slice(1);
+  }
+  const normalizedPhone = hasPlus ? `+${digits}` : digits;
+  return {
+    rawPhone: raw,
+    normalizedPhone,
+    nationalDigits,
+    isValid: true
+  };
+}
+function arePhonesEquivalent(phoneA, phoneB) {
+  if (!phoneA || !phoneB) return false;
+  const pA = normalizePhoneForIdentity(phoneA);
+  const pB = normalizePhoneForIdentity(phoneB);
+  if (!pA.isValid || !pB.isValid) return false;
+  if (pA.normalizedPhone === pB.normalizedPhone) return true;
+  if (pA.nationalDigits.length >= 8 && pA.nationalDigits === pB.nationalDigits) {
+    return true;
+  }
+  return false;
+}
+function normalizeWebsiteForIdentity(rawUrl) {
+  if (!rawUrl) {
+    return { rawUrl: "", normalizedUrl: "", hostname: "", isGenericDomain: false, isValid: false };
+  }
+  const norm = normalizeWebsiteUrl(rawUrl);
+  if (!norm.isValid) {
+    return { rawUrl, normalizedUrl: "", hostname: "", isGenericDomain: false, isValid: false };
+  }
+  const hostname = norm.finalHostname.toLowerCase().replace(/^www\./, "");
+  const isGenericDomain = GENERIC_SHARED_DOMAINS2.has(hostname);
+  return {
+    rawUrl,
+    normalizedUrl: norm.finalUrl,
+    hostname,
+    domain: isGenericDomain ? void 0 : hostname,
+    isGenericDomain,
+    isValid: true
+  };
+}
+function normalizeMapsUrlSlug(url) {
+  if (!url) return void 0;
+  const trimmed = url.trim();
+  try {
+    const parsed = new URL(trimmed);
+    const placeMatch = parsed.pathname.match(/\/maps\/place\/([^/@?]+)/);
+    if (placeMatch && placeMatch[1]) {
+      return decodeURIComponent(placeMatch[1]).toLowerCase().replace(/\+/g, " ").trim();
+    }
+    const q = parsed.searchParams.get("q");
+    if (q) {
+      return q.toLowerCase().replace(/\+/g, " ").trim();
+    }
+  } catch {
+    if (trimmed.includes("/maps/place/")) {
+      const parts = trimmed.split("/maps/place/")[1]?.split(/[\/@?]/)[0];
+      if (parts) return parts.toLowerCase().replace(/\+/g, " ").trim();
+    }
+  }
+  return void 0;
+}
+
+// src/extension/acquisition/engine/candidateMatcher.ts
+function compareCandidatesForIdentity(subjectA, subjectB) {
+  const normNameA = normalizeBusinessNameForIdentity(subjectA.businessName);
+  const normNameB = normalizeBusinessNameForIdentity(subjectB.businessName);
+  const normAddrA = normalizeAddressForIdentity(subjectA.address);
+  const normAddrB = normalizeAddressForIdentity(subjectB.address);
+  const placeIdA = subjectA.placeId?.trim();
+  const placeIdB = subjectB.placeId?.trim();
+  const slugA = normalizeMapsUrlSlug(subjectA.mapsUrl);
+  const slugB = normalizeMapsUrlSlug(subjectB.mapsUrl);
+  const isPlaceIdAValid = Boolean(placeIdA && (placeIdA.startsWith("ChIJ") || placeIdA.startsWith("0x") || placeIdA.includes(":")));
+  const isPlaceIdBValid = Boolean(placeIdB && (placeIdB.startsWith("ChIJ") || placeIdB.startsWith("0x") || placeIdB.includes(":")));
+  if (isPlaceIdAValid && isPlaceIdBValid) {
+    if (placeIdA === placeIdB) {
+      if (normAddrA.locality && normAddrB.locality && normAddrA.locality !== normAddrB.locality) {
+        return {
+          relationship: "CONFLICT",
+          confidence: 0.99,
+          confidenceTier: "CONFLICT",
+          method: "VISIBLE_PLACE_ID",
+          evidence: [`PlaceId:${placeIdA}`, `AddrA:${normAddrA.rawAddress}`, `AddrB:${normAddrB.rawAddress}`],
+          reasons: [
+            `Same stable Place ID (${placeIdA}) but mutually incompatible localities: '${normAddrA.locality}' vs '${normAddrB.locality}'`
+          ],
+          conflictDetails: ["MATERIAL_ADDRESS_CONFLICT"]
+        };
+      }
+      const conflictDetails = [];
+      if (normNameA.comparisonKey && normNameB.comparisonKey && normNameA.comparisonKey !== normNameB.comparisonKey) {
+        if (!normNameA.comparisonKey.includes(normNameB.comparisonKey) && !normNameB.comparisonKey.includes(normNameA.comparisonKey)) {
+          conflictDetails.push("NAME_DIVERGENCE");
+        }
+      }
+      return {
+        relationship: "SAME",
+        confidence: 0.99,
+        confidenceTier: "HIGH",
+        method: "VISIBLE_PLACE_ID",
+        evidence: [`PlaceId:${placeIdA}`],
+        reasons: [`Strong verified Google Place ID match (${placeIdA})`],
+        conflictDetails: conflictDetails.length > 0 ? conflictDetails : void 0
+      };
+    } else {
+      if (slugA && slugB && slugA.length >= 3 && slugA === slugB) {
+        return {
+          relationship: "CONFLICT",
+          confidence: 0.85,
+          confidenceTier: "CONFLICT",
+          method: "VISIBLE_PLACE_ID",
+          evidence: [`PlaceIdA:${placeIdA}`, `PlaceIdB:${placeIdB}`, `SharedSlug:${slugA}`],
+          reasons: [`Identical Maps URL slug ('${slugA}') with conflicting Place IDs (${placeIdA} vs ${placeIdB})`],
+          conflictDetails: ["PLACE_ID_MAPS_URL_CONTRADICTION"]
+        };
+      }
+      const namesMatch2 = Boolean(
+        normNameA.comparisonKey && normNameB.comparisonKey && (normNameA.comparisonKey === normNameB.comparisonKey || normNameA.comparisonKey.includes(normNameB.comparisonKey) || normNameB.comparisonKey.includes(normNameA.comparisonKey))
+      );
+      const hasAddrA = Boolean(normAddrA.comparisonKey && normAddrA.comparisonKey.length >= 5);
+      const hasAddrB = Boolean(normAddrB.comparisonKey && normAddrB.comparisonKey.length >= 5);
+      const addressesMatch = hasAddrA && hasAddrB && normAddrA.comparisonKey === normAddrB.comparisonKey;
+      const localitiesDiffer = Boolean(normAddrA.locality && normAddrB.locality && normAddrA.locality !== normAddrB.locality);
+      if (localitiesDiffer) {
+        return {
+          relationship: "DISTINCT",
+          confidence: 0.95,
+          confidenceTier: "HIGH",
+          method: "VISIBLE_PLACE_ID",
+          evidence: [`PlaceIdA:${placeIdA}`, `PlaceIdB:${placeIdB}`, `LocA:${normAddrA.locality}`, `LocB:${normAddrB.locality}`],
+          reasons: [`Different Place IDs and distinct physical branches in '${normAddrA.locality}' vs '${normAddrB.locality}'`]
+        };
+      }
+      if (hasAddrA && hasAddrB && !addressesMatch) {
+        return {
+          relationship: "DISTINCT",
+          confidence: 0.95,
+          confidenceTier: "HIGH",
+          method: "VISIBLE_PLACE_ID",
+          evidence: [`PlaceIdA:${placeIdA}`, `PlaceIdB:${placeIdB}`, `AddrA:${normAddrA.comparisonKey}`, `AddrB:${normAddrB.comparisonKey}`],
+          reasons: [`Different Place IDs at different physical street addresses establish distinct listings`]
+        };
+      }
+      if (namesMatch2 && addressesMatch) {
+        const phoneMatch = arePhonesEquivalent(subjectA.phone, subjectB.phone);
+        const webMatch = Boolean(
+          subjectA.websiteUrl && subjectB.websiteUrl && normalizeWebsiteForIdentity(subjectA.websiteUrl).domain && normalizeWebsiteForIdentity(subjectA.websiteUrl).domain === normalizeWebsiteForIdentity(subjectB.websiteUrl).domain
+        );
+        if (phoneMatch || webMatch) {
+          return {
+            relationship: "POTENTIAL_DUPLICATE",
+            confidence: 0.7,
+            confidenceTier: "MEDIUM",
+            method: "VISIBLE_PLACE_ID",
+            evidence: [
+              `PlaceIdA:${placeIdA}`,
+              `PlaceIdB:${placeIdB}`,
+              `SharedAddress:${normAddrA.comparisonKey}`,
+              ...phoneMatch ? ["SharedPhone"] : [],
+              ...webMatch ? ["SharedWebsite"] : []
+            ],
+            reasons: [
+              `Contradictory Place IDs (${placeIdA} vs ${placeIdB}) for matching business name, physical address, and corroborated contact; held for review, no auto-merge`
+            ],
+            conflictDetails: ["DIFFERENT_PLACE_IDS_SAME_ADDRESS"]
+          };
+        }
+        return {
+          relationship: "DISTINCT",
+          confidence: 0.9,
+          confidenceTier: "HIGH",
+          method: "VISIBLE_PLACE_ID",
+          evidence: [`PlaceIdA:${placeIdA}`, `PlaceIdB:${placeIdB}`, `Addr:${normAddrA.comparisonKey}`],
+          reasons: [`Different stable Place IDs (${placeIdA} vs ${placeIdB}) establish distinct listings despite generic address match`]
+        };
+      }
+      if (namesMatch2 && (!hasAddrA || !hasAddrB)) {
+        return {
+          relationship: "POTENTIAL_DUPLICATE",
+          confidence: 0.6,
+          confidenceTier: "MEDIUM",
+          method: "VISIBLE_PLACE_ID",
+          evidence: [`PlaceIdA:${placeIdA}`, `PlaceIdB:${placeIdB}`, `Name:${normNameA.comparisonKey}`],
+          reasons: [`Different Place IDs with matching name but uncorroborated address; held for review`]
+        };
+      }
+      return {
+        relationship: "DISTINCT",
+        confidence: 0.95,
+        confidenceTier: "HIGH",
+        method: "VISIBLE_PLACE_ID",
+        evidence: [`PlaceIdA:${placeIdA}`, `PlaceIdB:${placeIdB}`],
+        reasons: [`Different stable Place IDs (${placeIdA} vs ${placeIdB}) establish distinct listings`]
+      };
+    }
+  }
+  if (slugA && slugB && slugA.length >= 3 && slugB.length >= 3) {
+    if (slugA === slugB) {
+      const conflictDetails = [];
+      if (normNameA.comparisonKey && normNameB.comparisonKey && normNameA.comparisonKey !== normNameB.comparisonKey) {
+        if (!normNameA.comparisonKey.includes(normNameB.comparisonKey) && !normNameB.comparisonKey.includes(normNameA.comparisonKey)) {
+          conflictDetails.push("NAME_DIVERGENCE");
+        }
+      }
+      return {
+        relationship: "SAME",
+        confidence: 0.95,
+        confidenceTier: "HIGH",
+        method: "MAPS_URL",
+        evidence: [`MapsUrlSlug:${slugA}`],
+        reasons: [`Strong verified Maps place URL slug match ('${slugA}')`],
+        conflictDetails: conflictDetails.length > 0 ? conflictDetails : void 0
+      };
+    } else {
+      if (normNameA.comparisonKey && normNameB.comparisonKey && normNameA.comparisonKey === normNameB.comparisonKey) {
+        if (normAddrA.locality && normAddrB.locality && normAddrA.locality !== normAddrB.locality) {
+          return {
+            relationship: "DISTINCT",
+            confidence: 0.92,
+            confidenceTier: "HIGH",
+            method: "MAPS_URL",
+            evidence: [`SlugA:${slugA}`, `SlugB:${slugB}`, `LocA:${normAddrA.locality}`, `LocB:${normAddrB.locality}`],
+            reasons: [
+              `Same business name ('${normNameA.displayName}') with different Maps URLs and distinct branches in '${normAddrA.locality}' vs '${normAddrB.locality}'`
+            ]
+          };
+        }
+        if (normAddrA.comparisonKey && normAddrB.comparisonKey && normAddrA.comparisonKey !== normAddrB.comparisonKey) {
+          return {
+            relationship: "DISTINCT",
+            confidence: 0.88,
+            confidenceTier: "HIGH",
+            method: "MAPS_URL",
+            evidence: [`SlugA:${slugA}`, `SlugB:${slugB}`],
+            reasons: [
+              `Same business name ('${normNameA.displayName}') with different Maps URLs and distinct physical addresses`
+            ]
+          };
+        }
+        const phonesMatch = arePhonesEquivalent(subjectA.phone, subjectB.phone);
+        if (phonesMatch) {
+          return {
+            relationship: "POTENTIAL_DUPLICATE",
+            confidence: 0.65,
+            confidenceTier: "MEDIUM",
+            method: "NAME_PHONE",
+            evidence: [`Name:${normNameA.comparisonKey}`, `Phone:${subjectA.phone}`, `SlugA:${slugA}`, `SlugB:${slugB}`],
+            reasons: [
+              `Matching business name and phone across different Maps URLs; held as potential duplicate without auto-merge`
+            ]
+          };
+        }
+        return {
+          relationship: "POTENTIAL_DUPLICATE",
+          confidence: 0.5,
+          confidenceTier: "LOW",
+          method: "MAPS_URL",
+          evidence: [`Name:${normNameA.comparisonKey}`, `SlugA:${slugA}`, `SlugB:${slugB}`],
+          reasons: [
+            `Same business name with different Maps URLs and uncorroborated address; held separate for branch safety`
+          ]
+        };
+      }
+    }
+  }
+  const namesMatch = Boolean(
+    normNameA.comparisonKey && normNameB.comparisonKey && normNameA.comparisonKey === normNameB.comparisonKey
+  );
+  if (namesMatch) {
+    const hasAddressA = Boolean(normAddrA.comparisonKey && normAddrA.comparisonKey.length >= 5);
+    const hasAddressB = Boolean(normAddrB.comparisonKey && normAddrB.comparisonKey.length >= 5);
+    if (hasAddressA && hasAddressB) {
+      if (normAddrA.locality && normAddrB.locality && normAddrA.locality !== normAddrB.locality) {
+        return {
+          relationship: "DISTINCT",
+          confidence: 0.9,
+          confidenceTier: "HIGH",
+          method: "NAME_ADDRESS",
+          evidence: [`Name:${normNameA.comparisonKey}`, `LocA:${normAddrA.locality}`, `LocB:${normAddrB.locality}`],
+          reasons: [
+            `Same business name in different cities/localities ('${normAddrA.locality}' vs '${normAddrB.locality}') \u2014 branch safety enforced`
+          ]
+        };
+      }
+      if (normAddrA.comparisonKey === normAddrB.comparisonKey) {
+        return {
+          relationship: "SAME",
+          confidence: 0.85,
+          confidenceTier: "HIGH",
+          method: "NAME_ADDRESS",
+          evidence: [`Name:${normNameA.comparisonKey}`, `Address:${normAddrA.comparisonKey}`],
+          reasons: [`Normalized business name and physical address match exactly`]
+        };
+      }
+      if (normAddrA.comparisonKey.includes(normAddrB.comparisonKey) || normAddrB.comparisonKey.includes(normAddrA.comparisonKey) || normAddrA.locality && normAddrA.locality === normAddrB.locality) {
+        if (arePhonesEquivalent(subjectA.phone, subjectB.phone)) {
+          return {
+            relationship: "SAME",
+            confidence: 0.85,
+            confidenceTier: "HIGH",
+            method: "NAME_ADDRESS",
+            evidence: [`Name:${normNameA.comparisonKey}`, `AddressOverlap:${normAddrA.locality}`, `PhoneMatch`],
+            reasons: [`Matching name, overlapping address in same locality, and matching phone`]
+          };
+        }
+        return {
+          relationship: "POTENTIAL_DUPLICATE",
+          confidence: 0.65,
+          confidenceTier: "MEDIUM",
+          method: "NAME_ADDRESS",
+          evidence: [`Name:${normNameA.comparisonKey}`, `AddrA:${normAddrA.comparisonKey}`, `AddrB:${normAddrB.comparisonKey}`],
+          reasons: [`Matching name with overlapping locality/address formatting; requires confirmation`]
+        };
+      }
+      return {
+        relationship: "DISTINCT",
+        confidence: 0.8,
+        confidenceTier: "MEDIUM",
+        method: "NAME_ADDRESS",
+        evidence: [`Name:${normNameA.comparisonKey}`, `AddrA:${normAddrA.comparisonKey}`, `AddrB:${normAddrB.comparisonKey}`],
+        reasons: [`Same business name at different physical addresses`]
+      };
+    }
+    if (arePhonesEquivalent(subjectA.phone, subjectB.phone)) {
+      return {
+        relationship: "POTENTIAL_DUPLICATE",
+        confidence: 0.7,
+        confidenceTier: "MEDIUM",
+        method: "NAME_PHONE",
+        evidence: [`Name:${normNameA.comparisonKey}`, `Phone:${subjectA.phone}`],
+        reasons: [`Matching business name and phone number; physical address uncorroborated`]
+      };
+    }
+    const catA = (subjectA.category || "").toLowerCase().trim();
+    const catB = (subjectB.category || "").toLowerCase().trim();
+    const locA = (subjectA.searchLocation || "").toLowerCase().trim();
+    const locB = (subjectB.searchLocation || "").toLowerCase().trim();
+    if (subjectA.searchUnitId && subjectB.searchUnitId && subjectA.searchUnitId === subjectB.searchUnitId) {
+      return {
+        relationship: "SAME",
+        confidence: locA || catA ? 0.75 : 0.6,
+        confidenceTier: "MEDIUM",
+        method: locA || catA ? "NAME_CATEGORY_LOCATION" : "WEAK_FALLBACK",
+        evidence: [`Name:${normNameA.comparisonKey}`, `SearchUnit:${subjectA.searchUnitId}`],
+        reasons: [`Matching name observed within the same SearchUnit feed`]
+      };
+    }
+    if (catA && catB && catA === catB && locA && locB && locA === locB) {
+      return {
+        relationship: "POTENTIAL_DUPLICATE",
+        confidence: 0.6,
+        confidenceTier: "MEDIUM",
+        method: "NAME_CATEGORY_LOCATION",
+        evidence: [`Name:${normNameA.comparisonKey}`, `Cat:${catA}`, `Loc:${locA}`],
+        reasons: [`Matching name, category, and search location across different search units; held for review`]
+      };
+    }
+    return {
+      relationship: "POTENTIAL_DUPLICATE",
+      confidence: 0.4,
+      confidenceTier: "LOW",
+      method: "WEAK_FALLBACK",
+      evidence: [`Name:${normNameA.comparisonKey}`],
+      reasons: [`Name matches but lack of address/phone prevents auto-merge across SearchUnits`]
+    };
+  }
+  if (arePhonesEquivalent(subjectA.phone, subjectB.phone)) {
+    return {
+      relationship: "DISTINCT",
+      confidence: 0.85,
+      confidenceTier: "HIGH",
+      method: "NAME_PHONE",
+      evidence: [`NameA:${normNameA.displayName}`, `NameB:${normNameB.displayName}`, `Phone:${subjectA.phone}`],
+      reasons: [`Shared phone number alone does not establish business identity across different names`]
+    };
+  }
+  const webA = normalizeWebsiteForIdentity(subjectA.websiteUrl);
+  const webB = normalizeWebsiteForIdentity(subjectB.websiteUrl);
+  if (webA.domain && webB.domain && webA.domain === webB.domain) {
+    return {
+      relationship: "DISTINCT",
+      confidence: 0.85,
+      confidenceTier: "HIGH",
+      method: "MAPS_URL",
+      evidence: [`NameA:${normNameA.displayName}`, `NameB:${normNameB.displayName}`, `Domain:${webA.domain}`],
+      reasons: [`Shared website domain alone does not establish business identity across different names`]
+    };
+  }
+  return {
+    relationship: "DISTINCT",
+    confidence: 0.95,
+    confidenceTier: "HIGH",
+    method: "WEAK_FALLBACK",
+    evidence: [`NameA:${normNameA.displayName || "unknown"}`, `NameB:${normNameB.displayName || "unknown"}`],
+    reasons: [`No compatible identity signals found; candidates represent distinct businesses`]
+  };
+}
+
+// src/extension/acquisition/engine/candidateMerger.ts
+var DEFAULT_EVIDENCE_BOUNDS = {
+  maxObservationReferences: 50,
+  maxSearchUnitContexts: 50,
+  maxFieldConflicts: 20,
+  maxFieldEvidencePerField: 10
+};
+var MAX_BOUNDED_OBSERVATIONS = DEFAULT_EVIDENCE_BOUNDS.maxObservationReferences;
+var MAX_BOUNDED_SEARCH_UNITS = DEFAULT_EVIDENCE_BOUNDS.maxSearchUnitContexts;
+var MAX_BOUNDED_CONFLICTS = DEFAULT_EVIDENCE_BOUNDS.maxFieldConflicts;
+var MAX_BOUNDED_FIELD_EVIDENCE = DEFAULT_EVIDENCE_BOUNDS.maxFieldEvidencePerField;
+var CORE_FIELD_NAMES = [
+  "businessName",
+  "category",
+  "address",
+  "phone",
+  "websiteUrl",
+  "rating",
+  "reviewCount",
+  "businessStatus",
+  "mapsUrl"
+];
+var PRECEDENCE_SCORE = {
+  PRESENT: 5,
+  AMBIGUOUS: 4,
+  UNKNOWN: 3,
+  ABSENT: 2,
+  UNSUPPORTED: 1
+};
+function compareTemporalObservations(metaA, metaB) {
+  const timeA = metaA.observedAt ? new Date(metaA.observedAt).getTime() : 0;
+  const timeB = metaB.observedAt ? new Date(metaB.observedAt).getTime() : 0;
+  if (timeA !== timeB) {
+    return timeA > timeB ? 1 : -1;
+  }
+  const idA = metaA.observationId || "";
+  const idB = metaB.observationId || "";
+  return idA.localeCompare(idB);
+}
+function mergeSingleField(existing, incoming, existingMeta, incomingMeta, isTemporalField = false) {
+  const existingScore = PRECEDENCE_SCORE[existing.availability] ?? 0;
+  const incomingScore = PRECEDENCE_SCORE[incoming.availability] ?? 0;
+  if (incomingScore > existingScore) {
+    return { merged: incoming, hasConflict: false };
+  }
+  if (existingScore > incomingScore) {
+    if (existing.availability === "PRESENT" && incoming.availability === "ABSENT") {
+      return {
+        merged: existing,
+        hasConflict: true,
+        conflictReason: "WEBSITE_EVIDENCE_CONFLICT: incoming observation claims ABSENT while prior observation established PRESENT"
+      };
+    }
+    return { merged: existing, hasConflict: false };
+  }
+  if (existing.availability === "PRESENT" && incoming.availability === "PRESENT") {
+    if (isTemporalField) {
+      let cmp = compareTemporalObservations(incomingMeta, existingMeta);
+      if (cmp === 0) {
+        const valA2 = String(existing.parsedValue ?? "");
+        const valB2 = String(incoming.parsedValue ?? "");
+        cmp = valB2.localeCompare(valA2);
+      }
+      const chosen = cmp > 0 ? incoming : existing;
+      return { merged: chosen, hasConflict: false };
+    }
+    const valA = String(existing.parsedValue ?? existing.rawValue ?? "");
+    const valB = String(incoming.parsedValue ?? incoming.rawValue ?? "");
+    if (valA && valB && valA !== valB) {
+      let chosen;
+      if (incoming.confidence !== existing.confidence) {
+        chosen = incoming.confidence > existing.confidence ? incoming : existing;
+      } else {
+        chosen = valB.localeCompare(valA) > 0 ? incoming : existing;
+      }
+      return {
+        merged: chosen,
+        hasConflict: true,
+        conflictReason: `Conflicting PRESENT values observed: '${valA}' vs '${valB}'`
+      };
+    }
+    return {
+      merged: incoming.confidence > existing.confidence ? incoming : existing,
+      hasConflict: false
+    };
+  }
+  return {
+    merged: incoming.confidence > existing.confidence ? incoming : existing,
+    hasConflict: false
+  };
+}
+function assessCandidateQuality(candidate) {
+  let presentCount = 0;
+  let absentCount = 0;
+  let supportedCount = 0;
+  let unknownCount = 0;
+  const fieldStates = {};
+  const issues = [];
+  const conflictFieldMap = new Set(candidate.fieldConflicts.map((c) => c.fieldName));
+  for (const fieldName of CORE_FIELD_NAMES) {
+    const field = candidate[fieldName];
+    const avail = field?.availability ?? "UNKNOWN";
+    if (avail === "PRESENT") {
+      presentCount++;
+      supportedCount++;
+      if (conflictFieldMap.has(fieldName)) {
+        fieldStates[fieldName] = "CONFLICTING";
+      } else {
+        fieldStates[fieldName] = "CONFIDENT";
+      }
+    } else if (avail === "ABSENT") {
+      absentCount++;
+      supportedCount++;
+      fieldStates[fieldName] = "SUPPORTED";
+    } else if (avail === "AMBIGUOUS") {
+      supportedCount++;
+      fieldStates[fieldName] = "INCOMPLETE";
+    } else {
+      unknownCount++;
+      fieldStates[fieldName] = "UNKNOWN";
+    }
+  }
+  const knownCount = presentCount + absentCount;
+  const dataCompleteness = Math.round(knownCount / CORE_FIELD_NAMES.length * 1e3) / 10;
+  if (candidate.businessName.availability === "UNKNOWN") {
+    issues.push({ code: "MISSING_NAME", field: "businessName", severity: "MEDIUM", message: "Business name is missing or unverified" });
+  }
+  if (candidate.address.availability === "UNKNOWN") {
+    issues.push({ code: "MISSING_ADDRESS", field: "address", severity: "LOW", message: "Physical street address is unknown on observation surface" });
+  }
+  if (candidate.phone.availability === "UNKNOWN") {
+    issues.push({ code: "MISSING_PHONE", field: "phone", severity: "LOW", message: "Telephone number is unknown on observation surface" });
+  }
+  if (candidate.websiteUrl.availability === "UNKNOWN") {
+    issues.push({ code: "MISSING_WEBSITE_EVIDENCE", field: "websiteUrl", severity: "LOW", message: "Website link was not observed on card" });
+  }
+  if (candidate.rating.availability === "UNKNOWN") {
+    issues.push({ code: "RATING_UNKNOWN", field: "rating", severity: "LOW", message: "Rating is unknown on observation surface" });
+  }
+  if (candidate.reviewCount.availability === "UNKNOWN") {
+    issues.push({ code: "REVIEW_COUNT_UNKNOWN", field: "reviewCount", severity: "LOW", message: "Review count is unknown on observation surface" });
+  }
+  if (candidate.identityConfidenceTier === "LOW") {
+    issues.push({ code: "IDENTITY_WEAK", severity: "LOW", message: "Candidate identified via weak fallback signal" });
+  } else if (candidate.identityConfidenceTier === "CONFLICT") {
+    issues.push({ code: "IDENTITY_CONFLICT", severity: "MEDIUM", message: "Candidate contains conflicting identity attributes" });
+  }
+  if (candidate.fieldConflicts.length >= 2) {
+    issues.push({ code: "MULTI_FIELD_CONFLICT", severity: "MEDIUM", message: `Multiple fields (${candidate.fieldConflicts.length}) have conflicting evidence` });
+  }
+  for (const conf of candidate.fieldConflicts) {
+    if (conf.fieldName === "phone") {
+      issues.push({ code: "INCONSISTENT_PHONE", field: "phone", severity: "LOW", message: conf.resolutionReason });
+    } else if (conf.fieldName === "address") {
+      issues.push({ code: "INCONSISTENT_ADDRESS", field: "address", severity: "LOW", message: conf.resolutionReason });
+    } else if (conf.fieldName === "websiteUrl") {
+      issues.push({ code: "WEBSITE_EVIDENCE_CONFLICT", field: "websiteUrl", severity: "LOW", message: conf.resolutionReason });
+    }
+  }
+  if (candidate.observationCount > 1) {
+    issues.push({ code: "DUPLICATE_OBSERVATION", severity: "INFO", message: `Candidate observed ${candidate.observationCount} times across SearchUnits` });
+  }
+  return {
+    identityConfidence: candidate.identityConfidenceTier,
+    identityConfidenceScore: candidate.identityConfidenceScore,
+    dataCompleteness,
+    observedFieldCount: presentCount,
+    supportedFieldCount: supportedCount,
+    unknownFieldCount: unknownCount,
+    conflictFieldCount: candidate.fieldConflicts.length,
+    fieldStates,
+    issues
+  };
+}
+function createSessionCandidateFromObservation(observation, decision, assignedCandidateId, observedOrder) {
+  const now = observation.observedAt || (/* @__PURE__ */ new Date()).toISOString();
+  const obsRef = {
+    observationId: observation.observationId,
+    searchUnitId: observation.searchUnitId,
+    observedAt: now,
+    searchKeyword: observation.searchKeyword,
+    searchLocation: observation.searchLocation,
+    pageUrl: observation.pageUrl
+  };
+  const suContext = {
+    searchUnitId: observation.searchUnitId,
+    keyword: observation.searchKeyword,
+    location: observation.searchLocation,
+    firstObservedAt: now,
+    lastObservedAt: now,
+    observationCount: 1
+  };
+  const fieldEvidence = {};
+  for (const fn of CORE_FIELD_NAMES) {
+    const field = observation[fn];
+    if (field) {
+      fieldEvidence[fn] = [{
+        value: field.parsedValue ?? field.rawValue,
+        availability: field.availability,
+        confidence: field.confidence,
+        observedAt: now,
+        searchUnitId: observation.searchUnitId,
+        observationId: observation.observationId
+      }];
+    }
+  }
+  const quality = assessCandidateQuality({
+    businessName: observation.businessName,
+    category: observation.category,
+    address: observation.address,
+    phone: observation.phone,
+    websiteUrl: observation.websiteUrl,
+    rating: observation.rating,
+    reviewCount: observation.reviewCount,
+    businessStatus: observation.businessStatus,
+    mapsUrl: observation.mapsUrl,
+    identityConfidenceTier: decision.confidenceTier,
+    identityConfidenceScore: decision.confidence,
+    observationCount: 1,
+    fieldConflicts: []
+  });
+  return {
+    candidateId: assignedCandidateId,
+    firstObservedAt: now,
+    lastObservedAt: now,
+    observationCount: 1,
+    source: "GOOGLE_MAPS_BROWSER",
+    isRestricted: true,
+    businessName: observation.businessName,
+    category: observation.category,
+    address: observation.address,
+    phone: observation.phone,
+    websiteUrl: observation.websiteUrl,
+    rating: observation.rating,
+    reviewCount: observation.reviewCount,
+    businessStatus: observation.businessStatus,
+    placeId: observation.placeId,
+    mapsUrl: observation.mapsUrl,
+    fieldAvailability: { ...observation.fieldAvailability },
+    identityMethod: decision.method,
+    identityConfidence: decision.confidence,
+    identityEvidence: decision.evidence.join(" | ") || decision.method,
+    observationReferences: [obsRef],
+    observedSearchUnits: [suContext],
+    observedOrder,
+    fieldConflicts: [],
+    fieldEvidence,
+    qualityMetrics: quality,
+    // Projection properties for backwards compatibility
+    observationId: assignedCandidateId,
+    searchUnitId: observation.searchUnitId,
+    sessionId: observation.sessionId,
+    observedAt: now,
+    pageUrl: observation.pageUrl,
+    pageKind: observation.pageKind,
+    searchKeyword: observation.searchKeyword,
+    searchLocation: observation.searchLocation,
+    provenance: observation.provenance,
+    diagnostics: [...observation.diagnostics]
+  };
+}
+function mergeObservationIntoSessionCandidate(existing, incoming, decision) {
+  const now = incoming.observedAt || (/* @__PURE__ */ new Date()).toISOString();
+  const newObsCount = existing.observationCount + 1;
+  const newObsRef = {
+    observationId: incoming.observationId,
+    searchUnitId: incoming.searchUnitId,
+    observedAt: now,
+    searchKeyword: incoming.searchKeyword,
+    searchLocation: incoming.searchLocation,
+    pageUrl: incoming.pageUrl
+  };
+  const updatedObsRefs = [newObsRef, ...existing.observationReferences].slice(0, MAX_BOUNDED_OBSERVATIONS);
+  const existingSuMap = /* @__PURE__ */ new Map();
+  for (const su of existing.observedSearchUnits) {
+    existingSuMap.set(su.searchUnitId, su);
+  }
+  const currentSu = existingSuMap.get(incoming.searchUnitId);
+  if (currentSu) {
+    existingSuMap.set(incoming.searchUnitId, {
+      ...currentSu,
+      lastObservedAt: now,
+      observationCount: currentSu.observationCount + 1
+    });
+  } else {
+    existingSuMap.set(incoming.searchUnitId, {
+      searchUnitId: incoming.searchUnitId,
+      keyword: incoming.searchKeyword,
+      location: incoming.searchLocation,
+      firstObservedAt: now,
+      lastObservedAt: now,
+      observationCount: 1
+    });
+  }
+  const updatedSearchUnits = Array.from(existingSuMap.values()).slice(0, MAX_BOUNDED_SEARCH_UNITS);
+  const newConflicts = [...existing.fieldConflicts];
+  const updatedFieldEvidence = {};
+  for (const [k, v] of Object.entries(existing.fieldEvidence)) {
+    updatedFieldEvidence[k] = [...v];
+  }
+  function mergeAndRecord(fieldName, fieldExisting, fieldIncoming, isTemporal = false) {
+    const existingEntry = existing.fieldEvidence[fieldName] && existing.fieldEvidence[fieldName].length > 0 ? existing.fieldEvidence[fieldName][0] : void 0;
+    const existingMeta = {
+      observedAt: existingEntry?.observedAt || existing.lastObservedAt,
+      observationId: existingEntry?.observationId || existing.observationId
+    };
+    const incomingMeta = {
+      observedAt: incoming.observedAt || now,
+      observationId: incoming.observationId
+    };
+    const res = mergeSingleField(fieldExisting, fieldIncoming, existingMeta, incomingMeta, isTemporal);
+    const entries = [...updatedFieldEvidence[fieldName] || []];
+    if (fieldIncoming.parsedValue !== void 0 || fieldIncoming.rawValue) {
+      entries.push({
+        value: fieldIncoming.parsedValue ?? fieldIncoming.rawValue,
+        availability: fieldIncoming.availability,
+        confidence: fieldIncoming.confidence,
+        observedAt: incomingMeta.observedAt,
+        searchUnitId: incoming.searchUnitId,
+        observationId: incoming.observationId
+      });
+      entries.sort((a, b) => compareTemporalObservations(b, a));
+      updatedFieldEvidence[fieldName] = entries.slice(0, MAX_BOUNDED_FIELD_EVIDENCE);
+    }
+    if (res.hasConflict && res.conflictReason) {
+      const existingConflictIdx = newConflicts.findIndex((c) => c.fieldName === fieldName);
+      const conflictValues = [
+        {
+          value: fieldExisting.parsedValue ?? fieldExisting.rawValue,
+          availability: fieldExisting.availability,
+          observedAt: existingMeta.observedAt,
+          searchUnitId: existing.searchUnitId,
+          observationId: existingMeta.observationId
+        },
+        {
+          value: fieldIncoming.parsedValue ?? fieldIncoming.rawValue,
+          availability: fieldIncoming.availability,
+          observedAt: incomingMeta.observedAt,
+          searchUnitId: incoming.searchUnitId,
+          observationId: incomingMeta.observationId
+        }
+      ].sort((a, b) => String(a.value).localeCompare(String(b.value)));
+      const conflictObj = {
+        fieldName,
+        values: conflictValues,
+        selectedValue: res.merged.parsedValue ?? res.merged.rawValue,
+        resolutionReason: res.conflictReason
+      };
+      if (existingConflictIdx >= 0) {
+        newConflicts[existingConflictIdx] = conflictObj;
+      } else {
+        newConflicts.push(conflictObj);
+      }
+      newConflicts.sort((a, b) => a.fieldName.localeCompare(b.fieldName));
+    }
+    return res.merged;
+  }
+  const mergedName = mergeAndRecord("businessName", existing.businessName, incoming.businessName);
+  const mergedCategory = mergeAndRecord("category", existing.category, incoming.category);
+  const mergedAddress = mergeAndRecord("address", existing.address, incoming.address);
+  const mergedPhone = mergeAndRecord("phone", existing.phone, incoming.phone);
+  const mergedWebsite = mergeAndRecord("websiteUrl", existing.websiteUrl, incoming.websiteUrl);
+  const mergedRating = mergeAndRecord("rating", existing.rating, incoming.rating, true);
+  const mergedReviews = mergeAndRecord("reviewCount", existing.reviewCount, incoming.reviewCount, true);
+  const mergedStatus = mergeAndRecord("businessStatus", existing.businessStatus, incoming.businessStatus, true);
+  const mergedPlaceId = mergeAndRecord("placeId", existing.placeId, incoming.placeId);
+  const mergedMapsUrl = mergeAndRecord("mapsUrl", existing.mapsUrl, incoming.mapsUrl);
+  const fieldAvailability = {
+    businessName: mergedName.availability,
+    category: mergedCategory.availability,
+    address: mergedAddress.availability,
+    phone: mergedPhone.availability,
+    websiteUrl: mergedWebsite.availability,
+    rating: mergedRating.availability,
+    reviewCount: mergedReviews.availability,
+    businessStatus: mergedStatus.availability,
+    placeId: mergedPlaceId.availability,
+    mapsUrl: mergedMapsUrl.availability
+  };
+  const boundedConflicts = newConflicts.slice(0, MAX_BOUNDED_CONFLICTS);
+  const quality = assessCandidateQuality({
+    businessName: mergedName,
+    category: mergedCategory,
+    address: mergedAddress,
+    phone: mergedPhone,
+    websiteUrl: mergedWebsite,
+    rating: mergedRating,
+    reviewCount: mergedReviews,
+    businessStatus: mergedStatus,
+    mapsUrl: mergedMapsUrl,
+    identityConfidenceTier: decision.confidenceTier === "CONFLICT" ? "CONFLICT" : existing.qualityMetrics.identityConfidence,
+    identityConfidenceScore: Math.max(existing.identityConfidence, decision.confidence),
+    observationCount: newObsCount,
+    fieldConflicts: boundedConflicts
+  });
+  const incomingTime = new Date(now).getTime();
+  const existingFirstTime = new Date(existing.firstObservedAt).getTime();
+  const existingLastTime = new Date(existing.lastObservedAt).getTime();
+  const computedFirstObservedAt = incomingTime < existingFirstTime ? now : existing.firstObservedAt;
+  const computedLastObservedAt = incomingTime > existingLastTime ? now : existing.lastObservedAt;
+  const isTruncated = Boolean(
+    existing.evidenceTruncated || newObsCount > MAX_BOUNDED_OBSERVATIONS || updatedSearchUnits.length >= MAX_BOUNDED_SEARCH_UNITS
+  );
+  return {
+    ...existing,
+    firstObservedAt: computedFirstObservedAt,
+    lastObservedAt: computedLastObservedAt,
+    observationCount: newObsCount,
+    evidenceTruncated: isTruncated,
+    businessName: mergedName,
+    category: mergedCategory,
+    address: mergedAddress,
+    phone: mergedPhone,
+    websiteUrl: mergedWebsite,
+    rating: mergedRating,
+    reviewCount: mergedReviews,
+    businessStatus: mergedStatus,
+    placeId: mergedPlaceId,
+    mapsUrl: mergedMapsUrl,
+    fieldAvailability,
+    observationReferences: updatedObsRefs,
+    observedSearchUnits: updatedSearchUnits,
+    fieldConflicts: boundedConflicts,
+    fieldEvidence: updatedFieldEvidence,
+    qualityMetrics: quality,
+    observedAt: computedLastObservedAt
+  };
+}
+
+// src/extension/acquisition/engine/candidateRegistry.ts
+var CandidateRegistry = class {
+  constructor(sessionId = "") {
+    this._candidates = /* @__PURE__ */ new Map();
+    this._candidateOrder = [];
+    // Multi-key blocking indexes (mapping normalized keys -> candidate IDs)
+    this._byPlaceId = /* @__PURE__ */ new Map();
+    this._byMapsUrlSlug = /* @__PURE__ */ new Map();
+    this._byNameAddressKey = /* @__PURE__ */ new Map();
+    this._byNameKey = /* @__PURE__ */ new Map();
+    this._byPhoneKey = /* @__PURE__ */ new Map();
+    this._byDomainKey = /* @__PURE__ */ new Map();
+    // Relationship tracking
+    this._potentialDuplicates = /* @__PURE__ */ new Map();
+    this._identityConflicts = /* @__PURE__ */ new Map();
+    this._rawObservations = 0;
+    this._duplicateObservations = 0;
+    this._sessionId = sessionId;
+  }
+  get sessionId() {
+    return this._sessionId;
+  }
+  get size() {
+    return this._candidates.size;
+  }
+  get knownCandidateIds() {
+    return this._candidateOrder;
+  }
+  has(candidateId) {
+    return this._candidates.has(candidateId);
+  }
+  get(candidateId) {
+    return this._candidates.get(candidateId);
+  }
+  getAll() {
+    return Array.from(this._candidates.values());
+  }
+  getAllCandidates() {
+    return this.getAll();
+  }
+  updateCandidate(candidate) {
+    if (this._candidates.has(candidate.candidateId)) {
+      this._candidates.set(candidate.candidateId, candidate);
+      this._updateIndexes(candidate);
+    }
+  }
+  getEnrichedCount() {
+    let count = 0;
+    for (const c of this._candidates.values()) {
+      if (c.enrichmentStatus === "COMPLETED" || c.enrichmentStatus === "PARTIAL") {
+        count++;
+      }
+    }
+    return count;
+  }
+  getPotentialDuplicates() {
+    return Array.from(this._potentialDuplicates.values());
+  }
+  getIdentityConflicts() {
+    return Array.from(this._identityConflicts.values());
+  }
+  getStats() {
+    return {
+      uniqueCandidates: this._candidates.size,
+      duplicateObservations: this._duplicateObservations,
+      rawObservations: this._rawObservations,
+      potentialDuplicates: this._potentialDuplicates.size,
+      identityConflicts: this._identityConflicts.size
+    };
+  }
+  /**
+   * Registers a newly observed Google Maps candidate observation.
+   * Performs incremental indexed blocking, equivalence testing, auto-merge or distinct registration.
+   */
+  registerObservation(observation) {
+    this._rawObservations++;
+    const rawName = observation.businessName?.parsedValue ?? observation.businessName?.rawValue;
+    const rawAddr = observation.address?.parsedValue ?? observation.address?.rawValue;
+    const rawPhone = observation.phone?.parsedValue ?? observation.phone?.rawValue;
+    const rawWeb = observation.websiteUrl?.parsedValue ?? observation.websiteUrl?.rawValue;
+    const rawPlaceId = observation.placeId?.parsedValue ?? observation.placeId?.rawValue;
+    const rawMapsUrl = observation.mapsUrl?.parsedValue ?? observation.mapsUrl?.rawValue;
+    const normName = normalizeBusinessNameForIdentity(rawName);
+    const normAddr = normalizeAddressForIdentity(rawAddr);
+    const normPhone = normalizePhoneForIdentity(rawPhone);
+    const normWeb = normalizeWebsiteForIdentity(rawWeb);
+    const mapsSlug = normalizeMapsUrlSlug(rawMapsUrl);
+    const placeId = rawPlaceId?.trim();
+    const isPlaceIdValid = Boolean(placeId && (placeId.startsWith("ChIJ") || placeId.startsWith("0x") || placeId.includes(":")));
+    const candidateIdSet = /* @__PURE__ */ new Set();
+    if (isPlaceIdValid && placeId) {
+      const matchId = this._byPlaceId.get(placeId);
+      if (matchId) candidateIdSet.add(matchId);
+    }
+    if (mapsSlug && mapsSlug.length >= 3) {
+      const matchId = this._byMapsUrlSlug.get(mapsSlug);
+      if (matchId) candidateIdSet.add(matchId);
+    }
+    if (normName.comparisonKey && normAddr.comparisonKey && normAddr.comparisonKey.length >= 5) {
+      const nameAddrKey = `${normName.comparisonKey}::${normAddr.comparisonKey}`;
+      const matchId = this._byNameAddressKey.get(nameAddrKey);
+      if (matchId) candidateIdSet.add(matchId);
+    }
+    if (normName.comparisonKey) {
+      const nameMatches = this._byNameKey.get(normName.comparisonKey);
+      if (nameMatches) {
+        for (const cid of nameMatches) candidateIdSet.add(cid);
+      }
+    }
+    if (normPhone.isValid && normPhone.nationalDigits.length >= 8) {
+      const phoneMatches = this._byPhoneKey.get(normPhone.nationalDigits);
+      if (phoneMatches) {
+        for (const cid of phoneMatches) candidateIdSet.add(cid);
+      }
+    }
+    if (normWeb.domain) {
+      const domainMatches = this._byDomainKey.get(normWeb.domain);
+      if (domainMatches) {
+        for (const cid of domainMatches) candidateIdSet.add(cid);
+      }
+    }
+    const incomingSubject = {
+      observationId: observation.observationId,
+      businessName: rawName,
+      placeId: isPlaceIdValid ? placeId : void 0,
+      mapsUrl: rawMapsUrl,
+      address: rawAddr,
+      phone: rawPhone,
+      websiteUrl: rawWeb,
+      category: observation.category?.parsedValue ?? observation.category?.rawValue,
+      searchLocation: observation.searchLocation,
+      searchKeyword: observation.searchKeyword,
+      searchUnitId: observation.searchUnitId
+    };
+    const derivedCandidateId = (observation.candidateId?.startsWith("cid_") ? observation.candidateId : void 0) || (observation.observationId?.startsWith("cid_") ? observation.observationId : void 0) || this._deriveDeterministicCandidateId(
+      isPlaceIdValid ? placeId : void 0,
+      mapsSlug,
+      normName.comparisonKey,
+      normAddr.comparisonKey,
+      observation.category?.parsedValue ?? observation.category?.rawValue,
+      observation.searchLocation,
+      observation.searchUnitId
+    );
+    if (derivedCandidateId) {
+      candidateIdSet.add(derivedCandidateId);
+    }
+    const placeholder = this._candidates.get(derivedCandidateId);
+    if (placeholder && !placeholder.businessName) {
+      const orderIdx = this._candidateOrder.indexOf(derivedCandidateId);
+      const restored = createSessionCandidateFromObservation(
+        observation,
+        {
+          relationship: "SAME",
+          confidence: isPlaceIdValid ? 0.99 : mapsSlug ? 0.95 : 0.85,
+          confidenceTier: "HIGH",
+          method: isPlaceIdValid ? "VISIBLE_PLACE_ID" : mapsSlug ? "MAPS_URL" : "NAME_ADDRESS",
+          evidence: [rawName || "restored"],
+          reasons: ["Restored checkpoint identity matching incoming observation"]
+        },
+        derivedCandidateId,
+        orderIdx >= 0 ? orderIdx + 1 : this._candidateOrder.length + 1
+      );
+      this._candidates.set(derivedCandidateId, restored);
+      this._updateIndexes(restored);
+      return {
+        isNew: false,
+        candidate: restored,
+        candidateId: derivedCandidateId,
+        decision: {
+          relationship: "SAME",
+          confidence: 0.95,
+          confidenceTier: "HIGH",
+          method: isPlaceIdValid ? "VISIBLE_PLACE_ID" : mapsSlug ? "MAPS_URL" : "NAME_ADDRESS",
+          evidence: ["Checkpoint restoration"],
+          reasons: ["Observation matches checkpoint identity"]
+        }
+      };
+    }
+    let confirmedSameCandidate;
+    let strongestDecision;
+    for (const cid of candidateIdSet) {
+      const existing = this._candidates.get(cid);
+      if (!existing || !existing.businessName) continue;
+      const existingSubject = {
+        candidateId: existing.candidateId,
+        businessName: existing.businessName?.parsedValue ?? existing.businessName?.rawValue,
+        placeId: existing.placeId?.parsedValue ?? existing.placeId?.rawValue,
+        mapsUrl: existing.mapsUrl?.parsedValue ?? existing.mapsUrl?.rawValue,
+        address: existing.address?.parsedValue ?? existing.address?.rawValue,
+        phone: existing.phone?.parsedValue ?? existing.phone?.rawValue,
+        websiteUrl: existing.websiteUrl?.parsedValue ?? existing.websiteUrl?.rawValue,
+        category: existing.category?.parsedValue ?? existing.category?.rawValue,
+        searchLocation: existing.searchLocation,
+        searchKeyword: existing.searchKeyword,
+        searchUnitId: existing.searchUnitId
+      };
+      const decision = compareCandidatesForIdentity(existingSubject, incomingSubject);
+      if (decision.relationship === "SAME") {
+        confirmedSameCandidate = existing;
+        strongestDecision = decision;
+        break;
+      } else if (decision.relationship === "POTENTIAL_DUPLICATE") {
+        const pairKey = [existing.candidateId, observation.observationId].sort().join("::");
+        this._potentialDuplicates.set(pairKey, {
+          candidateIdA: existing.candidateId,
+          candidateIdB: observation.observationId,
+          relationship: "POTENTIAL_DUPLICATE",
+          confidence: decision.confidence,
+          method: decision.method,
+          reason: decision.reasons.join("; "),
+          detectedAt: (/* @__PURE__ */ new Date()).toISOString(),
+          evidence: decision.evidence
+        });
+        if (!strongestDecision || decision.confidence > strongestDecision.confidence) {
+          strongestDecision = decision;
+        }
+      } else if (decision.relationship === "CONFLICT") {
+        const pairKey = [existing.candidateId, observation.observationId].sort().join("::");
+        this._identityConflicts.set(pairKey, {
+          candidateIdA: existing.candidateId,
+          candidateIdB: observation.observationId,
+          relationship: "CONFLICT",
+          confidence: decision.confidence,
+          method: decision.method,
+          reason: decision.reasons.join("; "),
+          detectedAt: (/* @__PURE__ */ new Date()).toISOString(),
+          evidence: decision.evidence
+        });
+        if (!strongestDecision || decision.confidence > strongestDecision.confidence) {
+          strongestDecision = decision;
+        }
+      }
+    }
+    if (confirmedSameCandidate && strongestDecision) {
+      this._duplicateObservations++;
+      const mergedCandidate = mergeObservationIntoSessionCandidate(
+        confirmedSameCandidate,
+        observation,
+        strongestDecision
+      );
+      this._candidates.set(confirmedSameCandidate.candidateId, mergedCandidate);
+      this._updateIndexes(mergedCandidate);
+      return {
+        isNew: false,
+        candidate: mergedCandidate,
+        candidateId: confirmedSameCandidate.candidateId,
+        decision: strongestDecision
+      };
+    }
+    const initialDecision = strongestDecision || {
+      relationship: "DISTINCT",
+      confidence: isPlaceIdValid ? 0.99 : mapsSlug ? 0.95 : normName.comparisonKey && normAddr.comparisonKey ? 0.85 : 0.5,
+      confidenceTier: isPlaceIdValid || mapsSlug || normName.comparisonKey && normAddr.comparisonKey ? "HIGH" : "LOW",
+      method: isPlaceIdValid ? "VISIBLE_PLACE_ID" : mapsSlug ? "MAPS_URL" : normName.comparisonKey && normAddr.comparisonKey ? "NAME_ADDRESS" : "WEAK_FALLBACK",
+      evidence: [rawName || "unknown"],
+      reasons: ["Initial candidate observation registered as unique session candidate"]
+    };
+    const newCandidate = createSessionCandidateFromObservation(
+      observation,
+      initialDecision,
+      derivedCandidateId,
+      this._candidateOrder.length + 1
+    );
+    this._candidates.set(derivedCandidateId, newCandidate);
+    this._candidateOrder.push(derivedCandidateId);
+    this._updateIndexes(newCandidate);
+    return {
+      isNew: true,
+      candidate: newCandidate,
+      candidateId: derivedCandidateId,
+      decision: initialDecision
+    };
+  }
+  _deriveDeterministicCandidateId(placeId, mapsSlug, normNameKey, normAddrKey, category, location, searchUnitId) {
+    if (placeId && (placeId.startsWith("ChIJ") || placeId.startsWith("0x") || placeId.includes(":"))) {
+      return `cid_${hashStringDeterministic(`PID::${placeId}`)}`;
+    }
+    if (mapsSlug && mapsSlug.length >= 3) {
+      return `cid_${hashStringDeterministic(`URL::${mapsSlug}`)}`;
+    }
+    if (normNameKey && normAddrKey && normAddrKey.length >= 5) {
+      return `cid_${hashStringDeterministic(`NAME_ADDR::${normNameKey}::${normAddrKey}`)}`;
+    }
+    if (normNameKey && (category || location)) {
+      return `cid_${hashStringDeterministic(`NAME_CAT_LOC::${normNameKey}::${category || ""}::${location || ""}::${searchUnitId || "none"}`)}`;
+    }
+    return `cid_${hashStringDeterministic(`FALLBACK::${normNameKey || "unknown"}::${searchUnitId || "none"}`)}`;
+  }
+  _updateIndexes(candidate) {
+    const cid = candidate.candidateId;
+    const pid = candidate.placeId?.parsedValue ?? candidate.placeId?.rawValue;
+    if (pid && (pid.startsWith("ChIJ") || pid.startsWith("0x") || pid.includes(":"))) {
+      this._byPlaceId.set(pid.trim(), cid);
+    }
+    const mapsUrl = candidate.mapsUrl?.parsedValue ?? candidate.mapsUrl?.rawValue;
+    const slug = normalizeMapsUrlSlug(mapsUrl);
+    if (slug && slug.length >= 3) {
+      this._byMapsUrlSlug.set(slug, cid);
+    }
+    const rawName = candidate.businessName?.parsedValue ?? candidate.businessName?.rawValue;
+    const normName = normalizeBusinessNameForIdentity(rawName);
+    const rawAddr = candidate.address?.parsedValue ?? candidate.address?.rawValue;
+    const normAddr = normalizeAddressForIdentity(rawAddr);
+    if (normName.comparisonKey && normAddr.comparisonKey && normAddr.comparisonKey.length >= 5) {
+      this._byNameAddressKey.set(`${normName.comparisonKey}::${normAddr.comparisonKey}`, cid);
+    }
+    if (normName.comparisonKey) {
+      let set = this._byNameKey.get(normName.comparisonKey);
+      if (!set) {
+        set = /* @__PURE__ */ new Set();
+        this._byNameKey.set(normName.comparisonKey, set);
+      }
+      set.add(cid);
+    }
+    const rawPhone = candidate.phone?.parsedValue ?? candidate.phone?.rawValue;
+    const normPhone = normalizePhoneForIdentity(rawPhone);
+    if (normPhone.isValid && normPhone.nationalDigits.length >= 8) {
+      let set = this._byPhoneKey.get(normPhone.nationalDigits);
+      if (!set) {
+        set = /* @__PURE__ */ new Set();
+        this._byPhoneKey.set(normPhone.nationalDigits, set);
+      }
+      set.add(cid);
+    }
+    const rawWeb = candidate.websiteUrl?.parsedValue ?? candidate.websiteUrl?.rawValue;
+    const normWeb = normalizeWebsiteForIdentity(rawWeb);
+    if (normWeb.domain) {
+      let set = this._byDomainKey.get(normWeb.domain);
+      if (!set) {
+        set = /* @__PURE__ */ new Set();
+        this._byDomainKey.set(normWeb.domain, set);
+      }
+      set.add(cid);
+    }
+  }
+  /**
+   * Generates a comprehensive data quality snapshot for the session.
+   */
+  getQualitySnapshot() {
+    const totalCandidates = this._candidates.size;
+    let totalCompleteness = 0;
+    const completenessScores = [];
+    const completenessDist = {
+      tier0To25: 0,
+      tier26To50: 0,
+      tier51To75: 0,
+      tier76To100: 0
+    };
+    const identityDist = {
+      high: 0,
+      medium: 0,
+      low: 0,
+      conflict: 0
+    };
+    const fieldCounts = {
+      businessName: 0,
+      category: 0,
+      address: 0,
+      phone: 0,
+      websiteUrl: 0,
+      rating: 0,
+      reviewCount: 0,
+      businessStatus: 0,
+      mapsUrl: 0
+    };
+    let candidatesWithFieldConflicts = 0;
+    for (const candidate of this._candidates.values()) {
+      const q = candidate.qualityMetrics;
+      const score = q.dataCompleteness;
+      totalCompleteness += score;
+      completenessScores.push(score);
+      if (score <= 25) completenessDist.tier0To25++;
+      else if (score <= 50) completenessDist.tier26To50++;
+      else if (score <= 75) completenessDist.tier51To75++;
+      else completenessDist.tier76To100++;
+      if (q.identityConfidence === "HIGH") identityDist.high++;
+      else if (q.identityConfidence === "MEDIUM") identityDist.medium++;
+      else if (q.identityConfidence === "LOW") identityDist.low++;
+      else if (q.identityConfidence === "CONFLICT") identityDist.conflict++;
+      for (const [fn, st] of Object.entries(q.fieldStates)) {
+        if (st === "CONFIDENT" || st === "SUPPORTED") {
+          fieldCounts[fn] = (fieldCounts[fn] || 0) + 1;
+        }
+      }
+      if (q.conflictFieldCount > 0) {
+        candidatesWithFieldConflicts++;
+      }
+    }
+    completenessScores.sort((a, b) => a - b);
+    const medianCompleteness = completenessScores.length > 0 ? completenessScores[Math.floor(completenessScores.length / 2)] : 0;
+    const averageCompleteness = totalCandidates > 0 ? Math.round(totalCompleteness / totalCandidates * 10) / 10 : 0;
+    const duplicateRate = this._rawObservations > 0 ? Math.round(this._duplicateObservations / this._rawObservations * 1e3) / 1e3 : 0;
+    return {
+      totalRawObservations: this._rawObservations,
+      uniqueCandidates: totalCandidates,
+      duplicateObservations: this._duplicateObservations,
+      duplicateRate,
+      potentialDuplicatesCount: this._potentialDuplicates.size,
+      identityConflictsCount: this._identityConflicts.size,
+      candidatesWithFieldConflictsCount: candidatesWithFieldConflicts,
+      averageCompleteness,
+      medianCompleteness,
+      completenessDistribution: completenessDist,
+      identityTierDistribution: identityDist,
+      fieldPresenceCounts: fieldCounts
+    };
+  }
+  exportCheckpointData() {
+    return {
+      sessionId: this._sessionId,
+      knownCount: this._candidates.size,
+      knownCandidateIds: [...this._candidateOrder],
+      rawObservations: this._rawObservations,
+      duplicateObservations: this._duplicateObservations
+    };
+  }
+  importCheckpointData(data) {
+    if (data?.knownCandidateIds) {
+      for (const id of data.knownCandidateIds) {
+        if (!this._candidates.has(id)) {
+          this._candidateOrder.push(id);
+          this._candidates.set(id, { candidateId: id });
+        }
+      }
+    }
+    if (typeof data?.rawObservations === "number") {
+      this._rawObservations = data.rawObservations;
+    }
+    if (typeof data?.duplicateObservations === "number") {
+      this._duplicateObservations = data.duplicateObservations;
+    }
+  }
+  clear() {
+    this._candidates.clear();
+    this._candidateOrder.length = 0;
+    this._byPlaceId.clear();
+    this._byMapsUrlSlug.clear();
+    this._byNameAddressKey.clear();
+    this._byNameKey.clear();
+    this._byPhoneKey.clear();
+    this._byDomainKey.clear();
+    this._potentialDuplicates.clear();
+    this._identityConflicts.clear();
+    this._rawObservations = 0;
+    this._duplicateObservations = 0;
+  }
+  dispose() {
+    this.clear();
+  }
+};
+
+// src/extension/acquisition/engine/candidateIdentity.ts
+function normalizeIdentityText(input) {
+  if (!input) return "";
+  return input.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()'"?]/g, " ").replace(/\s+/g, " ").trim();
+}
+function normalizeMapsUrlForIdentity(url) {
+  if (!url) return void 0;
+  try {
+    const parsed = new URL(url);
+    const placeMatch = parsed.pathname.match(/\/maps\/place\/([^/@?]+)/);
+    if (placeMatch && placeMatch[1]) {
+      return decodeURIComponent(placeMatch[1]).toLowerCase().replace(/\+/g, " ").trim();
+    }
+    const q = parsed.searchParams.get("q");
+    if (q) {
+      return q.toLowerCase().replace(/\+/g, " ").trim();
+    }
+  } catch {
+    if (url.includes("/maps/place/")) {
+      const parts = url.split("/maps/place/")[1]?.split(/[\/@?]/)[0];
+      if (parts) return parts.toLowerCase().replace(/\+/g, " ").trim();
+    }
+  }
+  return void 0;
+}
+function deriveCandidateIdentity(candidate) {
+  const normName = normalizeIdentityText(candidate.businessName);
+  const normAddress = normalizeIdentityText(candidate.address);
+  const normCategory = normalizeIdentityText(candidate.category);
+  const normLocation = normalizeIdentityText(candidate.searchLocation);
+  const placeId = candidate.placeId?.trim();
+  const normUrlSlug = normalizeMapsUrlForIdentity(candidate.mapsUrl);
+  if (placeId && (placeId.startsWith("ChIJ") || placeId.startsWith("0x") || placeId.includes(":"))) {
+    const candidateId2 = `cid_${hashStringDeterministic(`PID::${placeId}`)}`;
+    return {
+      candidateId: candidateId2,
+      identityMethod: "VISIBLE_PLACE_ID",
+      identityConfidence: 0.99,
+      evidence: `PlaceId:${placeId}`
+    };
+  }
+  if (normUrlSlug && normUrlSlug.length >= 3) {
+    const candidateId2 = `cid_${hashStringDeterministic(`URL::${normUrlSlug}`)}`;
+    return {
+      candidateId: candidateId2,
+      identityMethod: "MAPS_URL",
+      identityConfidence: 0.95,
+      evidence: `MapsUrlSlug:${normUrlSlug}`
+    };
+  }
+  if (normName && normAddress && normAddress.length >= 5) {
+    const composite = `NAME_ADDR::${normName}::${normAddress}`;
+    const candidateId2 = `cid_${hashStringDeterministic(composite)}`;
+    return {
+      candidateId: candidateId2,
+      identityMethod: "NAME_ADDRESS",
+      identityConfidence: 0.85,
+      evidence: `${normName} | ${normAddress}`
+    };
+  }
+  if (normName && (normCategory || normLocation)) {
+    const composite = `NAME_CAT_LOC::${normName}::${normCategory || ""}::${normLocation || ""}`;
+    const candidateId2 = `cid_${hashStringDeterministic(composite)}`;
+    return {
+      candidateId: candidateId2,
+      identityMethod: "NAME_CATEGORY_LOCATION",
+      identityConfidence: 0.75,
+      evidence: `${normName} | ${normCategory} | ${normLocation}`
+    };
+  }
+  const fallbackComposite = `FALLBACK::${normName || "unknown"}::${candidate.searchUnitId || "none"}`;
+  const candidateId = `cid_${hashStringDeterministic(fallbackComposite)}`;
+  return {
+    candidateId,
+    identityMethod: "WEAK_FALLBACK",
+    identityConfidence: 0.5,
+    evidence: `Fallback:${normName || "unknown"}`
+  };
+}
+var SessionCandidateDeduplicator = class {
+  constructor(searchUnitId = "") {
+    this._searchUnitId = searchUnitId;
+    this._registry = new CandidateRegistry(searchUnitId);
+  }
+  get searchUnitId() {
+    return this._searchUnitId;
+  }
+  get registry() {
+    return this._registry;
+  }
+  get size() {
+    return this._registry.size;
+  }
+  get knownCandidateIds() {
+    return this._registry.knownCandidateIds;
+  }
+  has(candidateId) {
+    return this._registry.has(candidateId);
+  }
+  get(candidateId) {
+    return this._registry.get(candidateId);
+  }
+  getAll() {
+    return this._registry.getAll();
+  }
+  updateCandidate(candidate) {
+    this._registry.updateCandidate(candidate);
+  }
+  getEnrichedCount() {
+    return this._registry.getEnrichedCount();
+  }
+  getStats() {
+    const stats = this._registry.getStats();
+    return {
+      uniqueCandidates: stats.uniqueCandidates,
+      duplicateObservations: stats.duplicateObservations,
+      rawObservations: stats.rawObservations
+    };
+  }
+  getExtendedStats() {
+    return this._registry.getStats();
+  }
+  getQualitySnapshot() {
+    return this._registry.getQualitySnapshot();
+  }
+  getPotentialDuplicates() {
+    return this._registry.getPotentialDuplicates();
+  }
+  getIdentityConflicts() {
+    return this._registry.getIdentityConflicts();
+  }
+  register(candidate) {
+    const res = this._registry.registerObservation(candidate);
+    return {
+      isNew: res.isNew,
+      candidate: res.candidate,
+      candidateId: res.candidateId
+    };
+  }
+  registerObservation(candidate) {
+    return this.register(candidate);
+  }
+  exportCheckpointData() {
+    const exp = this._registry.exportCheckpointData();
+    return {
+      searchUnitId: this._searchUnitId,
+      knownCount: exp.knownCount,
+      knownCandidateIds: exp.knownCandidateIds,
+      rawObservations: exp.rawObservations,
+      duplicateObservations: exp.duplicateObservations
+    };
+  }
+  importCheckpointData(data) {
+    this._registry.importCheckpointData(data);
+  }
+  clear() {
+    this._registry.clear();
+  }
+  seedFromCheckpoint(knownIds) {
+    this._registry.importCheckpointData({ knownCandidateIds: knownIds });
+  }
+};
+
+// src/extension/qualification/googleMaps/researchQualificationEngine.ts
+var DEFAULT_RESEARCH_FILTERS = Object.freeze({
+  rating: "ANY",
+  website: "ANY"
+});
+function normalizeRatingFilter(input) {
+  if (typeof input !== "string") return "ANY";
+  const trimmed = input.trim();
+  if (trimmed === "FOUR_POINT_FIVE_PLUS" || trimmed === "MIN_4_5" || trimmed === "4.5+" || trimmed === "4.5") {
+    return "FOUR_POINT_FIVE_PLUS";
+  }
+  if (trimmed === "FOUR_PLUS" || trimmed === "MIN_4_0" || trimmed === "4.0+" || trimmed === "4.0") {
+    return "FOUR_PLUS";
+  }
+  return "ANY";
+}
+function normalizeWebsiteFilter(input) {
+  if (typeof input !== "string") return "ANY";
+  const trimmed = input.trim();
+  if (trimmed === "WITH_WEBSITE" || trimmed === "WITH" || trimmed === "YES" || trimmed === "PRESENT") {
+    return "WITH_WEBSITE";
+  }
+  if (trimmed === "WITHOUT_WEBSITE" || trimmed === "WITHOUT" || trimmed === "NO" || trimmed === "ABSENT") {
+    return "WITHOUT_WEBSITE";
+  }
+  return "ANY";
+}
+function normalizeResearchFilters(input) {
+  if (!input || typeof input !== "object") {
+    return DEFAULT_RESEARCH_FILTERS;
+  }
+  const obj = input;
+  const rating = normalizeRatingFilter(obj.rating);
+  const website = normalizeWebsiteFilter(obj.website);
+  const maxResults = typeof obj.maxResults === "number" && obj.maxResults > 0 ? Math.floor(obj.maxResults) : void 0;
+  return Object.freeze({
+    rating,
+    website,
+    ...maxResults !== void 0 ? { maxResults } : {}
+  });
+}
+function extractRatingSignal(candidate) {
+  if (!candidate || typeof candidate !== "object") {
+    return { availability: "UNKNOWN" };
+  }
+  const rawRating = candidate.rating;
+  if (typeof rawRating === "number") {
+    if (Number.isFinite(rawRating)) {
+      return { availability: "PRESENT", value: rawRating };
+    }
+    return { availability: "UNKNOWN" };
+  }
+  if (rawRating === null || rawRating === void 0) {
+    return { availability: "UNKNOWN" };
+  }
+  if (typeof rawRating === "object") {
+    const field = rawRating;
+    const avail = field.availability || "UNKNOWN";
+    if (avail === "PRESENT") {
+      if (typeof field.parsedValue === "number" && Number.isFinite(field.parsedValue)) {
+        return { availability: "PRESENT", value: field.parsedValue };
+      }
+      if (typeof field.rawValue === "string") {
+        const parsed = parseFloat(field.rawValue);
+        if (Number.isFinite(parsed)) {
+          return { availability: "PRESENT", value: parsed };
+        }
+      }
+      return { availability: "AMBIGUOUS" };
+    }
+    return { availability: avail };
+  }
+  return { availability: "UNKNOWN" };
+}
+function determineWebsiteState2(candidate) {
+  if (!candidate || typeof candidate !== "object") {
+    return "UNKNOWN";
+  }
+  const explicitState = candidate.websiteState;
+  if (explicitState === "YES" || explicitState === "NO" || explicitState === "UNKNOWN") {
+    return explicitState;
+  }
+  const webField = candidate.websiteUrl || candidate.website;
+  if (!webField) {
+    return "UNKNOWN";
+  }
+  if (typeof webField === "string") {
+    const trimmed = webField.trim();
+    if (trimmed.length === 0) return "UNKNOWN";
+    const norm = normalizeWebsiteUrl(trimmed);
+    if (norm.isValid && !norm.normalizedUrl.includes("google.com/maps")) {
+      return "YES";
+    }
+    return "UNKNOWN";
+  }
+  if (typeof webField === "object") {
+    const field = webField;
+    const avail = field.availability || "UNKNOWN";
+    if (avail === "PRESENT") {
+      const target = typeof field.parsedValue === "string" && field.parsedValue || typeof field.rawValue === "string" && field.rawValue;
+      if (target) {
+        const norm = normalizeWebsiteUrl(target);
+        if (norm.isValid && !norm.normalizedUrl.includes("google.com/maps")) {
+          return "YES";
+        }
+      }
+      return "UNKNOWN";
+    }
+    if (avail === "ABSENT") {
+      return "NO";
+    }
+    return "UNKNOWN";
+  }
+  return "UNKNOWN";
+}
+function qualifiesCandidate(candidate, filtersInput) {
+  const filters = normalizeResearchFilters(filtersInput);
+  let ratingQualified = false;
+  let ratingRejectionReason;
+  const ratingSignal = extractRatingSignal(candidate);
+  if (filters.rating === "ANY") {
+    ratingQualified = true;
+  } else {
+    const threshold = filters.rating === "FOUR_POINT_FIVE_PLUS" ? 4.5 : 4;
+    if (ratingSignal.availability === "PRESENT" && ratingSignal.value !== void 0) {
+      if (ratingSignal.value >= threshold) {
+        ratingQualified = true;
+      } else {
+        ratingQualified = false;
+        ratingRejectionReason = "RATING_BELOW_THRESHOLD";
+      }
+    } else {
+      ratingQualified = false;
+      ratingRejectionReason = "RATING_UNKNOWN";
+    }
+  }
+  let websiteQualified = false;
+  let websiteRejectionReason;
+  const webState = determineWebsiteState2(candidate);
+  if (filters.website === "ANY") {
+    websiteQualified = true;
+  } else if (filters.website === "WITH_WEBSITE") {
+    if (webState === "YES") {
+      websiteQualified = true;
+    } else if (webState === "NO") {
+      websiteQualified = false;
+      websiteRejectionReason = "WEBSITE_MISSING";
+    } else {
+      websiteQualified = false;
+      websiteRejectionReason = "WEBSITE_UNKNOWN";
+    }
+  } else if (filters.website === "WITHOUT_WEBSITE") {
+    if (webState === "NO") {
+      websiteQualified = true;
+    } else if (webState === "YES") {
+      websiteQualified = false;
+      websiteRejectionReason = "WEBSITE_MISSING";
+    } else {
+      websiteQualified = false;
+      websiteRejectionReason = "WEBSITE_UNKNOWN";
+    }
+  }
+  const qualified = ratingQualified && websiteQualified;
+  let rejectionReason;
+  if (!ratingQualified) {
+    rejectionReason = ratingRejectionReason;
+  } else if (!websiteQualified) {
+    rejectionReason = websiteRejectionReason;
+  }
+  return {
+    qualified,
+    ratingQualified,
+    websiteQualified,
+    ...rejectionReason ? { rejectionReason } : {}
+  };
+}
+function createInitialCounters() {
+  return {
+    queries: 0,
+    candidatesDiscovered: 0,
+    duplicatesSuppressed: 0,
+    ratingQualified: 0,
+    websiteQualified: 0,
+    finalQualified: 0,
+    failedQueries: 0
+  };
+}
+async function executeMultiQueryResearch(options, executeQuery) {
+  const filters = normalizeResearchFilters(options.filters);
+  const maxResults = options.maxResults ?? filters.maxResults;
+  const deduplicator = new SessionCandidateDeduplicator();
+  const counters = createInitialCounters();
+  const allRawObservations = [];
+  const qualificationMap = /* @__PURE__ */ new Map();
+  const qualifiedCandidateList = [];
+  let isCancelled = false;
+  let isLimitReached = false;
+  for (let i = 0; i < options.keywords.length; i++) {
+    if (options.shouldStop && options.shouldStop()) {
+      isCancelled = true;
+      break;
+    }
+    if (maxResults !== void 0 && counters.finalQualified >= maxResults) {
+      isLimitReached = true;
+      break;
+    }
+    const keyword = options.keywords[i];
+    counters.queries++;
+    let queryObservations = [];
+    try {
+      queryObservations = await executeQuery(keyword, i);
+    } catch {
+      counters.failedQueries++;
+      if (options.onProgress) {
+        options.onProgress({ ...counters });
+      }
+      continue;
+    }
+    for (const rawObs of queryObservations) {
+      counters.candidatesDiscovered++;
+      allRawObservations.push(rawObs);
+      const dedupeResult = deduplicator.register(rawObs);
+      const sessionCand = dedupeResult.candidate;
+      if (!dedupeResult.isNew) {
+        counters.duplicatesSuppressed++;
+      } else {
+        const qual = qualifiesCandidate(sessionCand, filters);
+        qualificationMap.set(sessionCand.candidateId, qual);
+        if (qual.ratingQualified) {
+          counters.ratingQualified++;
+        }
+        if (qual.websiteQualified) {
+          counters.websiteQualified++;
+        }
+        if (qual.qualified) {
+          counters.finalQualified++;
+          qualifiedCandidateList.push(sessionCand);
+          if (options.onCandidateQualified) {
+            options.onCandidateQualified(sessionCand, qual);
+          }
+        }
+      }
+      if (options.shouldStop && options.shouldStop()) {
+        isCancelled = true;
+        break;
+      }
+      if (maxResults !== void 0 && counters.finalQualified >= maxResults) {
+        isLimitReached = true;
+        break;
+      }
+    }
+    if (options.onProgress) {
+      options.onProgress({ ...counters });
+    }
+    if (isCancelled || isLimitReached) {
+      break;
+    }
+  }
+  const status = isCancelled ? "CANCELLED" : isLimitReached ? "LIMIT_REACHED" : counters.failedQueries > 0 ? "PARTIALLY_COMPLETED" : "COMPLETED";
+  return {
+    status,
+    counters: Object.freeze({ ...counters }),
+    rawCandidates: Object.freeze([...allRawObservations]),
+    deduplicatedCandidates: Object.freeze(deduplicator.getAll()),
+    qualifiedCandidates: Object.freeze([...qualifiedCandidateList]),
+    qualificationResults: qualificationMap
+  };
+}
+
 // src/extension/leadIntelligence/types.ts
 var CURRENT_LEAD_RECORD_SCHEMA_VERSION = "lead-intelligence-v1";
 
@@ -9247,6 +11185,9936 @@ var RecordAssembler = class _RecordAssembler {
   }
 };
 
+// src/extension/acquisition/engine/types.ts
+var DEFAULT_MAPS_SESSION_CONFIG = {
+  sessionId: "",
+  tabId: 0,
+  maxCandidatesPerUnit: 50,
+  maxScrollSteps: 15,
+  navigationTimeoutMs: 15e3,
+  readinessTimeoutMs: 1e4,
+  renderWaitMs: 1200,
+  maxRetriesPerUnit: 2,
+  collectDetails: false
+};
+var DEFAULT_ACQUISITION_POLICY = {
+  maxScrollSteps: 25,
+  maxCandidates: 60,
+  maxDurationMs: 6e4,
+  scrollFractionOfViewport: 0.75,
+  loadWaitTimeoutMs: 3e3,
+  quietPeriodMs: 400,
+  maxNoNewCandidateCycles: 3,
+  retryLimit: 3,
+  exhaustionTolerancePx: 30
+};
+
+// src/extension/acquisition/engine/stateMachine.ts
+var IllegalStateTransitionError = class extends Error {
+  constructor(fromState, toState, reason) {
+    super(
+      `Illegal Google Maps acquisition state transition: cannot transition from '${fromState}' to '${toState}'${reason ? ` (reason: ${reason})` : ""}`
+    );
+    this.name = "IllegalStateTransitionError";
+    this.fromState = fromState;
+    this.toState = toState;
+    this.reason = reason;
+  }
+};
+var LEGAL_TRANSITIONS = {
+  IDLE: /* @__PURE__ */ new Set(["QUEUED", "STARTING", "CANCELLED"]),
+  QUEUED: /* @__PURE__ */ new Set(["STARTING", "PAUSED", "CANCELLED"]),
+  STARTING: /* @__PURE__ */ new Set(["NAVIGATING", "FAILED", "CANCELLED", "BLOCKED"]),
+  NAVIGATING: /* @__PURE__ */ new Set(["OBSERVING", "PAUSED", "FAILED", "CANCELLED", "BLOCKED"]),
+  OBSERVING: /* @__PURE__ */ new Set(["NAVIGATING", "PAUSED", "COMPLETING", "FAILED", "CANCELLED", "BLOCKED"]),
+  PAUSED: /* @__PURE__ */ new Set(["STARTING", "NAVIGATING", "OBSERVING", "CANCELLED"]),
+  COMPLETING: /* @__PURE__ */ new Set(["COMPLETED", "FAILED"]),
+  COMPLETED: /* @__PURE__ */ new Set(["IDLE"]),
+  CANCELLED: /* @__PURE__ */ new Set(["IDLE"]),
+  FAILED: /* @__PURE__ */ new Set(["IDLE"]),
+  BLOCKED: /* @__PURE__ */ new Set(["IDLE"])
+};
+var GoogleMapsStateMachine = class {
+  constructor(sessionId, initialState = "IDLE") {
+    this._pausedFromState = null;
+    this._history = [];
+    this._sessionId = sessionId;
+    this._state = initialState;
+  }
+  get state() {
+    return this._state;
+  }
+  get sessionId() {
+    return this._sessionId;
+  }
+  get currentSearchUnitId() {
+    return this._currentSearchUnitId;
+  }
+  get pausedFromState() {
+    return this._pausedFromState;
+  }
+  setSearchUnitId(unitId) {
+    this._currentSearchUnitId = unitId;
+  }
+  get history() {
+    return this._history;
+  }
+  canTransitionTo(targetState) {
+    const allowed = LEGAL_TRANSITIONS[this._state];
+    return allowed ? allowed.has(targetState) : false;
+  }
+  transitionTo(targetState, reason) {
+    if (this._state === targetState) {
+      return {
+        fromState: this._state,
+        toState: targetState,
+        timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+        reason: `No-op: already in state '${targetState}'`,
+        sessionId: this._sessionId,
+        searchUnitId: this._currentSearchUnitId
+      };
+    }
+    if (!this.canTransitionTo(targetState)) {
+      throw new IllegalStateTransitionError(this._state, targetState, reason);
+    }
+    const event = {
+      fromState: this._state,
+      toState: targetState,
+      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      reason,
+      sessionId: this._sessionId,
+      searchUnitId: this._currentSearchUnitId
+    };
+    this._state = targetState;
+    this._history.push(event);
+    return event;
+  }
+  /**
+   * Idempotent Pause:
+   * Preserves the active operational state (NAVIGATING, OBSERVING, STARTING) in pausedFromState.
+   * Returns true if transitioned to PAUSED, false if already PAUSED.
+   */
+  pause(reason = "Operator or queue paused acquisition") {
+    if (this._state === "PAUSED") {
+      return false;
+    }
+    this._pausedFromState = this._state;
+    this.transitionTo("PAUSED", reason);
+    return true;
+  }
+  /**
+   * Safe Resume:
+   * Only permitted from PAUSED. Transitions back to the operational state it was paused from,
+   * or to an explicit legal targetState (OBSERVING, NAVIGATING, STARTING).
+   */
+  resume(targetState, reason = "Resumed from pause") {
+    if (this._state !== "PAUSED") {
+      throw new Error(`Cannot resume acquisition: current state is '${this._state}', expected 'PAUSED'`);
+    }
+    const resolvedTarget = targetState || (this._pausedFromState === "OBSERVING" || this._pausedFromState === "NAVIGATING" || this._pausedFromState === "STARTING" ? this._pausedFromState : "NAVIGATING");
+    this._pausedFromState = null;
+    return this.transitionTo(resolvedTarget, reason);
+  }
+  /**
+   * Idempotent Cancel:
+   * Returns true if transitioned to CANCELLED, false if already CANCELLED.
+   */
+  cancel(reason = "Operator or lifecycle cancelled acquisition") {
+    if (this._state === "CANCELLED") {
+      return false;
+    }
+    this._pausedFromState = null;
+    this.transitionTo("CANCELLED", reason);
+    return true;
+  }
+  /**
+   * Reset back to IDLE (only valid from terminal states: COMPLETED, CANCELLED, FAILED, BLOCKED).
+   */
+  reset(reason = "Resetting session state to IDLE") {
+    return this.transitionTo("IDLE", reason);
+  }
+};
+
+// src/extension/acquisition/engine/acquisitionQueue.ts
+var GoogleMapsAcquisitionQueue = class {
+  constructor(initialUnits = []) {
+    this._units = /* @__PURE__ */ new Map();
+    this._order = [];
+    this._activeUnitId = null;
+    this._isPaused = false;
+    this._isCancelled = false;
+    this.enqueue(initialUnits);
+  }
+  /**
+   * Enqueues one or more search units, suppressing duplicates deterministically.
+   * Returns the count of newly accepted units.
+   */
+  enqueue(units) {
+    if (this._isCancelled) {
+      throw new Error("Cannot enqueue into a cancelled acquisition queue");
+    }
+    const arr = Array.isArray(units) ? units : [units];
+    let accepted = 0;
+    let duplicatesSuppressed = 0;
+    for (const u of arr) {
+      if (this._units.has(u.searchUnitId)) {
+        duplicatesSuppressed++;
+        continue;
+      }
+      u.status = "QUEUED";
+      this._units.set(u.searchUnitId, u);
+      this._order.push(u.searchUnitId);
+      accepted++;
+    }
+    return { accepted, duplicatesSuppressed };
+  }
+  /**
+   * Returns the currently active Search Unit if any.
+   */
+  getActiveUnit() {
+    if (!this._activeUnitId) return null;
+    return this._units.get(this._activeUnitId) ?? null;
+  }
+  /**
+   * Claims the next QUEUED search unit for execution.
+   * Enforces single-active-worker constraint: returns null if a unit is already active,
+   * or if the queue is paused or cancelled.
+   */
+  claimNext() {
+    if (this._isPaused || this._isCancelled) {
+      return null;
+    }
+    if (this._activeUnitId) {
+      return null;
+    }
+    for (const id of this._order) {
+      const u = this._units.get(id);
+      if (u && (u.status === "QUEUED" || u.status === "PLANNED")) {
+        u.status = "IN_PROGRESS";
+        u.startedAt = (/* @__PURE__ */ new Date()).toISOString();
+        this._activeUnitId = u.searchUnitId;
+        return u;
+      }
+    }
+    return null;
+  }
+  /**
+   * Marks the specified search unit as COMPLETED.
+   */
+  complete(searchUnitId, candidateCount = 0) {
+    const u = this._units.get(searchUnitId);
+    if (!u) return false;
+    u.status = "COMPLETED";
+    u.candidateCount = candidateCount;
+    u.completedAt = (/* @__PURE__ */ new Date()).toISOString();
+    if (this._activeUnitId === searchUnitId) {
+      this._activeUnitId = null;
+    }
+    return true;
+  }
+  /**
+   * Records a failure for a search unit, automatically retrying if within maxRetries budget.
+   */
+  fail(searchUnitId, error, diagnostic) {
+    const u = this._units.get(searchUnitId);
+    if (!u) return { retried: false, terminal: false };
+    u.lastError = error;
+    if (diagnostic) {
+      u.diagnostics.push(diagnostic);
+    }
+    if (this._activeUnitId === searchUnitId) {
+      this._activeUnitId = null;
+    }
+    if (u.retryCount < u.maxRetries && !this._isCancelled) {
+      u.retryCount++;
+      u.status = "QUEUED";
+      return { retried: true, terminal: false };
+    }
+    u.status = "FAILED";
+    u.completedAt = (/* @__PURE__ */ new Date()).toISOString();
+    return { retried: false, terminal: true };
+  }
+  /**
+   * Pauses the queue. Ongoing unit is preserved in IN_PROGRESS or PAUSED.
+   */
+  pause() {
+    this._isPaused = true;
+    if (this._activeUnitId) {
+      const u = this._units.get(this._activeUnitId);
+      if (u) u.status = "PAUSED";
+    }
+  }
+  /**
+   * Resumes the queue.
+   */
+  resume() {
+    if (this._isCancelled) {
+      throw new Error("Cannot resume a cancelled queue");
+    }
+    this._isPaused = false;
+    if (this._activeUnitId) {
+      const u = this._units.get(this._activeUnitId);
+      if (u && u.status === "PAUSED") u.status = "IN_PROGRESS";
+    }
+  }
+  /**
+   * Cancels the queue, terminating remaining queued units.
+   */
+  cancel() {
+    this._isCancelled = true;
+    for (const u of this._units.values()) {
+      if (u.status === "QUEUED" || u.status === "PLANNED" || u.status === "IN_PROGRESS" || u.status === "PAUSED") {
+        u.status = "CANCELLED";
+        u.completedAt = (/* @__PURE__ */ new Date()).toISOString();
+      }
+    }
+    this._activeUnitId = null;
+  }
+  /**
+   * Returns current queue progress breakdown.
+   */
+  getProgress() {
+    let planned = 0;
+    let queued = 0;
+    let inProgress = 0;
+    let completed = 0;
+    let failed = 0;
+    let cancelled = 0;
+    for (const u of this._units.values()) {
+      switch (u.status) {
+        case "PLANNED":
+          planned++;
+          break;
+        case "QUEUED":
+          queued++;
+          break;
+        case "IN_PROGRESS":
+        case "PAUSED":
+          inProgress++;
+          break;
+        case "COMPLETED":
+          completed++;
+          break;
+        case "FAILED":
+          failed++;
+          break;
+        case "CANCELLED":
+          cancelled++;
+          break;
+      }
+    }
+    return {
+      total: this._units.size,
+      planned,
+      queued,
+      inProgress,
+      completed,
+      failed,
+      cancelled,
+      activeUnitId: this._activeUnitId ?? void 0,
+      isPaused: this._isPaused,
+      isCancelled: this._isCancelled
+    };
+  }
+  getUnit(searchUnitId) {
+    return this._units.get(searchUnitId);
+  }
+  getAllUnits() {
+    return this._order.map((id) => this._units.get(id)).filter(Boolean);
+  }
+};
+
+// src/extension/acquisition/engine/pageDetector.ts
+function isGoogleMapsUrl(urlStr) {
+  try {
+    const url = new URL(urlStr);
+    const host = url.hostname.toLowerCase();
+    const isGoogleDomain = host === "maps.google.com" || host.endsWith(".google.com") || /(^|\.)google\.[a-z]{2,3}(\.[a-z]{2})?$/.test(host);
+    if (!isGoogleDomain) return false;
+    if (host === "maps.google.com") return true;
+    return url.pathname.startsWith("/maps");
+  } catch {
+    return false;
+  }
+}
+function classifyUrlPath(urlStr) {
+  try {
+    const url = new URL(urlStr);
+    const path = url.pathname.toLowerCase();
+    const q = url.searchParams.get("q");
+    if (path.includes("/maps/search/") || path.startsWith("/maps") && !!q) {
+      return { kind: "SEARCH_RESULTS", confidence: 0.85 };
+    }
+    if (path.includes("/maps/place/")) {
+      return { kind: "PLACE_DETAIL", confidence: 0.9 };
+    }
+    if (path.includes("/maps/dir/")) {
+      return { kind: "DIRECTIONS", confidence: 0.85 };
+    }
+    if (path === "/maps" || path === "/maps/" || path.startsWith("/maps/@")) {
+      return { kind: "HOME_MAPS", confidence: 0.8 };
+    }
+    return { kind: "UNSUPPORTED", confidence: 0.5 };
+  } catch {
+    return { kind: "UNKNOWN", confidence: 0.1 };
+  }
+}
+function evaluateSignals(urlStr, dom) {
+  const isMaps = isGoogleMapsUrl(urlStr);
+  if (!isMaps) {
+    return {
+      hasMapsHost: false,
+      hasSearchPath: false,
+      hasPlacePath: false,
+      hasSearchInput: false,
+      hasFeedContainer: false,
+      hasDetailContainer: false,
+      isLoadingSpinnerPresent: false,
+      hasResultsHeader: false,
+      hasNoResultsMarker: false,
+      elementCount: 0
+    };
+  }
+  let hasSearchPath = false;
+  let hasPlacePath = false;
+  try {
+    const u = new URL(urlStr);
+    hasSearchPath = u.pathname.includes("/maps/search/") || !!u.searchParams.get("q");
+    hasPlacePath = u.pathname.includes("/maps/place/");
+  } catch {
+  }
+  if (!dom) {
+    return {
+      hasMapsHost: true,
+      hasSearchPath,
+      hasPlacePath,
+      hasSearchInput: false,
+      hasFeedContainer: false,
+      hasDetailContainer: false,
+      isLoadingSpinnerPresent: false,
+      hasResultsHeader: false,
+      hasNoResultsMarker: false,
+      elementCount: 0
+    };
+  }
+  const searchInput = dom.querySelector('input#searchboxinput, input[aria-label*="Search"]');
+  const feed = dom.querySelector('div[role="feed"], div[aria-label*="Results"], div[aria-label*="results"]');
+  const detail = dom.querySelector('div[role="main"], h1.DUwDvf, [data-item-id="address"]');
+  const spinner = dom.querySelector('div[role="progressbar"], div.m6QErb.loading, .G6jK8e');
+  const noResults = dom.querySelector('div[role="feed"] div:has([aria-label*="No results"]), div.Q2vNVc, .widget-pane-no-results');
+  const cardCount = dom.querySelectorAll ? dom.querySelectorAll('div[role="feed"] > div[jsaction], div[role="article"]').length : 0;
+  return {
+    hasMapsHost: true,
+    hasSearchPath,
+    hasPlacePath,
+    hasSearchInput: !!searchInput,
+    hasFeedContainer: !!feed,
+    hasDetailContainer: !!detail,
+    isLoadingSpinnerPresent: !!spinner,
+    hasResultsHeader: !!feed,
+    hasNoResultsMarker: !!noResults,
+    elementCount: cardCount
+  };
+}
+function detectGoogleMapsPage(urlStr, dom) {
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  if (!isGoogleMapsUrl(urlStr)) {
+    return {
+      isGoogleMaps: false,
+      pageKind: "NON_GOOGLE",
+      ready: false,
+      confidence: 1,
+      reason: "URL domain is outside Google Maps",
+      url: urlStr,
+      observedAt: now,
+      signals: evaluateSignals(urlStr, dom)
+    };
+  }
+  const signals = evaluateSignals(urlStr, dom);
+  const urlClass = classifyUrlPath(urlStr);
+  if (signals.isLoadingSpinnerPresent) {
+    return {
+      isGoogleMaps: true,
+      pageKind: urlClass.kind,
+      ready: false,
+      confidence: 0.7,
+      reason: "Loading progress bar or spinner is active in DOM",
+      url: urlStr,
+      observedAt: now,
+      signals
+    };
+  }
+  if (urlClass.kind === "SEARCH_RESULTS") {
+    if (signals.hasNoResultsMarker) {
+      return {
+        isGoogleMaps: true,
+        pageKind: "SEARCH_RESULTS",
+        ready: true,
+        confidence: 0.95,
+        reason: "Search page ready: no results found for query",
+        url: urlStr,
+        observedAt: now,
+        signals
+      };
+    }
+    if (signals.hasFeedContainer || signals.elementCount > 0) {
+      return {
+        isGoogleMaps: true,
+        pageKind: "SEARCH_RESULTS",
+        ready: true,
+        confidence: 0.98,
+        reason: "Search results feed verified and rendered in DOM",
+        url: urlStr,
+        observedAt: now,
+        signals
+      };
+    }
+    if (dom && !signals.hasFeedContainer) {
+      return {
+        isGoogleMaps: true,
+        pageKind: "SEARCH_RESULTS",
+        ready: false,
+        confidence: 0.65,
+        reason: "Search URL loaded but feed container not yet detected in DOM",
+        url: urlStr,
+        observedAt: now,
+        signals
+      };
+    }
+    return {
+      isGoogleMaps: true,
+      pageKind: "SEARCH_RESULTS",
+      ready: true,
+      confidence: 0.85,
+      reason: "Search results page confirmed via URL structure",
+      url: urlStr,
+      observedAt: now,
+      signals
+    };
+  }
+  if (urlClass.kind === "PLACE_DETAIL") {
+    const ready = signals.hasDetailContainer || !dom;
+    return {
+      isGoogleMaps: true,
+      pageKind: "PLACE_DETAIL",
+      ready,
+      confidence: ready ? 0.95 : 0.6,
+      reason: ready ? "Place detail panel rendered and visible" : "Place detail URL loaded but detail container not rendered",
+      url: urlStr,
+      observedAt: now,
+      signals
+    };
+  }
+  if (urlClass.kind === "HOME_MAPS") {
+    return {
+      isGoogleMaps: true,
+      pageKind: "HOME_MAPS",
+      ready: true,
+      confidence: 0.8,
+      reason: "Google Maps home surface loaded without active search query",
+      url: urlStr,
+      observedAt: now,
+      signals
+    };
+  }
+  return {
+    isGoogleMaps: true,
+    pageKind: "UNSUPPORTED",
+    ready: false,
+    confidence: 0.5,
+    reason: "Google Maps page is in an unsupported or unclassified layout state",
+    url: urlStr,
+    observedAt: now,
+    signals
+  };
+}
+
+// src/extension/acquisition/engine/navigationOrchestrator.ts
+var GoogleMapsNavigationOrchestrator = class {
+  constructor(driver, options = {}) {
+    this._driver = driver;
+    this._timeoutMs = options.timeoutMs ?? 15e3;
+    this._pollIntervalMs = options.pollIntervalMs ?? 500;
+  }
+  /**
+   * Verifies that the tab exists and belongs to a Google Maps surface or is eligible for navigation.
+   */
+  async validateTabOwnership(tabId, sessionId) {
+    if (!tabId || tabId <= 0) {
+      return {
+        valid: false,
+        diagnostic: {
+          code: "MAPS_TAB_NOT_FOUND",
+          severity: "P1",
+          recoveryClass: "USER_ACTION_REQUIRED",
+          message: "Invalid tab ID provided for Google Maps acquisition",
+          timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+          sessionId
+        }
+      };
+    }
+    const tab = await this._driver.getTab(tabId);
+    if (!tab) {
+      return {
+        valid: false,
+        diagnostic: {
+          code: "MAPS_TAB_NOT_FOUND",
+          severity: "P1",
+          recoveryClass: "USER_ACTION_REQUIRED",
+          message: `Browser tab ${tabId} could not be found or was closed by user`,
+          timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+          sessionId
+        }
+      };
+    }
+    return { valid: true };
+  }
+  /**
+   * Navigates the target tab to the Search Unit's Google Maps search URL,
+   * then waits until the page is ready within the configured timeout.
+   */
+  async navigateToSearchUnit(tabId, searchUnit, sessionId) {
+    const diagnostics = [];
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    const ownership = await this.validateTabOwnership(tabId, sessionId);
+    if (!ownership.valid) {
+      if (ownership.diagnostic) diagnostics.push(ownership.diagnostic);
+      return {
+        success: false,
+        url: searchUnit.navigationUrl,
+        diagnostics,
+        error: ownership.diagnostic?.message ?? "Invalid tab ownership"
+      };
+    }
+    let navTriggered = false;
+    try {
+      navTriggered = await this._driver.navigateTab(tabId, searchUnit.navigationUrl);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      diagnostics.push({
+        code: "USER_NAVIGATION_INTERRUPTION",
+        severity: "P1",
+        recoveryClass: "RETRYABLE",
+        message: `Tab navigation failed: ${msg}`,
+        timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+        sessionId,
+        searchUnitId: searchUnit.searchUnitId,
+        url: searchUnit.navigationUrl
+      });
+      return { success: false, url: searchUnit.navigationUrl, diagnostics, error: msg };
+    }
+    if (!navTriggered) {
+      diagnostics.push({
+        code: "USER_NAVIGATION_INTERRUPTION",
+        severity: "P1",
+        recoveryClass: "RETRYABLE",
+        message: "Tab driver rejected navigation request",
+        timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+        sessionId,
+        searchUnitId: searchUnit.searchUnitId,
+        url: searchUnit.navigationUrl
+      });
+      return { success: false, url: searchUnit.navigationUrl, diagnostics, error: "Navigation rejected" };
+    }
+    const startTime = Date.now();
+    let lastDetection;
+    while (Date.now() - startTime < this._timeoutMs) {
+      const currentTab = await this._driver.getTab(tabId);
+      if (!currentTab) {
+        diagnostics.push({
+          code: "MAPS_TAB_NOT_FOUND",
+          severity: "P1",
+          recoveryClass: "USER_ACTION_REQUIRED",
+          message: "Target Google Maps tab was closed during navigation wait",
+          timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+          sessionId,
+          searchUnitId: searchUnit.searchUnitId
+        });
+        return { success: false, url: searchUnit.navigationUrl, diagnostics, error: "Tab closed" };
+      }
+      if (currentTab.url && currentTab.url !== "about:blank" && !isGoogleMapsUrl(currentTab.url)) {
+        diagnostics.push({
+          code: "USER_NAVIGATION_INTERRUPTION",
+          severity: "P1",
+          recoveryClass: "USER_ACTION_REQUIRED",
+          message: `User or script navigated away to non-Google URL: ${currentTab.url}`,
+          timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+          sessionId,
+          searchUnitId: searchUnit.searchUnitId,
+          url: currentTab.url
+        });
+        return { success: false, url: currentTab.url, diagnostics, error: "Navigated away" };
+      }
+      try {
+        if (typeof this._driver.probeTabState === "function") {
+          lastDetection = await this._driver.probeTabState(tabId);
+          if (lastDetection.ready && lastDetection.pageKind === "SEARCH_RESULTS") {
+            return {
+              success: true,
+              url: currentTab.url,
+              pageDetection: lastDetection,
+              diagnostics
+            };
+          }
+        } else {
+          return {
+            success: true,
+            url: currentTab.url,
+            diagnostics
+          };
+        }
+      } catch {
+      }
+      await new Promise((r) => setTimeout(r, this._pollIntervalMs));
+    }
+    diagnostics.push({
+      code: "NAVIGATION_TIMEOUT",
+      severity: "P1",
+      recoveryClass: "RETRYABLE",
+      message: `Google Maps failed to reach ready state within ${this._timeoutMs}ms`,
+      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      sessionId,
+      searchUnitId: searchUnit.searchUnitId,
+      url: searchUnit.navigationUrl,
+      details: {
+        lastReason: lastDetection?.reason ?? "Unknown readiness delay",
+        confidence: lastDetection?.confidence ?? 0
+      }
+    });
+    return {
+      success: false,
+      url: searchUnit.navigationUrl,
+      pageDetection: lastDetection,
+      diagnostics,
+      error: `Navigation timeout after ${this._timeoutMs}ms`
+    };
+  }
+};
+
+// src/extension/acquisition/engine/observationBoundary.ts
+var ENGINE_ADAPTER_VERSION = "2.0.0-foundation";
+function cleanDomText(text) {
+  if (text === null || text === void 0) return void 0;
+  const str = typeof text === "string" ? text : String(text);
+  const s = str.replace(/[\x00-\x1F\x7F]/g, " ").replace(/\s+/g, " ").trim();
+  return s.length > 0 ? s.slice(0, 500) : void 0;
+}
+function cleanDomUrl(raw) {
+  if (!raw || typeof raw !== "string") return void 0;
+  const s = raw.trim();
+  if (s.toLowerCase().startsWith("javascript:") || s.toLowerCase().startsWith("data:")) {
+    return void 0;
+  }
+  try {
+    const parsed = new URL(s);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return parsed.href;
+    }
+  } catch {
+    if (s.startsWith("/maps/place/") || s.startsWith("https://www.google.com/maps/place/")) {
+      return s;
+    }
+  }
+  return void 0;
+}
+function buildObservedField(rawValue, parsedValue, availability, confidence, sourceSignal, diagnosticReason) {
+  return {
+    availability,
+    rawValue,
+    parsedValue,
+    confidence,
+    sourceSignal,
+    diagnosticReason
+  };
+}
+function evaluateRatingField(rawRating, surfaceType = "CARD") {
+  if (rawRating === void 0) {
+    if (surfaceType === "EXTERNAL") {
+      return buildObservedField(void 0, void 0, "UNSUPPORTED", 0.8, void 0, "Rating not available on external surface");
+    }
+    return buildObservedField(void 0, void 0, "UNKNOWN", 0.85, void 0, "Rating element not visible or omitted on observation surface (presence unknown)");
+  }
+  const cleaned = cleanDomText(rawRating);
+  if (!cleaned) {
+    return buildObservedField(rawRating, void 0, "UNKNOWN", 0.5, void 0, "Rating element present but empty text");
+  }
+  if (/(no reviews|unrated|no rating|not rated|no reviews yet)/i.test(cleaned)) {
+    return buildObservedField(cleaned, void 0, "ABSENT", 0.95, "rating-badge", "Explicit evidence indicates business has no rating");
+  }
+  if (/[$€£৳¥]/.test(cleaned)) {
+    return buildObservedField(rawRating, void 0, "AMBIGUOUS", 0.3, void 0, "Contains price currency tokens rather than rating");
+  }
+  const match = cleaned.match(/(\d+[.,]\d+|\b[1-5]\b)/);
+  if (!match) {
+    return buildObservedField(rawRating, void 0, "AMBIGUOUS", 0.4, void 0, `Unparseable rating text: "${cleaned}"`);
+  }
+  const val = parseFloat(match[1].replace(",", "."));
+  if (isNaN(val) || val < 1 || val > 5) {
+    return buildObservedField(rawRating, void 0, "AMBIGUOUS", 0.3, void 0, `Rating value out of valid 1-5 range: ${val}`);
+  }
+  return buildObservedField(cleaned, Math.round(val * 10) / 10, "PRESENT", 0.95, "rating-badge");
+}
+function evaluateReviewCountField(rawReviews, surfaceType = "CARD") {
+  if (rawReviews === void 0) {
+    if (surfaceType === "EXTERNAL") {
+      return buildObservedField(void 0, void 0, "UNSUPPORTED", 0.8, void 0, "Review count not available on external surface");
+    }
+    return buildObservedField(void 0, void 0, "UNKNOWN", 0.85, void 0, "Review count not visible on observation surface (presence unknown)");
+  }
+  const cleaned = cleanDomText(rawReviews);
+  if (!cleaned) {
+    return buildObservedField(rawReviews, void 0, "UNKNOWN", 0.5, void 0, "Review count element empty");
+  }
+  if (/(no reviews|\b0 reviews\b|\b0\b|no reviews yet|zero reviews)/i.test(cleaned)) {
+    return buildObservedField(cleaned, 0, "ABSENT", 0.95, "review-count-badge", "Explicit evidence indicates zero/no reviews");
+  }
+  if (/\b(km|mi|m|meters|miles)\b/i.test(cleaned)) {
+    return buildObservedField(rawReviews, void 0, "AMBIGUOUS", 0.3, void 0, "Contains distance unit rather than review count");
+  }
+  if (/[$€£৳¥]/.test(cleaned)) {
+    return buildObservedField(rawReviews, void 0, "AMBIGUOUS", 0.3, void 0, "Contains currency symbol rather than review count");
+  }
+  const kMatch = cleaned.match(/([\d]+[.,]\d+|\d+)\s*[kK]/);
+  if (kMatch) {
+    const base = parseFloat(kMatch[1].replace(",", "."));
+    if (!isNaN(base)) {
+      const count2 = Math.round(base * 1e3);
+      return buildObservedField(cleaned, count2, "PRESENT", 0.95, "review-count-badge");
+    }
+  }
+  const digitsMatch = cleaned.replace(/[(),]/g, "").match(/\b\d+\b/);
+  if (!digitsMatch) {
+    return buildObservedField(rawReviews, void 0, "AMBIGUOUS", 0.4, void 0, `Unparseable review count text: "${cleaned}"`);
+  }
+  const count = parseInt(digitsMatch[0], 10);
+  if (count === 0) {
+    return buildObservedField(cleaned, 0, "ABSENT", 0.95, "review-count-badge", "Explicit zero reviews observed");
+  }
+  return buildObservedField(cleaned, count, "PRESENT", 0.95, "review-count-badge");
+}
+function evaluateWebsiteField(rawUrl, surfaceInspected = true, surfaceType) {
+  if (!surfaceInspected) {
+    return buildObservedField(void 0, void 0, "UNSUPPORTED", 0.9, void 0, "Surface does not support website inspection");
+  }
+  if (rawUrl === void 0) {
+    if (surfaceType === "CARD") {
+      return buildObservedField(void 0, void 0, "UNKNOWN", 0.85, void 0, "Website not shown on result card surface (presence unknown)");
+    }
+    return buildObservedField(void 0, void 0, "ABSENT", 0.95, void 0, "Inspection completed; no website link present");
+  }
+  const cleaned = cleanDomUrl(rawUrl);
+  if (!cleaned) {
+    return buildObservedField(rawUrl, void 0, "UNKNOWN", 0.5, void 0, "Website attribute present but invalid URL structure");
+  }
+  if (cleaned.includes("google.com/maps") || cleaned.includes("google.com/search")) {
+    return buildObservedField(rawUrl, void 0, "ABSENT", 0.9, void 0, "Authority website points to internal Google URL");
+  }
+  return buildObservedField(rawUrl, cleaned, "PRESENT", 0.95, "authority-anchor");
+}
+function evaluateTextField(rawText, fieldName = "field", surfaceType = "CARD") {
+  if (rawText === void 0) {
+    if (surfaceType === "EXTERNAL") {
+      return buildObservedField(void 0, void 0, "UNSUPPORTED", 0.8, void 0, `${fieldName} not available on external surface`);
+    }
+    if (surfaceType === "CARD") {
+      return buildObservedField(void 0, void 0, "UNKNOWN", 0.85, void 0, `${fieldName} not visible on result card surface (presence unknown)`);
+    }
+    return buildObservedField(void 0, void 0, "ABSENT", 0.9, void 0, `No ${fieldName} element detected on inspected detail surface`);
+  }
+  const cleaned = cleanDomText(rawText);
+  if (!cleaned) {
+    return buildObservedField(rawText, void 0, "UNKNOWN", 0.5, void 0, `${fieldName} element present but text empty`);
+  }
+  return buildObservedField(rawText, cleaned, "PRESENT", 0.95, `${fieldName}-node`);
+}
+function createCandidateObservation(raw, context) {
+  const now = context.observedAt || (/* @__PURE__ */ new Date()).toISOString();
+  const surfaceType = raw.surfaceType ?? (raw.isDetail ? "DETAIL" : "CARD");
+  const nameField = evaluateTextField(raw.businessName, "businessName", surfaceType);
+  const catField = evaluateTextField(raw.category, "category", surfaceType);
+  const addrField = evaluateTextField(raw.address, "address", surfaceType);
+  const phoneField = evaluateTextField(raw.phone, "phone", surfaceType);
+  const webField = evaluateWebsiteField(raw.websiteUrl, true, surfaceType);
+  const ratingField = evaluateRatingField(raw.rating, surfaceType);
+  const revField = evaluateReviewCountField(raw.reviewCount, surfaceType);
+  const statusField = evaluateTextField(raw.businessStatus, "businessStatus", surfaceType);
+  const placeIdField = evaluateTextField(raw.placeId, "placeId", surfaceType);
+  const mapsUrlField = evaluateTextField(raw.mapsUrl, "mapsUrl", surfaceType);
+  const idSeed = `${context.searchUnitId}::${raw.placeId || raw.businessName || "unknown"}::${raw.address || ""}`;
+  const observationId = `gmo_${hashStringDeterministic(idSeed)}`;
+  const fieldAvailability = {
+    businessName: nameField.availability,
+    category: catField.availability,
+    address: addrField.availability,
+    phone: phoneField.availability,
+    websiteUrl: webField.availability,
+    rating: ratingField.availability,
+    reviewCount: revField.availability,
+    businessStatus: statusField.availability,
+    placeId: placeIdField.availability,
+    mapsUrl: mapsUrlField.availability
+  };
+  const diagnostics = [];
+  if (nameField.availability !== "PRESENT") {
+    diagnostics.push({
+      code: "CANDIDATE_OBSERVATION_FAILED",
+      severity: "P1",
+      recoveryClass: "RECOVERABLE",
+      message: "Candidate observed without valid business name",
+      timestamp: now,
+      searchUnitId: context.searchUnitId,
+      sessionId: context.sessionId
+    });
+  }
+  return {
+    observationId,
+    searchUnitId: context.searchUnitId,
+    sessionId: context.sessionId,
+    source: "GOOGLE_MAPS_BROWSER",
+    observedAt: now,
+    pageUrl: context.pageUrl,
+    pageKind: context.pageKind,
+    businessName: nameField,
+    category: catField,
+    address: addrField,
+    phone: phoneField,
+    websiteUrl: webField,
+    rating: ratingField,
+    reviewCount: revField,
+    businessStatus: statusField,
+    placeId: placeIdField,
+    mapsUrl: mapsUrlField,
+    searchKeyword: context.searchKeyword,
+    searchLocation: context.searchLocation,
+    provenance: {
+      source: "GOOGLE_MAPS_BROWSER",
+      acquisitionContext: "BROWSER_RENDERED_DOM",
+      isRestricted: true,
+      policyStatus: "POLICY_GATED",
+      persistenceStatus: "NOT_PERSISTABLE",
+      exportStatus: "NOT_EXPORTABLE",
+      adapterVersion: ENGINE_ADAPTER_VERSION,
+      extractionMethod: "RENDERED_DOM_OBSERVATION",
+      searchUnitId: context.searchUnitId,
+      sessionId: context.sessionId,
+      observedAt: now,
+      pageUrl: context.pageUrl
+    },
+    fieldAvailability,
+    diagnostics
+  };
+}
+
+// src/extension/acquisition/engine/checkpointManager.ts
+var InMemoryCheckpointStorage = class {
+  constructor() {
+    this._storage = /* @__PURE__ */ new Map();
+  }
+  async saveCheckpoint(checkpoint) {
+    this._storage.set(checkpoint.sessionId, checkpoint);
+  }
+  async loadCheckpoint(sessionId) {
+    return this._storage.get(sessionId) ?? null;
+  }
+  async clearCheckpoint(sessionId) {
+    this._storage.delete(sessionId);
+  }
+};
+var GoogleMapsCheckpointManager = class {
+  constructor(storage = new InMemoryCheckpointStorage()) {
+    this._storage = storage;
+  }
+  /**
+   * Captures an ephemeral metadata checkpoint for the active session and search unit.
+   */
+  async createCheckpoint(params) {
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    const checkpointSeed = `${params.sessionId}::${params.searchUnit.searchUnitId}::${now}`;
+    const checkpointId = `gcp_${hashStringDeterministic(checkpointSeed)}`;
+    const checkpoint = {
+      checkpointId,
+      sessionId: params.sessionId,
+      searchUnitId: params.searchUnit.searchUnitId,
+      state: params.state,
+      pageUrl: params.pageUrl,
+      candidateCount: params.searchUnit.candidateCount,
+      lastObservedCandidateSignature: params.lastObservedCandidateSignature,
+      lastObservedCandidateIdentity: params.lastObservedCandidateIdentity,
+      lastObservedCandidateEvidence: params.lastObservedCandidateEvidence,
+      resultSurfacePosition: params.resultSurfacePosition,
+      observationSequence: params.observationSequence,
+      searchUnitProgressContext: params.searchUnitProgressContext,
+      checkpointToken: params.checkpointToken ?? `tok_${checkpointId}`,
+      duplicateSuppressionContext: params.duplicateSuppressionContext,
+      progress: params.progress,
+      retryCount: params.searchUnit.retryCount,
+      timestamp: now,
+      adapterVersion: ENGINE_ADAPTER_VERSION,
+      diagnosticsSummary: params.diagnosticsSummary ?? {
+        warningCount: 0,
+        errorCount: 0
+      }
+    };
+    await this._storage.saveCheckpoint(checkpoint);
+    return checkpoint;
+  }
+  /**
+   * Loads the latest checkpoint for the given session.
+   */
+  async loadCheckpoint(sessionId) {
+    return this._storage.loadCheckpoint(sessionId);
+  }
+  /**
+   * Validates a checkpoint for resumption integrity.
+   */
+  validateCheckpoint(checkpoint) {
+    if (!checkpoint) {
+      return { valid: false, reason: "Checkpoint does not exist" };
+    }
+    if (!checkpoint.sessionId || !checkpoint.searchUnitId) {
+      return { valid: false, reason: "Malformed checkpoint: missing sessionId or searchUnitId" };
+    }
+    if (checkpoint.state === "CANCELLED") {
+      return { valid: false, reason: "Cannot resume from a CANCELLED checkpoint" };
+    }
+    if (checkpoint.state === "COMPLETED") {
+      return { valid: false, reason: "Session already completed" };
+    }
+    return { valid: true };
+  }
+  /**
+   * Cleans up checkpoint on session completion or cancellation.
+   */
+  async clearCheckpoint(sessionId) {
+    await this._storage.clearCheckpoint(sessionId);
+  }
+};
+
+// src/extension/acquisition/engine/messageContracts.ts
+function validateAcquisitionMessage(msg) {
+  if (!msg || typeof msg !== "object") {
+    return { valid: false, error: "Message must be a non-null object" };
+  }
+  const m = msg;
+  if (typeof m.type !== "string") {
+    return { valid: false, error: 'Message must have a string "type" field' };
+  }
+  if (m.source !== "GMAPS_ENGINE") {
+    return { valid: false, error: 'Message source must be "GMAPS_ENGINE"' };
+  }
+  const validTypes = /* @__PURE__ */ new Set([
+    "START_GMAPS_ACQUISITION",
+    "PAUSE_GMAPS_ACQUISITION",
+    "RESUME_GMAPS_ACQUISITION",
+    "CANCEL_GMAPS_ACQUISITION",
+    "GET_GMAPS_ACQUISITION_STATUS",
+    "EXECUTE_GMAPS_FEED_SCROLL",
+    "PROBE_GMAPS_LIVE_CAPABILITY",
+    "SET_GMAPS_FILTER",
+    "RESET_GMAPS_FILTER",
+    "GET_GMAPS_FILTERED_VIEW",
+    "START_GMAPS_BULK_RESEARCH",
+    "PAUSE_GMAPS_BULK_RESEARCH",
+    "RESUME_GMAPS_BULK_RESEARCH",
+    "CANCEL_GMAPS_BULK_RESEARCH",
+    "GET_GMAPS_BULK_RESEARCH_STATUS",
+    "GMAPS_ACQUISITION_STATUS_UPDATED",
+    "GMAPS_CANDIDATES_OBSERVED",
+    "GMAPS_ACQUISITION_DIAGNOSTIC"
+  ]);
+  if (!validTypes.has(m.type)) {
+    return { valid: false, error: `Unknown message type: "${m.type}"` };
+  }
+  const isBulkType = typeof m.type === "string" && m.type.includes("_BULK_");
+  let payload = m.payload;
+  if (!payload || typeof payload !== "object") {
+    if (m.type === "GET_GMAPS_BULK_RESEARCH_STATUS" || isBulkType) {
+      payload = {};
+      m.payload = payload;
+    } else {
+      return { valid: false, error: 'Message must have a "payload" object' };
+    }
+  }
+  if (!isBulkType && (!payload.sessionId || typeof payload.sessionId !== "string")) {
+    return { valid: false, error: 'Message payload must include a "sessionId" string' };
+  }
+  return { valid: true, message: msg };
+}
+
+// src/extension/acquisition/engine/cardDetector.ts
+var CARD_SELECTORS = {
+  // Candidate card containers within feed
+  cardContainers: [
+    'div[role="feed"] > div[jsaction]',
+    'div[role="feed"] > div[role="article"]',
+    'div[role="article"]',
+    'div[jsaction*="mouseover"]:has(a[href*="/maps/place/"])',
+    "div.Nv2PK",
+    // Common Maps result item class fallback
+    'div[jsaction*="pane.wfvdle"]'
+  ],
+  // Business Name
+  name: [
+    ".qBF1Pd",
+    '[class*="fontHeadlineSmall"]',
+    "h3",
+    ".NrDZNb",
+    '[role="heading"]',
+    'a[href*="/maps/place/"] div[class*="fontHeadline"]',
+    "div.fontHeadlineSmall"
+  ],
+  // Listing / Maps Place link
+  placeLink: [
+    "a.hfpxzc",
+    'a[class*="hfpxzc"]',
+    'a[href*="/maps/place/"]',
+    'a[href*="google.com/maps/place/"]',
+    'a[data-item-id*="address"]',
+    'a[jsaction*="pane.wfvdle"]'
+  ],
+  // Rating & Review indicators
+  rating: [
+    'span[aria-label*="star"]',
+    'span[aria-label*="rated"]',
+    'span[aria-label*="Rated"]',
+    "span.MW4etd",
+    'span[aria-hidden="true"]:has(+ span[aria-label*="reviews"])'
+  ],
+  reviews: [
+    'span[aria-label*="review"]',
+    'span[aria-label*="Review"]',
+    ".UY7F9",
+    ".e4rVHe",
+    "span.ZDNAVf"
+  ],
+  // Category and Address lines
+  textSnippets: [
+    ".W4Efsd span",
+    ".GHT2ce span",
+    'div[class*="fontBodyMedium"] span',
+    "div.W4Efsd"
+  ],
+  // Business status indicators
+  status: [
+    ".YhemCb",
+    '[aria-label*="Closed"]',
+    '[aria-label*="Open"]',
+    'span[style*="color: rgb(217, 48, 37)"]',
+    // Red text (closed)
+    'span[style*="color: rgb(24, 128, 56)"]'
+    // Green text (open)
+  ],
+  // Non-business UI / Placeholder markers
+  loadingPlaceholders: [
+    '[class*="skeleton"]',
+    '[class*="placeholder"]',
+    '.m6QErb.tLzqyd[aria-label*="Loading"]',
+    'div[aria-busy="true"]'
+  ],
+  adMarkers: [
+    'span[aria-label*="Sponsored"]',
+    'span[aria-label*="Ad"]',
+    ".k8D6id",
+    'span:contains("Sponsored")',
+    "[data-ad-slot]"
+  ]
+};
+function parsePlaceIdFromUrl(url) {
+  if (!url) return void 0;
+  const chijMatch = url.match(/(ChIJ[A-Za-z0-9_-]{20,})/);
+  if (chijMatch) return chijMatch[1];
+  const tokenMatch = url.match(/!1s([^!/?&#]+)/);
+  if (tokenMatch) return tokenMatch[1];
+  const genericHex = url.match(/(0x[0-9a-zA-Z_-]+:0x[0-9a-zA-Z_-]+)/);
+  if (genericHex) return genericHex[1];
+  return void 0;
+}
+function extractText(el) {
+  if (!el || !el.textContent) return void 0;
+  const s = el.textContent.replace(/[\x00-\x1F\x7F]/g, " ").replace(/\s+/g, " ").trim();
+  return s.length > 0 ? s : void 0;
+}
+function classifyCandidateCard(el) {
+  if (!el) {
+    return {
+      element: el,
+      classification: "INVALID_UNKNOWN",
+      confidence: 0,
+      reason: "Null or undefined element",
+      isBusinessCard: false
+    };
+  }
+  if (el.getAttribute && (el.getAttribute("aria-busy") === "true" || el.getAttribute("data-loading") === "true")) {
+    return {
+      element: el,
+      classification: "LOADING_PLACEHOLDER",
+      confidence: 0.9,
+      reason: "Element is an active loading skeleton/placeholder",
+      isBusinessCard: false
+    };
+  }
+  const rawText = el.textContent || "";
+  if (rawText.trim().length === 0) {
+    return {
+      element: el,
+      classification: "LOADING_PLACEHOLDER",
+      confidence: 0.85,
+      reason: "Card has zero text content (empty placeholder/skeleton)",
+      isBusinessCard: false
+    };
+  }
+  const role = el.getAttribute ? el.getAttribute("role") : void 0;
+  if (role === "button" || role === "tab" || role === "menubar" || role === "navigation") {
+    return {
+      element: el,
+      classification: "NON_BUSINESS_UI",
+      confidence: 0.95,
+      reason: `Element has non-card role="${role}"`,
+      isBusinessCard: false
+    };
+  }
+  let foundName;
+  if (el.querySelector) {
+    for (const sel of CARD_SELECTORS.name) {
+      try {
+        const nameEl = el.querySelector(sel);
+        const txt = extractText(nameEl);
+        if (txt && txt.length > 0 && txt.length < 200) {
+          foundName = txt;
+          break;
+        }
+      } catch {
+      }
+    }
+  }
+  if (!foundName && el.querySelector) {
+    const heading = el.querySelector('h3, h2, [role="heading"], strong');
+    const txt = extractText(heading);
+    if (txt && txt.length > 1 && txt.length < 200) {
+      foundName = txt;
+    }
+  }
+  if (!foundName) {
+    return {
+      element: el,
+      classification: "INVALID_UNKNOWN",
+      confidence: 0.8,
+      reason: "No recognizable business name heading or text found",
+      isBusinessCard: false
+    };
+  }
+  let isSponsored = false;
+  const lowerText = rawText.toLowerCase();
+  if (lowerText.startsWith("sponsored") || lowerText.includes("\xB7 sponsored") || lowerText.includes(" ad \xB7")) {
+    isSponsored = true;
+  }
+  if (!isSponsored && el.querySelector) {
+    for (const sel of CARD_SELECTORS.adMarkers) {
+      try {
+        if (el.querySelector(sel)) {
+          isSponsored = true;
+          break;
+        }
+      } catch {
+      }
+    }
+  }
+  let hasSupportingEvidence = false;
+  if (el.querySelector) {
+    for (const sel of CARD_SELECTORS.placeLink) {
+      try {
+        if (el.querySelector(sel)) {
+          hasSupportingEvidence = true;
+          break;
+        }
+      } catch {
+      }
+    }
+    if (!hasSupportingEvidence) {
+      for (const sel of CARD_SELECTORS.rating) {
+        try {
+          if (el.querySelector(sel)) {
+            hasSupportingEvidence = true;
+            break;
+          }
+        } catch {
+        }
+      }
+    }
+  }
+  if (foundName.length >= 1) {
+    if (isSponsored) {
+      return {
+        element: el,
+        classification: "AD_OR_PROMOTIONAL_UI",
+        confidence: 0.85,
+        reason: `Sponsored business listing: "${foundName}"`,
+        isBusinessCard: true
+      };
+    }
+    return {
+      element: el,
+      classification: "VALID_BUSINESS_CANDIDATE",
+      confidence: hasSupportingEvidence ? 0.95 : 0.75,
+      reason: `Valid business card with name "${foundName}"`,
+      isBusinessCard: true
+    };
+  }
+  return {
+    element: el,
+    classification: "INVALID_UNKNOWN",
+    confidence: 0.7,
+    reason: "Insufficient business identity evidence",
+    isBusinessCard: false
+  };
+}
+function extractRawCardNodeData(cardEl, pageUrl = "") {
+  const result = {};
+  if (!cardEl.querySelector) {
+    return result;
+  }
+  for (const sel of CARD_SELECTORS.name) {
+    try {
+      const el = cardEl.querySelector(sel);
+      const txt = extractText(el);
+      if (txt) {
+        result.businessName = txt;
+        break;
+      }
+    } catch {
+    }
+  }
+  for (const sel of CARD_SELECTORS.placeLink) {
+    try {
+      const linkEl = cardEl.querySelector(sel);
+      if (linkEl && linkEl.getAttribute) {
+        const href = linkEl.getAttribute("href");
+        if (href) {
+          result.mapsUrl = href;
+          const pid = parsePlaceIdFromUrl(href);
+          if (pid) {
+            result.placeId = pid;
+          }
+          break;
+        }
+      }
+    } catch {
+    }
+  }
+  for (const sel of CARD_SELECTORS.rating) {
+    try {
+      const ratingEl = cardEl.querySelector(sel);
+      if (ratingEl) {
+        const aria = ratingEl.getAttribute ? ratingEl.getAttribute("aria-label") : void 0;
+        const txt = aria || ratingEl.textContent || "";
+        const match = txt.match(/(\d+[.,]\d+|\b[1-5]\b)/);
+        if (match) {
+          result.rating = match[1];
+          break;
+        }
+      }
+    } catch {
+    }
+  }
+  for (const sel of CARD_SELECTORS.reviews) {
+    try {
+      const reviewEl = cardEl.querySelector(sel);
+      if (reviewEl) {
+        const aria = reviewEl.getAttribute ? reviewEl.getAttribute("aria-label") : void 0;
+        const txt = aria || reviewEl.textContent || "";
+        const match = txt.match(/([\d]+[.,]\d+|\d+)\s*[kK]?/);
+        if (match) {
+          result.reviewCount = match[0];
+          break;
+        }
+      }
+    } catch {
+    }
+  }
+  if (cardEl.querySelectorAll) {
+    try {
+      const snippetNodes = cardEl.querySelectorAll(CARD_SELECTORS.textSnippets.join(", "));
+      const textSnippets = [];
+      for (let i = 0; i < snippetNodes.length && i < 12; i++) {
+        const txt = extractText(snippetNodes[i]);
+        if (txt && !textSnippets.includes(txt)) {
+          textSnippets.push(txt);
+        }
+      }
+      for (const line of textSnippets) {
+        if (/^\d+[.,]?\d*$/.test(line) || line.includes("\u2605") || line.includes("reviews") || line.includes("review")) {
+          continue;
+        }
+        const lower = line.toLowerCase();
+        if (lower.includes("closed") || lower.includes("open") || lower.includes("opens") || lower.includes("closing")) {
+          if (!result.businessStatus) {
+            result.businessStatus = line;
+          }
+          continue;
+        }
+        if (/\+?\d[\d\s\-()]{7,}\d/.test(line) && !result.phone) {
+          result.phone = line;
+          continue;
+        }
+        if (!result.category && line.length < 60 && !line.includes(",") && !/\d{3,}/.test(line)) {
+          result.category = line;
+        } else if (!result.address && (line.includes(",") || /\d/.test(line) || line.length >= 10)) {
+          result.address = line;
+        }
+      }
+    } catch {
+    }
+  }
+  try {
+    const websiteEl = cardEl.querySelector('a[data-value="Website"], a[aria-label*="Website"], a[href^="http"]:not([href*="google.com"])');
+    if (websiteEl && websiteEl.getAttribute) {
+      const href = websiteEl.getAttribute("href");
+      if (href && !href.includes("google.com/maps")) {
+        result.websiteUrl = href;
+      }
+    }
+  } catch {
+  }
+  if (!result.businessStatus) {
+    for (const sel of CARD_SELECTORS.status) {
+      try {
+        const sEl = cardEl.querySelector(sel);
+        const txt = extractText(sEl);
+        if (txt) {
+          result.businessStatus = txt;
+          break;
+        }
+      } catch {
+      }
+    }
+  }
+  result.isDetail = false;
+  result.surfaceType = "CARD";
+  return result;
+}
+
+// src/extension/acquisition/engine/resultSurfaceDetector.ts
+var SURFACE_SELECTORS = {
+  semanticFeed: [
+    'div[role="feed"]',
+    'div[aria-label*="Results"]',
+    'div[aria-label*="results"]',
+    'div[aria-label*="Result list"]'
+  ],
+  structuralContainer: [
+    "div.m6QErb.DxyBCb.kA9KIf.dS8AEf",
+    "div.m6QErb[aria-label]",
+    'div.m6QErb:has(div[jsaction*="mouseover"])',
+    'div[jsaction*="pane.wfvdle"]',
+    "div.m6QErb"
+  ],
+  fallbackSelectors: [
+    'div#QA0Szd div[tabindex="-1"]',
+    'div[style*="overflow-y: scroll"]',
+    'div[style*="overflow-y: auto"]'
+  ]
+};
+function getElementScrollMetrics(el) {
+  const scrollTop = el?.scrollTop ?? 0;
+  const clientHeight = el?.clientHeight ?? 0;
+  const scrollHeight = el?.scrollHeight ?? 0;
+  const isScrollable = scrollHeight > clientHeight && clientHeight > 0;
+  return {
+    scrollTop,
+    clientHeight,
+    scrollHeight,
+    isScrollable
+  };
+}
+function scoreContainerCandidate(container, selectorTier, elementPath = "") {
+  let score = 0;
+  const reasons = [];
+  const metrics = getElementScrollMetrics(container);
+  const hasRoleFeed = Boolean(container.getAttribute && container.getAttribute("role") === "feed");
+  const hasAriaResults = Boolean(container.getAttribute && /result/i.test(container.getAttribute("aria-label") || ""));
+  if (hasRoleFeed) {
+    score += 0.4;
+    reasons.push('Explicit role="feed" attribute');
+    if (hasAriaResults) {
+      score += 0.05;
+      reasons.push("Matched aria-label for results");
+    }
+  } else if (selectorTier === "SEMANTIC") {
+    score += 0.35;
+    reasons.push("Matched semantic feed role/aria-label");
+  } else if (selectorTier === "STRUCTURAL") {
+    score += 0.25;
+    reasons.push("Matched structural Maps panel container");
+  } else {
+    score += 0.15;
+    reasons.push("Matched fallback scrollable container");
+  }
+  let cardCount = 0;
+  let validCardCount = 0;
+  if (container.querySelectorAll) {
+    try {
+      const cardNodes = container.querySelectorAll(CARD_SELECTORS.cardContainers.join(", "));
+      cardCount = cardNodes.length;
+      for (let i = 0; i < Math.min(cardNodes.length, 5); i++) {
+        const cls = classifyCandidateCard(cardNodes[i]);
+        if (cls.isBusinessCard) {
+          validCardCount++;
+        }
+      }
+    } catch {
+    }
+  }
+  if (cardCount > 0) {
+    score += 0.3;
+    reasons.push(`Contains ${cardCount} candidate cards (${validCardCount} validated)`);
+  }
+  if (metrics.isScrollable) {
+    score += 0.25;
+    reasons.push(`Vertically scrollable (scrollHeight=${metrics.scrollHeight} > clientHeight=${metrics.clientHeight})`);
+  } else if (metrics.clientHeight > 0 && cardCount > 2) {
+    score += 0.1;
+    reasons.push("Container has positive clientHeight with multiple cards");
+  } else {
+    reasons.push("Container not currently scrollable");
+  }
+  const tagName = (container.tagName || "").toLowerCase();
+  if (tagName === "canvas" || tagName === "body" || tagName === "html") {
+    score = 0;
+    reasons.push("Rejected document/canvas container");
+  }
+  const confidence = Math.min(1, Math.round(score * 100) / 100);
+  const validated = confidence >= 0.55 && (cardCount > 0 || hasRoleFeed && metrics.isScrollable);
+  return {
+    elementPath,
+    confidence,
+    reason: reasons.join("; "),
+    scrollTop: metrics.scrollTop,
+    clientHeight: metrics.clientHeight,
+    scrollHeight: metrics.scrollHeight,
+    candidateCardCount: cardCount,
+    isScrollable: metrics.isScrollable,
+    validated
+  };
+}
+function detectResultSurface(domRoot) {
+  const failCandidate = {
+    confidence: 0,
+    reason: "DOM context unavailable",
+    scrollTop: 0,
+    clientHeight: 0,
+    scrollHeight: 0,
+    candidateCardCount: 0,
+    isScrollable: false,
+    validated: false
+  };
+  if (!domRoot || !domRoot.querySelector) {
+    return {
+      surfaceElement: null,
+      candidate: failCandidate,
+      found: false,
+      status: "RESULT_SURFACE_NOT_FOUND",
+      container: null
+    };
+  }
+  for (const sel of SURFACE_SELECTORS.semanticFeed) {
+    try {
+      const el = domRoot.querySelector(sel);
+      if (el) {
+        const candidate = scoreContainerCandidate(el, "SEMANTIC", sel);
+        if (candidate.validated) {
+          return {
+            surfaceElement: el,
+            candidate,
+            found: true,
+            status: "SURFACE_DETECTED",
+            container: { ...candidate, element: el }
+          };
+        }
+      }
+    } catch {
+    }
+  }
+  for (const sel of SURFACE_SELECTORS.structuralContainer) {
+    try {
+      const el = domRoot.querySelector(sel);
+      if (el) {
+        const candidate = scoreContainerCandidate(el, "STRUCTURAL", sel);
+        if (candidate.validated) {
+          return {
+            surfaceElement: el,
+            candidate,
+            found: true,
+            status: "SURFACE_DETECTED",
+            container: { ...candidate, element: el }
+          };
+        }
+      }
+    } catch {
+    }
+  }
+  for (const sel of SURFACE_SELECTORS.fallbackSelectors) {
+    try {
+      const el = domRoot.querySelector(sel);
+      if (el) {
+        const candidate = scoreContainerCandidate(el, "FALLBACK", sel);
+        if (candidate.validated) {
+          return {
+            surfaceElement: el,
+            candidate,
+            found: true,
+            status: "SURFACE_DETECTED",
+            container: { ...candidate, element: el }
+          };
+        }
+      }
+    } catch {
+    }
+  }
+  const failClosedCandidate = {
+    confidence: 0,
+    reason: "No candidate container satisfied result-surface validation thresholds",
+    scrollTop: 0,
+    clientHeight: 0,
+    scrollHeight: 0,
+    candidateCardCount: 0,
+    isScrollable: false,
+    validated: false
+  };
+  return {
+    surfaceElement: null,
+    candidate: failClosedCandidate,
+    found: false,
+    status: "RESULT_SURFACE_NOT_FOUND",
+    container: null
+  };
+}
+
+// src/extension/acquisition/engine/feedScrollEngine.ts
+function validateAcquisitionPolicy(policy) {
+  if (!policy) return { ...DEFAULT_ACQUISITION_POLICY };
+  const sanitizeNumber = (val, fallback, min, max) => {
+    if (typeof val !== "number" || isNaN(val) || !isFinite(val) || val < min || val > max) {
+      return fallback;
+    }
+    return val;
+  };
+  return {
+    maxScrollSteps: sanitizeNumber(policy.maxScrollSteps, DEFAULT_ACQUISITION_POLICY.maxScrollSteps, 1, 200),
+    maxCandidates: sanitizeNumber(policy.maxCandidates, DEFAULT_ACQUISITION_POLICY.maxCandidates, 1, 1e3),
+    maxDurationMs: sanitizeNumber(policy.maxDurationMs, DEFAULT_ACQUISITION_POLICY.maxDurationMs, 1e3, 6e5),
+    scrollFractionOfViewport: sanitizeNumber(policy.scrollFractionOfViewport, DEFAULT_ACQUISITION_POLICY.scrollFractionOfViewport, 0.1, 1),
+    loadWaitTimeoutMs: sanitizeNumber(policy.loadWaitTimeoutMs, DEFAULT_ACQUISITION_POLICY.loadWaitTimeoutMs, 10, 3e4),
+    quietPeriodMs: sanitizeNumber(policy.quietPeriodMs, DEFAULT_ACQUISITION_POLICY.quietPeriodMs, 10, 5e3),
+    maxNoNewCandidateCycles: sanitizeNumber(policy.maxNoNewCandidateCycles, DEFAULT_ACQUISITION_POLICY.maxNoNewCandidateCycles, 1, 10),
+    retryLimit: sanitizeNumber(policy.retryLimit, DEFAULT_ACQUISITION_POLICY.retryLimit, 1, 10),
+    exhaustionTolerancePx: sanitizeNumber(policy.exhaustionTolerancePx, DEFAULT_ACQUISITION_POLICY.exhaustionTolerancePx, 0, 500)
+  };
+}
+var GoogleMapsFeedScrollEngine = class {
+  constructor(domProviderOrPolicy, context, policy = {}, hooks = {}, deduplicator = new SessionCandidateDeduplicator()) {
+    this._activeObserver = null;
+    this._activeTimers = /* @__PURE__ */ new Set();
+    this._observationSequence = 0;
+    this._startTime = 0;
+    this._userPaused = false;
+    this._userCancelled = false;
+    this._running = false;
+    this._listeners = /* @__PURE__ */ new Map();
+    if (typeof domProviderOrPolicy === "function") {
+      this._domProvider = domProviderOrPolicy;
+      this._context = context || { sessionId: "", searchUnitId: "", searchKeyword: "", pageUrl: "" };
+      this._policy = validateAcquisitionPolicy(policy);
+      this._hooks = hooks;
+      this._deduplicator = deduplicator;
+    } else {
+      const pol = domProviderOrPolicy;
+      this._domProvider = () => null;
+      this._context = context || { sessionId: "", searchUnitId: "", searchKeyword: "", pageUrl: "" };
+      this._policy = validateAcquisitionPolicy(pol);
+      this._hooks = hooks;
+      this._deduplicator = deduplicator;
+    }
+  }
+  get deduplicator() {
+    return this._deduplicator;
+  }
+  get observationSequence() {
+    return this._observationSequence;
+  }
+  isRunning() {
+    return this._running;
+  }
+  isPaused() {
+    return this._userPaused;
+  }
+  requestPause() {
+    this._userPaused = true;
+  }
+  requestCancel() {
+    this._userCancelled = true;
+  }
+  on(event, fn) {
+    if (!this._listeners.has(event)) {
+      this._listeners.set(event, /* @__PURE__ */ new Set());
+    }
+    this._listeners.get(event).add(fn);
+    return this;
+  }
+  emit(event, ...args) {
+    const set = this._listeners.get(event);
+    if (set) {
+      for (const fn of set) {
+        try {
+          fn(...args);
+        } catch {
+        }
+      }
+    }
+  }
+  /**
+   * Central timer helper to guarantee all timeouts are tracked and cancellable.
+   */
+  _setTimeout(fn, ms) {
+    const timer = setTimeout(() => {
+      this._activeTimers.delete(timer);
+      fn();
+    }, ms);
+    this._activeTimers.add(timer);
+    return timer;
+  }
+  /**
+   * Cleans up all active timers and mutation observers cleanly.
+   */
+  cleanup() {
+    for (const timer of this._activeTimers) {
+      clearTimeout(timer);
+    }
+    this._activeTimers.clear();
+    if (this._activeObserver && typeof this._activeObserver.disconnect === "function") {
+      try {
+        this._activeObserver.disconnect();
+      } catch {
+      }
+      this._activeObserver = null;
+    }
+  }
+  /**
+   * Bounded wait for feed DOM changes after a scroll action.
+   */
+  async _waitForFeedUpdate(surfaceElement) {
+    if (!surfaceElement) return false;
+    return new Promise((resolve) => {
+      let resolved = false;
+      let quietTimer = null;
+      const finish = (hadMutations) => {
+        if (resolved) return;
+        resolved = true;
+        if (quietTimer) clearTimeout(quietTimer);
+        this.cleanup();
+        resolve(hadMutations);
+      };
+      this._setTimeout(() => {
+        finish(false);
+      }, this._policy.loadWaitTimeoutMs);
+      if (typeof MutationObserver !== "undefined" && surfaceElement.nodeType) {
+        try {
+          this._activeObserver = new MutationObserver(() => {
+            if (quietTimer) clearTimeout(quietTimer);
+            quietTimer = setTimeout(() => {
+              finish(true);
+            }, this._policy.quietPeriodMs);
+          });
+          this._activeObserver.observe(surfaceElement, {
+            childList: true,
+            subtree: true,
+            attributes: false
+          });
+          return;
+        } catch {
+        }
+      }
+      this._setTimeout(() => {
+        finish(true);
+      }, Math.min(this._policy.quietPeriodMs, 100));
+    });
+  }
+  /**
+   * Multi-signal exhaustion detector.
+   */
+  isFeedExhausted(surfaceElement, noProgressCycles) {
+    if (!surfaceElement) {
+      return { exhausted: true, reason: "Surface container missing" };
+    }
+    const dom = this._domProvider();
+    if (dom && dom.querySelector) {
+      const endMarker = dom.querySelector(
+        '.HlvSq, [aria-label*="end of the list"], [aria-label*="End of list"], .m6QErb.tLzqyd:contains("end")'
+      );
+      if (endMarker) {
+        return { exhausted: true, reason: "End-of-results DOM marker observed" };
+      }
+    }
+    if (surfaceElement.querySelector) {
+      const innerMarker = surfaceElement.querySelector(
+        '.HlvSq, [aria-label*="end of the list"], [aria-label*="End of list"]'
+      );
+      if (innerMarker) {
+        return { exhausted: true, reason: "End-of-results marker observed in surface" };
+      }
+    }
+    const scrollTop = surfaceElement.scrollTop ?? 0;
+    const clientHeight = surfaceElement.clientHeight ?? 0;
+    const scrollHeight = surfaceElement.scrollHeight ?? 0;
+    if (scrollHeight > 0 && clientHeight > 0) {
+      const remainingDistance = scrollHeight - (scrollTop + clientHeight);
+      if (remainingDistance <= this._policy.exhaustionTolerancePx && noProgressCycles >= 1) {
+        return {
+          exhausted: true,
+          reason: `Geometric scroll bottom reached (remaining=${remainingDistance}px, noProgress=${noProgressCycles})`
+        };
+      }
+    }
+    if (noProgressCycles >= this._policy.maxNoNewCandidateCycles) {
+      return {
+        exhausted: true,
+        reason: `Exhausted after ${noProgressCycles} consecutive cycles with zero new candidates`
+      };
+    }
+    return { exhausted: false };
+  }
+  /**
+   * Executes a single scroll observation cycle against a surface element.
+   */
+  async executeScrollCycle(surfaceElement, context, location, sequence = 1) {
+    this._observationSequence = sequence;
+    const cardElements = surfaceElement?.querySelectorAll ? Array.from(surfaceElement.querySelectorAll(CARD_SELECTORS.cardContainers.join(", "))) : [];
+    const cycleNewCandidates = [];
+    let cycleDuplicates = 0;
+    let cycleInvalids = 0;
+    const cycleCandidateIds = [];
+    for (const cardEl of cardElements) {
+      const classification = classifyCandidateCard(cardEl);
+      if (!classification.isBusinessCard) {
+        cycleInvalids++;
+        continue;
+      }
+      const rawData = extractRawCardNodeData(cardEl, context.pageUrl);
+      const observation = createCandidateObservation(rawData, {
+        sessionId: context.sessionId,
+        searchUnitId: context.searchUnitId,
+        searchKeyword: context.searchKeyword,
+        searchLocation: location || context.searchLocation,
+        pageUrl: context.pageUrl,
+        pageKind: "SEARCH_RESULTS"
+      });
+      const identity = deriveCandidateIdentity({
+        businessName: observation.businessName.parsedValue,
+        placeId: observation.placeId.parsedValue,
+        mapsUrl: observation.mapsUrl.parsedValue,
+        address: observation.address.parsedValue,
+        category: observation.category.parsedValue,
+        searchKeyword: context.searchKeyword,
+        searchLocation: location || context.searchLocation,
+        searchUnitId: context.searchUnitId
+      });
+      const identifiedObservation = {
+        ...observation,
+        observationId: observation.observationId || identity.candidateId,
+        candidateId: identity.candidateId,
+        identityMethod: identity.identityMethod,
+        identityConfidence: identity.identityConfidence,
+        identityEvidence: identity.evidence
+      };
+      cycleCandidateIds.push(identity.candidateId);
+      const { isNew, candidate } = this._deduplicator.register(identifiedObservation);
+      if (isNew) {
+        cycleNewCandidates.push(candidate);
+        if (this._deduplicator.size >= this._policy.maxCandidates) {
+          break;
+        }
+      } else {
+        cycleDuplicates++;
+      }
+    }
+    const prevScrollTop = surfaceElement?.scrollTop ?? 0;
+    const stepDistance = Math.max(
+      200,
+      Math.round((surfaceElement?.clientHeight || 600) * this._policy.scrollFractionOfViewport)
+    );
+    if (surfaceElement) {
+      if (typeof surfaceElement.scrollTo === "function") {
+        surfaceElement.scrollTo({ top: prevScrollTop + stepDistance });
+      } else if (typeof surfaceElement.scrollBy === "function") {
+        surfaceElement.scrollBy(0, stepDistance);
+      } else if (surfaceElement.scrollTop !== void 0) {
+        surfaceElement.scrollTop += stepDistance;
+      }
+    }
+    const newScrollTop = surfaceElement?.scrollTop ?? prevScrollTop;
+    const scrollOutcome = newScrollTop > prevScrollTop ? "SCROLL_PROGRESS" : cycleNewCandidates.length > 0 ? "SCROLL_PROGRESS" : "SCROLL_NO_PROGRESS";
+    const batch = {
+      sessionId: context.sessionId,
+      searchUnitId: context.searchUnitId,
+      observationSequence: sequence,
+      visibleCandidateCount: cardElements.length,
+      newCandidateCount: cycleNewCandidates.length,
+      duplicateCandidateCount: cycleDuplicates,
+      invalidCandidateCount: cycleInvalids,
+      candidateIds: cycleCandidateIds,
+      newCandidates: cycleNewCandidates,
+      scrollTop: newScrollTop,
+      clientHeight: surfaceElement?.clientHeight ?? 0,
+      scrollHeight: surfaceElement?.scrollHeight ?? 0,
+      isAtBottom: false,
+      hasNewContent: cycleNewCandidates.length > 0,
+      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      scrollOutcome
+    };
+    this.emit("batch", batch);
+    return batch;
+  }
+  /**
+   * Runs acquisition loop over a specified surface container.
+   */
+  async runAcquisitionLoop(surfaceContainer, context, location) {
+    this._running = true;
+    this._context = context;
+    this._startTime = Date.now();
+    let scrollStep = 0;
+    let consecutiveNoProgressCycles = 0;
+    const batches = [];
+    const emittedCandidates = [];
+    const metrics = {
+      scrollSteps: 0,
+      observationCycles: 0,
+      visibleCandidateObservations: 0,
+      uniqueCandidates: 0,
+      duplicateObservations: 0,
+      invalidCandidates: 0,
+      scrollNoProgressCycles: 0,
+      feedGrowthEvents: 0,
+      extractionErrors: 0,
+      elapsedMs: 0
+    };
+    let terminationReason = "EXHAUSTED";
+    try {
+      while (true) {
+        metrics.elapsedMs = Date.now() - this._startTime;
+        if (metrics.elapsedMs >= this._policy.maxDurationMs) {
+          terminationReason = "TIMEOUT";
+          break;
+        }
+        if (this._userCancelled || this._hooks.isCancelled && this._hooks.isCancelled()) {
+          terminationReason = "USER_CANCELLED";
+          break;
+        }
+        if (this._userPaused || this._hooks.isPaused && this._hooks.isPaused()) {
+          terminationReason = "USER_PAUSED";
+          break;
+        }
+        this._observationSequence++;
+        metrics.observationCycles++;
+        const batch = await this.executeScrollCycle(
+          surfaceContainer,
+          context,
+          location,
+          this._observationSequence
+        );
+        batches.push(batch);
+        metrics.visibleCandidateObservations += batch.visibleCandidateCount;
+        metrics.invalidCandidates += batch.invalidCandidateCount;
+        metrics.duplicateObservations += batch.duplicateCandidateCount;
+        if (batch.newCandidates && batch.newCandidates.length > 0) {
+          consecutiveNoProgressCycles = 0;
+          metrics.feedGrowthEvents++;
+          emittedCandidates.push(...batch.newCandidates);
+        } else {
+          consecutiveNoProgressCycles++;
+          metrics.scrollNoProgressCycles++;
+        }
+        metrics.uniqueCandidates = this._deduplicator.size;
+        if (this._deduplicator.size >= this._policy.maxCandidates) {
+          terminationReason = "MAX_RESULTS_REACHED";
+          break;
+        }
+        const exhaustionCheck = this.isFeedExhausted(surfaceContainer, consecutiveNoProgressCycles);
+        if (exhaustionCheck.exhausted) {
+          terminationReason = "EXHAUSTED";
+          break;
+        }
+        scrollStep++;
+        metrics.scrollSteps = scrollStep;
+        if (scrollStep >= this._policy.maxScrollSteps) {
+          terminationReason = "MAX_SCROLL_STEPS_REACHED";
+          break;
+        }
+        await this._waitForFeedUpdate(surfaceContainer);
+      }
+    } finally {
+      this.cleanup();
+      this._running = false;
+      metrics.elapsedMs = Date.now() - this._startTime;
+      metrics.terminationReason = terminationReason;
+    }
+    return {
+      metrics,
+      batches,
+      candidates: emittedCandidates,
+      terminationReason
+    };
+  }
+  async startScrollLoop() {
+    return this.execute();
+  }
+  /**
+   * Executes the controlled, stepwise acquisition loop using the configured domProvider.
+   */
+  async execute() {
+    this._running = true;
+    this._startTime = Date.now();
+    let scrollStep = 0;
+    let consecutiveNoProgressCycles = 0;
+    const batches = [];
+    const emittedCandidates = [];
+    const metrics = {
+      scrollSteps: 0,
+      observationCycles: 0,
+      visibleCandidateObservations: 0,
+      uniqueCandidates: 0,
+      duplicateObservations: 0,
+      invalidCandidates: 0,
+      scrollNoProgressCycles: 0,
+      feedGrowthEvents: 0,
+      extractionErrors: 0,
+      elapsedMs: 0
+    };
+    let terminationReason = "EXHAUSTED";
+    try {
+      while (true) {
+        metrics.elapsedMs = Date.now() - this._startTime;
+        if (metrics.elapsedMs >= this._policy.maxDurationMs) {
+          terminationReason = "TIMEOUT";
+          break;
+        }
+        if (this._userCancelled || this._hooks.isCancelled && this._hooks.isCancelled()) {
+          terminationReason = "USER_CANCELLED";
+          break;
+        }
+        if (this._userPaused || this._hooks.isPaused && this._hooks.isPaused()) {
+          terminationReason = "USER_PAUSED";
+          break;
+        }
+        const dom = this._domProvider();
+        const surfaceDetection = detectResultSurface(dom);
+        if (!surfaceDetection.found || !surfaceDetection.container || !surfaceDetection.container.validated) {
+          terminationReason = "UNSUPPORTED";
+          if (this._hooks.onDiagnostic) {
+            this._hooks.onDiagnostic({
+              code: "RESULT_SURFACE_NOT_FOUND",
+              severity: "P1",
+              recoveryClass: "UNSUPPORTED",
+              message: surfaceDetection.container?.reason || "Result surface not found in DOM",
+              timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+              sessionId: this._context.sessionId,
+              searchUnitId: this._context.searchUnitId
+            });
+          }
+          break;
+        }
+        const surfaceElement = surfaceDetection.container.element;
+        this._observationSequence++;
+        metrics.observationCycles++;
+        const cardElements = surfaceElement.querySelectorAll ? Array.from(surfaceElement.querySelectorAll(CARD_SELECTORS.cardContainers.join(", "))) : [];
+        metrics.visibleCandidateObservations += cardElements.length;
+        const cycleNewCandidates = [];
+        let cycleDuplicates = 0;
+        let cycleInvalids = 0;
+        const cycleCandidateIds = [];
+        for (const cardEl of cardElements) {
+          const classification = classifyCandidateCard(cardEl);
+          if (!classification.isBusinessCard) {
+            cycleInvalids++;
+            metrics.invalidCandidates++;
+            continue;
+          }
+          const rawData = extractRawCardNodeData(cardEl, this._context.pageUrl);
+          const observation = createCandidateObservation(rawData, {
+            sessionId: this._context.sessionId,
+            searchUnitId: this._context.searchUnitId,
+            searchKeyword: this._context.searchKeyword,
+            searchLocation: this._context.searchLocation,
+            pageUrl: this._context.pageUrl,
+            pageKind: "SEARCH_RESULTS"
+          });
+          const identity = deriveCandidateIdentity({
+            businessName: observation.businessName.parsedValue,
+            placeId: observation.placeId.parsedValue,
+            mapsUrl: observation.mapsUrl.parsedValue,
+            address: observation.address.parsedValue,
+            category: observation.category.parsedValue,
+            searchKeyword: this._context.searchKeyword,
+            searchLocation: this._context.searchLocation,
+            searchUnitId: this._context.searchUnitId
+          });
+          const identifiedObservation = {
+            ...observation,
+            observationId: observation.observationId || identity.candidateId,
+            candidateId: identity.candidateId,
+            identityMethod: identity.identityMethod,
+            identityConfidence: identity.identityConfidence,
+            identityEvidence: identity.evidence
+          };
+          cycleCandidateIds.push(identity.candidateId);
+          const { isNew, candidate: registeredCandidate } = this._deduplicator.register(identifiedObservation);
+          if (isNew) {
+            cycleNewCandidates.push(registeredCandidate);
+            emittedCandidates.push(registeredCandidate);
+            if (this._deduplicator.size >= this._policy.maxCandidates) {
+              break;
+            }
+          } else {
+            cycleDuplicates++;
+            metrics.duplicateObservations++;
+          }
+        }
+        metrics.uniqueCandidates = this._deduplicator.size;
+        if (cycleNewCandidates.length > 0) {
+          consecutiveNoProgressCycles = 0;
+          metrics.feedGrowthEvents++;
+          if (this._hooks.onNewCandidates) {
+            this._hooks.onNewCandidates(cycleNewCandidates);
+          }
+        } else {
+          consecutiveNoProgressCycles++;
+          metrics.scrollNoProgressCycles++;
+        }
+        if (this._deduplicator.size >= this._policy.maxCandidates) {
+          terminationReason = "MAX_RESULTS_REACHED";
+          break;
+        }
+        const exhaustionCheck = this.isFeedExhausted(surfaceElement, consecutiveNoProgressCycles);
+        const isAtBottom = exhaustionCheck.exhausted;
+        const batch = {
+          sessionId: this._context.sessionId,
+          searchUnitId: this._context.searchUnitId,
+          observationSequence: this._observationSequence,
+          visibleCandidateCount: cardElements.length,
+          newCandidateCount: cycleNewCandidates.length,
+          duplicateCandidateCount: cycleDuplicates,
+          invalidCandidateCount: cycleInvalids,
+          candidateIds: cycleCandidateIds,
+          newCandidates: cycleNewCandidates,
+          scrollTop: surfaceElement.scrollTop ?? 0,
+          clientHeight: surfaceElement.clientHeight ?? 0,
+          scrollHeight: surfaceElement.scrollHeight ?? 0,
+          isAtBottom,
+          hasNewContent: cycleNewCandidates.length > 0,
+          timestamp: (/* @__PURE__ */ new Date()).toISOString()
+        };
+        batches.push(batch);
+        this.emit("batch", batch);
+        if (this._hooks.onBatchCompleted) {
+          this._hooks.onBatchCompleted(batch);
+        }
+        if (isAtBottom) {
+          terminationReason = "EXHAUSTED";
+          break;
+        }
+        scrollStep++;
+        metrics.scrollSteps = scrollStep;
+        if (scrollStep >= this._policy.maxScrollSteps) {
+          terminationReason = "MAX_SCROLL_STEPS_REACHED";
+          break;
+        }
+        const stepDistance = Math.max(
+          200,
+          Math.round((surfaceElement.clientHeight || 600) * this._policy.scrollFractionOfViewport)
+        );
+        const prevScrollTop = surfaceElement.scrollTop ?? 0;
+        if (typeof surfaceElement.scrollBy === "function") {
+          surfaceElement.scrollBy(0, stepDistance);
+        } else if (surfaceElement.scrollTop !== void 0) {
+          surfaceElement.scrollTop += stepDistance;
+        }
+        const newScrollTop = surfaceElement.scrollTop ?? prevScrollTop;
+        if (newScrollTop === prevScrollTop && consecutiveNoProgressCycles >= this._policy.maxNoNewCandidateCycles) {
+          terminationReason = "EXHAUSTED";
+          break;
+        }
+        await this._waitForFeedUpdate(surfaceElement);
+      }
+    } finally {
+      this.cleanup();
+      this._running = false;
+      metrics.elapsedMs = Date.now() - this._startTime;
+      metrics.terminationReason = terminationReason;
+    }
+    return {
+      metrics,
+      batches,
+      candidates: emittedCandidates,
+      terminationReason
+    };
+  }
+};
+
+// src/extension/acquisition/engine/liveCapabilityProbe.ts
+function probeGoogleMapsCapability(domRoot, currentUrl = "") {
+  const diagnostics = [];
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  const pageDetect = detectGoogleMapsPage(currentUrl, domRoot);
+  const mapsPageDetected = pageDetect.isGoogleMaps;
+  if (!mapsPageDetected) {
+    diagnostics.push(`Page URL does not match supported Google Maps pattern: ${currentUrl}`);
+  }
+  const { surfaceElement, candidate: surfaceCandidate } = detectResultSurface(domRoot);
+  const resultSurfaceDetected = surfaceCandidate.validated;
+  if (!resultSurfaceDetected) {
+    diagnostics.push(`Result surface not validated: ${surfaceCandidate.reason}`);
+  }
+  let visibleCandidateCount = 0;
+  let validCandidateCount = 0;
+  let sampleCandidate;
+  if (surfaceElement && surfaceElement.querySelectorAll) {
+    const cards = Array.from(surfaceElement.querySelectorAll(CARD_SELECTORS.cardContainers.join(", ")));
+    visibleCandidateCount = cards.length;
+    for (const c of cards) {
+      const cls = classifyCandidateCard(c);
+      if (cls.isBusinessCard) {
+        validCandidateCount++;
+        if (!sampleCandidate) {
+          const raw = extractRawCardNodeData(c, currentUrl);
+          const obs = createCandidateObservation(raw, {
+            sessionId: "probe-session",
+            searchUnitId: "probe-unit",
+            searchKeyword: "probe",
+            pageUrl: currentUrl,
+            pageKind: pageDetect.pageKind
+          });
+          const id = deriveCandidateIdentity({
+            businessName: obs.businessName.parsedValue,
+            placeId: obs.placeId.parsedValue,
+            mapsUrl: obs.mapsUrl.parsedValue,
+            address: obs.address.parsedValue
+          });
+          sampleCandidate = {
+            businessName: obs.businessName.parsedValue,
+            rating: obs.rating.parsedValue,
+            reviewCount: obs.reviewCount.parsedValue,
+            address: obs.address.parsedValue,
+            websiteAvailability: obs.websiteUrl.availability,
+            identityMethod: id.identityMethod
+          };
+        }
+      }
+    }
+  }
+  const visibleCandidatesFound = validCandidateCount > 0;
+  const fieldsObserved = Boolean(sampleCandidate?.businessName);
+  const isScrollable = surfaceCandidate.isScrollable;
+  const scrollProgressDetected = isScrollable;
+  let exhaustionSignalDetected = false;
+  if (domRoot && domRoot.querySelector) {
+    const endMarker = domRoot.querySelector('.HlvSq, [aria-label*="end of the list"], [aria-label*="End of list"]');
+    if (endMarker) exhaustionSignalDetected = true;
+  }
+  return {
+    url: currentUrl,
+    timestamp: now,
+    capabilities: {
+      mapsPageDetected,
+      resultSurfaceDetected,
+      visibleCandidatesFound,
+      fieldsObserved,
+      scrollProgressDetected,
+      newCandidatesAfterScroll: false,
+      // Non-destructive read probe does not alter scroll
+      exhaustionSignalDetected
+    },
+    metrics: {
+      visibleCandidateCount,
+      validCandidateCount,
+      surfaceConfidence: surfaceCandidate.confidence,
+      surfaceSelector: surfaceCandidate.elementPath,
+      sampleCandidate
+    },
+    diagnostics
+  };
+}
+
+// src/extension/acquisition/engine/filterTypes.ts
+var DEFAULT_GOOGLE_MAPS_FILTER = Object.freeze({
+  rating: "ANY",
+  website: "ANY"
+});
+function normalizeRatingFilter2(input) {
+  if (typeof input !== "string") return "ANY";
+  const trimmed = input.trim();
+  if (trimmed === "MIN_4_5" || trimmed === "4.5+" || trimmed === "4.5") {
+    return "MIN_4_5";
+  }
+  if (trimmed === "MIN_4_0" || trimmed === "4.0+" || trimmed === "4.0") {
+    return "MIN_4_0";
+  }
+  return "ANY";
+}
+function normalizeWebsiteFilter2(input) {
+  if (typeof input !== "string") return "ANY";
+  const trimmed = input.trim();
+  if (trimmed === "WITH_WEBSITE" || trimmed === "WITH" || trimmed === "PRESENT") {
+    return "WITH_WEBSITE";
+  }
+  if (trimmed === "WITHOUT_WEBSITE" || trimmed === "WITHOUT" || trimmed === "ABSENT") {
+    return "WITHOUT_WEBSITE";
+  }
+  return "ANY";
+}
+function normalizeFilterCriteria(input) {
+  if (!input || typeof input !== "object") {
+    return DEFAULT_GOOGLE_MAPS_FILTER;
+  }
+  const obj = input;
+  return Object.freeze({
+    rating: normalizeRatingFilter2(obj.rating),
+    website: normalizeWebsiteFilter2(obj.website)
+  });
+}
+
+// src/extension/acquisition/engine/filterEngine.ts
+function evaluateRatingMatch(candidate, ratingFilter) {
+  const canonicalFilter = normalizeRatingFilter2(ratingFilter);
+  const ratingField = candidate.rating;
+  const avail = ratingField ? ratingField.availability : "UNKNOWN";
+  const val = ratingField ? ratingField.parsedValue : void 0;
+  if (canonicalFilter === "ANY") {
+    return {
+      matches: true,
+      reason: "RATING_ANY",
+      observedAvailability: avail,
+      observedValue: val
+    };
+  }
+  const threshold = canonicalFilter === "MIN_4_5" ? 4.5 : 4;
+  if (avail === "PRESENT") {
+    if (typeof val === "number" && Number.isFinite(val)) {
+      if (val >= threshold) {
+        return {
+          matches: true,
+          reason: "RATING_THRESHOLD_MET",
+          observedAvailability: avail,
+          observedValue: val
+        };
+      }
+      return {
+        matches: false,
+        reason: "RATING_BELOW_THRESHOLD",
+        observedAvailability: avail,
+        observedValue: val
+      };
+    }
+    return {
+      matches: false,
+      reason: "RATING_AMBIGUOUS",
+      observedAvailability: avail,
+      observedValue: val
+    };
+  }
+  if (avail === "UNKNOWN") {
+    return {
+      matches: false,
+      reason: "RATING_UNKNOWN",
+      observedAvailability: avail,
+      observedValue: void 0
+    };
+  }
+  if (avail === "ABSENT") {
+    return {
+      matches: false,
+      reason: "RATING_ABSENT",
+      observedAvailability: avail,
+      observedValue: void 0
+    };
+  }
+  if (avail === "AMBIGUOUS") {
+    return {
+      matches: false,
+      reason: "RATING_AMBIGUOUS",
+      observedAvailability: avail,
+      observedValue: void 0
+    };
+  }
+  return {
+    matches: false,
+    reason: "RATING_UNSUPPORTED",
+    observedAvailability: avail,
+    observedValue: void 0
+  };
+}
+function evaluateWebsiteMatch(candidate, websiteFilter) {
+  const canonicalWeb = normalizeWebsiteFilter2(websiteFilter);
+  const webField = candidate.websiteUrl;
+  const avail = webField ? webField.availability : "UNKNOWN";
+  const rawUrl = webField ? webField.parsedValue || webField.rawValue : void 0;
+  if (canonicalWeb === "ANY") {
+    return {
+      matches: true,
+      reason: "WEBSITE_ANY",
+      observedAvailability: avail,
+      observedValue: rawUrl
+    };
+  }
+  if (canonicalWeb === "WITH_WEBSITE") {
+    if (avail === "PRESENT") {
+      if (rawUrl) {
+        const norm = normalizeWebsiteUrl(rawUrl);
+        if (norm.isValid && !norm.normalizedUrl.includes("google.com/maps")) {
+          return {
+            matches: true,
+            reason: "WEBSITE_PRESENT",
+            observedAvailability: avail,
+            observedValue: norm.normalizedUrl
+          };
+        }
+      }
+      return {
+        matches: false,
+        reason: "WEBSITE_AMBIGUOUS",
+        observedAvailability: avail,
+        observedValue: rawUrl
+      };
+    }
+    if (avail === "ABSENT") {
+      return {
+        matches: false,
+        reason: "WEBSITE_ABSENT",
+        observedAvailability: avail,
+        observedValue: void 0
+      };
+    }
+    if (avail === "UNKNOWN") {
+      return {
+        matches: false,
+        reason: "WEBSITE_UNKNOWN",
+        observedAvailability: avail,
+        observedValue: void 0
+      };
+    }
+    if (avail === "AMBIGUOUS") {
+      return {
+        matches: false,
+        reason: "WEBSITE_AMBIGUOUS",
+        observedAvailability: avail,
+        observedValue: void 0
+      };
+    }
+    return {
+      matches: false,
+      reason: "WEBSITE_UNSUPPORTED",
+      observedAvailability: avail,
+      observedValue: void 0
+    };
+  }
+  if (canonicalWeb === "WITHOUT_WEBSITE") {
+    if (avail === "ABSENT") {
+      return {
+        matches: true,
+        reason: "WEBSITE_ABSENT",
+        observedAvailability: avail,
+        observedValue: void 0
+      };
+    }
+    if (avail === "PRESENT") {
+      return {
+        matches: false,
+        reason: "WEBSITE_PRESENT",
+        observedAvailability: avail,
+        observedValue: rawUrl
+      };
+    }
+    if (avail === "UNKNOWN") {
+      return {
+        matches: false,
+        reason: "WEBSITE_UNKNOWN",
+        observedAvailability: avail,
+        observedValue: void 0
+      };
+    }
+    if (avail === "AMBIGUOUS") {
+      return {
+        matches: false,
+        reason: "WEBSITE_AMBIGUOUS",
+        observedAvailability: avail,
+        observedValue: void 0
+      };
+    }
+    return {
+      matches: false,
+      reason: "WEBSITE_UNSUPPORTED",
+      observedAvailability: avail,
+      observedValue: void 0
+    };
+  }
+  return {
+    matches: false,
+    reason: "WEBSITE_UNKNOWN",
+    observedAvailability: avail,
+    observedValue: void 0
+  };
+}
+function formatFilterExplanation(ratingResOrEval, webRes, criteria) {
+  if (ratingResOrEval && "rating" in ratingResOrEval && "website" in ratingResOrEval) {
+    const ev = ratingResOrEval;
+    if (ev.explanation) return ev.explanation;
+    return formatFilterExplanation(ev.rating, ev.website, criteria || { rating: "ANY", website: "ANY" });
+  }
+  const ratingRes = ratingResOrEval;
+  const effectiveWebRes = webRes || { matches: true, reason: "WEBSITE_ANY", observedAvailability: "UNKNOWN" };
+  const effectiveCriteria = normalizeFilterCriteria(criteria);
+  if (ratingRes.matches && effectiveWebRes.matches) {
+    const rLabel = effectiveCriteria.rating === "MIN_4_5" ? "4.5+" : effectiveCriteria.rating === "MIN_4_0" ? "4.0+" : "any";
+    const rNote = effectiveCriteria.rating === "ANY" ? "any rating" : `rating ${ratingRes.observedValue} meets ${rLabel}`;
+    const wNote = effectiveCriteria.website === "ANY" ? "any website" : effectiveCriteria.website === "WITH_WEBSITE" ? "website is present" : "website is confirmed absent";
+    return `Matches: ${rNote} and ${wNote}.`;
+  }
+  const parts = [];
+  if (!ratingRes.matches) {
+    if (ratingRes.reason === "RATING_BELOW_THRESHOLD") {
+      const thresholdLabel = effectiveCriteria.rating === "MIN_4_5" ? "4.5" : "4.0";
+      parts.push(`rating ${ratingRes.observedValue} is below ${thresholdLabel}`);
+    } else if (ratingRes.reason === "RATING_UNKNOWN") {
+      parts.push("rating status is unknown on observation surface");
+    } else if (ratingRes.reason === "RATING_ABSENT") {
+      parts.push("business has no rating");
+    } else {
+      parts.push(`rating evidence is ${ratingRes.observedAvailability.toLowerCase()}`);
+    }
+  }
+  if (!webRes.matches) {
+    if (effectiveCriteria.website === "WITH_WEBSITE") {
+      if (webRes.reason === "WEBSITE_UNKNOWN") {
+        parts.push("website was not shown on result card (presence unknown)");
+      } else if (webRes.reason === "WEBSITE_ABSENT") {
+        parts.push("website is confirmed absent");
+      } else {
+        parts.push(`website evidence is ${webRes.observedAvailability.toLowerCase()}`);
+      }
+    } else if (effectiveCriteria.website === "WITHOUT_WEBSITE") {
+      if (webRes.reason === "WEBSITE_PRESENT") {
+        parts.push("candidate has a verified website");
+      } else if (webRes.reason === "WEBSITE_UNKNOWN") {
+        parts.push("card omitted website link without proving absence");
+      } else {
+        parts.push(`website evidence is ${webRes.observedAvailability.toLowerCase()}`);
+      }
+    }
+  }
+  return `Does not match: ${parts.join("; ")}.`;
+}
+function evaluateCandidateFilter(candidate, filter) {
+  const canonicalFilter = normalizeFilterCriteria(filter);
+  const ratingRes = evaluateRatingMatch(candidate, canonicalFilter.rating);
+  const webRes = evaluateWebsiteMatch(candidate, canonicalFilter.website);
+  const matches = ratingRes.matches && webRes.matches;
+  let combinedReason = "COMBINED_MATCH";
+  if (!matches) {
+    if (!ratingRes.matches && !webRes.matches) {
+      combinedReason = "COMBINED_BOTH_MISMATCH";
+    } else if (!ratingRes.matches) {
+      combinedReason = "COMBINED_RATING_MISMATCH";
+    } else {
+      combinedReason = "COMBINED_WEBSITE_MISMATCH";
+    }
+  }
+  const explanation = formatFilterExplanation(ratingRes, webRes, canonicalFilter);
+  return {
+    candidateId: candidate.observationId,
+    observationId: candidate.observationId,
+    matches,
+    combinedReason,
+    rating: ratingRes,
+    website: webRes,
+    explanation
+  };
+}
+function filterCandidateDataset(candidates, filter, isAcquisitionRunning = false) {
+  const canonicalFilter = normalizeFilterCriteria(filter);
+  const matchingCandidateIds = [];
+  const matchingObservations = [];
+  const evaluations = /* @__PURE__ */ new Map();
+  let rating4PlusCount = 0;
+  let rating4_5PlusCount = 0;
+  let websitePresentCount = 0;
+  let websiteAbsentCount = 0;
+  for (let i = 0; i < candidates.length; i++) {
+    const c = candidates[i];
+    const evalResult = evaluateCandidateFilter(c, canonicalFilter);
+    evaluations.set(c.observationId, evalResult);
+    const rField = c.rating;
+    if (rField && rField.availability === "PRESENT" && typeof rField.parsedValue === "number") {
+      if (rField.parsedValue >= 4) rating4PlusCount++;
+      if (rField.parsedValue >= 4.5) rating4_5PlusCount++;
+    }
+    const wField = c.websiteUrl;
+    if (wField && wField.availability === "PRESENT") {
+      const norm = normalizeWebsiteUrl(wField.parsedValue || wField.rawValue);
+      if (norm.isValid && !norm.normalizedUrl.includes("google.com/maps")) {
+        websitePresentCount++;
+      }
+    } else if (wField && wField.availability === "ABSENT") {
+      websiteAbsentCount++;
+    }
+    const id = c.candidateId || c.observationId;
+    if (evalResult.matches) {
+      matchingCandidateIds.push(id);
+      matchingObservations.push(c);
+    }
+  }
+  const matchingCount = matchingObservations.length;
+  const excludedCount = candidates.length - matchingCount;
+  let emptyStateReason = "NONE";
+  if (candidates.length === 0) {
+    emptyStateReason = isAcquisitionRunning ? "ACQUISITION_IN_PROGRESS" : "NO_DATA";
+  } else if (matchingCount === 0) {
+    emptyStateReason = "NO_MATCHES";
+  }
+  const counts = {
+    totalObserved: candidates.length,
+    matchingCount,
+    excludedCount,
+    rating4PlusCount,
+    rating4_5PlusCount,
+    websitePresentCount,
+    websiteAbsentCount
+  };
+  return {
+    totalObserved: candidates.length,
+    matchingCount,
+    excludedCount,
+    matchingCandidateIds,
+    visibleCandidateIds: matchingCandidateIds,
+    matchingObservations,
+    visibleCandidates: matchingObservations,
+    activeFilter: canonicalFilter,
+    counts,
+    emptyStateReason,
+    evaluations
+  };
+}
+var GoogleMapsFilterStateManager = class {
+  constructor(initialCandidatesOrFilter = [], initialFilter) {
+    this._activeFilter = Object.freeze({ ...DEFAULT_GOOGLE_MAPS_FILTER });
+    this._rawCandidates = /* @__PURE__ */ new Map();
+    this._isAcquisitionRunning = false;
+    if (initialCandidatesOrFilter && !Array.isArray(initialCandidatesOrFilter) && ("rating" in initialCandidatesOrFilter || "website" in initialCandidatesOrFilter)) {
+      this._activeFilter = normalizeFilterCriteria(initialCandidatesOrFilter);
+    } else {
+      const candidates = initialCandidatesOrFilter || [];
+      for (const c of candidates) {
+        this._rawCandidates.set(c.candidateId || c.observationId, c);
+      }
+      if (initialFilter) {
+        this._activeFilter = normalizeFilterCriteria(initialFilter);
+      }
+    }
+  }
+  /**
+   * Returns current immutable active filter criteria containing only canonical states.
+   */
+  getActiveFilter() {
+    return { ...this._activeFilter };
+  }
+  /**
+   * Updates rating filter and instantly re-evaluates filtered view without re-acquisition.
+   * Automatically normalizes external/legacy input to canonical internal state.
+   */
+  setRatingFilter(rating) {
+    this._activeFilter = Object.freeze({
+      ...this._activeFilter,
+      rating: normalizeRatingFilter2(rating)
+    });
+    this._cachedView = void 0;
+    return this.getFilteredView();
+  }
+  /**
+   * Updates website filter and instantly re-evaluates filtered view without re-acquisition.
+   * Automatically normalizes external/legacy input to canonical internal state.
+   */
+  setWebsiteFilter(website) {
+    this._activeFilter = Object.freeze({
+      ...this._activeFilter,
+      website: normalizeWebsiteFilter2(website)
+    });
+    this._cachedView = void 0;
+    return this.getFilteredView();
+  }
+  /**
+   * Sets full filter criteria and instantly re-evaluates view.
+   * Guarantees internal state stores only canonical values.
+   */
+  setFilter(filter) {
+    this._activeFilter = normalizeFilterCriteria(filter);
+    this._cachedView = void 0;
+    return this.getFilteredView();
+  }
+  /**
+   * Resets active filters to default ANY / ANY and restores all candidates.
+   * Completely local operation with zero network/DOM calls.
+   */
+  resetFilters() {
+    this._activeFilter = Object.freeze({ ...DEFAULT_GOOGLE_MAPS_FILTER });
+    this._cachedView = void 0;
+    return this.getFilteredView();
+  }
+  resetFilter() {
+    return this.resetFilters();
+  }
+  /**
+   * Ingests a new candidate observation into the raw dataset and updates active view.
+   * Does NOT discard candidates that do not match the active filter.
+   */
+  ingestCandidate(candidate) {
+    this._rawCandidates.set(candidate.candidateId || candidate.observationId, candidate);
+    this._cachedView = void 0;
+    return this.getFilteredView();
+  }
+  /**
+   * Ingests multiple candidate observations into the raw dataset in a single pass.
+   */
+  ingestCandidates(candidates) {
+    for (const c of candidates) {
+      this._rawCandidates.set(c.candidateId || c.observationId, c);
+    }
+    this._cachedView = void 0;
+    return this.getFilteredView();
+  }
+  /**
+   * Informs manager of acquisition lifecycle for empty-state distinction.
+   */
+  setAcquisitionRunning(isRunning) {
+    this._isAcquisitionRunning = isRunning;
+    this._cachedView = void 0;
+  }
+  /**
+   * Returns total unique raw candidate count in dataset.
+   */
+  getRawCount() {
+    return this._rawCandidates.size;
+  }
+  /**
+   * Returns all raw candidates without mutation.
+   */
+  getRawCandidates() {
+    return Array.from(this._rawCandidates.values());
+  }
+  getRawDataset() {
+    return this.getRawCandidates();
+  }
+  /**
+   * Retrieves or computes current filtered dataset view.
+   */
+  getFilteredView() {
+    if (!this._cachedView) {
+      const candidates = Array.from(this._rawCandidates.values());
+      this._cachedView = filterCandidateDataset(
+        candidates,
+        this._activeFilter,
+        this._isAcquisitionRunning
+      );
+    }
+    return this._cachedView;
+  }
+  /**
+   * Retrieves current dataset counts.
+   */
+  getCounts() {
+    return this.getFilteredView().counts;
+  }
+};
+
+// src/extension/acquisition/engine/bulkPlanTypes.ts
+var DEFAULT_BULK_EXECUTION_POLICY = Object.freeze({
+  maxSearchUnits: 500,
+  maxCandidatesPerUnit: 50,
+  maxScrollStepsPerUnit: 15,
+  maxDurationPerUnitMs: 6e4,
+  maxRunDurationMs: 18e5,
+  maxRetriesPerUnit: 2,
+  retryBackoffMs: 1e3,
+  navigationTimeoutMs: 15e3,
+  readinessTimeoutMs: 1e4
+});
+
+// src/extension/acquisition/engine/bulkPlanner.ts
+var BULK_PLAN_SCHEMA_VERSION = 1;
+var MAX_KEYWORD_LENGTH = 200;
+var MAX_LOCATION_LENGTH = 200;
+function normalizeKeywordList(rawKeywords) {
+  if (!rawKeywords || !Array.isArray(rawKeywords)) {
+    return [];
+  }
+  const seenKeys = /* @__PURE__ */ new Set();
+  const normalized = [];
+  for (const raw of rawKeywords) {
+    if (typeof raw !== "string") continue;
+    const trimmed = raw.replace(/[\x00-\x1F\x7F]/g, " ").replace(/\s+/g, " ").trim();
+    if (trimmed.length === 0 || trimmed.length > MAX_KEYWORD_LENGTH) {
+      continue;
+    }
+    const key = trimmed.toLowerCase();
+    if (!seenKeys.has(key)) {
+      seenKeys.add(key);
+      normalized.push(key);
+    }
+  }
+  return normalized;
+}
+function normalizeLocationList(rawLocations) {
+  if (!rawLocations || !Array.isArray(rawLocations)) {
+    return [];
+  }
+  const seenKeys = /* @__PURE__ */ new Set();
+  const normalized = [];
+  for (const raw of rawLocations) {
+    if (typeof raw !== "string") continue;
+    const trimmed = raw.replace(/[\x00-\x1F\x7F]/g, " ").replace(/\s+/g, " ").trim();
+    if (trimmed.length === 0 || trimmed.length > MAX_LOCATION_LENGTH) {
+      continue;
+    }
+    const key = trimmed.toLowerCase();
+    if (!seenKeys.has(key)) {
+      seenKeys.add(key);
+      normalized.push(trimmed);
+    }
+  }
+  return normalized;
+}
+function computePlanFingerprint(keywords, locations, schemaVersion = BULK_PLAN_SCHEMA_VERSION) {
+  const sortedKeywords = [...keywords].map((k) => k.toLowerCase()).sort().join("|");
+  const sortedLocations = [...locations].map((l) => l.toLowerCase()).sort().join("|");
+  const composite = `v${schemaVersion}::kw:${sortedKeywords}::loc:${sortedLocations}`;
+  return `bpfp_${hashStringDeterministic(composite)}`;
+}
+function validateBulkRequest(request, policyOverrides) {
+  const policy = {
+    ...DEFAULT_BULK_EXECUTION_POLICY,
+    ...policyOverrides
+  };
+  const errors = [];
+  const warnings = [];
+  if (!request) {
+    return {
+      valid: false,
+      isValid: false,
+      errors: ["Request object is required"],
+      warnings: [],
+      plannedCount: 0,
+      normalizedKeywords: [],
+      normalizedLocations: []
+    };
+  }
+  if (!request.keywords || !Array.isArray(request.keywords)) {
+    errors.push("keywords array is required");
+  }
+  if (!request.locations || !Array.isArray(request.locations)) {
+    errors.push("locations array is required");
+  }
+  if (Array.isArray(request.keywords)) {
+    for (const kw of request.keywords) {
+      if (typeof kw === "string" && kw.length > MAX_KEYWORD_LENGTH) {
+        errors.push(`Keyword exceeds maximum length of ${MAX_KEYWORD_LENGTH}`);
+        break;
+      }
+    }
+  }
+  if (Array.isArray(request.locations)) {
+    for (const loc of request.locations) {
+      if (typeof loc === "string" && loc.length > MAX_LOCATION_LENGTH) {
+        errors.push(`Location exceeds maximum length of ${MAX_LOCATION_LENGTH}`);
+        break;
+      }
+    }
+  }
+  const normalizedKeywords = normalizeKeywordList(request.keywords || []);
+  const normalizedLocations = normalizeLocationList(request.locations || []);
+  if (errors.length === 0 && normalizedKeywords.length === 0) {
+    errors.push("At least one valid keyword is required");
+  }
+  if (errors.length === 0 && normalizedLocations.length === 0) {
+    errors.push("At least one valid location is required");
+  }
+  const plannedCount = normalizedKeywords.length * normalizedLocations.length;
+  if (plannedCount > policy.maxSearchUnits) {
+    warnings.push(
+      `Plan contains ${plannedCount} SearchUnits, exceeding recommended maximum of ${policy.maxSearchUnits}. Explicit confirmation required.`
+    );
+  }
+  const isValid = errors.length === 0;
+  return {
+    valid: isValid,
+    isValid,
+    errors,
+    warnings,
+    plannedCount,
+    normalizedKeywords,
+    normalizedLocations
+  };
+}
+function createBulkResearchPlan(request, policyOverrides) {
+  const validation = validateBulkRequest(request, policyOverrides);
+  if (!validation.isValid) {
+    throw new Error(`Invalid BulkResearchRequest: ${validation.errors.join("; ")}`);
+  }
+  const policy = {
+    ...DEFAULT_BULK_EXECUTION_POLICY,
+    ...request.executionPolicy,
+    ...policyOverrides
+  };
+  const { normalizedKeywords, normalizedLocations } = validation;
+  const searchUnits = [];
+  const seenUnitIds = /* @__PURE__ */ new Set();
+  for (const kw of normalizedKeywords) {
+    for (const loc of normalizedLocations) {
+      const unitId = deriveSearchUnitId(kw, loc);
+      if (seenUnitIds.has(unitId)) {
+        continue;
+      }
+      seenUnitIds.add(unitId);
+      const baseUnit = createSearchUnit({
+        keyword: kw,
+        location: loc,
+        maxRetries: policy.maxRetriesPerUnit
+      });
+      searchUnits.push(
+        Object.assign(baseUnit, { keyword: kw, location: loc })
+      );
+    }
+  }
+  const planFingerprint = computePlanFingerprint(
+    normalizedKeywords,
+    normalizedLocations,
+    BULK_PLAN_SCHEMA_VERSION
+  );
+  const planId = request.planId || `plan_${planFingerprint}`;
+  const initialFilter = normalizeFilterCriteria({
+    rating: request.ratingFilter,
+    website: request.websiteFilter
+  });
+  return Object.freeze({
+    planId,
+    planFingerprint,
+    createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+    normalizedKeywords: Object.freeze(normalizedKeywords),
+    normalizedLocations: Object.freeze(normalizedLocations),
+    searchUnits: Object.freeze(searchUnits),
+    totalUnits: searchUnits.length,
+    initialFilter,
+    executionPolicy: Object.freeze(policy),
+    ...request.maxResults !== void 0 ? { maxResults: request.maxResults } : {},
+    schemaVersion: BULK_PLAN_SCHEMA_VERSION
+  });
+}
+
+// src/extension/acquisition/engine/enrichmentTypes.ts
+var DEFAULT_ENRICHMENT_POLICY = {
+  maxPendingEnrichmentJobs: 200,
+  maxConcurrentTasks: 1,
+  maxRetries: 1,
+  maxPagesPerDomain: 5,
+  pageTimeoutMs: 1e4,
+  domainTimeoutMs: 3e4,
+  maxDocumentBytes: 5e5,
+  collectPeople: true,
+  collectServices: true,
+  detectTechnology: true
+};
+var ENRICHMENT_ADAPTER_VERSION = "1.0.0-phase21-22";
+
+// src/extension/websiteIntelligence/urlSafety.ts
+var FORBIDDEN_SCHEMES = /* @__PURE__ */ new Set([
+  "javascript:",
+  "data:",
+  "file:",
+  "vbscript:",
+  "chrome:",
+  "chrome-extension:",
+  "blob:",
+  "about:",
+  "ws:",
+  "wss:",
+  "ftp:",
+  "sftp:"
+]);
+var FORBIDDEN_INTERNAL_TLDS = [
+  ".local",
+  ".internal",
+  "." + ["local", "host"].join(""),
+  ".lan",
+  ".corp",
+  ".home",
+  ".test",
+  ".example",
+  ".invalid"
+];
+function isPrivateOrLoopbackIPv4(ip) {
+  const parts = ip.split(".").map(Number);
+  if (parts.length !== 4 || parts.some((p) => isNaN(p) || p < 0 || p > 255)) {
+    return false;
+  }
+  const [b0, b1] = parts;
+  if (b0 === 0) return true;
+  if (b0 === 127) return true;
+  if (b0 === 10) return true;
+  if (b0 === 172 && b1 >= 16 && b1 <= 31) return true;
+  if (b0 === 192 && b1 === 168) return true;
+  if (b0 === 169 && b1 === 254) return true;
+  return false;
+}
+function validateSafeWebUrl(rawUrl) {
+  const trimmed = (rawUrl || "").trim();
+  if (!trimmed) {
+    return { isSafe: false, reason: "EMPTY_URL" };
+  }
+  const lower = trimmed.toLowerCase();
+  for (const scheme of FORBIDDEN_SCHEMES) {
+    if (lower.startsWith(scheme)) {
+      return { isSafe: false, reason: `FORBIDDEN_SCHEME: ${scheme}` };
+    }
+  }
+  let working = trimmed;
+  if (!/^https?:\/\//i.test(working)) {
+    working = "https://" + working;
+  }
+  let parsed;
+  try {
+    parsed = new URL(working);
+  } catch {
+    return { isSafe: false, reason: "MALFORMED_URL" };
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    return { isSafe: false, reason: `INVALID_PROTOCOL: ${parsed.protocol}` };
+  }
+  const hostname = parsed.hostname.toLowerCase().trim();
+  if (hostname === ["local", "host"].join("") || hostname === ["127", "0", "0", "1"].join(".") || hostname === "::1" || hostname === "0.0.0.0" || hostname === "[::1]") {
+    return { isSafe: false, reason: "LOOPBACK_NOT_ALLOWED" };
+  }
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)) {
+    if (isPrivateOrLoopbackIPv4(hostname)) {
+      return { isSafe: false, reason: "PRIVATE_NETWORK_NOT_ALLOWED" };
+    }
+  }
+  if (hostname.startsWith("[fe8") || hostname.startsWith("[fc") || hostname.startsWith("[fd")) {
+    return { isSafe: false, reason: "IPV6_LOCAL_NOT_ALLOWED" };
+  }
+  for (const tld of FORBIDDEN_INTERNAL_TLDS) {
+    if (hostname.endsWith(tld)) {
+      return { isSafe: false, reason: `INTERNAL_TLD_NOT_ALLOWED: ${tld}` };
+    }
+  }
+  if (!hostname.includes(".") || hostname.includes(" ")) {
+    return { isSafe: false, reason: "INVALID_HOSTNAME" };
+  }
+  return {
+    isSafe: true,
+    normalizedUrl: parsed.toString(),
+    parsedUrl: parsed
+  };
+}
+function isSafeSameOrigin(targetUrl, baseOrigin) {
+  try {
+    const targetParsed = new URL(targetUrl);
+    const baseParsed = new URL(baseOrigin);
+    if (targetParsed.protocol !== baseParsed.protocol) {
+      if (!["http:", "https:"].includes(targetParsed.protocol)) return false;
+    }
+    const tHost = targetParsed.hostname.toLowerCase().replace(/^www\./, "");
+    const bHost = baseParsed.hostname.toLowerCase().replace(/^www\./, "");
+    return tHost === bHost;
+  } catch {
+    return false;
+  }
+}
+function validateRedirectHop(locationHeader, currentUrl, baseOrigin) {
+  if (!locationHeader || typeof locationHeader !== "string") {
+    return { isSafe: false, reason: "EMPTY_REDIRECT_LOCATION" };
+  }
+  const trimmed = locationHeader.trim();
+  if (!trimmed) {
+    return { isSafe: false, reason: "EMPTY_REDIRECT_LOCATION" };
+  }
+  let resolved;
+  try {
+    resolved = new URL(trimmed, currentUrl);
+  } catch {
+    return { isSafe: false, reason: "MALFORMED_REDIRECT_URL" };
+  }
+  const safety = validateSafeWebUrl(resolved.toString());
+  if (!safety.isSafe) {
+    return { isSafe: false, reason: `UNSAFE_REDIRECT_TARGET: ${safety.reason}` };
+  }
+  if (!isSafeSameOrigin(resolved.toString(), baseOrigin)) {
+    return { isSafe: false, reason: "CROSS_ORIGIN_REDIRECT_BLOCKED" };
+  }
+  return {
+    isSafe: true,
+    resolvedUrl: resolved.toString()
+  };
+}
+
+// src/extension/acquisition/engine/enrichmentEligibility.ts
+function evaluateWebsiteEligibility(candidate) {
+  const websiteField = candidate.websiteUrl;
+  if (!websiteField) {
+    return {
+      isEligible: false,
+      status: "NOT_ELIGIBLE",
+      reason: "Candidate website field is undefined"
+    };
+  }
+  const availability = websiteField.availability;
+  if (availability === "ABSENT") {
+    return {
+      isEligible: false,
+      status: "SKIPPED_NO_WEBSITE",
+      reason: "Candidate explicitly has no website (availability = ABSENT)"
+    };
+  }
+  if (availability === "UNKNOWN") {
+    return {
+      isEligible: false,
+      status: "NOT_ELIGIBLE",
+      reason: "Candidate website is unknown (availability = UNKNOWN). Website discovery is prohibited."
+    };
+  }
+  if (availability === "AMBIGUOUS" || availability === "UNSUPPORTED") {
+    return {
+      isEligible: false,
+      status: "SKIPPED_AMBIGUOUS_WEBSITE",
+      reason: `Candidate website availability is ${availability}`
+    };
+  }
+  if (availability !== "PRESENT") {
+    return {
+      isEligible: false,
+      status: "NOT_ELIGIBLE",
+      reason: `Unsupported website availability: ${availability}`
+    };
+  }
+  const hasWebsiteConflict = (candidate.fieldConflicts || []).some(
+    (fc) => fc.fieldName === "website" || fc.fieldName === "websiteUrl"
+  );
+  const websiteEvidenceList = candidate.fieldEvidence?.websiteUrl || candidate.fieldEvidence?.website || [];
+  const distinctTargets = /* @__PURE__ */ new Set();
+  for (const ev of websiteEvidenceList) {
+    if (ev.value && typeof ev.value === "string" && ev.availability === "PRESENT") {
+      try {
+        const parsed = new URL(ev.value.startsWith("http") ? ev.value : `https://${ev.value}`);
+        const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+        distinctTargets.add(host);
+      } catch {
+        distinctTargets.add(ev.value.toLowerCase());
+      }
+    }
+  }
+  if (hasWebsiteConflict && distinctTargets.size > 1) {
+    return {
+      isEligible: false,
+      status: "BLOCKED_WEBSITE_CONFLICT",
+      reason: `Candidate has unresolved conflicting website targets (${Array.from(distinctTargets).join(", ")}). Crawl blocked.`,
+      diagnosticCode: "WEBSITE_TARGET_CONFLICT"
+    };
+  }
+  const rawTarget = websiteField.parsedValue || websiteField.rawValue;
+  if (!rawTarget || typeof rawTarget !== "string" || !rawTarget.trim()) {
+    return {
+      isEligible: false,
+      status: "SKIPPED_NO_WEBSITE",
+      reason: "Candidate has PRESENT availability but empty website URL payload"
+    };
+  }
+  const trimmed = rawTarget.trim();
+  const lower = trimmed.toLowerCase();
+  if (lower.includes("google.com/maps") || lower.includes("maps.google.com") || lower.includes("google.com/search") || lower.includes("goo.gl")) {
+    return {
+      isEligible: false,
+      status: "BLOCKED",
+      reason: "Website target points to Google internal URL",
+      diagnosticCode: "WEBSITE_TARGET_INVALID"
+    };
+  }
+  const safety = validateSafeWebUrl(trimmed);
+  if (!safety.isSafe || !safety.normalizedUrl || !safety.parsedUrl) {
+    const isSsrf = safety.reason?.includes("LOOPBACK") || safety.reason?.includes("PRIVATE_NETWORK") || safety.reason?.includes("INTERNAL_TLD") || safety.reason?.includes("IPV6_LOCAL");
+    return {
+      isEligible: false,
+      status: "BLOCKED",
+      reason: `URL safety rejection: ${safety.reason || "UNSAFE_URL"}`,
+      diagnosticCode: isSsrf ? "WEBSITE_SSRF_BLOCKED" : "WEBSITE_TARGET_INVALID"
+    };
+  }
+  const domain = safety.parsedUrl.hostname.toLowerCase().replace(/^www\./, "");
+  return {
+    isEligible: true,
+    status: "QUEUED",
+    targetUrl: safety.normalizedUrl,
+    normalizedDomain: domain,
+    reason: "Candidate website is PRESENT and safely validated"
+  };
+}
+
+// src/extension/acquisition/engine/enrichmentMerger.ts
+function mergeEnrichmentIntoCandidate(candidate, enrichmentResult) {
+  const observedAt = enrichmentResult.completedAt || (/* @__PURE__ */ new Date()).toISOString();
+  const emailsCount = enrichmentResult.contactEvidence?.emails.length || 0;
+  const phonesCount = enrichmentResult.contactEvidence?.phones.length || 0;
+  const socialCount = enrichmentResult.contactEvidence?.socialProfiles.length || 0;
+  const peopleCount = enrichmentResult.personEvidence?.people.length || 0;
+  const pagesVisited = enrichmentResult.pagesVisited.length;
+  const enrichmentSummary = {
+    status: enrichmentResult.status,
+    targetUrl: enrichmentResult.websiteTarget,
+    emailsCount,
+    phonesCount,
+    socialCount,
+    peopleCount,
+    pagesVisited,
+    completedAt: enrichmentResult.completedAt
+  };
+  const updatedFieldEvidence = {};
+  for (const [key, list] of Object.entries(candidate.fieldEvidence || {})) {
+    updatedFieldEvidence[key] = [...list];
+  }
+  const updatedFieldConflicts = [...candidate.fieldConflicts || []];
+  const newIssues = [...candidate.qualityMetrics?.issues || []];
+  const mapsPhoneVal = candidate.phone?.parsedValue || candidate.phone?.rawValue;
+  const normMapsPhone = normalizePhoneForIdentity(mapsPhoneVal);
+  if (enrichmentResult.contactEvidence?.phones && enrichmentResult.contactEvidence.phones.length > 0) {
+    if (!updatedFieldEvidence.phone) {
+      updatedFieldEvidence.phone = [];
+    }
+    for (const webPhone of enrichmentResult.contactEvidence.phones) {
+      const normWebPhone = normalizePhoneForIdentity(webPhone.phone);
+      updatedFieldEvidence.phone.push({
+        value: webPhone.phone,
+        availability: "PRESENT",
+        confidence: 0.9,
+        observedAt: webPhone.observedAt || observedAt,
+        searchUnitId: candidate.searchUnitId,
+        observationId: `web_ph_${Math.abs(hashPhone(webPhone.phone))}`
+      });
+      if (normMapsPhone.isValid && normWebPhone.isValid) {
+        if (arePhonesEquivalent(mapsPhoneVal, webPhone.phone)) {
+        } else {
+          if (!updatedFieldConflicts.some((fc) => fc.fieldName === "phone")) {
+            updatedFieldConflicts.push({
+              fieldName: "phone",
+              values: [
+                {
+                  value: mapsPhoneVal,
+                  availability: "PRESENT",
+                  observedAt: candidate.firstObservedAt,
+                  searchUnitId: candidate.searchUnitId,
+                  observationId: candidate.candidateId
+                },
+                {
+                  value: webPhone.phone,
+                  availability: "PRESENT",
+                  observedAt: webPhone.observedAt || observedAt,
+                  searchUnitId: candidate.searchUnitId,
+                  observationId: `web_${webPhone.phone}`
+                }
+              ],
+              selectedValue: mapsPhoneVal,
+              resolutionReason: "Retained primary Maps observation while preserving website phone divergence"
+            });
+          }
+          if (!newIssues.some((iss) => iss.code === "INCONSISTENT_PHONE")) {
+            newIssues.push({
+              code: "INCONSISTENT_PHONE",
+              field: "phone",
+              severity: "LOW",
+              message: `Website exposes differing phone (${webPhone.phone}) than Maps listing (${mapsPhoneVal})`
+            });
+          }
+        }
+      }
+    }
+  }
+  const mapsAddrVal = candidate.address?.parsedValue || candidate.address?.rawValue;
+  const normMapsAddr = normalizeAddressForIdentity(mapsAddrVal);
+  const webAddress = enrichmentResult.contactEvidence?.address?.address;
+  if (webAddress) {
+    if (!updatedFieldEvidence.address) {
+      updatedFieldEvidence.address = [];
+    }
+    updatedFieldEvidence.address.push({
+      value: webAddress,
+      availability: "PRESENT",
+      confidence: 0.85,
+      observedAt,
+      searchUnitId: candidate.searchUnitId,
+      observationId: `web_addr_${Math.abs(hashPhone(webAddress))}`
+    });
+    const normWebAddr = normalizeAddressForIdentity(webAddress);
+    if (normMapsAddr.comparisonKey && normWebAddr.comparisonKey) {
+      if (normMapsAddr.comparisonKey !== normWebAddr.comparisonKey) {
+        if (!newIssues.some((iss) => iss.code === "INCONSISTENT_ADDRESS")) {
+          newIssues.push({
+            code: "INCONSISTENT_ADDRESS",
+            field: "address",
+            severity: "LOW",
+            message: `Website exposes address (${webAddress}) with variances from Maps listing (${mapsAddrVal})`
+          });
+        }
+        if (!updatedFieldConflicts.some((fc) => fc.fieldName === "address")) {
+          updatedFieldConflicts.push({
+            fieldName: "address",
+            values: [
+              {
+                value: mapsAddrVal,
+                availability: "PRESENT",
+                observedAt: candidate.firstObservedAt,
+                searchUnitId: candidate.searchUnitId,
+                observationId: candidate.candidateId
+              },
+              {
+                value: webAddress,
+                availability: "PRESENT",
+                observedAt,
+                searchUnitId: candidate.searchUnitId,
+                observationId: `web_${Math.abs(hashPhone(webAddress))}`
+              }
+            ],
+            selectedValue: mapsAddrVal,
+            resolutionReason: "Retained primary Maps observation while preserving website address divergence"
+          });
+        }
+      }
+    }
+  }
+  if (enrichmentResult.contactEvidence?.emails && enrichmentResult.contactEvidence.emails.length > 0) {
+    if (!updatedFieldEvidence.email) {
+      updatedFieldEvidence.email = [];
+    }
+    for (const em of enrichmentResult.contactEvidence.emails) {
+      updatedFieldEvidence.email.push({
+        value: em.email,
+        availability: "PRESENT",
+        confidence: 0.95,
+        observedAt: em.observedAt || observedAt,
+        searchUnitId: candidate.searchUnitId,
+        observationId: `web_em_${Math.abs(hashPhone(em.email))}`
+      });
+    }
+  }
+  if (enrichmentResult.websiteEvidence?.canonicalUrl) {
+    if (!updatedFieldEvidence.websiteUrl) {
+      updatedFieldEvidence.websiteUrl = [];
+    }
+    updatedFieldEvidence.websiteUrl.push({
+      value: enrichmentResult.websiteEvidence.canonicalUrl,
+      availability: "PRESENT",
+      confidence: 0.95,
+      observedAt,
+      searchUnitId: candidate.searchUnitId,
+      observationId: `web_canon_${Math.abs(hashPhone(enrichmentResult.websiteEvidence.canonicalUrl))}`
+    });
+  }
+  const prevMetrics = candidate.qualityMetrics;
+  const fieldStates = { ...prevMetrics?.fieldStates || {} };
+  if (updatedFieldConflicts.some((fc) => fc.fieldName === "phone")) {
+    fieldStates.phone = "CONFLICTING";
+  } else if (candidate.phone?.availability === "PRESENT") {
+    fieldStates.phone = phonesCount > 0 ? "CONFIDENT" : fieldStates.phone || "SUPPORTED";
+  }
+  if (emailsCount > 0) {
+    fieldStates.email = "CONFIDENT";
+  }
+  if (enrichmentResult.status === "COMPLETED" || enrichmentResult.status === "PARTIAL") {
+    fieldStates.website = "CONFIDENT";
+  }
+  const coreFields = [
+    candidate.businessName?.availability === "PRESENT",
+    candidate.address?.availability === "PRESENT",
+    candidate.phone?.availability === "PRESENT" || phonesCount > 0,
+    candidate.websiteUrl?.availability === "PRESENT",
+    candidate.rating?.availability === "PRESENT",
+    candidate.reviewCount?.availability === "PRESENT",
+    candidate.businessStatus?.availability === "PRESENT",
+    candidate.category?.availability === "PRESENT",
+    candidate.placeId?.availability === "PRESENT"
+  ];
+  const presentCoreCount = coreFields.filter(Boolean).length;
+  const hasEmailBonus = emailsCount > 0 ? 1 : 0;
+  const completenessPct = Math.min(100, Math.round((presentCoreCount + hasEmailBonus) / 10 * 100));
+  const updatedQualityMetrics = {
+    identityConfidence: prevMetrics?.identityConfidence || "HIGH",
+    identityConfidenceScore: prevMetrics?.identityConfidenceScore || 0.95,
+    dataCompleteness: Math.max(completenessPct, prevMetrics?.dataCompleteness || 0),
+    observedFieldCount: prevMetrics?.observedFieldCount || 9,
+    supportedFieldCount: (prevMetrics?.supportedFieldCount || 7) + (emailsCount > 0 ? 1 : 0),
+    unknownFieldCount: Math.max(0, (prevMetrics?.unknownFieldCount || 2) - (emailsCount > 0 ? 1 : 0)),
+    conflictFieldCount: updatedFieldConflicts.length,
+    fieldStates,
+    issues: newIssues
+  };
+  const enrichedCandidate = {
+    ...candidate,
+    // Google Lineage Preserved
+    source: "GOOGLE_MAPS_BROWSER",
+    isRestricted: true,
+    // Attached enrichment data
+    enrichmentStatus: enrichmentResult.status,
+    enrichmentResult,
+    enrichmentSummary,
+    // Updated evidence and conflicts
+    fieldEvidence: updatedFieldEvidence,
+    fieldConflicts: updatedFieldConflicts,
+    qualityMetrics: updatedQualityMetrics
+  };
+  return enrichedCandidate;
+}
+function hashPhone(val) {
+  let hash = 0;
+  for (let i = 0; i < val.length; i++) {
+    hash = (hash << 5) - hash + val.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash;
+}
+
+// src/extension/websiteIntelligence/types.ts
+var DEFAULT_MAX_PAGES_PER_DOMAIN = 5;
+var DEFAULT_MAX_PAGE_TIMEOUT_MS = 1e4;
+var DEFAULT_MAX_DOMAIN_TIMEOUT_MS = 3e4;
+var DEFAULT_CACHE_TTL_MS = 864e5;
+var DEFAULT_MAX_DOCUMENT_BYTES = 5e5;
+var DEFAULT_MAX_CACHE_ENTRIES = 100;
+var DEFAULT_MAX_CACHE_BYTES = 5 * 1024 * 1024;
+
+// src/extension/websiteIntelligence/observationCache.ts
+function estimateObservationBytes(payload) {
+  try {
+    const json = JSON.stringify(payload);
+    return json.length * 2 + 256;
+  } catch {
+    return 8192;
+  }
+}
+function generateObservationCacheKey(targetUrl, config) {
+  let origin = "";
+  let pathScope = "/";
+  try {
+    const u = new URL(targetUrl.toLowerCase().trim());
+    origin = `${u.protocol}//${u.hostname.replace(/^www\./, "")}${u.port ? ":" + u.port : ""}`;
+    pathScope = u.pathname.replace(/\/+$/, "") || "/";
+  } catch {
+    origin = targetUrl.toLowerCase().trim();
+  }
+  const p = config?.maxPages ?? 5;
+  const d = config?.maxDocumentBytes ?? 5e5;
+  const tech = config?.detectTechnology !== false ? "1" : "0";
+  const pp = config?.collectPeople !== false ? "1" : "0";
+  const sv = config?.collectServices !== false ? "1" : "0";
+  return `obs:${origin}${pathScope}:p${p}:d${d}:t${tech}:pp${pp}:s${sv}:v1`;
+}
+var BoundedObservationCache = class {
+  constructor(options) {
+    this.entries = /* @__PURE__ */ new Map();
+    this.currentBytes = 0;
+    this.hits = 0;
+    this.misses = 0;
+    this.evictions = 0;
+    this.expirations = 0;
+    this.maxEntries = options?.maxEntries ?? DEFAULT_MAX_CACHE_ENTRIES;
+    this.maxBytes = options?.maxBytes ?? DEFAULT_MAX_CACHE_BYTES;
+    this.defaultTtlMs = options?.defaultTtlMs ?? DEFAULT_CACHE_TTL_MS;
+  }
+  /**
+   * Retrieves an active neutral observation, updating its LRU position.
+   * Returns a clean deep-clone to guarantee caller isolation.
+   */
+  get(key) {
+    const entry = this.entries.get(key);
+    if (!entry) {
+      this.misses++;
+      return null;
+    }
+    const now = Date.now();
+    if (now > entry.expiresAt) {
+      this.entries.delete(key);
+      this.currentBytes = Math.max(0, this.currentBytes - entry.byteSize);
+      this.expirations++;
+      this.misses++;
+      return null;
+    }
+    this.entries.delete(key);
+    entry.lastAccessedAt = now;
+    this.entries.set(key, entry);
+    this.hits++;
+    return JSON.parse(JSON.stringify(entry.payload));
+  }
+  /**
+   * Stores a neutral observation payload with deterministic LRU eviction.
+   */
+  set(key, payload, customTtlMs) {
+    const byteSize = estimateObservationBytes(payload);
+    if (byteSize > this.maxBytes) {
+      return false;
+    }
+    const existing = this.entries.get(key);
+    if (existing) {
+      this.entries.delete(key);
+      this.currentBytes = Math.max(0, this.currentBytes - existing.byteSize);
+    }
+    while ((this.entries.size >= this.maxEntries || this.currentBytes + byteSize > this.maxBytes) && this.entries.size > 0) {
+      const oldestKey = this.entries.keys().next().value;
+      if (!oldestKey) break;
+      const oldestEntry = this.entries.get(oldestKey);
+      this.entries.delete(oldestKey);
+      if (oldestEntry) {
+        this.currentBytes = Math.max(0, this.currentBytes - oldestEntry.byteSize);
+      }
+      this.evictions++;
+    }
+    const now = Date.now();
+    const ttl = typeof customTtlMs === "number" ? customTtlMs : this.defaultTtlMs;
+    const entry = {
+      key,
+      payload: JSON.parse(JSON.stringify(payload)),
+      byteSize,
+      cachedAt: now,
+      lastAccessedAt: now,
+      expiresAt: now + ttl
+    };
+    this.entries.set(key, entry);
+    this.currentBytes += byteSize;
+    return true;
+  }
+  /**
+   * Deletes a specific cache key.
+   */
+  delete(key) {
+    const existing = this.entries.get(key);
+    if (!existing) return false;
+    this.entries.delete(key);
+    this.currentBytes = Math.max(0, this.currentBytes - existing.byteSize);
+    return true;
+  }
+  /**
+   * Removes all expired entries from cache.
+   */
+  pruneExpired() {
+    const now = Date.now();
+    let pruned = 0;
+    for (const [key, entry] of this.entries.entries()) {
+      if (now > entry.expiresAt) {
+        this.entries.delete(key);
+        this.currentBytes = Math.max(0, this.currentBytes - entry.byteSize);
+        this.expirations++;
+        pruned++;
+      }
+    }
+    return pruned;
+  }
+  /**
+   * Completely clears all cached entries.
+   */
+  clear() {
+    this.entries.clear();
+    this.currentBytes = 0;
+  }
+  /**
+   * Current number of entries in the cache.
+   */
+  size() {
+    return this.entries.size;
+  }
+  /**
+   * Current estimated byte consumption.
+   */
+  getBytes() {
+    return this.currentBytes;
+  }
+  /**
+   * Diagnostics stats.
+   */
+  getStats() {
+    return {
+      entries: this.entries.size,
+      currentBytes: this.currentBytes,
+      maxEntries: this.maxEntries,
+      maxBytes: this.maxBytes,
+      hits: this.hits,
+      misses: this.misses,
+      evictions: this.evictions,
+      expirations: this.expirations
+    };
+  }
+};
+
+// src/extension/websiteIntelligence/pageDiscovery.ts
+var BANNED_PATH_PATTERNS = [
+  "/login",
+  "/signin",
+  "/sign-in",
+  "/signup",
+  "/sign-up",
+  "/register",
+  "/auth",
+  "/cart",
+  "/checkout",
+  "/my-account",
+  "/account",
+  "/wp-admin",
+  "/wp-login",
+  "/user",
+  "/password",
+  "/reset",
+  "/admin",
+  "/portal",
+  "/session",
+  "/logout",
+  "/signout"
+];
+var BANNED_EXTENSIONS = [
+  ".pdf",
+  ".zip",
+  ".tar",
+  ".gz",
+  ".rar",
+  ".7z",
+  ".exe",
+  ".dmg",
+  ".pkg",
+  ".apk",
+  ".bin",
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".svg",
+  ".webp",
+  ".ico",
+  ".mp4",
+  ".avi",
+  ".mov",
+  ".wmv",
+  ".mp3",
+  ".wav",
+  ".doc",
+  ".docx",
+  ".xls",
+  ".xlsx",
+  ".ppt",
+  ".pptx"
+];
+var BANNED_HOST_FRAGMENTS = [
+  "facebook.com",
+  "fb.com",
+  "instagram.com",
+  "twitter.com",
+  "x.com",
+  "linkedin.com",
+  "youtube.com",
+  "pinterest.com",
+  "tiktok.com",
+  "google.com",
+  "amazon.",
+  "ebay.",
+  "aliexpress.",
+  "apple.com",
+  "doubleclick.net",
+  "googleadservices.com",
+  "googlesyndication.com"
+];
+var CATEGORY_PATTERNS = [
+  {
+    category: "CONTACT",
+    priority: 1,
+    patterns: [
+      /\/contact(?:-us|us)?\b/i,
+      /\/get-in-touch\b/i,
+      /\/reach-us\b/i,
+      /\/locations?\b/i,
+      /\/find-us\b/i
+    ]
+  },
+  {
+    category: "ABOUT",
+    priority: 2,
+    patterns: [
+      /\/about(?:-us)?\b/i,
+      /\/our-story\b/i,
+      /\/who-we-are\b/i,
+      /\/company\b/i,
+      /\/mission\b/i
+    ]
+  },
+  {
+    category: "SERVICES",
+    priority: 3,
+    patterns: [
+      /\/services?\b/i,
+      /\/our-services\b/i,
+      /\/what-we-do\b/i,
+      /\/practice-areas?\b/i,
+      /\/treatments?\b/i,
+      /\/products?\b/i,
+      /\/solutions?\b/i
+    ]
+  },
+  {
+    category: "TEAM",
+    priority: 4,
+    patterns: [
+      /\/team\b/i,
+      /\/our-team\b/i,
+      /\/leadership\b/i,
+      /\/staff\b/i,
+      /\/doctors?\b/i,
+      /\/attorneys?\b/i,
+      /\/providers?\b/i,
+      /\/people\b/i,
+      /\/board\b/i
+    ]
+  }
+];
+function categorizePagePath(url, rootUrl) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return { url, category: "OTHER", priority: 99 };
+  }
+  const rootClean = rootUrl.toLowerCase().replace(/\/$/, "");
+  const urlClean = url.toLowerCase().replace(/\/$/, "");
+  if (rootClean === urlClean || parsed.pathname === "/" || !parsed.pathname) {
+    return { url, category: "HOMEPAGE", priority: 0 };
+  }
+  const pathname = parsed.pathname.toLowerCase();
+  for (const cat of CATEGORY_PATTERNS) {
+    for (const pat of cat.patterns) {
+      if (pat.test(pathname)) {
+        return { url, category: cat.category, priority: cat.priority };
+      }
+    }
+  }
+  return { url, category: "OTHER", priority: 10 };
+}
+function extractCandidateLinksFromHtml(html, pageUrl) {
+  const normHtml = html || "";
+  const links = [];
+  const currentOrigin = new URL(pageUrl).origin;
+  const anchorRegex = /<a\b[^>]*\bhref=["']([^"']+)["'][^>]*>/gi;
+  const matches = normHtml.matchAll(anchorRegex);
+  for (const m of matches) {
+    const rawHref = (m[1] || "").trim();
+    if (!rawHref || rawHref.startsWith("#") || rawHref.startsWith("mailto:") || rawHref.startsWith("tel:") || rawHref.startsWith("javascript:") || rawHref.startsWith("data:")) {
+      continue;
+    }
+    let absUrl;
+    try {
+      absUrl = new URL(rawHref, pageUrl).toString();
+    } catch {
+      continue;
+    }
+    const safety = validateSafeWebUrl(absUrl);
+    if (!safety.isSafe || !safety.parsedUrl) {
+      continue;
+    }
+    const parsed = safety.parsedUrl;
+    if (!isSafeSameOrigin(absUrl, currentOrigin)) {
+      continue;
+    }
+    const host = parsed.hostname.toLowerCase();
+    if (BANNED_HOST_FRAGMENTS.some((b) => host.includes(b))) {
+      continue;
+    }
+    const path = parsed.pathname.toLowerCase();
+    if (BANNED_PATH_PATTERNS.some((b) => path.includes(b))) {
+      continue;
+    }
+    if (BANNED_EXTENSIONS.some((ext) => path.endsWith(ext))) {
+      continue;
+    }
+    const cleanPath = path.replace(/\/$/, "") || "/";
+    const normalized = `${parsed.protocol}//${parsed.hostname}${cleanPath}`;
+    if (!links.includes(normalized)) {
+      links.push(normalized);
+    }
+  }
+  return links;
+}
+function buildDiscoveryPlan(rootUrl, candidateLinks, maxPages = 5) {
+  const cleanRoot = rootUrl.replace(/\/$/, "");
+  const plan = [cleanRoot];
+  const categorized = candidateLinks.filter((link) => link.replace(/\/$/, "") !== cleanRoot).map((link) => categorizePagePath(link, rootUrl)).sort((a, b) => a.priority - b.priority);
+  const categoriesSeen = /* @__PURE__ */ new Set();
+  for (const item of categorized) {
+    if (plan.length >= maxPages) break;
+    if (item.category !== "OTHER" && !categoriesSeen.has(item.category)) {
+      plan.push(item.url);
+      categoriesSeen.add(item.category);
+    }
+  }
+  for (const item of categorized) {
+    if (plan.length >= maxPages) break;
+    if (!plan.includes(item.url)) {
+      plan.push(item.url);
+    }
+  }
+  return plan.slice(0, maxPages);
+}
+
+// src/extension/websiteIntelligence/technologyDetector.ts
+var TECHNOLOGY_RULES = [
+  // 1. CMS & Website Builders
+  {
+    name: "WordPress",
+    category: "CMS",
+    patterns: [
+      { regex: /<meta[^>]+name=["']generator["'][^>]+content=["'][^"']*WordPress/i, state: "DETECTED", evidence: "WordPress generator meta tag" },
+      { regex: /\/wp-content\/(?:themes|plugins)\//i, state: "DETECTED", evidence: "/wp-content/ asset path" },
+      { regex: /\/wp-includes\//i, state: "DETECTED", evidence: "/wp-includes/ path" },
+      { regex: /class=["'][^"']*\bwp-block-/i, state: "LIKELY", evidence: "wp-block- Gutenberg class" }
+    ]
+  },
+  {
+    name: "Shopify",
+    category: "ECOMMERCE",
+    patterns: [
+      { regex: /cdn\.shopify\.com\/s\/files/i, state: "DETECTED", evidence: "Shopify CDN asset link" },
+      { regex: /\bShopify\.theme\b/i, state: "DETECTED", evidence: "Shopify.theme JS object" },
+      { regex: /myshopify\.com/i, state: "DETECTED", evidence: "myshopify.com reference" }
+    ]
+  },
+  {
+    name: "WooCommerce",
+    category: "ECOMMERCE",
+    patterns: [
+      { regex: /\/plugins\/woocommerce\//i, state: "DETECTED", evidence: "WooCommerce plugin asset" },
+      { regex: /\bclass=["'][^"']*\bwoocommerce\b/i, state: "DETECTED", evidence: "woocommerce CSS class" }
+    ]
+  },
+  {
+    name: "Wix",
+    category: "CMS",
+    patterns: [
+      { regex: /static\.parastorage\.com/i, state: "DETECTED", evidence: "Wix parastorage CDN" },
+      { regex: /<meta[^>]+name=["']generator["'][^>]+content=["'][^"']*Wix\.com/i, state: "DETECTED", evidence: "Wix generator meta tag" },
+      { regex: /wix-warmup-data/i, state: "DETECTED", evidence: "Wix warmup data container" }
+    ]
+  },
+  {
+    name: "Webflow",
+    category: "CMS",
+    patterns: [
+      { regex: /data-wf-page=["']/i, state: "DETECTED", evidence: "data-wf-page Webflow attribute" },
+      { regex: /assets\.website-files\.com/i, state: "DETECTED", evidence: "Webflow CDN asset URL" },
+      { regex: /<meta[^>]+name=["']generator["'][^>]+content=["'][^"']*Webflow/i, state: "DETECTED", evidence: "Webflow generator tag" }
+    ]
+  },
+  {
+    name: "Squarespace",
+    category: "CMS",
+    patterns: [
+      { regex: /static1\.squarespace\.com/i, state: "DETECTED", evidence: "Squarespace static CDN" },
+      { regex: /<!-- This is Squarespace\. -->/i, state: "DETECTED", evidence: "Squarespace comment signature" }
+    ]
+  },
+  // 2. Booking & Scheduling Widgets
+  {
+    name: "Calendly",
+    category: "BOOKING",
+    patterns: [
+      { regex: /assets\.calendly\.com\/assets\/external\/widget\.js/i, state: "DETECTED", evidence: "Calendly embedded widget script" },
+      { regex: /href=["']https?:\/\/calendly\.com\/[^"']+/i, state: "LIKELY", evidence: "Outbound Calendly scheduling link" }
+    ]
+  },
+  {
+    name: "Acuity Scheduling",
+    category: "BOOKING",
+    patterns: [
+      { regex: /embed\.acuityscheduling\.com\/js\/embed\.js/i, state: "DETECTED", evidence: "Acuity Scheduling embed script" },
+      { regex: /acuityscheduling\.com\/schedule\.php/i, state: "LIKELY", evidence: "Acuity scheduling frame" }
+    ]
+  },
+  {
+    name: "Vagaro",
+    category: "BOOKING",
+    patterns: [
+      { regex: /saleswidget\.vagaro\.com/i, state: "DETECTED", evidence: "Vagaro booking widget" }
+    ]
+  },
+  // 3. Contact & Chat Widgets
+  {
+    name: "Intercom",
+    category: "CHAT_WIDGET",
+    patterns: [
+      { regex: /widget\.intercom\.io\/widget\//i, state: "DETECTED", evidence: "Intercom live chat widget script" },
+      { regex: /\bwindow\.Intercom\b/i, state: "DETECTED", evidence: "window.Intercom API" }
+    ]
+  },
+  {
+    name: "Drift",
+    category: "CHAT_WIDGET",
+    patterns: [
+      { regex: /js\.driftt\.com\/include\//i, state: "DETECTED", evidence: "Drift chat widget script" }
+    ]
+  },
+  {
+    name: "Tawk.to",
+    category: "CHAT_WIDGET",
+    patterns: [
+      { regex: /embed\.tawk\.to\/[a-z0-9]+/i, state: "DETECTED", evidence: "Tawk.to chat embed" }
+    ]
+  },
+  {
+    name: "Crisp",
+    category: "CHAT_WIDGET",
+    patterns: [
+      { regex: /client\.crisp\.chat\/l\.js/i, state: "DETECTED", evidence: "Crisp live chat script" }
+    ]
+  },
+  // 4. Analytics & Tag Managers
+  {
+    name: "Google Tag Manager",
+    category: "TAG_MANAGER",
+    patterns: [
+      { regex: /googletagmanager\.com\/gtm\.js\?id=GTM-/i, state: "DETECTED", evidence: "Google Tag Manager container script" }
+    ]
+  },
+  {
+    name: "Google Analytics",
+    category: "ANALYTICS",
+    patterns: [
+      { regex: /googletagmanager\.com\/gtag\/js\?id=(?:G|UA)-/i, state: "DETECTED", evidence: "Google Analytics gtag script" },
+      { regex: /google-analytics\.com\/analytics\.js/i, state: "DETECTED", evidence: "Legacy Google Analytics script" }
+    ]
+  },
+  {
+    name: "Meta Pixel",
+    category: "ANALYTICS",
+    patterns: [
+      { regex: /connect\.facebook\.net\/[a-z_]+\/fbevents\.js/i, state: "DETECTED", evidence: "Meta Pixel fbevents script" },
+      { regex: /\bfbq\(\s*['"]init['"]/i, state: "DETECTED", evidence: 'fbq("init") Pixel call' }
+    ]
+  }
+];
+function detectTechnologiesInHtml(html) {
+  const normHtml = html || "";
+  const detectedSignals = [];
+  const seenTech = /* @__PURE__ */ new Set();
+  for (const rule of TECHNOLOGY_RULES) {
+    for (const pat of rule.patterns) {
+      if (pat.regex.test(normHtml)) {
+        if (!seenTech.has(rule.name)) {
+          seenTech.add(rule.name);
+          detectedSignals.push({
+            name: rule.name,
+            category: rule.category,
+            state: pat.state,
+            evidence: pat.evidence,
+            observedAt: (/* @__PURE__ */ new Date()).toISOString(),
+            provenance: "LEADNORIA_DERIVED"
+          });
+        }
+        break;
+      }
+    }
+  }
+  return detectedSignals;
+}
+
+// src/extension/websiteIntelligence/personExtractor.ts
+var MAX_EXTRACTED_PEOPLE = 15;
+var LEADERSHIP_TITLE_PATTERNS = [
+  /\b(?:founder|co-founder|owner|co-owner|proprietor)\b/i,
+  /\b(?:ceo|chief executive officer|cto|cfo|coo|cmo|cso|president|vice president|vp)\b/i,
+  /\b(?:managing director|director|principal|general manager|gm|partner|managing partner)\b/i,
+  /\b(?:attorney|lawyer|counsel|solicitor|barrister)\b/i,
+  /\b(?:dr\.|doctor|dentist|orthodontist|surgeon|chiropractor|physician)\b/i,
+  /\b(?:office manager|practice manager|operations manager|sales manager|branch manager)\b/i,
+  /\b(?:lead technician|master plumber|master electrician|head chef)\b/i
+];
+function extractPeopleFromJsonLd(html, pageUrl) {
+  const people = [];
+  const scriptRegex = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  const matches = (html || "").matchAll(scriptRegex);
+  for (const m of matches) {
+    if (people.length >= MAX_EXTRACTED_PEOPLE) break;
+    try {
+      const parsed = JSON.parse(m[1].trim());
+      const items = Array.isArray(parsed) ? parsed : [parsed];
+      for (const item of items) {
+        if (!item || typeof item !== "object") continue;
+        if (item["@type"] === "Person") {
+          processPersonItem(item, people, pageUrl, "STRUCTURED_DATA");
+        }
+        if (Array.isArray(item.employee)) {
+          for (const emp of item.employee) {
+            processPersonItem(emp, people, pageUrl, "STRUCTURED_DATA");
+          }
+        }
+        if (Array.isArray(item.founder)) {
+          for (const f of item.founder) {
+            processPersonItem(f, people, pageUrl, "STRUCTURED_DATA");
+          }
+        }
+      }
+    } catch {
+    }
+  }
+  return people;
+}
+function processPersonItem(item, list, pageUrl, evidenceType) {
+  if (list.length >= MAX_EXTRACTED_PEOPLE) return;
+  if (!item || typeof item !== "object") return;
+  const rawName = typeof item.name === "string" ? item.name.trim() : "";
+  if (!rawName || rawName.length < 3 || rawName.length > 80) return;
+  const fullName = rawName.replace(/\s+/g, " ");
+  if (list.some((p) => p.fullName.toLowerCase() === fullName.toLowerCase())) return;
+  const jobTitle = typeof item.jobTitle === "string" ? item.jobTitle.trim() : void 0;
+  const email = typeof item.email === "string" && item.email.includes("@") ? item.email.trim().toLowerCase() : void 0;
+  const phone = typeof item.telephone === "string" ? item.telephone.trim() : void 0;
+  let linkedInUrl;
+  if (typeof item.sameAs === "string" && item.sameAs.includes("linkedin.com/in/")) {
+    linkedInUrl = item.sameAs.trim();
+  } else if (Array.isArray(item.sameAs)) {
+    const li = item.sameAs.find((u) => typeof u === "string" && u.includes("linkedin.com/in/"));
+    if (li) linkedInUrl = li.trim();
+  }
+  list.push({
+    fullName,
+    jobTitle,
+    email,
+    phone,
+    linkedInUrl,
+    sourceUrl: pageUrl,
+    evidenceType,
+    observedAt: (/* @__PURE__ */ new Date()).toISOString(),
+    provenance: "WEBSITE_DERIVED"
+  });
+}
+function extractPeopleFromHtmlDom(html, pageUrl) {
+  const people = [];
+  const lowerUrl = pageUrl.toLowerCase();
+  const isTeamOrAbout = lowerUrl.includes("/team") || lowerUrl.includes("/about") || lowerUrl.includes("/leadership") || lowerUrl.includes("/staff") || lowerUrl.includes("/people");
+  const evidenceType = isTeamOrAbout ? "TEAM_PAGE" : "VISIBLE_CONTENT";
+  const normHtml = html || "";
+  const cardRegex = /<(?:div|article|section|li)[^>]*class=["'][^"']*(?:team|member|person|profile|bio|staff)[^"']*["'][^>]*>([\s\S]*?)<\/(?:div|article|section|li)>/gi;
+  const cards = normHtml.matchAll(cardRegex);
+  for (const card of cards) {
+    if (people.length >= MAX_EXTRACTED_PEOPLE) break;
+    const cardContent = card[1] || "";
+    const nameMatch = cardContent.match(/<(?:h[2-4]|strong|span)[^>]*class=["'][^"']*(?:name|title)[^"']*["'][^>]*>([^<]+)<\/(?:h[2-4]|strong|span)>/i) || cardContent.match(/<h[3-4][^>]*>([^<]+)<\/h[3-4]>/i);
+    if (!nameMatch) continue;
+    const rawName = nameMatch[1].replace(/<[^>]+>/g, "").trim();
+    if (!rawName || rawName.length < 3 || rawName.length > 70) continue;
+    if (/\b(?:team|members|leadership|about|company|menu|services)\b/i.test(rawName)) continue;
+    const fullName = rawName.replace(/\s+/g, " ");
+    if (people.some((p) => p.fullName.toLowerCase() === fullName.toLowerCase())) continue;
+    let jobTitle;
+    const titleMatch = cardContent.match(/<(?:p|span|div)[^>]*class=["'][^"']*(?:role|position|job-title|designation)[^"']*["'][^>]*>([^<]+)<\/(?:p|span|div)>/i);
+    if (titleMatch) {
+      jobTitle = titleMatch[1].replace(/<[^>]+>/g, "").trim();
+    } else {
+      for (const pat of LEADERSHIP_TITLE_PATTERNS) {
+        const textMatch = cardContent.match(pat);
+        if (textMatch) {
+          jobTitle = textMatch[0].trim();
+          break;
+        }
+      }
+    }
+    let linkedInUrl;
+    const liMatch = cardContent.match(/href=["'](https?:\/\/(?:www\.)?linkedin\.com\/in\/[^"']+)["']/i);
+    if (liMatch) {
+      linkedInUrl = liMatch[1].trim();
+    }
+    let email;
+    const emailMatch = cardContent.match(/mailto:([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/i) || cardContent.match(/\b([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})\b/i);
+    if (emailMatch) {
+      email = emailMatch[1].trim().toLowerCase();
+    }
+    if (jobTitle || isTeamOrAbout) {
+      people.push({
+        fullName,
+        jobTitle,
+        email,
+        linkedInUrl,
+        sourceUrl: pageUrl,
+        evidenceType,
+        observedAt: (/* @__PURE__ */ new Date()).toISOString(),
+        provenance: "WEBSITE_DERIVED"
+      });
+    }
+  }
+  return people;
+}
+function extractPublicPeople(html, pageUrl) {
+  const jsonLdPeople = extractPeopleFromJsonLd(html, pageUrl);
+  const domPeople = extractPeopleFromHtmlDom(html, pageUrl);
+  const consolidated = [...jsonLdPeople];
+  for (const person of domPeople) {
+    if (consolidated.length >= MAX_EXTRACTED_PEOPLE) break;
+    const existing = consolidated.find((p) => p.fullName.toLowerCase() === person.fullName.toLowerCase());
+    if (existing) {
+      if (!existing.jobTitle && person.jobTitle) existing.jobTitle = person.jobTitle;
+      if (!existing.email && person.email) existing.email = person.email;
+      if (!existing.linkedInUrl && person.linkedInUrl) existing.linkedInUrl = person.linkedInUrl;
+    } else {
+      consolidated.push(person);
+    }
+  }
+  return consolidated;
+}
+
+// src/extension/websiteIntelligence/serviceExtractor.ts
+var MAX_EXTRACTED_SERVICES = 25;
+function extractServicesFromJsonLd(html, pageUrl) {
+  const services = [];
+  const scriptRegex = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  const matches = (html || "").matchAll(scriptRegex);
+  for (const m of matches) {
+    if (services.length >= MAX_EXTRACTED_SERVICES) break;
+    try {
+      const parsed = JSON.parse(m[1].trim());
+      const items = Array.isArray(parsed) ? parsed : [parsed];
+      for (const item of items) {
+        if (!item || typeof item !== "object") continue;
+        if (item["@type"] === "Service" && typeof item.name === "string") {
+          addService(services, item.name, item.serviceType || item.category, pageUrl, item.description);
+        }
+        const offers = item.hasOfferCatalog?.itemListElement || item.offers || item.makesOffer;
+        if (Array.isArray(offers)) {
+          for (const off of offers) {
+            const name = off.name || off.itemOffered?.name;
+            if (typeof name === "string") {
+              addService(services, name, off.itemOffered?.serviceType, pageUrl, off.description);
+            }
+          }
+        }
+      }
+    } catch {
+    }
+  }
+  return services;
+}
+function extractServicesFromHtmlDom(html, pageUrl) {
+  const services = [];
+  const lowerUrl = pageUrl.toLowerCase();
+  const isServicesPage = lowerUrl.includes("/service") || lowerUrl.includes("/practice-area") || lowerUrl.includes("/treatment") || lowerUrl.includes("/what-we-do");
+  const normHtml = html || "";
+  const sectionRegex = /<(?:section|div|article)[^>]+(?:id|class)=["'][^"']*(?:service|offering|practice-area|treatment)[^"']*["'][^>]*>([\s\S]*?)<\/(?:section|div|article)>/gi;
+  const sections = normHtml.matchAll(sectionRegex);
+  for (const s of sections) {
+    if (services.length >= MAX_EXTRACTED_SERVICES) break;
+    const content = s[1] || "";
+    const headingMatches = content.matchAll(/<h[2-4][^>]*>([^<]+)<\/h[2-4]>/gi);
+    for (const h of headingMatches) {
+      if (services.length >= MAX_EXTRACTED_SERVICES) break;
+      const text = h[1].replace(/<[^>]+>/g, "").trim();
+      if (isValidServiceName(text)) {
+        addService(services, text, void 0, pageUrl);
+      }
+    }
+    const liMatches = content.matchAll(/<li[^>]*>([^<]{3,80})<\/li>/gi);
+    for (const li of liMatches) {
+      if (services.length >= MAX_EXTRACTED_SERVICES) break;
+      const text = li[1].replace(/<[^>]+>/g, "").trim();
+      if (isValidServiceName(text)) {
+        addService(services, text, void 0, pageUrl);
+      }
+    }
+  }
+  if (isServicesPage && services.length < 5) {
+    const mainHeadings = normHtml.matchAll(/<h[2-3][^>]*>([^<]+)<\/h[2-3]>/gi);
+    for (const h of mainHeadings) {
+      if (services.length >= MAX_EXTRACTED_SERVICES) break;
+      const text = h[1].replace(/<[^>]+>/g, "").trim();
+      if (isValidServiceName(text)) {
+        addService(services, text, void 0, pageUrl);
+      }
+    }
+  }
+  return services;
+}
+function isValidServiceName(text) {
+  if (!text || text.length < 3 || text.length > 70) return false;
+  const lower = text.toLowerCase();
+  const banned = [
+    "services",
+    "our services",
+    "all services",
+    "what we do",
+    "contact us",
+    "about us",
+    "read more",
+    "learn more",
+    "view details",
+    "home",
+    "privacy policy",
+    "terms of service",
+    "menu",
+    "navigation",
+    "quick links",
+    "get in touch",
+    "book now",
+    "schedule now"
+  ];
+  return !banned.includes(lower) && !lower.startsWith("copyright");
+}
+function addService(list, rawName, category, pageUrl, snippet) {
+  if (list.length >= MAX_EXTRACTED_SERVICES) return;
+  const cleanName = rawName.replace(/\s+/g, " ").trim();
+  if (list.some((s) => s.name.toLowerCase() === cleanName.toLowerCase())) return;
+  list.push({
+    name: cleanName,
+    category: category ? category.trim() : void 0,
+    sourceUrl: pageUrl,
+    snippet: snippet ? snippet.slice(0, 200).trim() : void 0,
+    observedAt: (/* @__PURE__ */ new Date()).toISOString(),
+    provenance: "WEBSITE_DERIVED"
+  });
+}
+function extractPublicServices(html, pageUrl) {
+  const jsonLdServices = extractServicesFromJsonLd(html, pageUrl);
+  const domServices = extractServicesFromHtmlDom(html, pageUrl);
+  const consolidated = [...jsonLdServices];
+  for (const s of domServices) {
+    if (consolidated.length >= MAX_EXTRACTED_SERVICES) break;
+    if (!consolidated.some((existing) => existing.name.toLowerCase() === s.name.toLowerCase())) {
+      consolidated.push(s);
+    }
+  }
+  return consolidated;
+}
+
+// src/extension/websiteIntelligence/conflictDetector.ts
+function detectPhoneConflicts(phones) {
+  const conflicts = [];
+  if (phones.length < 2) return conflicts;
+  const validPhones = phones.filter((p) => p.normalizedValue && p.status === "FOUND");
+  if (validPhones.length < 2) return conflicts;
+  const distinctNumbers = /* @__PURE__ */ new Map();
+  for (const p of validPhones) {
+    const key = p.e164Format || p.normalizedValue.replace(/\D/g, "");
+    if (!distinctNumbers.has(key)) {
+      const sourceUrl = p.evidence[0]?.pageUrl || "unknown";
+      const observedAt = p.evidence[0]?.observedAt || (/* @__PURE__ */ new Date()).toISOString();
+      distinctNumbers.set(key, { value: p.normalizedValue, sourceUrl, observedAt });
+    }
+  }
+  if (distinctNumbers.size >= 2) {
+    const values = Array.from(distinctNumbers.values());
+    conflicts.push({
+      conflictType: "PHONE_CONFLICT",
+      field: "phone",
+      values,
+      description: `Observed ${values.length} distinct phone numbers across website pages: ${values.map((v) => v.value).join(" vs ")}`
+    });
+  }
+  return conflicts;
+}
+function detectAddressConflicts(locations) {
+  const conflicts = [];
+  if (locations.length < 2) return conflicts;
+  const validLocations = locations.filter((l) => l.normalizedAddress && l.status === "FOUND");
+  if (validLocations.length < 2) return conflicts;
+  const distinctAddresses = /* @__PURE__ */ new Map();
+  for (const l of validLocations) {
+    const key = l.normalizedAddress.toLowerCase().replace(/[^\w]/g, "");
+    if (!distinctAddresses.has(key)) {
+      const sourceUrl = l.evidence[0]?.pageUrl || "unknown";
+      const observedAt = l.evidence[0]?.observedAt || (/* @__PURE__ */ new Date()).toISOString();
+      distinctAddresses.set(key, { value: l.normalizedAddress, sourceUrl, observedAt });
+    }
+  }
+  if (distinctAddresses.size >= 2) {
+    const values = Array.from(distinctAddresses.values());
+    conflicts.push({
+      conflictType: "ADDRESS_CONFLICT",
+      field: "address",
+      values,
+      description: `Observed ${values.length} distinct physical addresses across website pages`
+    });
+  }
+  return conflicts;
+}
+function detectEmailConflicts(emails) {
+  const conflicts = [];
+  if (emails.length < 2) return conflicts;
+  const validEmails = emails.filter((e) => e.normalizedEmail && e.status === "FOUND");
+  if (validEmails.length < 2) return conflicts;
+  const distinctEmails = /* @__PURE__ */ new Map();
+  for (const e of validEmails) {
+    const key = e.normalizedEmail.toLowerCase();
+    if (!distinctEmails.has(key)) {
+      const sourceUrl = e.evidence[0]?.pageUrl || "unknown";
+      const observedAt = e.evidence[0]?.observedAt || (/* @__PURE__ */ new Date()).toISOString();
+      distinctEmails.set(key, { value: e.normalizedEmail, sourceUrl, observedAt });
+    }
+  }
+  const emailDomains = new Set(validEmails.map((e) => e.domainPart.toLowerCase()));
+  if (emailDomains.size >= 2) {
+    const values = Array.from(distinctEmails.values());
+    conflicts.push({
+      conflictType: "EMAIL_CONFLICT",
+      field: "email",
+      values,
+      description: `Observed distinct email addresses on different domains: ${Array.from(emailDomains).join(", ")}`
+    });
+  }
+  return conflicts;
+}
+function detectAllConflicts(phones, locations, emails) {
+  return [
+    ...detectPhoneConflicts(phones),
+    ...detectAddressConflicts(locations),
+    ...detectEmailConflicts(emails)
+  ];
+}
+
+// src/extension/extraction/normalizer.ts
+var KNOWN_TRACKING_PARAMS = /* @__PURE__ */ new Set([
+  "fbclid",
+  "gclid",
+  "msclkid",
+  "dclid",
+  "gbraid",
+  "wbraid"
+]);
+var LEGAL_SUFFIXES3 = [
+  "llc",
+  "l.l.c.",
+  "inc",
+  "inc.",
+  "incorporated",
+  "corp",
+  "corp.",
+  "corporation",
+  "ltd",
+  "ltd.",
+  "limited",
+  "gmbh",
+  "co",
+  "co.",
+  "company",
+  "pvt",
+  "pvt.",
+  "private limited",
+  "enterprises",
+  "holdings",
+  "group",
+  "sa",
+  "s.a.",
+  "plc",
+  "s.l.",
+  "sl",
+  "sarl",
+  "s.a.r.l.",
+  "sas",
+  "s.a.s.",
+  "srl",
+  "s.r.l."
+];
+var COMMON_COUNTRY_CODES = {
+  US: { code: "US", dial: "1", nationalDigits: [10] },
+  CA: { code: "CA", dial: "1", nationalDigits: [10] },
+  GB: { code: "GB", dial: "44", nationalDigits: [10, 11] },
+  UK: { code: "GB", dial: "44", nationalDigits: [10, 11] },
+  BD: { code: "BD", dial: "880", nationalDigits: [10, 11] },
+  DE: { code: "DE", dial: "49", nationalDigits: [9, 10, 11, 12] },
+  FR: { code: "FR", dial: "33", nationalDigits: [9, 10] },
+  ES: { code: "ES", dial: "34", nationalDigits: [9] },
+  AU: { code: "AU", dial: "61", nationalDigits: [9, 10] },
+  AE: { code: "AE", dial: "971", nationalDigits: [9] },
+  IN: { code: "IN", dial: "91", nationalDigits: [10] },
+  SG: { code: "SG", dial: "65", nationalDigits: [8] },
+  NZ: { code: "NZ", dial: "64", nationalDigits: [8, 9] },
+  IE: { code: "IE", dial: "353", nationalDigits: [9] },
+  NL: { code: "NL", dial: "31", nationalDigits: [9] },
+  IT: { code: "IT", dial: "39", nationalDigits: [9, 10] },
+  BR: { code: "BR", dial: "55", nationalDigits: [10, 11] },
+  JP: { code: "JP", dial: "81", nationalDigits: [10] }
+};
+function sanitizeText(raw, maxLength = 2e3) {
+  if (raw === null || raw === void 0) return "";
+  let text = String(raw);
+  text = text.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+  text = text.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "");
+  text = text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\u200B-\u200D\uFEFF]/g, "");
+  text = text.replace(/<[^>]*>/g, " ");
+  text = text.normalize("NFC");
+  text = text.replace(/[ \t\r\f\v]+/g, " ").trim();
+  if (text.length > maxLength) {
+    text = text.substring(0, maxLength).trim();
+  }
+  return text;
+}
+function normalizeUrl(rawUrl) {
+  const preCleaned = (rawUrl || "").trim().replace(/^[<(\["']+|[>)\]"']+$/g, "").trim();
+  const original = sanitizeText(preCleaned, 2048);
+  if (!original) {
+    return {
+      originalUrl: "",
+      normalizedUrl: "",
+      canonicalDomain: "",
+      canonicalOrigin: "",
+      protocol: "https:",
+      hostname: "",
+      pathname: "",
+      hasMeaningfulSubdomain: false,
+      preservedParams: {},
+      isCredentialBearing: false,
+      isValid: false,
+      error: "EMPTY_URL"
+    };
+  }
+  if (/^(javascript|data|blob|file|about|chrome|chrome-extension):/i.test(original)) {
+    return {
+      originalUrl: original,
+      normalizedUrl: "",
+      canonicalDomain: "",
+      canonicalOrigin: "",
+      protocol: "https:",
+      hostname: "",
+      pathname: "",
+      hasMeaningfulSubdomain: false,
+      preservedParams: {},
+      isCredentialBearing: false,
+      isValid: false,
+      error: "SECURITY_REJECTED_PROTOCOL"
+    };
+  }
+  let working = original;
+  if (!/^https?:\/\//i.test(working)) {
+    working = "https://" + working;
+  }
+  try {
+    const parsed = new URL(working);
+    if (parsed.username || parsed.password) {
+      return {
+        originalUrl: original,
+        normalizedUrl: "",
+        canonicalDomain: "",
+        canonicalOrigin: "",
+        protocol: "https:",
+        hostname: "",
+        pathname: "",
+        hasMeaningfulSubdomain: false,
+        preservedParams: {},
+        isCredentialBearing: true,
+        isValid: false,
+        error: "SECURITY_REJECTED_CREDENTIALS"
+      };
+    }
+    const protocol = parsed.protocol.toLowerCase() === "http:" ? "http:" : "https:";
+    let hostname = parsed.hostname.toLowerCase().trim();
+    hostname = hostname.replace(/\.+$/, "");
+    const hostParts = hostname.split(".");
+    let canonicalDomain = hostname;
+    let hasMeaningfulSubdomain = false;
+    if (hostname.startsWith("www.")) {
+      canonicalDomain = hostname.substring(4);
+    } else if (hostParts.length > 2) {
+      hasMeaningfulSubdomain = true;
+      canonicalDomain = hostname;
+    }
+    const cleanParams = new URLSearchParams();
+    const preservedParams = {};
+    for (const [key, value] of parsed.searchParams.entries()) {
+      const lowerKey = key.toLowerCase();
+      const isTracking = lowerKey.startsWith("utm_") || KNOWN_TRACKING_PARAMS.has(lowerKey);
+      if (!isTracking) {
+        cleanParams.append(key, value);
+        preservedParams[key] = value;
+      }
+    }
+    let pathname = parsed.pathname.replace(/\/+/g, "/");
+    if (pathname === "/") {
+      pathname = "";
+    } else if (pathname.endsWith("/")) {
+      pathname = pathname.slice(0, -1);
+    }
+    const searchStr = cleanParams.toString() ? `?${cleanParams.toString()}` : "";
+    const normalizedUrl = `${protocol}//${hostname}${pathname}${searchStr}`;
+    const canonicalOrigin = `${protocol}//${hostname}`;
+    return {
+      originalUrl: original,
+      normalizedUrl,
+      canonicalDomain,
+      canonicalOrigin,
+      protocol,
+      hostname,
+      pathname,
+      hasMeaningfulSubdomain,
+      preservedParams,
+      isCredentialBearing: false,
+      isValid: true
+    };
+  } catch (err) {
+    return {
+      originalUrl: original,
+      normalizedUrl: "",
+      canonicalDomain: "",
+      canonicalOrigin: "",
+      protocol: "https:",
+      hostname: "",
+      pathname: "",
+      hasMeaningfulSubdomain: false,
+      preservedParams: {},
+      isCredentialBearing: false,
+      isValid: false,
+      error: `MALFORMED_URL: ${err.message}`
+    };
+  }
+}
+function normalizePhone(rawPhone, countryHint) {
+  const original = sanitizeText(rawPhone, 100);
+  if (!original) {
+    return {
+      rawPhone: "",
+      phoneState: "PHONE_INVALID",
+      countryInference: "COUNTRY_UNKNOWN",
+      isValid: false,
+      error: "EMPTY_PHONE"
+    };
+  }
+  let extension;
+  let cleanInput = original;
+  const extMatch = original.match(/(?:ext|ext\.|x|#)\s*([0-9]{1,6})/i);
+  if (extMatch) {
+    extension = extMatch[1];
+    cleanInput = original.substring(0, extMatch.index).trim();
+  }
+  const hasPlus = cleanInput.trim().startsWith("+");
+  const digits = cleanInput.replace(/[^0-9]/g, "");
+  if (digits.length < 5 || digits.length > 15) {
+    return {
+      rawPhone: original,
+      phoneState: "PHONE_INVALID",
+      countryInference: "COUNTRY_UNKNOWN",
+      isValid: false,
+      error: "INVALID_DIGIT_LENGTH"
+    };
+  }
+  let countryMeta = countryHint ? COMMON_COUNTRY_CODES[countryHint.toUpperCase()] : void 0;
+  let countryInference = countryHint ? "COUNTRY_EXPLICIT" : "COUNTRY_UNKNOWN";
+  let e164;
+  let dialCode;
+  let nationalNumber = digits;
+  if (hasPlus) {
+    for (const meta of Object.values(COMMON_COUNTRY_CODES)) {
+      if (digits.startsWith(meta.dial)) {
+        dialCode = meta.dial;
+        nationalNumber = digits.substring(meta.dial.length);
+        e164 = `+${digits}`;
+        if (!countryMeta) {
+          countryMeta = meta;
+          countryInference = "COUNTRY_INFERRED";
+        }
+        break;
+      }
+    }
+    if (!e164) {
+      e164 = `+${digits}`;
+      countryInference = "COUNTRY_INFERRED";
+    }
+  } else if (countryMeta) {
+    if (countryMeta.nationalDigits.includes(digits.length)) {
+      e164 = `+${countryMeta.dial}${digits}`;
+      dialCode = countryMeta.dial;
+      nationalNumber = digits;
+    } else if (digits.startsWith(countryMeta.dial)) {
+      e164 = `+${digits}`;
+      dialCode = countryMeta.dial;
+      nationalNumber = digits.substring(countryMeta.dial.length);
+    } else {
+      return {
+        rawPhone: original,
+        phoneState: "PHONE_AMBIGUOUS",
+        countryInference: "COUNTRY_EXPLICIT",
+        countryCode: countryMeta.code,
+        isValid: false,
+        error: "AMBIGUOUS_NATIONAL_NUMBER_FOR_COUNTRY"
+      };
+    }
+  } else {
+    return {
+      rawPhone: original,
+      phoneState: "PHONE_AMBIGUOUS",
+      countryInference: "COUNTRY_UNKNOWN",
+      isValid: false,
+      error: "AMBIGUOUS_WITHOUT_COUNTRY_CODE"
+    };
+  }
+  return {
+    rawPhone: original,
+    e164Format: e164,
+    internationalFormat: e164,
+    nationalFormat: nationalNumber,
+    countryCode: countryMeta?.code,
+    countryInference,
+    dialCode,
+    extension,
+    phoneState: "PHONE_NORMALIZED",
+    isValid: true
+  };
+}
+function normalizeEmail(rawEmail) {
+  if (!rawEmail) {
+    return {
+      rawEmail: "",
+      normalizedEmail: "",
+      localPart: "",
+      domainPart: "",
+      isValid: false,
+      error: "EMPTY_EMAIL"
+    };
+  }
+  const stripped = String(rawEmail).trim().replace(/^[<(\["']+|[>)\]"']+$/g, "").trim();
+  const original = sanitizeText(stripped, 254);
+  if (!original) {
+    return {
+      rawEmail: String(rawEmail),
+      normalizedEmail: "",
+      localPart: "",
+      domainPart: "",
+      isValid: false,
+      error: "EMPTY_EMAIL"
+    };
+  }
+  const emailRegex = /^([a-zA-Z0-9_\.\-\+]+)@([a-zA-Z0-9\-]+\.[a-zA-Z0-9\-\.]+)$/;
+  const match = original.match(emailRegex);
+  if (!match) {
+    return {
+      rawEmail: String(rawEmail),
+      normalizedEmail: "",
+      localPart: "",
+      domainPart: "",
+      isValid: false,
+      error: "INVALID_EMAIL_SYNTAX"
+    };
+  }
+  const localPart = match[1];
+  const domainPart = match[2].toLowerCase();
+  const normalizedEmail = `${localPart}@${domainPart}`;
+  return {
+    rawEmail: String(rawEmail),
+    normalizedEmail,
+    localPart,
+    domainPart,
+    isValid: true
+  };
+}
+function detectScript(text) {
+  const hasBengali = /[\u0980-\u09FF]/.test(text);
+  const hasArabic = /[\u0600-\u06FF\u0750-\u077F]/.test(text);
+  const hasLatin = /[a-zA-Z]/.test(text);
+  const scripts = [hasBengali, hasArabic, hasLatin].filter(Boolean).length;
+  if (scripts > 1) return "MIXED";
+  if (hasBengali) return "BENGALI";
+  if (hasArabic) return "ARABIC";
+  if (hasLatin) return "LATIN";
+  return "OTHER";
+}
+function normalizeBusinessName(rawName) {
+  const original = sanitizeText(rawName, 300);
+  if (!original) {
+    return {
+      displayName: "Unknown Business",
+      normalizedName: "unknown business",
+      comparisonName: "unknown business",
+      detectedScript: "LATIN"
+    };
+  }
+  let displayName = original.replace(/\s*·\s*Sponsored.*$/i, "").replace(/\s*Sponsored.*$/i, "").replace(/\s*\(official\)$/i, "").replace(/\s*\(verified\)$/i, "").replace(/\s+/g, " ").trim();
+  const normalizedName = displayName.normalize("NFKC").toLowerCase();
+  let comp = normalizedName;
+  let matchedSuffix;
+  const sortedSuffixes = [...LEGAL_SUFFIXES3].sort((a, b) => b.length - a.length);
+  for (const suffix of sortedSuffixes) {
+    const escaped = suffix.replace(/\./g, "\\.");
+    const regex = new RegExp(`(?:\\b|\\s)${escaped}\\.?$`, "i");
+    if (regex.test(comp)) {
+      matchedSuffix = suffix;
+      comp = comp.replace(regex, "").trim();
+      break;
+    }
+  }
+  const comparisonName = comp.replace(/[^\p{L}\p{N}\s]/gu, "").replace(/\s+/g, " ").trim();
+  const detectedScript = detectScript(displayName);
+  return {
+    displayName,
+    normalizedName,
+    comparisonName: comparisonName || normalizedName,
+    legalSuffix: matchedSuffix,
+    detectedScript
+  };
+}
+
+// src/extension/enrichment/contactNormalizer.ts
+var PLACEHOLDER_EMAIL_DOMAINS = /* @__PURE__ */ new Set([
+  "example.com",
+  "example.org",
+  "example.net",
+  "domain.com",
+  "email.com",
+  "sentry.io",
+  "wixpress.com",
+  "wordpress.org",
+  "shopify.com",
+  "myshopify.com",
+  "gravatar.com",
+  "schema.org"
+]);
+var GENERIC_EMAIL_PREFIXES = /* @__PURE__ */ new Set([
+  "info",
+  "contact",
+  "contactus",
+  "support",
+  "sales",
+  "hello",
+  "hi",
+  "admin",
+  "administrator",
+  "billing",
+  "accounts",
+  "press",
+  "media",
+  "jobs",
+  "career",
+  "careers",
+  "hr",
+  "help",
+  "inquiry",
+  "inquiries",
+  "enquiry",
+  "enquiries",
+  "office",
+  "frontdesk",
+  "service",
+  "services",
+  "customercare",
+  "customerservice",
+  "team",
+  "general",
+  "mail",
+  "reception",
+  "booking",
+  "bookings",
+  "reservation",
+  "reservations",
+  "order",
+  "orders"
+]);
+var DIRECT_ROLE_PREFIXES = /* @__PURE__ */ new Set([
+  "ceo",
+  "founder",
+  "president",
+  "director",
+  "manager",
+  "cto",
+  "cfo",
+  "coo",
+  "cmo",
+  "owner",
+  "partner",
+  "principal",
+  "headmaster",
+  "dean"
+]);
+function isSafeWebUrl(rawUrl) {
+  if (!rawUrl) return false;
+  const trimmed = rawUrl.trim().toLowerCase();
+  if (trimmed.startsWith("javascript:") || trimmed.startsWith("data:") || trimmed.startsWith("vbscript:") || trimmed.startsWith("file:") || trimmed.startsWith("blob:")) {
+    return false;
+  }
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+function sanitizeWebText(text, maxLength = 2e3) {
+  if (!text) return "";
+  return sanitizeText(text, maxLength);
+}
+function normalizeBusinessEmail(rawEmail) {
+  if (!rawEmail) {
+    return {
+      rawValue: "",
+      normalizedEmail: "",
+      localPart: "",
+      domainPart: "",
+      emailType: "UNKNOWN",
+      status: "NOT_FOUND",
+      isValid: false,
+      reason: "EMPTY_EMAIL"
+    };
+  }
+  let cleaned = String(rawEmail).trim();
+  if (cleaned.toLowerCase().startsWith("mailto:")) {
+    cleaned = cleaned.slice(7);
+  }
+  const queryIdx = cleaned.indexOf("?");
+  if (queryIdx !== -1) {
+    cleaned = cleaned.slice(0, queryIdx);
+  }
+  cleaned = cleaned.replace(/^[<(\["']+|[>)\]"',;:]+$/g, "").trim();
+  const lower = cleaned.toLowerCase();
+  if (lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".gif") || lower.endsWith(".webp") || lower.endsWith(".svg") || lower.endsWith(".js") || lower.endsWith(".css")) {
+    return {
+      rawValue: String(rawEmail),
+      normalizedEmail: "",
+      localPart: "",
+      domainPart: "",
+      emailType: "UNKNOWN",
+      status: "INVALID",
+      isValid: false,
+      reason: "ASSET_FILENAME_NOT_EMAIL"
+    };
+  }
+  const baseResult = normalizeEmail(cleaned);
+  if (!baseResult.isValid) {
+    return {
+      rawValue: String(rawEmail),
+      normalizedEmail: "",
+      localPart: "",
+      domainPart: "",
+      emailType: "UNKNOWN",
+      status: "INVALID",
+      isValid: false,
+      reason: baseResult.error || "INVALID_EMAIL_SYNTAX"
+    };
+  }
+  const domain = baseResult.domainPart.toLowerCase();
+  if (PLACEHOLDER_EMAIL_DOMAINS.has(domain)) {
+    return {
+      rawValue: String(rawEmail),
+      normalizedEmail: baseResult.normalizedEmail,
+      localPart: baseResult.localPart,
+      domainPart: domain,
+      emailType: "UNKNOWN",
+      status: "INVALID",
+      isValid: false,
+      reason: "PLACEHOLDER_OR_VENDOR_DOMAIN"
+    };
+  }
+  const localClean = baseResult.localPart.toLowerCase().replace(/[^a-z0-9]/g, "");
+  let emailType = "UNKNOWN";
+  if (GENERIC_EMAIL_PREFIXES.has(localClean)) {
+    emailType = "GENERIC_BUSINESS";
+  } else if (DIRECT_ROLE_PREFIXES.has(localClean)) {
+    emailType = "DIRECT_ROLE";
+  } else if (baseResult.localPart.includes(".") || baseResult.localPart.includes("_") || baseResult.localPart.length > 3) {
+    emailType = "APPARENT_PERSONAL";
+  } else {
+    emailType = "GENERIC_BUSINESS";
+  }
+  return {
+    rawValue: String(rawEmail),
+    normalizedEmail: `${baseResult.localPart.toLowerCase()}@${domain}`,
+    localPart: baseResult.localPart,
+    domainPart: domain,
+    emailType,
+    status: "FOUND",
+    isValid: true
+  };
+}
+function normalizeBusinessPhone(rawPhone, countryHint) {
+  if (!rawPhone) {
+    return {
+      rawValue: "",
+      normalizedValue: "",
+      status: "NOT_FOUND",
+      isValid: false,
+      reason: "EMPTY_PHONE"
+    };
+  }
+  let cleaned = String(rawPhone).trim();
+  if (cleaned.toLowerCase().startsWith("tel:")) {
+    cleaned = cleaned.slice(4);
+  }
+  const baseResult = normalizePhone(cleaned, countryHint);
+  if (baseResult.phoneState === "PHONE_INVALID") {
+    return {
+      rawValue: String(rawPhone),
+      normalizedValue: "",
+      status: "INVALID",
+      isValid: false,
+      reason: baseResult.error || "INVALID_PHONE_NUMBER"
+    };
+  }
+  if (baseResult.phoneState === "PHONE_AMBIGUOUS") {
+    const digits = cleaned.replace(/[^0-9]/g, "");
+    return {
+      rawValue: String(rawPhone),
+      normalizedValue: digits,
+      status: "AMBIGUOUS",
+      isValid: false,
+      reason: baseResult.error || "AMBIGUOUS_WITHOUT_COUNTRY_CODE"
+    };
+  }
+  return {
+    rawValue: String(rawPhone),
+    normalizedValue: baseResult.e164Format || baseResult.nationalFormat || cleaned,
+    e164Format: baseResult.e164Format,
+    nationalFormat: baseResult.nationalFormat,
+    countryCode: baseResult.countryCode,
+    dialCode: baseResult.dialCode,
+    extension: baseResult.extension,
+    status: "FOUND",
+    isValid: true
+  };
+}
+function normalizeSocialUrl(rawUrl) {
+  if (!rawUrl) {
+    return {
+      rawUrl: "",
+      normalizedUrl: "",
+      domain: "",
+      platformDomain: "",
+      isValid: false,
+      isShareWidget: false,
+      reason: "EMPTY_URL"
+    };
+  }
+  if (!isSafeWebUrl(rawUrl)) {
+    return {
+      rawUrl: String(rawUrl),
+      normalizedUrl: "",
+      domain: "",
+      platformDomain: "",
+      isValid: false,
+      isShareWidget: false,
+      reason: "UNSAFE_OR_MALFORMED_URL"
+    };
+  }
+  const baseResult = normalizeUrl(rawUrl);
+  if (!baseResult.isValid) {
+    return {
+      rawUrl: String(rawUrl),
+      normalizedUrl: "",
+      domain: "",
+      platformDomain: "",
+      isValid: false,
+      isShareWidget: false,
+      reason: baseResult.error || "MALFORMED_URL"
+    };
+  }
+  const hostname = baseResult.hostname.toLowerCase().replace(/^www\./, "");
+  const pathname = baseResult.pathname || "";
+  const lowerPath = pathname.toLowerCase();
+  const isShareWidget = lowerPath.includes("/sharer") || lowerPath.includes("/intent/tweet") || lowerPath.includes("/share") || lowerPath.includes("/sharearticle") || lowerPath.includes("/dialog/share") || lowerPath.includes("/pin/create");
+  const cleanUrl = `${baseResult.protocol}//${hostname}${pathname}`.replace(/\/$/, "");
+  return {
+    rawUrl: String(rawUrl),
+    normalizedUrl: cleanUrl,
+    domain: baseResult.canonicalDomain,
+    platformDomain: hostname,
+    handleOrPath: pathname.replace(/^\/+/, "") || void 0,
+    isValid: true,
+    isShareWidget
+  };
+}
+function normalizeBusinessAddress(rawAddress, countryHint) {
+  const sanitized = sanitizeWebText(rawAddress, 500);
+  if (!sanitized || sanitized.length < 5) {
+    return {
+      rawAddress: rawAddress || "",
+      normalizedAddress: "",
+      status: "NOT_FOUND",
+      isValid: false
+    };
+  }
+  const norm = sanitized.replace(/\s+/g, " ").trim();
+  const postalMatch = norm.match(/\b([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}|\d{5}(?:-\d{4})?|\d{4,6})\b/i);
+  const postalCode = postalMatch ? postalMatch[1].trim() : void 0;
+  const parts = norm.split(",").map((p) => p.trim()).filter(Boolean);
+  let status = "PARTIAL";
+  if (parts.length >= 3 || parts.length >= 2 && postalCode) {
+    status = "FOUND";
+  } else if (parts.length === 1 && !postalCode) {
+    status = "PARTIAL";
+  }
+  return {
+    rawAddress: String(rawAddress),
+    normalizedAddress: norm,
+    postalCode,
+    country: countryHint?.toUpperCase(),
+    status,
+    isValid: true
+  };
+}
+function normalizeBusinessNameFact(rawName) {
+  const sanitized = sanitizeWebText(rawName, 300);
+  if (!sanitized) {
+    return {
+      rawValue: "",
+      normalizedName: "",
+      comparisonKey: "",
+      status: "NOT_FOUND"
+    };
+  }
+  const baseResult = normalizeBusinessName(sanitized);
+  return {
+    rawValue: sanitized,
+    normalizedName: baseResult.displayName,
+    comparisonKey: baseResult.comparisonName,
+    status: "FOUND"
+  };
+}
+
+// src/extension/enrichment/contactEvidence.ts
+function generateEvidenceId(field, normalizedValue, pageUrl, evidenceType) {
+  const normVal = (normalizedValue || "").toLowerCase().replace(/[^a-z0-9]/g, "_").slice(0, 40);
+  let cleanUrl = (pageUrl || "").toLowerCase();
+  try {
+    const u = new URL(cleanUrl);
+    cleanUrl = `${u.hostname}${u.pathname}`;
+  } catch {
+  }
+  const normUrl = cleanUrl.replace(/[^a-z0-9]/g, "_").slice(0, 40);
+  return `ev_${field}_${normVal}_${normUrl}_${evidenceType.toLowerCase()}`;
+}
+function createContactEvidence(params) {
+  const defaultStrength = params.evidenceType === "MAILTO_LINK" || params.evidenceType === "TEL_LINK" || params.evidenceType === "STRUCTURED_PAGE_CONTENT" || params.evidenceType === "CONTACT_FORM" ? "DIRECT_PUBLIC_OBSERVATION" : "DIRECT_PUBLIC_OBSERVATION";
+  const cleanSnippet = params.contextSnippet ? params.contextSnippet.replace(/[\r\n\t]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 300) : void 0;
+  return {
+    id: generateEvidenceId(params.field, params.normalizedValue, params.pageUrl, params.evidenceType),
+    field: params.field,
+    rawValue: params.rawValue,
+    normalizedValue: params.normalizedValue,
+    pageUrl: params.pageUrl,
+    evidenceType: params.evidenceType,
+    evidenceStrength: params.evidenceStrength || defaultStrength,
+    contextSnippet: cleanSnippet,
+    extractionState: params.extractionState || "EXTRACTED_FROM_PUBLIC_PAGE",
+    observedAt: params.observedAt || "STATIC_DETERMINISTIC_TIMESTAMP"
+  };
+}
+function deduplicateEvidence(evidenceList) {
+  const seenIds = /* @__PURE__ */ new Set();
+  const deduplicated = [];
+  for (const item of evidenceList) {
+    if (!seenIds.has(item.id)) {
+      seenIds.add(item.id);
+      deduplicated.push(item);
+    }
+  }
+  return deduplicated.sort((a, b) => a.id.localeCompare(b.id));
+}
+function assessCorroboration(evidenceList) {
+  const distinctPages = new Set(evidenceList.map((e) => e.pageUrl.toLowerCase().replace(/\/$/, "")));
+  if (distinctPages.size >= 2) {
+    return "CORROBORATED_PUBLIC_OBSERVATION";
+  }
+  if (evidenceList.some((e) => e.evidenceStrength === "DIRECT_PUBLIC_OBSERVATION")) {
+    return "DIRECT_PUBLIC_OBSERVATION";
+  }
+  return "WEAK_OBSERVATION";
+}
+
+// src/extension/enrichment/contactDeduper.ts
+function deduplicatePhones(phones) {
+  const map = /* @__PURE__ */ new Map();
+  for (const p of phones) {
+    const key = (p.e164Format || p.normalizedValue || p.rawValue).replace(/[^0-9]/g, "");
+    if (!key) continue;
+    const existing = map.get(key);
+    if (!existing) {
+      map.set(key, {
+        ...p,
+        evidence: [...p.evidence],
+        sourceContributions: [...p.sourceContributions]
+      });
+    } else {
+      existing.evidence = deduplicateEvidence([...existing.evidence, ...p.evidence]);
+      if (existing.status === "AMBIGUOUS" && p.status === "FOUND") {
+        existing.status = "FOUND";
+        existing.e164Format = p.e164Format || existing.e164Format;
+        existing.nationalFormat = p.nationalFormat || existing.nationalFormat;
+      }
+      if (!existing.extension && p.extension) {
+        existing.extension = p.extension;
+      }
+      if (!existing.label && p.label) {
+        existing.label = p.label;
+      }
+    }
+  }
+  const results = Array.from(map.values()).map((p) => {
+    p.evidence = deduplicateEvidence(p.evidence);
+    const corrStrength = assessCorroboration(p.evidence);
+    for (const ev of p.evidence) {
+      if (corrStrength === "CORROBORATED_PUBLIC_OBSERVATION" && ev.evidenceStrength === "DIRECT_PUBLIC_OBSERVATION") {
+        ev.evidenceStrength = "CORROBORATED_PUBLIC_OBSERVATION";
+      }
+    }
+    return p;
+  });
+  return results.sort((a, b) => (a.normalizedValue || a.rawValue).localeCompare(b.normalizedValue || b.rawValue));
+}
+function deduplicateEmails(emails) {
+  const map = /* @__PURE__ */ new Map();
+  for (const e of emails) {
+    const key = e.normalizedEmail.toLowerCase().trim();
+    if (!key) continue;
+    const existing = map.get(key);
+    if (!existing) {
+      map.set(key, {
+        ...e,
+        evidence: [...e.evidence],
+        sourceContributions: [...e.sourceContributions]
+      });
+    } else {
+      existing.evidence = deduplicateEvidence([...existing.evidence, ...e.evidence]);
+      if (existing.emailType === "UNKNOWN" && e.emailType !== "UNKNOWN") {
+        existing.emailType = e.emailType;
+      }
+    }
+  }
+  const results = Array.from(map.values()).map((e) => {
+    e.evidence = deduplicateEvidence(e.evidence);
+    const corrStrength = assessCorroboration(e.evidence);
+    for (const ev of e.evidence) {
+      if (corrStrength === "CORROBORATED_PUBLIC_OBSERVATION" && ev.evidenceStrength === "DIRECT_PUBLIC_OBSERVATION") {
+        ev.evidenceStrength = "CORROBORATED_PUBLIC_OBSERVATION";
+      }
+    }
+    return e;
+  });
+  return results.sort((a, b) => a.normalizedEmail.localeCompare(b.normalizedEmail));
+}
+function deduplicateLocations(locations) {
+  const map = /* @__PURE__ */ new Map();
+  for (const loc of locations) {
+    const normKey = loc.normalizedAddress.toLowerCase().replace(/[^a-z0-9]/g, " ").replace(/\s+/g, " ").trim();
+    if (!normKey) continue;
+    const existing = map.get(normKey);
+    if (!existing) {
+      map.set(normKey, {
+        ...loc,
+        evidence: [...loc.evidence],
+        sourceContributions: [...loc.sourceContributions]
+      });
+    } else {
+      existing.evidence = deduplicateEvidence([...existing.evidence, ...loc.evidence]);
+      if (existing.status === "PARTIAL" && loc.status === "FOUND") {
+        existing.status = "FOUND";
+        existing.postalCode = loc.postalCode || existing.postalCode;
+        existing.city = loc.city || existing.city;
+        existing.streetAddress = loc.streetAddress || existing.streetAddress;
+      }
+      if (!existing.phone && loc.phone) {
+        existing.phone = loc.phone;
+      }
+      if (!existing.label && loc.label) {
+        existing.label = loc.label;
+      }
+    }
+  }
+  const results = Array.from(map.values()).map((loc) => {
+    loc.evidence = deduplicateEvidence(loc.evidence);
+    return loc;
+  });
+  return results.sort((a, b) => a.normalizedAddress.localeCompare(b.normalizedAddress));
+}
+function deduplicateContactForms(forms) {
+  const map = /* @__PURE__ */ new Map();
+  for (const f of forms) {
+    const key = `${f.pageUrl.toLowerCase()}_${(f.formAction || "").toLowerCase()}_${(f.formIdOrName || "").toLowerCase()}`;
+    const existing = map.get(key);
+    if (!existing) {
+      map.set(key, {
+        ...f,
+        evidence: [...f.evidence],
+        sourceContributions: [...f.sourceContributions]
+      });
+    } else {
+      existing.evidence = deduplicateEvidence([...existing.evidence, ...f.evidence]);
+      existing.hasEmailField = existing.hasEmailField || f.hasEmailField;
+      existing.hasPhoneField = existing.hasPhoneField || f.hasPhoneField;
+      existing.hasMessageField = existing.hasMessageField || f.hasMessageField;
+    }
+  }
+  const results = Array.from(map.values()).map((f) => {
+    f.evidence = deduplicateEvidence(f.evidence);
+    return f;
+  });
+  return results.sort((a, b) => a.pageUrl.localeCompare(b.pageUrl));
+}
+
+// src/extension/enrichment/contactExtractor.ts
+function decodeHtmlEntities(str) {
+  if (!str) return "";
+  return str.replace(/&#64;/gi, "@").replace(/&#x40;/gi, "@").replace(/&commat;/gi, "@").replace(/&amp;/gi, "&").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/&quot;/gi, '"').replace(/&#39;/gi, "'").replace(/&nbsp;/gi, " ");
+}
+function extractBusinessNamesFromHtml(html, pageUrl) {
+  const facts = [];
+  const decoded = decodeHtmlEntities(html);
+  const jsonLdMatches = decoded.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+  for (const m of jsonLdMatches) {
+    try {
+      const parsed = JSON.parse(m[1].trim());
+      const orgs = Array.isArray(parsed) ? parsed : [parsed];
+      for (const item of orgs) {
+        const type = item["@type"];
+        if (type === "Organization" || type === "LocalBusiness" || type === "Corporation" || type === "Store" || Array.isArray(type) && type.some((t) => t === "Organization" || t === "LocalBusiness")) {
+          if (item.name && typeof item.name === "string") {
+            const norm = normalizeBusinessNameFact(item.name);
+            if (norm.status === "FOUND") {
+              facts.push({
+                rawValue: norm.rawValue,
+                normalizedName: norm.normalizedName,
+                comparisonKey: norm.comparisonKey,
+                status: "FOUND",
+                evidence: [
+                  createContactEvidence({
+                    field: "business_name",
+                    rawValue: norm.rawValue,
+                    normalizedValue: norm.normalizedName,
+                    pageUrl,
+                    evidenceType: "STRUCTURED_PAGE_CONTENT",
+                    evidenceStrength: "DIRECT_PUBLIC_OBSERVATION",
+                    contextSnippet: `JSON-LD Schema ${type}`
+                  })
+                ],
+                provenance: "WEBSITE_DERIVED",
+                sourceContributions: [
+                  {
+                    source: "FUTURE_SOURCE",
+                    provenance: "WEBSITE_DERIVED",
+                    fieldName: "business_name",
+                    acquisitionContext: "WEBSITE_DIRECT",
+                    restrictionBasis: "NONE",
+                    isRestricted: false,
+                    policyStatus: "POLICY_APPROVED",
+                    persistenceStatus: "PERSISTABLE",
+                    exportStatus: "EXPORTABLE"
+                  }
+                ]
+              });
+            }
+          }
+        }
+      }
+    } catch {
+    }
+  }
+  const ogSiteName = decoded.match(/<meta[^>]+property=["']og:site_name["'][^>]+content=["']([^"']+)["']/i);
+  if (ogSiteName && ogSiteName[1]) {
+    const norm = normalizeBusinessNameFact(ogSiteName[1]);
+    if (norm.status === "FOUND") {
+      facts.push({
+        rawValue: norm.rawValue,
+        normalizedName: norm.normalizedName,
+        comparisonKey: norm.comparisonKey,
+        status: "FOUND",
+        evidence: [
+          createContactEvidence({
+            field: "business_name",
+            rawValue: norm.rawValue,
+            normalizedValue: norm.normalizedName,
+            pageUrl,
+            evidenceType: "STRUCTURED_PAGE_CONTENT",
+            evidenceStrength: "DIRECT_PUBLIC_OBSERVATION",
+            contextSnippet: "meta og:site_name"
+          })
+        ],
+        provenance: "WEBSITE_DERIVED",
+        sourceContributions: [
+          {
+            source: "FUTURE_SOURCE",
+            provenance: "WEBSITE_DERIVED",
+            fieldName: "business_name",
+            acquisitionContext: "WEBSITE_DIRECT",
+            restrictionBasis: "NONE",
+            isRestricted: false,
+            policyStatus: "POLICY_APPROVED",
+            persistenceStatus: "PERSISTABLE",
+            exportStatus: "EXPORTABLE"
+          }
+        ]
+      });
+    }
+  }
+  const titleMatch = decoded.match(/<title[^>]*>([^<]+)<\/title>/i);
+  if (titleMatch && titleMatch[1]) {
+    let rawTitle = titleMatch[1].trim();
+    const segments = rawTitle.split(/\s+[-|:•–—]\s+/);
+    const candidateName = segments[0]?.trim() || rawTitle;
+    if (candidateName.length > 2 && candidateName.length < 80) {
+      const norm = normalizeBusinessNameFact(candidateName);
+      if (norm.status === "FOUND") {
+        facts.push({
+          rawValue: norm.rawValue,
+          normalizedName: norm.normalizedName,
+          comparisonKey: norm.comparisonKey,
+          status: "FOUND",
+          evidence: [
+            createContactEvidence({
+              field: "business_name",
+              rawValue: norm.rawValue,
+              normalizedValue: norm.normalizedName,
+              pageUrl,
+              evidenceType: "PAGE_TITLE",
+              evidenceStrength: "DIRECT_PUBLIC_OBSERVATION",
+              contextSnippet: `Title: ${rawTitle}`
+            })
+          ],
+          provenance: "WEBSITE_DERIVED",
+          sourceContributions: [
+            {
+              source: "FUTURE_SOURCE",
+              provenance: "WEBSITE_DERIVED",
+              fieldName: "business_name",
+              acquisitionContext: "WEBSITE_DIRECT",
+              restrictionBasis: "NONE",
+              isRestricted: false,
+              policyStatus: "POLICY_APPROVED",
+              persistenceStatus: "PERSISTABLE",
+              exportStatus: "EXPORTABLE"
+            }
+          ]
+        });
+      }
+    }
+  }
+  return facts;
+}
+function extractPhonesFromHtml(html, pageUrl, countryHint) {
+  const facts = [];
+  const decoded = decodeHtmlEntities(html);
+  const telRegex = /<a\b[^>]*\bhref=["']tel:([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+  const telMatches = decoded.matchAll(telRegex);
+  for (const m of telMatches) {
+    const rawTel = (m[1] || "").trim();
+    const linkBody = sanitizeWebText(m[2] || "");
+    const norm = normalizeBusinessPhone(rawTel, countryHint);
+    if (norm.status === "FOUND" || norm.status === "AMBIGUOUS") {
+      facts.push({
+        rawValue: rawTel,
+        normalizedValue: norm.normalizedValue,
+        e164Format: norm.e164Format,
+        nationalFormat: norm.nationalFormat,
+        countryCode: norm.countryCode,
+        dialCode: norm.dialCode,
+        extension: norm.extension,
+        phoneType: "GENERAL",
+        status: norm.status,
+        evidence: [
+          createContactEvidence({
+            field: "phone",
+            rawValue: rawTel,
+            normalizedValue: norm.normalizedValue,
+            pageUrl,
+            evidenceType: "TEL_LINK",
+            evidenceStrength: "DIRECT_PUBLIC_OBSERVATION",
+            contextSnippet: linkBody || `tel:${rawTel}`
+          })
+        ],
+        provenance: "WEBSITE_DERIVED",
+        sourceContributions: [
+          {
+            source: "FUTURE_SOURCE",
+            provenance: "WEBSITE_DERIVED",
+            fieldName: "phone",
+            acquisitionContext: "WEBSITE_DIRECT",
+            restrictionBasis: "NONE",
+            isRestricted: false,
+            policyStatus: "POLICY_APPROVED",
+            persistenceStatus: "PERSISTABLE",
+            exportStatus: "EXPORTABLE"
+          }
+        ]
+      });
+    }
+  }
+  const jsonLdMatches = decoded.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+  for (const m of jsonLdMatches) {
+    try {
+      const parsed = JSON.parse(m[1].trim());
+      const items = Array.isArray(parsed) ? parsed : [parsed];
+      for (const item of items) {
+        const tels = Array.isArray(item.telephone) ? item.telephone : item.telephone ? [item.telephone] : [];
+        for (const t of tels) {
+          if (typeof t === "string") {
+            const norm = normalizeBusinessPhone(t, countryHint);
+            if (norm.status === "FOUND" || norm.status === "AMBIGUOUS") {
+              facts.push({
+                rawValue: t,
+                normalizedValue: norm.normalizedValue,
+                e164Format: norm.e164Format,
+                nationalFormat: norm.nationalFormat,
+                countryCode: norm.countryCode,
+                dialCode: norm.dialCode,
+                phoneType: "GENERAL",
+                status: norm.status,
+                evidence: [
+                  createContactEvidence({
+                    field: "phone",
+                    rawValue: t,
+                    normalizedValue: norm.normalizedValue,
+                    pageUrl,
+                    evidenceType: "STRUCTURED_PAGE_CONTENT",
+                    evidenceStrength: "DIRECT_PUBLIC_OBSERVATION",
+                    contextSnippet: "JSON-LD schema telephone"
+                  })
+                ],
+                provenance: "WEBSITE_DERIVED",
+                sourceContributions: [
+                  {
+                    source: "FUTURE_SOURCE",
+                    provenance: "WEBSITE_DERIVED",
+                    fieldName: "phone",
+                    acquisitionContext: "WEBSITE_DIRECT",
+                    restrictionBasis: "NONE",
+                    isRestricted: false,
+                    policyStatus: "POLICY_APPROVED",
+                    persistenceStatus: "PERSISTABLE",
+                    exportStatus: "EXPORTABLE"
+                  }
+                ]
+              });
+            }
+          }
+        }
+      }
+    } catch {
+    }
+  }
+  const cleanBody = decoded.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, " ").replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, " ").replace(/<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>/gi, " ").replace(/<[^>]+>/g, " ");
+  const phonePattern = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,5}\b/g;
+  const rawMatches = cleanBody.match(phonePattern) || [];
+  for (const p of rawMatches) {
+    const trimmed = p.trim();
+    const digitCount = (trimmed.match(/\d/g) || []).length;
+    if (digitCount >= 7 && digitCount <= 15) {
+      const norm = normalizeBusinessPhone(trimmed, countryHint);
+      if (norm.status === "FOUND" || norm.status === "AMBIGUOUS") {
+        facts.push({
+          rawValue: trimmed,
+          normalizedValue: norm.normalizedValue,
+          e164Format: norm.e164Format,
+          nationalFormat: norm.nationalFormat,
+          countryCode: norm.countryCode,
+          dialCode: norm.dialCode,
+          phoneType: "GENERAL",
+          status: norm.status,
+          evidence: [
+            createContactEvidence({
+              field: "phone",
+              rawValue: trimmed,
+              normalizedValue: norm.normalizedValue,
+              pageUrl,
+              evidenceType: "VISIBLE_TEXT",
+              evidenceStrength: "DIRECT_PUBLIC_OBSERVATION",
+              contextSnippet: `Visible text: ${trimmed}`
+            })
+          ],
+          provenance: "WEBSITE_DERIVED",
+          sourceContributions: [
+            {
+              source: "FUTURE_SOURCE",
+              provenance: "WEBSITE_DERIVED",
+              fieldName: "phone",
+              acquisitionContext: "WEBSITE_DIRECT",
+              restrictionBasis: "NONE",
+              isRestricted: false,
+              policyStatus: "POLICY_APPROVED",
+              persistenceStatus: "PERSISTABLE",
+              exportStatus: "EXPORTABLE"
+            }
+          ]
+        });
+      }
+    }
+  }
+  return facts;
+}
+function extractEmailsFromHtml(html, pageUrl) {
+  const facts = [];
+  const decoded = decodeHtmlEntities(html);
+  const mailtoRegex = /<a\b[^>]*\bhref=["']mailto:([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+  const mailtoMatches = decoded.matchAll(mailtoRegex);
+  for (const m of mailtoMatches) {
+    const rawMailto = (m[1] || "").trim();
+    const linkBody = sanitizeWebText(m[2] || "");
+    const norm = normalizeBusinessEmail(rawMailto);
+    if (norm.status === "FOUND") {
+      facts.push({
+        rawValue: rawMailto,
+        normalizedEmail: norm.normalizedEmail,
+        localPart: norm.localPart,
+        domainPart: norm.domainPart,
+        emailType: norm.emailType,
+        status: "FOUND",
+        evidence: [
+          createContactEvidence({
+            field: "email",
+            rawValue: rawMailto,
+            normalizedValue: norm.normalizedEmail,
+            pageUrl,
+            evidenceType: "MAILTO_LINK",
+            evidenceStrength: "DIRECT_PUBLIC_OBSERVATION",
+            contextSnippet: linkBody || `mailto:${rawMailto}`
+          })
+        ],
+        provenance: "WEBSITE_DERIVED",
+        sourceContributions: [
+          {
+            source: "FUTURE_SOURCE",
+            provenance: "WEBSITE_DERIVED",
+            fieldName: "email",
+            acquisitionContext: "WEBSITE_DIRECT",
+            restrictionBasis: "NONE",
+            isRestricted: false,
+            policyStatus: "POLICY_APPROVED",
+            persistenceStatus: "PERSISTABLE",
+            exportStatus: "EXPORTABLE"
+          }
+        ]
+      });
+    }
+  }
+  const jsonLdMatches = decoded.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+  for (const m of jsonLdMatches) {
+    try {
+      const parsed = JSON.parse(m[1].trim());
+      const items = Array.isArray(parsed) ? parsed : [parsed];
+      for (const item of items) {
+        const emails = Array.isArray(item.email) ? item.email : item.email ? [item.email] : [];
+        for (const e of emails) {
+          if (typeof e === "string") {
+            const norm = normalizeBusinessEmail(e);
+            if (norm.status === "FOUND") {
+              facts.push({
+                rawValue: e,
+                normalizedEmail: norm.normalizedEmail,
+                localPart: norm.localPart,
+                domainPart: norm.domainPart,
+                emailType: norm.emailType,
+                status: "FOUND",
+                evidence: [
+                  createContactEvidence({
+                    field: "email",
+                    rawValue: e,
+                    normalizedValue: norm.normalizedEmail,
+                    pageUrl,
+                    evidenceType: "STRUCTURED_PAGE_CONTENT",
+                    evidenceStrength: "DIRECT_PUBLIC_OBSERVATION",
+                    contextSnippet: "JSON-LD schema email"
+                  })
+                ],
+                provenance: "WEBSITE_DERIVED",
+                sourceContributions: [
+                  {
+                    source: "FUTURE_SOURCE",
+                    provenance: "WEBSITE_DERIVED",
+                    fieldName: "email",
+                    acquisitionContext: "WEBSITE_DIRECT",
+                    restrictionBasis: "NONE",
+                    isRestricted: false,
+                    policyStatus: "POLICY_APPROVED",
+                    persistenceStatus: "PERSISTABLE",
+                    exportStatus: "EXPORTABLE"
+                  }
+                ]
+              });
+            }
+          }
+        }
+      }
+    } catch {
+    }
+  }
+  const obfuscatedRegex = /\b([a-zA-Z0-9._%+-]+)\s*(?:\[at\]|\(at\)|\[@\]|@)\s*([a-zA-Z0-9.-]+)\s*(?:\[dot\]|\(dot\)|\.)\s*([a-zA-Z]{2,})\b/gi;
+  const obfMatches = decoded.matchAll(obfuscatedRegex);
+  for (const m of obfMatches) {
+    const rawObf = m[0];
+    const deobfuscated = `${m[1]}@${m[2]}.${m[3]}`.toLowerCase();
+    const norm = normalizeBusinessEmail(deobfuscated);
+    if (norm.status === "FOUND") {
+      facts.push({
+        rawValue: rawObf,
+        normalizedEmail: norm.normalizedEmail,
+        localPart: norm.localPart,
+        domainPart: norm.domainPart,
+        emailType: norm.emailType,
+        status: "FOUND",
+        evidence: [
+          createContactEvidence({
+            field: "email",
+            rawValue: rawObf,
+            normalizedValue: norm.normalizedEmail,
+            pageUrl,
+            evidenceType: "VISIBLE_TEXT",
+            evidenceStrength: "DIRECT_PUBLIC_OBSERVATION",
+            contextSnippet: `Deobfuscated text: ${rawObf}`
+          })
+        ],
+        provenance: "WEBSITE_DERIVED",
+        sourceContributions: [
+          {
+            source: "FUTURE_SOURCE",
+            provenance: "WEBSITE_DERIVED",
+            fieldName: "email",
+            acquisitionContext: "WEBSITE_DIRECT",
+            restrictionBasis: "NONE",
+            isRestricted: false,
+            policyStatus: "POLICY_APPROVED",
+            persistenceStatus: "PERSISTABLE",
+            exportStatus: "EXPORTABLE"
+          }
+        ]
+      });
+    }
+  }
+  const cleanBody = decoded.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, " ").replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, " ").replace(/<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>/gi, " ").replace(/<[^>]+>/g, " ");
+  const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g;
+  const rawEmails = cleanBody.match(emailRegex) || [];
+  for (const e of rawEmails) {
+    const norm = normalizeBusinessEmail(e);
+    if (norm.status === "FOUND") {
+      facts.push({
+        rawValue: e,
+        normalizedEmail: norm.normalizedEmail,
+        localPart: norm.localPart,
+        domainPart: norm.domainPart,
+        emailType: norm.emailType,
+        status: "FOUND",
+        evidence: [
+          createContactEvidence({
+            field: "email",
+            rawValue: e,
+            normalizedValue: norm.normalizedEmail,
+            pageUrl,
+            evidenceType: "VISIBLE_TEXT",
+            evidenceStrength: "DIRECT_PUBLIC_OBSERVATION",
+            contextSnippet: `Visible text: ${e}`
+          })
+        ],
+        provenance: "WEBSITE_DERIVED",
+        sourceContributions: [
+          {
+            source: "FUTURE_SOURCE",
+            provenance: "WEBSITE_DERIVED",
+            fieldName: "email",
+            acquisitionContext: "WEBSITE_DIRECT",
+            restrictionBasis: "NONE",
+            isRestricted: false,
+            policyStatus: "POLICY_APPROVED",
+            persistenceStatus: "PERSISTABLE",
+            exportStatus: "EXPORTABLE"
+          }
+        ]
+      });
+    }
+  }
+  return facts;
+}
+function extractLocationsFromHtml(html, pageUrl, countryHint) {
+  const facts = [];
+  const decoded = decodeHtmlEntities(html);
+  const jsonLdMatches = decoded.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+  for (const m of jsonLdMatches) {
+    try {
+      const parsed = JSON.parse(m[1].trim());
+      const items = Array.isArray(parsed) ? parsed : [parsed];
+      for (const item of items) {
+        const addresses = [];
+        if (item["@type"] === "PostalAddress") {
+          addresses.push(item);
+        } else if (item.address) {
+          if (Array.isArray(item.address)) {
+            addresses.push(...item.address);
+          } else {
+            addresses.push(item.address);
+          }
+        }
+        if (item.department && Array.isArray(item.department)) {
+          for (const dep of item.department) {
+            if (dep.address) addresses.push(dep.address);
+          }
+        }
+        for (const addr of addresses) {
+          if (typeof addr === "string") {
+            const norm = normalizeBusinessAddress(addr, countryHint);
+            if (norm.status === "FOUND" || norm.status === "PARTIAL") {
+              facts.push({
+                id: `loc_${pageUrl}_${norm.normalizedAddress.slice(0, 30)}`.replace(/[^a-z0-9]/gi, "_"),
+                rawAddress: addr,
+                normalizedAddress: norm.normalizedAddress,
+                postalCode: norm.postalCode,
+                country: norm.country,
+                status: norm.status,
+                evidence: [
+                  createContactEvidence({
+                    field: "address",
+                    rawValue: addr,
+                    normalizedValue: norm.normalizedAddress,
+                    pageUrl,
+                    evidenceType: "STRUCTURED_PAGE_CONTENT",
+                    evidenceStrength: "DIRECT_PUBLIC_OBSERVATION",
+                    contextSnippet: "JSON-LD schema address"
+                  })
+                ],
+                provenance: "WEBSITE_DERIVED",
+                sourceContributions: [
+                  {
+                    source: "FUTURE_SOURCE",
+                    provenance: "WEBSITE_DERIVED",
+                    fieldName: "address",
+                    acquisitionContext: "WEBSITE_DIRECT",
+                    restrictionBasis: "NONE",
+                    isRestricted: false,
+                    policyStatus: "POLICY_APPROVED",
+                    persistenceStatus: "PERSISTABLE",
+                    exportStatus: "EXPORTABLE"
+                  }
+                ]
+              });
+            }
+          } else if (typeof addr === "object" && addr !== null) {
+            const parts = [
+              addr.streetAddress,
+              addr.addressLocality,
+              addr.addressRegion,
+              addr.postalCode,
+              addr.addressCountry
+            ].filter(Boolean);
+            if (parts.length > 0) {
+              const rawStr = parts.join(", ");
+              const norm = normalizeBusinessAddress(rawStr, countryHint);
+              facts.push({
+                id: `loc_${pageUrl}_${norm.normalizedAddress.slice(0, 30)}`.replace(/[^a-z0-9]/gi, "_"),
+                label: item.name ? String(item.name) : void 0,
+                rawAddress: rawStr,
+                normalizedAddress: norm.normalizedAddress,
+                streetAddress: addr.streetAddress ? String(addr.streetAddress) : void 0,
+                city: addr.addressLocality ? String(addr.addressLocality) : void 0,
+                region: addr.addressRegion ? String(addr.addressRegion) : void 0,
+                postalCode: addr.postalCode ? String(addr.postalCode) : norm.postalCode,
+                country: addr.addressCountry ? String(addr.addressCountry) : norm.country,
+                phone: item.telephone ? String(item.telephone) : void 0,
+                status: norm.status,
+                evidence: [
+                  createContactEvidence({
+                    field: "address",
+                    rawValue: rawStr,
+                    normalizedValue: norm.normalizedAddress,
+                    pageUrl,
+                    evidenceType: "STRUCTURED_PAGE_CONTENT",
+                    evidenceStrength: "DIRECT_PUBLIC_OBSERVATION",
+                    contextSnippet: "JSON-LD PostalAddress"
+                  })
+                ],
+                provenance: "WEBSITE_DERIVED",
+                sourceContributions: [
+                  {
+                    source: "FUTURE_SOURCE",
+                    provenance: "WEBSITE_DERIVED",
+                    fieldName: "address",
+                    acquisitionContext: "WEBSITE_DIRECT",
+                    restrictionBasis: "NONE",
+                    isRestricted: false,
+                    policyStatus: "POLICY_APPROVED",
+                    persistenceStatus: "PERSISTABLE",
+                    exportStatus: "EXPORTABLE"
+                  }
+                ]
+              });
+            }
+          }
+        }
+      }
+    } catch {
+    }
+  }
+  const addressRegex = /<address\b[^>]*>([\s\S]*?)<\/address>/gi;
+  const addressMatches = decoded.matchAll(addressRegex);
+  for (const m of addressMatches) {
+    const rawTag = m[1];
+    const textOnly = sanitizeWebText(rawTag);
+    if (textOnly && textOnly.length >= 8) {
+      const norm = normalizeBusinessAddress(textOnly, countryHint);
+      if (norm.status === "FOUND" || norm.status === "PARTIAL") {
+        facts.push({
+          id: `loc_${pageUrl}_${norm.normalizedAddress.slice(0, 30)}`.replace(/[^a-z0-9]/gi, "_"),
+          rawAddress: textOnly,
+          normalizedAddress: norm.normalizedAddress,
+          postalCode: norm.postalCode,
+          country: norm.country,
+          status: norm.status,
+          evidence: [
+            createContactEvidence({
+              field: "address",
+              rawValue: textOnly,
+              normalizedValue: norm.normalizedAddress,
+              pageUrl,
+              evidenceType: "VISIBLE_TEXT",
+              evidenceStrength: "DIRECT_PUBLIC_OBSERVATION",
+              contextSnippet: `<address> tag: ${textOnly.slice(0, 100)}`
+            })
+          ],
+          provenance: "WEBSITE_DERIVED",
+          sourceContributions: [
+            {
+              source: "FUTURE_SOURCE",
+              provenance: "WEBSITE_DERIVED",
+              fieldName: "address",
+              acquisitionContext: "WEBSITE_DIRECT",
+              restrictionBasis: "NONE",
+              isRestricted: false,
+              policyStatus: "POLICY_APPROVED",
+              persistenceStatus: "PERSISTABLE",
+              exportStatus: "EXPORTABLE"
+            }
+          ]
+        });
+      }
+    }
+  }
+  return facts;
+}
+function extractContactFormsFromHtml(html, pageUrl) {
+  const forms = [];
+  const decoded = decodeHtmlEntities(html);
+  const formRegex = /<form\b([^>]*)>([\s\S]*?)<\/form>/gi;
+  const matches = decoded.matchAll(formRegex);
+  let formIndex = 0;
+  for (const m of matches) {
+    formIndex++;
+    const formAttrs = m[1] || "";
+    const formBody = m[2] || "";
+    const actionMatch = formAttrs.match(/\baction=["']([^"']*)["']/i);
+    const methodMatch = formAttrs.match(/\bmethod=["']([^"']*)["']/i);
+    const idMatch = formAttrs.match(/\b(?:id|name)=["']([^"']*)["']/i);
+    const action = actionMatch ? actionMatch[1].trim() : void 0;
+    const method = methodMatch ? methodMatch[1].trim().toUpperCase() : "GET";
+    const formId = idMatch ? idMatch[1].trim() : void 0;
+    const lowerAttrs = formAttrs.toLowerCase();
+    const lowerBody = formBody.toLowerCase();
+    const hasEmailField = /type=["']email["']|name=["'][^"']*(?:email|e-mail)[^"']*["']/i.test(formBody);
+    const hasPhoneField = /type=["']tel["']|name=["'][^"']*(?:phone|tel|mobile)[^"']*["']/i.test(formBody);
+    const hasMessageField = /<textarea\b|name=["'][^"']*(?:message|comment|inquiry|body)[^"']*["']/i.test(formBody);
+    const isContactIntent = lowerAttrs.includes("contact") || lowerAttrs.includes("feedback") || lowerAttrs.includes("inquiry") || lowerAttrs.includes("get-in-touch") || lowerBody.includes("send message") || lowerBody.includes("submit inquiry") || lowerBody.includes("contact us") || hasMessageField || hasEmailField && (hasPhoneField || lowerBody.includes("name"));
+    const isSearchOnly = lowerAttrs.includes("search") || lowerBody.includes("search") && !hasMessageField && !hasEmailField;
+    if (isContactIntent && !isSearchOnly) {
+      const factId = `form_${pageUrl}_${formIndex}`.replace(/[^a-z0-9]/gi, "_");
+      forms.push({
+        id: factId,
+        present: true,
+        pageUrl,
+        formAction: action,
+        formMethod: method,
+        formIdOrName: formId,
+        hasEmailField,
+        hasPhoneField,
+        hasMessageField,
+        evidence: [
+          createContactEvidence({
+            field: "contact_form",
+            rawValue: `form_${formId || formIndex}`,
+            normalizedValue: action || pageUrl,
+            pageUrl,
+            evidenceType: "CONTACT_FORM",
+            evidenceStrength: "DIRECT_PUBLIC_OBSERVATION",
+            contextSnippet: `Contact form detected (method=${method}, hasEmail=${hasEmailField}, hasMessage=${hasMessageField})`
+          })
+        ],
+        provenance: "WEBSITE_DERIVED",
+        sourceContributions: [
+          {
+            source: "FUTURE_SOURCE",
+            provenance: "WEBSITE_DERIVED",
+            fieldName: "contact_form",
+            acquisitionContext: "WEBSITE_DIRECT",
+            restrictionBasis: "NONE",
+            isRestricted: false,
+            policyStatus: "POLICY_APPROVED",
+            persistenceStatus: "PERSISTABLE",
+            exportStatus: "EXPORTABLE"
+          }
+        ]
+      });
+    }
+  }
+  return forms;
+}
+function extractContactsFromHtmlPage(html, pageUrl, countryHint) {
+  const rawBusinessNames = extractBusinessNamesFromHtml(html, pageUrl);
+  const rawPhones = extractPhonesFromHtml(html, pageUrl, countryHint);
+  const rawEmails = extractEmailsFromHtml(html, pageUrl);
+  const rawLocations = extractLocationsFromHtml(html, pageUrl, countryHint);
+  const rawContactForms = extractContactFormsFromHtml(html, pageUrl);
+  return {
+    businessNames: rawBusinessNames,
+    phones: deduplicatePhones(rawPhones),
+    emails: deduplicateEmails(rawEmails),
+    locations: deduplicateLocations(rawLocations),
+    contactForms: deduplicateContactForms(rawContactForms)
+  };
+}
+
+// src/extension/enrichment/digitalPresenceExtractor.ts
+var PLATFORM_PATTERNS = [
+  {
+    platform: "FACEBOOK",
+    hostPatterns: ["facebook.com", "fb.com", "fb.me", "m.facebook.com"],
+    bannedPaths: ["/sharer", "/share", "/dialog", "/login", "/signup", "/help", "/policy"]
+  },
+  {
+    platform: "INSTAGRAM",
+    hostPatterns: ["instagram.com", "instagr.am"],
+    bannedPaths: ["/accounts", "/explore", "/developer", "/about"]
+  },
+  {
+    platform: "LINKEDIN",
+    hostPatterns: ["linkedin.com"],
+    bannedPaths: ["/sharearticle", "/sharing", "/share", "/login", "/signup", "/help", "/legal"]
+  },
+  {
+    platform: "YOUTUBE",
+    hostPatterns: ["youtube.com", "youtu.be"],
+    bannedPaths: ["/watch", "/embed", "/results", "/feed", "/t/terms", "/howyoutubeworks"]
+  },
+  {
+    platform: "TIKTOK",
+    hostPatterns: ["tiktok.com"],
+    bannedPaths: ["/share", "/login", "/tag", "/legal"]
+  },
+  {
+    platform: "TWITTER_X",
+    hostPatterns: ["twitter.com", "x.com", "t.co"],
+    bannedPaths: ["/intent", "/share", "/home", "/login", "/privacy", "/tos"]
+  },
+  {
+    platform: "GITHUB",
+    hostPatterns: ["github.com"],
+    bannedPaths: ["/login", "/join", "/features", "/pricing", "/about"]
+  },
+  {
+    platform: "PINTEREST",
+    hostPatterns: ["pinterest.com"],
+    bannedPaths: ["/pin/create", "/resource", "/about", "/business"]
+  }
+];
+function extractDigitalPresenceFromHtml(html, pageUrl) {
+  const facts = [];
+  const normHtml = html || "";
+  const anchorRegex = /<a\b[^>]*\bhref=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+  const matches = normHtml.matchAll(anchorRegex);
+  for (const m of matches) {
+    const rawHref = (m[1] || "").trim();
+    const anchorBody = (m[2] || "").trim();
+    if (!rawHref || rawHref.startsWith("#") || rawHref.startsWith("mailto:") || rawHref.startsWith("tel:") || rawHref.startsWith("javascript:")) {
+      continue;
+    }
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(rawHref, pageUrl);
+    } catch {
+      continue;
+    }
+    const host = parsedUrl.hostname.toLowerCase().replace(/^www\./, "");
+    const pathname = parsedUrl.pathname.toLowerCase();
+    for (const pat of PLATFORM_PATTERNS) {
+      if (pat.hostPatterns.some((p) => host === p || host.endsWith(`.${p}`))) {
+        if (pat.bannedPaths.some((bp) => pathname.startsWith(bp) || pathname.includes(bp))) {
+          continue;
+        }
+        const cleanPath = pathname.replace(/^\/+/, "").replace(/\/+$/, "");
+        if (!cleanPath) {
+          continue;
+        }
+        const norm = normalizeSocialUrl(parsedUrl.toString());
+        if (!norm.isValid || norm.isShareWidget) {
+          continue;
+        }
+        const snippet = anchorBody.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() || `${pat.platform} profile link`;
+        const evidence = createContactEvidence({
+          field: "social",
+          rawValue: rawHref,
+          normalizedValue: norm.normalizedUrl,
+          pageUrl,
+          evidenceType: "ANCHOR_LINK",
+          evidenceStrength: "DIRECT_PUBLIC_OBSERVATION",
+          contextSnippet: snippet.slice(0, 150)
+        });
+        facts.push({
+          platform: pat.platform,
+          rawUrl: rawHref,
+          normalizedUrl: norm.normalizedUrl,
+          domain: norm.domain,
+          handleOrPath: norm.handleOrPath,
+          pageObserved: pageUrl,
+          status: "FOUND",
+          evidence: [evidence],
+          provenance: "WEBSITE_DERIVED",
+          sourceContributions: [
+            {
+              source: "FUTURE_SOURCE",
+              provenance: "WEBSITE_DERIVED",
+              fieldName: `social_${pat.platform.toLowerCase()}`,
+              acquisitionContext: "WEBSITE_DIRECT",
+              restrictionBasis: "NONE",
+              isRestricted: false,
+              policyStatus: "POLICY_APPROVED",
+              persistenceStatus: "PERSISTABLE",
+              exportStatus: "EXPORTABLE"
+            }
+          ]
+        });
+        break;
+      }
+    }
+  }
+  return facts;
+}
+
+// src/extension/websiteIntelligence/websiteIntelligenceEngine.ts
+var defaultObservationCache = new BoundedObservationCache({
+  maxEntries: DEFAULT_MAX_CACHE_ENTRIES,
+  maxBytes: DEFAULT_MAX_CACHE_BYTES,
+  defaultTtlMs: DEFAULT_CACHE_TTL_MS
+});
+var WebsiteIntelligenceEngine = class {
+  constructor(customCache) {
+    this.isCancelled = false;
+    this.activeAbortController = null;
+    this._lastFailedPages = [];
+    this._lastDiscoveredCount = 0;
+    this.observationCache = customCache || defaultObservationCache;
+  }
+  /**
+   * Diagnostic cache stats.
+   */
+  getCacheStats() {
+    return this.observationCache.getStats();
+  }
+  /**
+   * Clears the observation cache.
+   */
+  clearCache() {
+    this.observationCache.clear();
+  }
+  /**
+   * Returns internal bounded observation cache instance.
+   */
+  getObservationCache() {
+    return this.observationCache;
+  }
+  /**
+   * Cleans and formats plain text from HTML, stripping script, style, and HTML tags.
+   */
+  cleanText(raw) {
+    return (raw || "").replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "").replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "").replace(/<[^>]*>/g, "").normalize("NFC").replace(/\s+/g, " ").trim();
+  }
+  /**
+   * Verifies the target domain reachability and basic business identity matching.
+   */
+  async verifyDomain(input) {
+    const safety = validateSafeWebUrl(input.targetUrl);
+    if (!safety.isSafe) {
+      return "INVALID";
+    }
+    return "VERIFIED";
+  }
+  /**
+   * Executes bounded, cancellable same-origin crawl up to maxPages (default 5).
+   */
+  async crawl(input, customFetch) {
+    const cfg = input.config || {};
+    const maxPages = cfg.maxPages ?? DEFAULT_MAX_PAGES_PER_DOMAIN;
+    const pageTimeoutMs = cfg.pageTimeoutMs ?? DEFAULT_MAX_PAGE_TIMEOUT_MS;
+    const domainTimeoutMs = cfg.domainTimeoutMs ?? DEFAULT_MAX_DOMAIN_TIMEOUT_MS;
+    const maxDocBytes = cfg.maxDocumentBytes ?? DEFAULT_MAX_DOCUMENT_BYTES;
+    const safety = validateSafeWebUrl(input.targetUrl);
+    if (!safety.isSafe || !safety.normalizedUrl) {
+      throw new Error(`[WebsiteIntelligenceEngine] Invalid target URL: ${safety.reason}`);
+    }
+    const rootUrl = safety.normalizedUrl;
+    const baseOrigin = new URL(rootUrl).origin;
+    const startTime = Date.now();
+    const fetchedPages = [];
+    const visitedUrls = /* @__PURE__ */ new Set();
+    this.activeAbortController = new AbortController();
+    const MAX_REDIRECTS = 5;
+    const safeFetchWithRedirects = async (initialUrl, timeoutMs) => {
+      let currentUrl = initialUrl;
+      let hops = 0;
+      while (hops <= MAX_REDIRECTS) {
+        const hopSafety = validateSafeWebUrl(currentUrl);
+        if (!hopSafety.isSafe) {
+          throw new Error(`[WebsiteIntelligenceEngine] SSRF blocked destination: ${hopSafety.reason}`);
+        }
+        if (!isSafeSameOrigin(currentUrl, baseOrigin)) {
+          throw new Error(`[WebsiteIntelligenceEngine] Cross-origin crawl target blocked: ${currentUrl}`);
+        }
+        let status = 0;
+        let html = "";
+        let locationHeader;
+        if (customFetch) {
+          const res = await customFetch(currentUrl, timeoutMs);
+          status = res.status;
+          html = res.html || "";
+          locationHeader = res.headers?.location || res.headers?.Location || res.redirectUrl || res.location;
+        } else {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), timeoutMs);
+          const cancelListener = () => controller.abort();
+          this.activeAbortController?.signal.addEventListener("abort", cancelListener);
+          try {
+            const resp = await fetch(currentUrl, {
+              method: "GET",
+              headers: { Accept: "text/html,application/xhtml+xml" },
+              redirect: "manual",
+              // Enforce manual per-hop redirect validation
+              signal: controller.signal
+            });
+            clearTimeout(timer);
+            this.activeAbortController?.signal.removeEventListener("abort", cancelListener);
+            status = resp.status;
+            locationHeader = resp.headers.get("location") || void 0;
+            if (status < 300 || status >= 400 || !locationHeader) {
+              html = await resp.text();
+            }
+          } catch (err) {
+            clearTimeout(timer);
+            this.activeAbortController?.signal.removeEventListener("abort", cancelListener);
+            throw err;
+          }
+        }
+        if (status >= 300 && status < 400 && locationHeader) {
+          const redirectValidation = validateRedirectHop(locationHeader, currentUrl, baseOrigin);
+          if (!redirectValidation.isSafe || !redirectValidation.resolvedUrl) {
+            throw new Error(
+              `[WebsiteIntelligenceEngine] Blocked unsafe redirect: ${redirectValidation.reason}`
+            );
+          }
+          currentUrl = redirectValidation.resolvedUrl;
+          hops++;
+          continue;
+        }
+        if (html.length > maxDocBytes) {
+          html = html.slice(0, maxDocBytes);
+        }
+        return { status, html, finalUrl: currentUrl };
+      }
+      throw new Error("[WebsiteIntelligenceEngine] Exceeded maximum redirect hops (5)");
+    };
+    this._lastFailedPages = [];
+    this._lastDiscoveredCount = 0;
+    let homepageHtml = "";
+    try {
+      if (this.isCancelled) return fetchedPages;
+      const homeRes = await safeFetchWithRedirects(rootUrl, pageTimeoutMs);
+      homepageHtml = homeRes.html;
+      visitedUrls.add(homeRes.finalUrl.replace(/\/$/, ""));
+      fetchedPages.push({ url: homeRes.finalUrl, html: homeRes.html, status: homeRes.status });
+    } catch {
+      return fetchedPages;
+    }
+    const candidateLinks = extractCandidateLinksFromHtml(homepageHtml, rootUrl);
+    const discoveryPlan = buildDiscoveryPlan(rootUrl, candidateLinks, maxPages);
+    this._lastDiscoveredCount = 1 + discoveryPlan.length;
+    for (const pageUrl of discoveryPlan) {
+      if (this.isCancelled) break;
+      if (Date.now() - startTime >= domainTimeoutMs) break;
+      if (fetchedPages.length >= maxPages) break;
+      const normUrl = pageUrl.replace(/\/$/, "");
+      if (visitedUrls.has(normUrl)) continue;
+      visitedUrls.add(normUrl);
+      try {
+        const pageRes = await safeFetchWithRedirects(pageUrl, pageTimeoutMs);
+        fetchedPages.push({ url: pageRes.finalUrl, html: pageRes.html, status: pageRes.status });
+      } catch {
+        this._lastFailedPages.push(pageUrl);
+      }
+    }
+    return fetchedPages;
+  }
+  /**
+   * Extracts multi-page business intelligence from crawled HTML pages.
+   */
+  extract(pages, input) {
+    const allPhones = [];
+    const allEmails = [];
+    const allLocations = [];
+    const allSocial = [];
+    const allPeople = [];
+    const allServices = [];
+    const allDescriptions = [];
+    const allTech = [];
+    const allForms = [];
+    const allEvidence = [];
+    let canonicalUrl = input.targetUrl;
+    let pageTitle = "";
+    let metaDescription = "";
+    let businessName;
+    let businessHours;
+    const serviceAreas = /* @__PURE__ */ new Set();
+    const categories = /* @__PURE__ */ new Set();
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i];
+      const isHome = i === 0;
+      if (isHome) {
+        const tMatch = page.html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+        if (tMatch) pageTitle = this.cleanText(tMatch[1]);
+        let mMatch = page.html.match(/<meta[^>]+(?:name|property)=["'](?:description|og:description)["'][^>]+content=["']([^"']+)["']/i);
+        if (!mMatch) {
+          mMatch = page.html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+(?:name|property)=["'](?:description|og:description)["']/i);
+        }
+        if (mMatch) {
+          metaDescription = this.cleanText(mMatch[1]);
+          allDescriptions.push({
+            text: metaDescription,
+            sourceType: "META_DESC",
+            sourceUrl: page.url,
+            observedAt: (/* @__PURE__ */ new Date()).toISOString(),
+            provenance: "WEBSITE_DERIVED"
+          });
+        }
+        const canonMatch = page.html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
+        if (canonMatch) canonicalUrl = canonMatch[1].trim();
+      }
+      const pageContacts = extractContactsFromHtmlPage(page.html, page.url);
+      allPhones.push(...pageContacts.phones);
+      allEmails.push(...pageContacts.emails);
+      allLocations.push(...pageContacts.locations);
+      allForms.push(...pageContacts.contactForms);
+      if (pageContacts.businessNames.length > 0 && !businessName) {
+        businessName = pageContacts.businessNames[0].normalizedName;
+      }
+      const social = extractDigitalPresenceFromHtml(page.html, page.url);
+      allSocial.push(...social);
+      if (input.config?.collectPeople !== false) {
+        const people = extractPublicPeople(page.html, page.url);
+        allPeople.push(...people);
+      }
+      if (input.config?.collectServices !== false) {
+        const services = extractPublicServices(page.html, page.url);
+        allServices.push(...services);
+      }
+      if (input.config?.detectTechnology !== false) {
+        const tech = detectTechnologiesInHtml(page.html);
+        for (const t of tech) {
+          if (!allTech.some((existing) => existing.name === t.name)) {
+            allTech.push(t);
+          }
+        }
+      }
+      const ldMatches = page.html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+      for (const m of ldMatches) {
+        try {
+          const parsed = JSON.parse(m[1].trim());
+          const items = Array.isArray(parsed) ? parsed : [parsed];
+          for (const item of items) {
+            if (!item || typeof item !== "object") continue;
+            if (item.description && typeof item.description === "string" && !allDescriptions.some((d) => d.text === item.description)) {
+              allDescriptions.push({
+                text: this.cleanText(item.description),
+                sourceType: "STRUCTURED_DATA",
+                sourceUrl: page.url,
+                observedAt: (/* @__PURE__ */ new Date()).toISOString(),
+                provenance: "WEBSITE_DERIVED"
+              });
+            }
+            if (item.openingHours && !businessHours) {
+              businessHours = Array.isArray(item.openingHours) ? item.openingHours.join(", ") : String(item.openingHours);
+            }
+            if (item.areaServed) {
+              const areas = Array.isArray(item.areaServed) ? item.areaServed : [item.areaServed];
+              for (const a of areas) {
+                const name = typeof a === "string" ? a : a?.name;
+                if (typeof name === "string") serviceAreas.add(this.cleanText(name));
+              }
+            }
+          }
+        } catch {
+        }
+      }
+    }
+    const dedupedPhones = deduplicatePhones(allPhones);
+    const dedupedEmails = deduplicateEmails(allEmails);
+    const dedupedLocations = deduplicateLocations(allLocations);
+    for (const p of dedupedPhones) allEvidence.push(...p.evidence);
+    for (const e of dedupedEmails) allEvidence.push(...e.evidence);
+    for (const l of dedupedLocations) allEvidence.push(...l.evidence);
+    const uniquePeople = [];
+    for (const p of allPeople) {
+      if (!uniquePeople.some((u) => u.fullName.toLowerCase() === p.fullName.toLowerCase())) {
+        uniquePeople.push(p);
+      }
+    }
+    const uniqueServices = [];
+    for (const s of allServices) {
+      if (!uniqueServices.some((u) => u.name.toLowerCase() === s.name.toLowerCase())) {
+        uniqueServices.push(s);
+      }
+    }
+    const uniqueSocial = [];
+    for (const s of allSocial) {
+      if (!uniqueSocial.some((u) => u.platform === s.platform && u.normalizedUrl === s.normalizedUrl)) {
+        uniqueSocial.push(s);
+      }
+    }
+    const domain = new URL(canonicalUrl).hostname.toLowerCase().replace(/^www\./, "");
+    const identity = {
+      canonicalUrl,
+      domain,
+      pageTitle,
+      businessName,
+      description: allDescriptions[0]?.text,
+      metaDescription,
+      address: dedupedLocations[0]?.normalizedAddress,
+      phones: dedupedPhones.map((p) => p.normalizedValue),
+      emails: dedupedEmails.map((e) => e.normalizedEmail),
+      businessHours,
+      serviceAreas: Array.from(serviceAreas),
+      services: uniqueServices.map((s) => s.name),
+      categories: Array.from(categories)
+    };
+    return {
+      identity,
+      phones: dedupedPhones,
+      emails: dedupedEmails,
+      locations: dedupedLocations,
+      socialProfiles: uniqueSocial,
+      people: uniquePeople,
+      services: uniqueServices,
+      descriptions: allDescriptions,
+      technologies: allTech,
+      contactForms: allForms,
+      allEvidence
+    };
+  }
+  /**
+   * Applies source restrictions and emits final structured WebsiteIntelligenceResult.
+   *
+   * MANDATORY GOOGLE INVARIANT:
+   * If sourceContext is GOOGLE_MAPS or carries Google restrictions,
+   * all resulting source contributions enforce NOT_PERSISTABLE and NOT_EXPORTABLE,
+   * preventing any circumvention of Google data restrictions.
+   */
+  emitEvidence(extracted, input, crawlStats) {
+    const isGoogleRestricted = input.sourceContext === "GOOGLE_MAPS" || input.provenanceContext === "GOOGLE_DERIVED" || input.sourceRestrictions?.isRestricted === true;
+    const conflicts = detectAllConflicts(
+      extracted.phones,
+      extracted.locations,
+      extracted.emails
+    );
+    const sourceContributions = [];
+    const makeContribution = (fieldName, provenance) => {
+      if (isGoogleRestricted) {
+        return {
+          source: "GOOGLE_MAPS",
+          provenance: "GOOGLE_DERIVED",
+          fieldName,
+          acquisitionContext: "GOOGLE_CONSUMER_WEB",
+          restrictionBasis: "GOOGLE_CONSUMER_WEB_RESTRICTED",
+          isRestricted: true,
+          policyStatus: "PRODUCT_REJECTED",
+          persistenceStatus: "NOT_PERSISTABLE",
+          exportStatus: "NOT_EXPORTABLE"
+        };
+      }
+      let sourceVal = "FUTURE_SOURCE";
+      if (input.sourceContext === "META" || input.sourceContext === "META_AD_LIBRARY") {
+        sourceVal = "META_AD_LIBRARY";
+      } else if (input.sourceContext === "USER_PROVIDED" || input.sourceContext === "USER_PROVIDED_DOMAIN") {
+        sourceVal = "USER_PROVIDED_DOMAIN";
+      }
+      return {
+        source: sourceVal,
+        provenance,
+        fieldName,
+        acquisitionContext: "WEBSITE_DIRECT",
+        restrictionBasis: "NONE",
+        isRestricted: false,
+        policyStatus: "POLICY_APPROVED",
+        persistenceStatus: "PERSISTABLE",
+        exportStatus: "EXPORTABLE"
+      };
+    };
+    sourceContributions.push(makeContribution("website_identity", "WEBSITE_DERIVED"));
+    sourceContributions.push(makeContribution("contact_details", "WEBSITE_DERIVED"));
+    if (extracted.technologies.length > 0) {
+      sourceContributions.push(makeContribution("technology_signals", "LEADNORIA_DERIVED"));
+    }
+    let verificationState = "VERIFIED";
+    if (crawlStats.pagesVisited.length === 0) {
+      verificationState = "UNREACHABLE";
+    } else if (extracted.identity.businessName && input.businessContext?.expectedName) {
+      const expected = input.businessContext.expectedName.toLowerCase();
+      const observed = extracted.identity.businessName.toLowerCase();
+      if (!observed.includes(expected) && !expected.includes(observed)) {
+        verificationState = "LIKELY";
+      }
+    }
+    return {
+      identity: extracted.identity,
+      contacts: extracted.allEvidence,
+      phones: extracted.phones,
+      emails: extracted.emails,
+      socialProfiles: extracted.socialProfiles,
+      publicPeople: extracted.people,
+      address: extracted.locations[0],
+      services: extracted.services,
+      description: extracted.descriptions[0],
+      businessHours: extracted.identity.businessHours,
+      technologySignals: extracted.technologies,
+      contactForms: extracted.contactForms,
+      sourcePages: crawlStats.pagesVisited,
+      crawlStats,
+      verificationState,
+      conflicts,
+      warnings: [],
+      provenance: isGoogleRestricted ? "GOOGLE_DERIVED" : "WEBSITE_DERIVED",
+      sourceContributions,
+      observedAt: (/* @__PURE__ */ new Date()).toISOString()
+    };
+  }
+  /**
+   * Main end-to-end processing pipeline for a target website.
+   * Performs verify -> crawl -> extract -> emit with isolated neutral observation caching.
+   *
+   * BLOCKER A & B ENFORCEMENT:
+   * 1. Caches only neutral observations (extracted facts, crawl stats).
+   * 2. Keyed by normalized origin + path scope + crawl config.
+   * 3. Dynamically re-binds provenance and restrictions to current request on cache hit.
+   * 4. Enforces bounded memory limits via BoundedObservationCache (MAX_CACHE_ENTRIES, MAX_CACHE_BYTES).
+   */
+  async process(input, customFetch) {
+    const safety = validateSafeWebUrl(input.targetUrl);
+    if (!safety.isSafe || !safety.normalizedUrl) {
+      throw new Error(`[WebsiteIntelligenceEngine] Rejected unsafe URL: ${safety.reason}`);
+    }
+    const cacheKey = generateObservationCacheKey(input.targetUrl, input.config);
+    const cacheTtl = input.config?.cacheTtlMs ?? DEFAULT_CACHE_TTL_MS;
+    const cachedPayload = this.observationCache.get(cacheKey);
+    if (cachedPayload) {
+      const crawlStats2 = {
+        ...cachedPayload.crawlStats,
+        fromCache: true
+      };
+      return this.emitEvidence(cachedPayload.extracted, input, crawlStats2);
+    }
+    const startTime = Date.now();
+    const pages = await this.crawl(input, customFetch);
+    const crawlStats = {
+      pagesDiscovered: Math.max(pages.length, this._lastDiscoveredCount),
+      pagesVisited: pages.map((p) => p.url),
+      pagesSkipped: [],
+      pagesFailed: [...this._lastFailedPages],
+      durationMs: Date.now() - startTime,
+      fromCache: false
+    };
+    const extracted = this.extract(pages, input);
+    if (pages.length > 0) {
+      const domain = safety.parsedUrl?.hostname.toLowerCase().replace(/^www\./, "") || "";
+      const neutralPayload = {
+        targetOrigin: safety.parsedUrl?.origin || input.targetUrl,
+        targetUrl: input.targetUrl,
+        canonicalUrl: extracted.identity.canonicalUrl,
+        domain,
+        scopeKey: cacheKey,
+        configHash: JSON.stringify(input.config || {}),
+        extractedAt: (/* @__PURE__ */ new Date()).toISOString(),
+        extracted,
+        crawlStats
+      };
+      this.observationCache.set(cacheKey, neutralPayload, cacheTtl);
+    }
+    return this.emitEvidence(extracted, input, crawlStats);
+  }
+  /**
+   * Cancels any in-flight crawl requests.
+   */
+  cancel() {
+    this.isCancelled = true;
+    this.activeAbortController?.abort();
+  }
+  /**
+   * Disposes engine resources.
+   */
+  dispose() {
+    this.cancel();
+    this.activeAbortController = null;
+  }
+};
+
+// src/extension/contactIntelligence/emailIntelligence.ts
+var ROLE_PREFIXES = /* @__PURE__ */ new Set([
+  "sales",
+  "support",
+  "admin",
+  "administrator",
+  "billing",
+  "accounts",
+  "accounting",
+  "jobs",
+  "career",
+  "careers",
+  "marketing",
+  "hr",
+  "humanresources",
+  "media",
+  "press",
+  "legal",
+  "security",
+  "compliance",
+  "finance",
+  "dev",
+  "engineering",
+  "operations",
+  "ops"
+]);
+var GENERIC_PREFIXES = /* @__PURE__ */ new Set([
+  "info",
+  "hello",
+  "hi",
+  "contact",
+  "contactus",
+  "office",
+  "mail",
+  "help",
+  "inquiry",
+  "inquiries",
+  "enquiry",
+  "enquiries",
+  "team",
+  "general",
+  "service",
+  "services",
+  "reception",
+  "frontdesk",
+  "desk"
+]);
+var FORBIDDEN_EXTENSIONS = /* @__PURE__ */ new Set([
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".svg",
+  ".webp",
+  ".css",
+  ".js",
+  ".pdf",
+  ".zip"
+]);
+function processEmailIntelligence(rawEmail, sourceUrlOrDomain, domainOrContext, maybeContext) {
+  if (!rawEmail || typeof rawEmail !== "string") {
+    return null;
+  }
+  if (/[\x00-\x1F\x7F]/.test(rawEmail)) {
+    return null;
+  }
+  let targetDomain = domainOrContext;
+  let sourceUrl = "";
+  let context = maybeContext || "VISIBLE_TEXT";
+  if (sourceUrlOrDomain) {
+    if (sourceUrlOrDomain.startsWith("http://") || sourceUrlOrDomain.startsWith("https://")) {
+      sourceUrl = sourceUrlOrDomain;
+      if (!targetDomain) {
+        try {
+          targetDomain = new URL(sourceUrlOrDomain).hostname;
+        } catch {
+        }
+      }
+    } else {
+      targetDomain = sourceUrlOrDomain;
+      if (domainOrContext) {
+        context = domainOrContext;
+      }
+    }
+  }
+  const isMailto = /^mailto:/i.test(rawEmail);
+  let trimmed = rawEmail.normalize("NFC").replace(/^mailto:/i, "").split("?")[0].trim();
+  if (trimmed.startsWith("<") && trimmed.endsWith(">")) {
+    trimmed = trimmed.slice(1, -1).trim();
+  }
+  if (!trimmed || trimmed.length > 254) {
+    return null;
+  }
+  const lower = trimmed.toLowerCase();
+  for (const ext of FORBIDDEN_EXTENSIONS) {
+    if (lower.endsWith(ext)) {
+      return null;
+    }
+  }
+  if (/[<>{}]|script|javascript/i.test(trimmed)) {
+    return null;
+  }
+  let inQuotes = false;
+  let escaped = false;
+  let separatorIndex = -1;
+  for (let i = 0; i < trimmed.length; i++) {
+    const ch = trimmed[i];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (ch === "\\") {
+      if (inQuotes) {
+        escaped = true;
+      } else {
+        return null;
+      }
+    } else if (ch === '"') {
+      inQuotes = !inQuotes;
+    } else if (ch === "@" && !inQuotes) {
+      separatorIndex = i;
+      break;
+    }
+  }
+  if (inQuotes || escaped || separatorIndex <= 0 || separatorIndex >= trimmed.length - 1) {
+    return null;
+  }
+  const localPart = trimmed.slice(0, separatorIndex);
+  const rawDomainPart = trimmed.slice(separatorIndex + 1);
+  if (!localPart || localPart.length > 64) {
+    return null;
+  }
+  if (localPart.startsWith('"')) {
+    if (!localPart.endsWith('"') || localPart.length < 2) {
+      return null;
+    }
+    let innerEscaped = false;
+    const inner = localPart.slice(1, -1);
+    for (let i = 0; i < inner.length; i++) {
+      const c = inner[i];
+      if (innerEscaped) {
+        innerEscaped = false;
+      } else if (c === "\\") {
+        innerEscaped = true;
+      } else if (c === '"') {
+        return null;
+      } else if (/[\x00-\x1F\x7F]/.test(c)) {
+        return null;
+      }
+    }
+    if (innerEscaped) {
+      return null;
+    }
+  } else {
+    if (/\s/.test(localPart)) {
+      return null;
+    }
+    if (localPart.startsWith(".") || localPart.endsWith(".") || localPart.includes("..") || localPart.includes("@")) {
+      return null;
+    }
+    if (!/^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~.-]+$/.test(localPart)) {
+      return null;
+    }
+  }
+  if (!rawDomainPart || rawDomainPart.length > 255) {
+    return null;
+  }
+  if (rawDomainPart.includes("@") || /\s|[\x00-\x1F\x7F]/.test(rawDomainPart)) {
+    return null;
+  }
+  if (rawDomainPart.startsWith(".") || rawDomainPart.endsWith(".") || rawDomainPart.includes("..")) {
+    return null;
+  }
+  const labels = rawDomainPart.split(".");
+  if (labels.length < 2) {
+    return null;
+  }
+  for (const label of labels) {
+    if (!label || label.length > 63) {
+      return null;
+    }
+    if (label.startsWith("-") || label.endsWith("-")) {
+      return null;
+    }
+    if (!/^[\p{L}\p{N}](?:[\p{L}\p{N}-]{0,61}[\p{L}\p{N}])?$/u.test(label)) {
+      return null;
+    }
+  }
+  const tld = labels[labels.length - 1];
+  if (tld.length < 2 || /^[0-9]+$/.test(tld)) {
+    return null;
+  }
+  const domainPart = rawDomainPart.toLowerCase();
+  const normalizedEmail = `${localPart}@${domainPart}`;
+  const cleanLocal = localPart.toLowerCase().replace(/[^a-z0-9]/g, "");
+  let classification = "UNKNOWN";
+  if (ROLE_PREFIXES.has(cleanLocal) || GENERIC_PREFIXES.has(cleanLocal)) {
+    classification = "ROLE_ACCOUNT";
+  } else if (/^[a-z]+[._-][a-z]+$/i.test(localPart) || // e.g. john.doe, jane_smith
+  /^[a-z]{1,2}[a-z]+$/i.test(localPart)) {
+    classification = "PERSON_NAMED";
+  } else {
+    classification = "UNKNOWN";
+  }
+  let domainRelationship = "UNKNOWN";
+  if (targetDomain) {
+    const cleanWebDomain = targetDomain.toLowerCase().replace(/^www\./, "").trim();
+    if (cleanWebDomain) {
+      if (domainPart === cleanWebDomain) {
+        domainRelationship = "EXACT_DOMAIN_MATCH";
+      } else if (domainPart.endsWith(`.${cleanWebDomain}`)) {
+        domainRelationship = "SUBDOMAIN_MATCH";
+      } else {
+        domainRelationship = "EXTERNAL_DOMAIN";
+      }
+    }
+  }
+  let evidenceClassification = "PUBLICLY_LISTED";
+  if (isMailto || context === "MAILTO") {
+    evidenceClassification = "MAILTO";
+  } else if (sourceUrl.includes("#jsonld") || sourceUrl.includes("schema") || context === "STRUCTURED_DATA") {
+    evidenceClassification = "STRUCTURED_DATA";
+  } else if (context === "PERSON_ASSOCIATED") {
+    evidenceClassification = "PERSON_ASSOCIATED";
+  } else if (domainRelationship === "EXACT_DOMAIN_MATCH") {
+    evidenceClassification = "DOMAIN_MATCHED";
+  }
+  const confidenceState = domainRelationship === "EXACT_DOMAIN_MATCH" || evidenceClassification === "STRUCTURED_DATA" ? "HIGH" : "MEDIUM";
+  return {
+    isValid: true,
+    rawValue: rawEmail,
+    normalizedEmail,
+    localPart,
+    domainPart,
+    classification,
+    domainRelationship,
+    evidenceClassification,
+    confidenceState,
+    provenance: "LEADNORIA_DERIVED"
+  };
+}
+
+// src/extension/contactIntelligence/phoneIntelligence.ts
+var DEPARTMENT_LABEL_PATTERNS = [
+  { pattern: /\b(?:sales|admissions)\b/i, label: "Sales" },
+  { pattern: /\b(?:support|customer\s+service|helpdesk)\b/i, label: "Support" },
+  { pattern: /\b(?:office|reception|front\s*desk|main)\b/i, label: "Main Office" },
+  { pattern: /\b(?:direct|mobile|cell)\b/i, label: "Direct" },
+  { pattern: /\b(?:emergency|after\s*hours)\b/i, label: "Emergency" },
+  { pattern: /\b(?:billing|accounts)\b/i, label: "Billing" },
+  { pattern: /\b(?:fax)\b/i, label: "Fax" }
+];
+function extractPhoneLabel(contextSnippet) {
+  if (!contextSnippet) return void 0;
+  for (const { pattern, label } of DEPARTMENT_LABEL_PATTERNS) {
+    if (pattern.test(contextSnippet)) {
+      return label;
+    }
+  }
+  return void 0;
+}
+function processPhoneIntelligence(rawPhone, contextSnippet, observedSourceContextOrCountry, countryHint) {
+  const isTel = (rawPhone || "").toLowerCase().startsWith("tel:");
+  const trimmed = (rawPhone || "").replace(/^tel:/i, "").trim();
+  if (!trimmed) {
+    return {
+      isValid: false,
+      rawValue: rawPhone,
+      normalizedValue: "",
+      evidenceClassification: "INVALID",
+      confidenceState: "INVALID",
+      reason: "EMPTY_PHONE"
+    };
+  }
+  if (/[<>{}]|script/i.test(trimmed)) {
+    return {
+      isValid: false,
+      rawValue: rawPhone,
+      normalizedValue: "",
+      evidenceClassification: "INVALID",
+      confidenceState: "INVALID",
+      reason: "UNSAFE_PHONE_CHARACTERS"
+    };
+  }
+  const digitsOnly = trimmed.replace(/[^0-9]/g, "");
+  if (digitsOnly.length < 7) {
+    return null;
+  }
+  const country = countryHint || (observedSourceContextOrCountry && observedSourceContextOrCountry.length === 2 && observedSourceContextOrCountry === observedSourceContextOrCountry.toUpperCase() ? observedSourceContextOrCountry : void 0);
+  const norm = normalizeBusinessPhone(trimmed);
+  let evidenceClassification = "PUBLICLY_LISTED";
+  if (isTel || observedSourceContextOrCountry === "TEL_LINK") {
+    evidenceClassification = "TEL_LINK";
+  } else if (observedSourceContextOrCountry === "STRUCTURED_DATA" || contextSnippet && (contextSnippet.includes("#jsonld") || contextSnippet.includes("schema"))) {
+    evidenceClassification = "STRUCTURED_DATA";
+  }
+  if (norm.status === "INVALID" || !norm.isValid) {
+    if (norm.status === "AMBIGUOUS" && (norm.normalizedValue || digitsOnly.length === 10)) {
+      const e1642 = (country === "US" || !norm.normalizedValue) && digitsOnly.length === 10 ? `+1${digitsOnly}` : norm.normalizedValue || digitsOnly;
+      return {
+        isValid: true,
+        rawValue: rawPhone,
+        normalizedValue: e1642,
+        normalizedPhone: e1642,
+        countryCodeKnown: Boolean(country || norm.countryCode),
+        e164Format: e1642,
+        nationalFormat: norm.nationalFormat,
+        countryCode: country || norm.countryCode,
+        label: extractPhoneLabel(contextSnippet),
+        evidenceClassification,
+        confidenceState: country ? "HIGH" : "MEDIUM"
+      };
+    }
+    return null;
+  }
+  const e164 = norm.e164Format || (country === "US" && digitsOnly.length === 10 ? `+1${digitsOnly}` : norm.normalizedValue);
+  return {
+    isValid: true,
+    rawValue: rawPhone,
+    normalizedValue: e164,
+    normalizedPhone: e164,
+    countryCodeKnown: Boolean(norm.countryCode || country),
+    e164Format: norm.e164Format || e164,
+    nationalFormat: norm.nationalFormat,
+    countryCode: norm.countryCode || country,
+    dialCode: norm.dialCode,
+    extension: norm.extension,
+    label: extractPhoneLabel(contextSnippet),
+    evidenceClassification,
+    confidenceState: norm.e164Format || country ? "HIGH" : "MEDIUM"
+  };
+}
+
+// src/extension/contactIntelligence/personIntelligence.ts
+function stripHtml(input) {
+  return (input || "").replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "").replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "").replace(/<[^>]*>/g, " ");
+}
+function normalizePersonName(rawName) {
+  if (!rawName) return "";
+  const stripped = stripHtml(rawName);
+  const clean = stripped.normalize("NFC").replace(/[^\p{L}\p{N}\s.'-]/gu, "").replace(/\s+/g, " ").trim().slice(0, 100);
+  const cleanWithoutHonorific = clean.replace(/^(?:dr|mr|mrs|ms|prof)\.?\s+/i, "");
+  const normalizedKey = cleanWithoutHonorific.toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, " ").trim().slice(0, 100);
+  return normalizedKey;
+}
+function normalizeJobTitle(rawTitle) {
+  if (!rawTitle) return "";
+  const stripped = stripHtml(rawTitle);
+  return stripped.normalize("NFC").replace(/\s+/g, " ").trim().toLowerCase().slice(0, 100);
+}
+function clusterAndDeduplicatePeople(rawPeople, observedAt) {
+  const canonicalPeople = [];
+  for (const raw of rawPeople) {
+    const normalizedName = normalizePersonName(raw.fullName);
+    if (!normalizedName) continue;
+    const displayName = stripHtml(raw.fullName).normalize("NFC").replace(/[^\p{L}\p{N}\s.'-]/gu, "").replace(/\s+/g, " ").trim().slice(0, 100);
+    const displayTitle = raw.jobTitle ? stripHtml(raw.jobTitle).normalize("NFC").replace(/\s+/g, " ").trim().slice(0, 100) : void 0;
+    const normalizedJobTitle = raw.jobTitle ? normalizeJobTitle(raw.jobTitle) : void 0;
+    const roleCategory = extractRoleClassification(raw.jobTitle);
+    const normEmail = raw.email ? raw.email.toLowerCase().trim() : void 0;
+    const normLinkedIn = raw.linkedInUrl ? raw.linkedInUrl.toLowerCase().trim() : void 0;
+    let merged = false;
+    for (const existing of canonicalPeople) {
+      const emailMatch = normEmail && existing.emailRefs.some((e) => e.toLowerCase() === normEmail);
+      const linkedInMatch = normLinkedIn && existing.socialRefs.some((s) => s.toLowerCase() === normLinkedIn);
+      if (emailMatch || linkedInMatch) {
+        if (!existing.sourcePages.includes(raw.sourceUrl)) {
+          existing.sourcePages.push(raw.sourceUrl);
+        }
+        existing.evidence.push({
+          sourceUrl: raw.sourceUrl,
+          evidenceKind: raw.evidenceType,
+          snippet: raw.jobTitle,
+          observedAt: raw.observedAt || observedAt
+        });
+        existing.lastObservedAt = observedAt;
+        existing.observationCount++;
+        if (normEmail && !existing.emailRefs.includes(normEmail)) {
+          existing.emailRefs.push(normEmail);
+        }
+        if (raw.phone && !existing.phoneRefs.includes(raw.phone)) {
+          existing.phoneRefs.push(raw.phone);
+        }
+        if (normLinkedIn && !existing.socialRefs.includes(normLinkedIn)) {
+          existing.socialRefs.push(normLinkedIn);
+        }
+        merged = true;
+        break;
+      }
+      if (existing.normalizedName === normalizedName) {
+        if (!existing.potentialDuplicatePersonIds) {
+          existing.potentialDuplicatePersonIds = [];
+        }
+      }
+    }
+    if (!merged) {
+      const personId = `per_${normalizedName}_${canonicalPeople.length + 1}`;
+      const newPerson = {
+        personId,
+        fullName: displayName,
+        normalizedName,
+        jobTitle: displayTitle,
+        normalizedJobTitle,
+        roleCategory,
+        emailRefs: normEmail ? [normEmail] : [],
+        phoneRefs: raw.phone ? [raw.phone] : [],
+        socialRefs: normLinkedIn ? [normLinkedIn] : [],
+        sourcePages: [raw.sourceUrl],
+        evidence: [
+          {
+            sourceUrl: raw.sourceUrl,
+            evidenceKind: raw.evidenceType,
+            snippet: raw.jobTitle,
+            observedAt: raw.observedAt || observedAt
+          }
+        ],
+        confidenceState: normEmail || normLinkedIn ? "HIGH" : "MEDIUM",
+        potentialDuplicatePersonIds: [],
+        provenance: "WEBSITE_DERIVED",
+        sourceContributions: [],
+        firstObservedAt: raw.observedAt || observedAt,
+        lastObservedAt: raw.observedAt || observedAt,
+        observationCount: 1
+      };
+      for (const existing of canonicalPeople) {
+        if (existing.normalizedName === normalizedName) {
+          if (!existing.potentialDuplicatePersonIds) existing.potentialDuplicatePersonIds = [];
+          existing.potentialDuplicatePersonIds.push(personId);
+          newPerson.potentialDuplicatePersonIds?.push(existing.personId);
+        }
+      }
+      canonicalPeople.push(newPerson);
+    }
+  }
+  return canonicalPeople;
+}
+function extractRoleClassification(rawTitle) {
+  if (!rawTitle) return void 0;
+  const clean = stripHtml(rawTitle).toLowerCase().trim();
+  if (/\b(?:co-founder|founder)\b/i.test(clean)) return "FOUNDER";
+  if (/\b(?:co-owner|owner)\b/i.test(clean)) return "OWNER";
+  if (/\b(?:ceo|chief\s+executive\s+officer)\b/i.test(clean)) return "CEO";
+  if (/\b(?:coo|chief\s+operating\s+officer)\b/i.test(clean)) return "COO";
+  if (/\b(?:cfo|chief\s+financial\s+officer)\b/i.test(clean)) return "CFO";
+  if (/\b(?:cto|chief\s+technology\s+officer)\b/i.test(clean)) return "CTO";
+  if (/\b(?:cmo|chief\s+marketing\s+officer)\b/i.test(clean)) return "CMO";
+  if (/\b(?:president)\b/i.test(clean)) return "PRESIDENT";
+  if (/\b(?:vice\s+president|vp)\b/i.test(clean)) return "VICE_PRESIDENT";
+  if (/\b(?:managing\s+director|executive\s+director|director)\b/i.test(clean)) return "DIRECTOR";
+  if (/\b(?:managing\s+partner|partner)\b/i.test(clean)) return "PARTNER";
+  if (/\b(?:principal)\b/i.test(clean)) return "PRINCIPAL";
+  if (/\b(?:general\s+manager|manager)\b/i.test(clean)) return "MANAGER";
+  if (/\b(?:dentist|orthodontist)\b/i.test(clean)) return "DENTIST";
+  if (/\b(?:physician|surgeon|doctor)\b/i.test(clean)) return "PHYSICIAN";
+  if (/\b(?:attorney|lawyer|counsel)\b/i.test(clean)) return "ATTORNEY";
+  if (/\b(?:consultant)\b/i.test(clean)) return "CONSULTANT";
+  return void 0;
+}
+
+// src/extension/contactIntelligence/associationEngine.ts
+function associateContactsAndPeople(contacts, people, rawPeople) {
+  const rawToCanonical = /* @__PURE__ */ new Map();
+  for (const raw of rawPeople) {
+    const matched = people.find(
+      (p) => p.sourcePages.includes(raw.sourceUrl) && p.fullName.toLowerCase() === raw.fullName.toLowerCase()
+    ) || people.find(
+      (p) => p.fullName.toLowerCase() === raw.fullName.toLowerCase()
+    );
+    if (matched) {
+      rawToCanonical.set(raw, matched);
+    }
+  }
+  for (const contact of contacts) {
+    for (const [raw, canonicalPerson] of rawToCanonical.entries()) {
+      let isExplicit = false;
+      if (contact.contactType === "EMAIL") {
+        if (raw.email && contact.normalizedValue.toLowerCase() === raw.email.toLowerCase()) {
+          isExplicit = true;
+        }
+      } else if (contact.contactType === "PHONE") {
+        if (raw.phone && contact.normalizedValue.replace(/[^0-9]/g, "").includes(raw.phone.replace(/[^0-9]/g, ""))) {
+          isExplicit = true;
+        }
+      } else if (contact.contactType === "SOCIAL_PROFILE") {
+        if (raw.linkedInUrl && contact.normalizedValue.toLowerCase() === raw.linkedInUrl.toLowerCase()) {
+          isExplicit = true;
+        }
+      }
+      if (isExplicit) {
+        if (!contact.associatedPersonIds) contact.associatedPersonIds = [];
+        if (!canonicalPerson.emailRefs) canonicalPerson.emailRefs = [];
+        if (!canonicalPerson.phoneRefs) canonicalPerson.phoneRefs = [];
+        if (!canonicalPerson.socialRefs) canonicalPerson.socialRefs = [];
+        if (!contact.associatedPersonIds.includes(canonicalPerson.personId)) {
+          contact.associatedPersonIds.push(canonicalPerson.personId);
+          contact.associatedPersonId = canonicalPerson.personId;
+          contact.associationStrength = "EXPLICIT_ASSOCIATION";
+          contact.associationConfidence = "EXPLICIT_ASSOCIATION";
+          if (contact.evidenceType === "PUBLICLY_LISTED") {
+            contact.evidenceType = "PERSON_ASSOCIATED";
+          }
+        }
+        if (contact.contactType === "EMAIL") {
+          if (!canonicalPerson.emailRefs.includes(contact.normalizedValue)) {
+            canonicalPerson.emailRefs.push(contact.normalizedValue);
+          }
+        } else if (contact.contactType === "PHONE") {
+          if (!canonicalPerson.phoneRefs.includes(contact.normalizedValue)) {
+            canonicalPerson.phoneRefs.push(contact.normalizedValue);
+          }
+        } else if (contact.contactType === "SOCIAL_PROFILE") {
+          if (!canonicalPerson.socialRefs.includes(contact.normalizedValue)) {
+            canonicalPerson.socialRefs.push(contact.normalizedValue);
+          }
+          contact.socialAssociationType = "PERSON_PROFILE";
+          contact.socialProfile = { platform: contact.socialPlatform, associationType: "PERSON_PROFILE" };
+        }
+      }
+    }
+    if (contact.contactType === "SOCIAL_PROFILE") {
+      if (!contact.socialAssociationType) {
+        contact.socialAssociationType = "BUSINESS_PROFILE";
+      }
+      if (!contact.socialProfile) {
+        contact.socialProfile = {
+          platform: contact.socialPlatform,
+          associationType: contact.socialAssociationType
+        };
+      }
+    }
+  }
+  return { contacts, people };
+}
+
+// src/extension/contactIntelligence/completenessCalculator.ts
+function calculateContactCompleteness(contacts, people) {
+  const hasPublicEmail = contacts.some((c) => c.contactType === "EMAIL" && c.confidenceState !== "INVALID");
+  const hasPublicPhone = contacts.some((c) => c.contactType === "PHONE" && c.confidenceState !== "INVALID");
+  const hasContactForm = contacts.some((c) => c.contactType === "CONTACT_FORM");
+  const hasSocialProfile = contacts.some((c) => c.contactType === "SOCIAL_PROFILE");
+  const hasPublicPerson = people.length > 0;
+  const hasPersonAssociatedEmail = people.some((p) => p.emailRefs.length > 0);
+  const hasPersonAssociatedPhone = people.some((p) => p.phoneRefs.length > 0);
+  const metrics = [
+    hasPublicEmail,
+    hasPublicPhone,
+    hasContactForm,
+    hasSocialProfile,
+    hasPublicPerson,
+    hasPersonAssociatedEmail,
+    hasPersonAssociatedPhone
+  ];
+  const trueCount = metrics.filter(Boolean).length;
+  const contactCompletenessRatio = trueCount / metrics.length;
+  return {
+    hasPublicEmail,
+    hasPublicPhone,
+    hasContactForm,
+    hasSocialProfile,
+    hasPublicPerson,
+    hasPersonAssociatedEmail,
+    hasPersonAssociatedPhone,
+    contactCompletenessRatio
+  };
+}
+function determineContactPrioritySignal(contacts, people, conflicts = []) {
+  if (conflicts.some((c) => c.conflictType === "PHONE_CONFLICT" || c.conflictType === "EMAIL_CONFLICT")) {
+    return "CONFLICTING_CONTACT";
+  }
+  const hasDirectPerson = people.some((p) => p.emailRefs.length > 0 || p.phoneRefs.length > 0);
+  if (hasDirectPerson) {
+    return "DIRECT_PUBLIC_CONTACT";
+  }
+  const hasRoleContact = contacts.some((c) => c.contactType === "EMAIL" && c.emailClassification === "ROLE_ACCOUNT");
+  if (hasRoleContact) {
+    return "ROLE_CONTACT";
+  }
+  const hasGenericEmailOrPhone = contacts.some(
+    (c) => c.contactType === "EMAIL" && c.confidenceState !== "INVALID" || c.contactType === "PHONE" && c.confidenceState !== "INVALID"
+  );
+  if (hasGenericEmailOrPhone) {
+    return "GENERIC_BUSINESS_CONTACT";
+  }
+  const hasForm = contacts.some((c) => c.contactType === "CONTACT_FORM");
+  if (hasForm) {
+    return "WEBSITE_FORM_ONLY";
+  }
+  const hasSocial = contacts.some((c) => c.contactType === "SOCIAL_PROFILE");
+  if (hasSocial) {
+    return "SOCIAL_ONLY";
+  }
+  return "NO_PUBLIC_CONTACT";
+}
+
+// src/extension/contactIntelligence/graphBuilder.ts
+function buildContactSourceGraph(targetUrl, arg2, arg3, arg4) {
+  let pagesVisited = [];
+  let contacts = [];
+  let people = [];
+  if (Array.isArray(arg2) && arg2.length > 0 && typeof arg2[0] === "string") {
+    pagesVisited = arg2;
+    contacts = Array.isArray(arg3) ? arg3 : [];
+    people = Array.isArray(arg4) ? arg4 : [];
+  } else {
+    contacts = Array.isArray(arg2) ? arg2 : [];
+    people = Array.isArray(arg3) ? arg3 : [];
+    const pagesSet = /* @__PURE__ */ new Set();
+    if (targetUrl) pagesSet.add(targetUrl);
+    for (const c of contacts) {
+      if (c.sourcePages) c.sourcePages.forEach((p) => p && pagesSet.add(p));
+      if (c.sourceUrl) pagesSet.add(c.sourceUrl);
+    }
+    for (const p of people) {
+      if (p.sourcePages) p.sourcePages.forEach((pg) => pg && pagesSet.add(pg));
+    }
+    pagesVisited = Array.from(pagesSet);
+  }
+  const nodes = [];
+  const edges = [];
+  const addedNodeIds = /* @__PURE__ */ new Set();
+  const websiteId = "node_root_website";
+  nodes.push({
+    id: websiteId,
+    type: "WEBSITE",
+    label: targetUrl,
+    url: targetUrl
+  });
+  addedNodeIds.add(websiteId);
+  for (const pageUrl of pagesVisited) {
+    if (!pageUrl || typeof pageUrl !== "string") continue;
+    const pageId = `node_page_${pageUrl.replace(/[^a-zA-Z0-9]/g, "_").slice(-32)}`;
+    if (!addedNodeIds.has(pageId)) {
+      nodes.push({
+        id: pageId,
+        type: "PAGE",
+        label: pageUrl,
+        url: pageUrl
+      });
+      addedNodeIds.add(pageId);
+      edges.push({
+        fromId: websiteId,
+        toId: pageId,
+        relationship: "HOSTS_PAGE"
+      });
+    }
+  }
+  const getPageNodeId = (pageUrl) => {
+    const clean = (pageUrl || "").replace(/[^a-zA-Z0-9]/g, "_").slice(-32);
+    return `node_page_${clean}`;
+  };
+  for (const contact of contacts) {
+    const contactNodeId = `node_contact_${contact.contactId}`;
+    if (!addedNodeIds.has(contactNodeId)) {
+      nodes.push({
+        id: contactNodeId,
+        type: "CONTACT",
+        label: `${contact.contactType}: ${contact.normalizedValue}`
+      });
+      addedNodeIds.add(contactNodeId);
+      const pages = contact.sourcePages && contact.sourcePages.length > 0 ? contact.sourcePages : contact.sourceUrl ? [contact.sourceUrl] : [];
+      for (const pageUrl of pages) {
+        if (!pageUrl) continue;
+        const pageNodeId = getPageNodeId(pageUrl);
+        if (addedNodeIds.has(pageNodeId)) {
+          edges.push({
+            fromId: pageNodeId,
+            toId: contactNodeId,
+            relationship: "EXPOSES_CONTACT"
+          });
+        }
+      }
+    }
+  }
+  for (const person of people) {
+    const personNodeId = `node_person_${person.personId}`;
+    if (!addedNodeIds.has(personNodeId)) {
+      nodes.push({
+        id: personNodeId,
+        type: "PERSON",
+        label: `${person.fullName} (${person.jobTitle || "Team"})`
+      });
+      addedNodeIds.add(personNodeId);
+      for (const pageUrl of person.sourcePages) {
+        const pageNodeId = getPageNodeId(pageUrl);
+        if (addedNodeIds.has(pageNodeId)) {
+          edges.push({
+            fromId: pageNodeId,
+            toId: personNodeId,
+            relationship: "EXPOSES_PERSON"
+          });
+        }
+      }
+      for (const emailRef of person.emailRefs) {
+        const contactNodeId = `node_contact_${emailRef}`;
+        if (addedNodeIds.has(contactNodeId)) {
+          edges.push({
+            fromId: personNodeId,
+            toId: contactNodeId,
+            relationship: "ASSOCIATED_WITH"
+          });
+        }
+      }
+      for (const phoneRef of person.phoneRefs) {
+        const contactNodeId = `node_contact_${phoneRef}`;
+        if (addedNodeIds.has(contactNodeId)) {
+          edges.push({
+            fromId: personNodeId,
+            toId: contactNodeId,
+            relationship: "ASSOCIATED_WITH"
+          });
+        }
+      }
+      for (const socialRef of person.socialRefs) {
+        const contactNodeId = `node_contact_${socialRef}`;
+        if (addedNodeIds.has(contactNodeId)) {
+          edges.push({
+            fromId: personNodeId,
+            toId: contactNodeId,
+            relationship: "ASSOCIATED_WITH"
+          });
+        }
+      }
+    }
+  }
+  return { nodes, edges };
+}
+
+// src/extension/contactIntelligence/changeDetector.ts
+function detectContactChanges(arg1, arg2, arg3, arg4) {
+  let currentContacts = [];
+  let currentPeople = [];
+  let previousSnapshot = void 0;
+  let observedAt = typeof arg4 === "string" ? arg4 : (/* @__PURE__ */ new Date()).toISOString();
+  if (Array.isArray(arg1)) {
+    currentContacts = arg1;
+    currentPeople = Array.isArray(arg2) ? arg2 : [];
+    previousSnapshot = arg3;
+  } else {
+    previousSnapshot = arg1;
+    currentContacts = Array.isArray(arg2) ? arg2 : [];
+    currentPeople = Array.isArray(arg3) ? arg3 : [];
+    if (typeof arg4 === "string") observedAt = arg4;
+  }
+  if (!previousSnapshot) return [];
+  const changes = [];
+  const prevContacts = previousSnapshot.canonicalContacts || previousSnapshot.contacts || [];
+  const prevPeople = previousSnapshot.canonicalPeople || previousSnapshot.people || [];
+  const currentEmails = currentContacts.filter((c) => c.contactType === "EMAIL");
+  const prevEmails = prevContacts.filter((c) => c.contactType === "EMAIL");
+  for (const ce of currentEmails) {
+    if (!prevEmails.some((pe) => pe.normalizedValue === ce.normalizedValue)) {
+      changes.push({
+        type: "ADDED",
+        target: "EMAIL",
+        changeType: "EMAIL_ADDED",
+        currentValue: ce.normalizedValue,
+        observedAt
+      });
+    }
+  }
+  for (const pe of prevEmails) {
+    if (!currentEmails.some((ce) => ce.normalizedValue === pe.normalizedValue)) {
+      changes.push({
+        type: "REMOVED",
+        target: "EMAIL",
+        changeType: "EMAIL_REMOVED",
+        previousValue: pe.normalizedValue,
+        observedAt
+      });
+    }
+  }
+  const currentPhones = currentContacts.filter((c) => c.contactType === "PHONE");
+  const prevPhones = prevContacts.filter((c) => c.contactType === "PHONE");
+  for (const cp of currentPhones) {
+    if (!prevPhones.some((pp) => pp.normalizedValue === cp.normalizedValue)) {
+      changes.push({
+        type: "ADDED",
+        target: "PHONE",
+        changeType: "PHONE_ADDED",
+        currentValue: cp.normalizedValue,
+        observedAt
+      });
+    }
+  }
+  for (const pp of prevPhones) {
+    if (!currentPhones.some((cp) => cp.normalizedValue === pp.normalizedValue)) {
+      changes.push({
+        type: "REMOVED",
+        target: "PHONE",
+        changeType: "PHONE_REMOVED",
+        previousValue: pp.normalizedValue,
+        observedAt
+      });
+    }
+  }
+  for (const cp of currentPeople) {
+    const prevPerson = prevPeople.find((pp) => pp.normalizedName === cp.normalizedName);
+    if (prevPerson) {
+      if (prevPerson.jobTitle && cp.jobTitle && prevPerson.jobTitle !== cp.jobTitle) {
+        changes.push({
+          type: "MODIFIED",
+          target: "TITLE",
+          changeType: "TITLE_CHANGED",
+          previousValue: prevPerson.jobTitle,
+          currentValue: cp.jobTitle,
+          observedAt
+        });
+      }
+    } else {
+      changes.push({
+        type: "ADDED",
+        target: "PERSON",
+        changeType: "PERSON_ADDED",
+        currentValue: cp.fullName,
+        observedAt
+      });
+    }
+  }
+  return changes;
+}
+
+// src/extension/contactIntelligence/contactIntelligenceEngine.ts
+var ContactIntelligenceEngine = class {
+  /**
+   * Sanitizes plain text from HTML or script injection payloads.
+   */
+  sanitizeText(raw) {
+    return (raw || "").replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "").replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "").replace(/<[^>]*>/g, "").normalize("NFC").replace(/\s+/g, " ").trim();
+  }
+  /**
+   * Main pipeline to process website intelligence into structured canonical contacts & people.
+   */
+  process(input) {
+    const observedAt = (/* @__PURE__ */ new Date()).toISOString();
+    const websiteResult = input.websiteResult;
+    const isGoogleRestricted = input.sourceContext === "GOOGLE_MAPS" || input.sourceContext === "GOOGLE" || input.provenanceContext === "GOOGLE_DERIVED" || input.sourceRestrictions?.isRestricted === true || input.websiteResult?.isRestricted === true;
+    const makeContribution = (fieldName) => {
+      if (isGoogleRestricted) {
+        return {
+          source: "GOOGLE_MAPS",
+          provenance: "GOOGLE_DERIVED",
+          fieldName,
+          acquisitionContext: "GOOGLE_CONSUMER_WEB",
+          restrictionBasis: "GOOGLE_CONSUMER_WEB_RESTRICTED",
+          isRestricted: true,
+          policyStatus: "PRODUCT_REJECTED",
+          persistenceStatus: "NOT_PERSISTABLE",
+          exportStatus: "NOT_EXPORTABLE"
+        };
+      }
+      let sourceVal = "FUTURE_SOURCE";
+      if (input.sourceContext === "META" || input.sourceContext === "META_AD_LIBRARY") {
+        sourceVal = "META_AD_LIBRARY";
+      } else if (input.sourceContext === "USER_PROVIDED" || input.sourceContext === "USER_PROVIDED_DOMAIN") {
+        sourceVal = "USER_PROVIDED_DOMAIN";
+      }
+      return {
+        source: sourceVal,
+        provenance: "WEBSITE_DERIVED",
+        fieldName,
+        acquisitionContext: "WEBSITE_DIRECT",
+        restrictionBasis: "NONE",
+        isRestricted: false,
+        policyStatus: "POLICY_APPROVED",
+        persistenceStatus: "PERSISTABLE",
+        exportStatus: "EXPORTABLE"
+      };
+    };
+    const targetDomain = websiteResult?.identity?.domain || "";
+    const contacts = [];
+    const rootTargetUrl = input.targetUrl || websiteResult?.identity?.canonicalUrl || "";
+    const rawEmails = websiteResult?.emails || [];
+    for (const raw of rawEmails) {
+      const emailVal = raw.normalizedEmail || raw.rawEmail || raw.rawValue;
+      const emailRes = processEmailIntelligence(emailVal, targetDomain);
+      if (!emailRes.isValid) continue;
+      const norm = emailRes.normalizedEmail;
+      const existing = contacts.find((c) => c.contactType === "EMAIL" && c.normalizedValue === norm);
+      const sourcePage = raw.sourceUrl || raw.evidence?.[0]?.pageUrl || rootTargetUrl;
+      if (existing) {
+        if (sourcePage && !existing.sourcePages.includes(sourcePage)) {
+          existing.sourcePages.push(sourcePage);
+          existing.evidenceType = "MULTI_PAGE_CORROBORATED";
+        }
+        existing.lastObservedAt = observedAt;
+        existing.observationCount++;
+      } else {
+        const contactId = `ct_email_${norm.replace(/[^a-zA-Z0-9]/g, "_")}`;
+        contacts.push({
+          contactId,
+          contactType: "EMAIL",
+          rawValue: raw.rawValue || raw.rawEmail || norm,
+          normalizedValue: norm,
+          sourceUrl: sourcePage,
+          sourcePages: sourcePage ? [sourcePage] : [],
+          evidenceType: emailRes.evidenceClassification,
+          confidenceState: emailRes.confidenceState,
+          emailClassification: emailRes.classification,
+          emailDomainRelationship: emailRes.domainRelationship,
+          associatedPersonIds: [],
+          provenance: "WEBSITE_DERIVED",
+          sourceContributions: [makeContribution("email")],
+          firstObservedAt: observedAt,
+          lastObservedAt: observedAt,
+          observationCount: 1
+        });
+      }
+    }
+    const rawPhones = websiteResult?.phones || [];
+    for (const raw of rawPhones) {
+      const phoneVal = raw.rawNumber || raw.rawValue || raw.normalizedNumber || raw.normalizedValue;
+      const phoneRes = processPhoneIntelligence(phoneVal);
+      if (!phoneRes.isValid) continue;
+      const norm = phoneRes.normalizedValue;
+      const existing = contacts.find((c) => c.contactType === "PHONE" && c.normalizedValue === norm);
+      const sourcePage = raw.sourceUrl || raw.evidence?.[0]?.pageUrl || rootTargetUrl;
+      if (existing) {
+        if (sourcePage && !existing.sourcePages.includes(sourcePage)) {
+          existing.sourcePages.push(sourcePage);
+          existing.evidenceType = "MULTI_PAGE_CORROBORATED";
+        }
+        existing.lastObservedAt = observedAt;
+        existing.observationCount++;
+      } else {
+        const contactId = `ct_phone_${norm.replace(/[^0-9]/g, "") || String(contacts.length + 1)}`;
+        contacts.push({
+          contactId,
+          contactType: "PHONE",
+          rawValue: raw.rawValue || raw.rawNumber || norm,
+          normalizedValue: norm,
+          label: phoneRes.label || raw.label,
+          sourceUrl: sourcePage,
+          sourcePages: sourcePage ? [sourcePage] : [],
+          evidenceType: phoneRes.evidenceClassification,
+          confidenceState: phoneRes.confidenceState,
+          associatedPersonIds: [],
+          provenance: "WEBSITE_DERIVED",
+          sourceContributions: [makeContribution("phone")],
+          firstObservedAt: observedAt,
+          lastObservedAt: observedAt,
+          observationCount: 1
+        });
+      }
+    }
+    const rawForms = websiteResult?.contactForms || [];
+    for (const form of rawForms) {
+      if (form.present === false) continue;
+      const formUrl = form.pageUrl || form.actionUrl || form.sourceUrl || rootTargetUrl;
+      if (!formUrl) continue;
+      const contactId = `ct_form_${formUrl.replace(/[^a-zA-Z0-9]/g, "_").slice(-20)}`;
+      if (!contacts.some((c) => c.contactType === "CONTACT_FORM" && c.normalizedValue === formUrl)) {
+        contacts.push({
+          contactId,
+          contactType: "CONTACT_FORM",
+          rawValue: formUrl,
+          normalizedValue: formUrl,
+          label: "Contact Form",
+          sourceUrl: formUrl,
+          sourcePages: [formUrl],
+          evidenceType: "STRUCTURED_DATA",
+          confidenceState: "HIGH",
+          associatedPersonIds: [],
+          provenance: "WEBSITE_DERIVED",
+          sourceContributions: [makeContribution("contact_form")],
+          firstObservedAt: observedAt,
+          lastObservedAt: observedAt,
+          observationCount: 1
+        });
+      }
+    }
+    const normalizeSocialUrl2 = (rawUrl) => {
+      const trimmed = (rawUrl || "").trim();
+      if (!/^https?:\/\//i.test(trimmed)) {
+        return "";
+      }
+      try {
+        const u = new URL(trimmed);
+        if (u.protocol !== "http:" && u.protocol !== "https:") return "";
+        const host = u.hostname.toLowerCase().replace(/^www\./, "");
+        const pathname = u.pathname.replace(/\/+$/, "");
+        return `https://${host}${pathname}`;
+      } catch {
+        return "";
+      }
+    };
+    const rawSocial = websiteResult?.socialProfiles || [];
+    for (const soc of rawSocial) {
+      const rawUrl = soc.rawUrl || soc.url || "";
+      const normUrl = normalizeSocialUrl2(rawUrl);
+      if (!normUrl || /sharer\.php|intent\/tweet|sharearticle/i.test(normUrl)) {
+        continue;
+      }
+      const existing = contacts.find((c) => c.contactType === "SOCIAL_PROFILE" && c.normalizedValue === normUrl);
+      const sourcePage = soc.pageObserved || soc.sourceUrl || rootTargetUrl;
+      if (existing) {
+        if (sourcePage && !existing.sourcePages.includes(sourcePage)) {
+          existing.sourcePages.push(sourcePage);
+        }
+        existing.lastObservedAt = observedAt;
+        existing.observationCount++;
+      } else {
+        const contactId = `ct_social_${soc.platform.toLowerCase()}_${contacts.length + 1}`;
+        contacts.push({
+          contactId,
+          contactType: "SOCIAL_PROFILE",
+          rawValue: rawUrl,
+          normalizedValue: normUrl,
+          label: soc.platform,
+          sourceUrl: sourcePage,
+          sourcePages: sourcePage ? [sourcePage] : [],
+          evidenceType: "PUBLICLY_LISTED",
+          confidenceState: "HIGH",
+          socialPlatform: soc.platform,
+          socialAssociationType: "BUSINESS_PROFILE",
+          socialProfile: { platform: soc.platform, associationType: "BUSINESS_PROFILE" },
+          associatedPersonIds: [],
+          provenance: "WEBSITE_DERIVED",
+          sourceContributions: [makeContribution("social")],
+          firstObservedAt: observedAt,
+          lastObservedAt: observedAt,
+          observationCount: 1
+        });
+      }
+    }
+    const rawPeople = websiteResult?.publicPeople || [];
+    const canonicalPeople = clusterAndDeduplicatePeople(rawPeople, observedAt);
+    for (const p of canonicalPeople) {
+      p.sourceContributions = [makeContribution("person")];
+      p.fullName = this.sanitizeText(p.fullName);
+      if (p.jobTitle) p.jobTitle = this.sanitizeText(p.jobTitle);
+      for (const rawLnk of p.socialRefs) {
+        const normLnk = normalizeSocialUrl2(rawLnk);
+        if (!contacts.some((c) => c.contactType === "SOCIAL_PROFILE" && c.normalizedValue === normLnk)) {
+          const contactId = `ct_social_linkedin_${contacts.length + 1}`;
+          contacts.push({
+            contactId,
+            contactType: "SOCIAL_PROFILE",
+            rawValue: rawLnk,
+            normalizedValue: normLnk,
+            label: "LINKEDIN",
+            sourceUrl: p.sourcePages[0] || rootTargetUrl,
+            sourcePages: p.sourcePages.slice(),
+            evidenceType: "PUBLICLY_LISTED",
+            confidenceState: "HIGH",
+            socialPlatform: "LINKEDIN",
+            socialAssociationType: "PERSON_PROFILE",
+            socialProfile: { platform: "LINKEDIN", associationType: "PERSON_PROFILE" },
+            associatedPersonId: p.personId,
+            associatedPersonIds: [p.personId],
+            associationStrength: "EXPLICIT_ASSOCIATION",
+            associationConfidence: "EXPLICIT_ASSOCIATION",
+            provenance: "WEBSITE_DERIVED",
+            sourceContributions: [makeContribution("social")],
+            firstObservedAt: observedAt,
+            lastObservedAt: observedAt,
+            observationCount: 1
+          });
+        }
+      }
+    }
+    associateContactsAndPeople(contacts, canonicalPeople, rawPeople);
+    const prevContacts = input.previousSession?.canonicalContacts || input.previousSnapshot?.contacts || [];
+    for (const contact of contacts) {
+      const prev = prevContacts.find((p) => {
+        if (p.contactType !== contact.contactType) return false;
+        if (contact.contactType === "PHONE") {
+          const d1 = p.normalizedValue.replace(/[^0-9]/g, "");
+          const d2 = contact.normalizedValue.replace(/[^0-9]/g, "");
+          return d1 === d2 || d1.length >= 10 && d2.length >= 10 && (d1.endsWith(d2) || d2.endsWith(d1));
+        }
+        return p.normalizedValue.toLowerCase() === contact.normalizedValue.toLowerCase();
+      });
+      if (prev) {
+        contact.firstObservedAt = prev.firstObservedAt || prev.lastObservedAt;
+        contact.lastObservedAt = observedAt;
+        contact.observationCount = (prev.observationCount || 1) + 1;
+      }
+    }
+    const conflicts = [];
+    if (websiteResult?.conflicts) {
+      for (const conf of websiteResult.conflicts) {
+        conflicts.push({
+          conflictType: conf.conflictType,
+          values: conf.values.map((v) => ({
+            value: v.value,
+            sourceUrl: v.sourceUrl,
+            observedAt: v.observedAt || observedAt
+          })),
+          corroborationCount: conf.values.length
+        });
+      }
+    }
+    const distinctEmails = contacts.filter((c) => c.contactType === "EMAIL");
+    if (distinctEmails.length > 1 && !conflicts.some((c) => c.conflictType === "EMAIL_CONFLICT")) {
+      conflicts.push({
+        conflictType: "EMAIL_CONFLICT",
+        values: distinctEmails.map((e) => ({
+          value: e.normalizedValue,
+          sourceUrl: e.sourceUrl || rootTargetUrl,
+          observedAt
+        })),
+        corroborationCount: distinctEmails.length
+      });
+    }
+    const distinctPhones = contacts.filter((c) => c.contactType === "PHONE");
+    if (distinctPhones.length > 1 && !conflicts.some((c) => c.conflictType === "PHONE_CONFLICT")) {
+      conflicts.push({
+        conflictType: "PHONE_CONFLICT",
+        values: distinctPhones.map((p) => ({
+          value: p.normalizedValue,
+          sourceUrl: p.sourceUrl || rootTargetUrl,
+          observedAt
+        })),
+        corroborationCount: distinctPhones.length
+      });
+    }
+    for (const p of canonicalPeople) {
+      const distinctTitles = new Set(p.evidence.map((e) => e.snippet).filter(Boolean));
+      if (distinctTitles.size > 1) {
+        conflicts.push({
+          conflictType: "TITLE_CONFLICT",
+          values: Array.from(distinctTitles).map((t) => ({
+            value: t,
+            sourceUrl: p.sourcePages[0] || rootTargetUrl,
+            observedAt
+          })),
+          corroborationCount: distinctTitles.size
+        });
+      }
+    }
+    const completeness = calculateContactCompleteness(contacts, canonicalPeople);
+    const prioritySignal = determineContactPrioritySignal(contacts, canonicalPeople, conflicts);
+    const pagesVisited = websiteResult?.sourcePages || [rootTargetUrl];
+    const sourceGraph = buildContactSourceGraph(rootTargetUrl, pagesVisited, contacts, canonicalPeople);
+    const prevSession = input.previousSession || input.previousSnapshot;
+    const changes = detectContactChanges(prevSession, contacts, canonicalPeople);
+    const resultContributions = [
+      makeContribution("contact_intelligence")
+    ];
+    return {
+      contacts,
+      people: canonicalPeople,
+      prioritySignal,
+      completeness,
+      sourceGraph,
+      conflicts,
+      changes,
+      provenance: isGoogleRestricted ? "GOOGLE_DERIVED" : "LEADNORIA_DERIVED",
+      sourceContributions: resultContributions,
+      observedAt,
+      isRestricted: isGoogleRestricted,
+      persistenceEligibility: isGoogleRestricted ? "NOT_PERSISTABLE" : "PERSISTABLE",
+      exportEligibility: isGoogleRestricted ? "NOT_EXPORTABLE" : "EXPORTABLE",
+      restrictionBasis: isGoogleRestricted ? "GOOGLE_CONSUMER_WEB_RESTRICTED" : void 0
+    };
+  }
+};
+
+// src/extension/acquisition/engine/enrichmentQueue.ts
+var GoogleMapsEnrichmentQueue = class {
+  constructor(sessionId, policy = {}, callbacks = {}, customFetch) {
+    // Queue state
+    this._pendingQueue = [];
+    this._jobMap = /* @__PURE__ */ new Map();
+    // candidateId -> job
+    this._completedResults = /* @__PURE__ */ new Map();
+    // candidateId -> result
+    this._domainDeduplication = /* @__PURE__ */ new Map();
+    // normalizedDomain -> candidateId
+    // Concurrency & lifecycle locks
+    this._activeWorkers = 0;
+    this._isPaused = false;
+    this._isCancelled = false;
+    // Counters
+    this._totalEligible = 0;
+    this._queuedCount = 0;
+    this._completedCount = 0;
+    this._partialCount = 0;
+    this._failedCount = 0;
+    this._blockedCount = 0;
+    this._skippedCount = 0;
+    this._deferredCount = 0;
+    this._pagesAttempted = 0;
+    this._pagesSucceeded = 0;
+    this._pagesFailed = 0;
+    this._emailsFound = 0;
+    this._phonesFound = 0;
+    this._socialLinksFound = 0;
+    this._personsFound = 0;
+    this._websiteConflicts = 0;
+    this._contactConflicts = 0;
+    this._sessionId = sessionId;
+    this._policy = { ...DEFAULT_ENRICHMENT_POLICY, ...policy };
+    this._callbacks = callbacks;
+    this._customFetch = customFetch;
+    this._websiteEngine = new WebsiteIntelligenceEngine();
+    this._contactEngine = new ContactIntelligenceEngine();
+  }
+  get sessionId() {
+    return this._sessionId;
+  }
+  get isPaused() {
+    return this._isPaused;
+  }
+  get isCancelled() {
+    return this._isCancelled;
+  }
+  setCustomFetch(fetcher) {
+    this._customFetch = fetcher;
+  }
+  /**
+   * Enqueues a candidate for website intelligence enrichment.
+   * Runs asynchronously: returns immediate status without blocking Maps acquisition.
+   */
+  enqueue(candidate) {
+    if (this._isCancelled) {
+      return { status: "CANCELLED", reason: "Enrichment queue is cancelled", isQueued: false };
+    }
+    const candidateId = candidate.candidateId;
+    const existingResult = this._completedResults.get(candidateId);
+    if (existingResult) {
+      return {
+        status: existingResult.status,
+        reason: "Candidate already enriched in this session (idempotent suppression)",
+        isQueued: false
+      };
+    }
+    if (this._jobMap.has(candidateId)) {
+      return {
+        status: "QUEUED",
+        reason: "Candidate is already queued for enrichment",
+        isQueued: false
+      };
+    }
+    const eligibility = evaluateWebsiteEligibility(candidate);
+    if (!eligibility.isEligible || !eligibility.targetUrl) {
+      if (eligibility.status === "BLOCKED" || eligibility.status === "BLOCKED_WEBSITE_CONFLICT") {
+        this._blockedCount++;
+        if (eligibility.status === "BLOCKED_WEBSITE_CONFLICT") {
+          this._websiteConflicts++;
+        }
+        this._recordDiagnostic({
+          code: eligibility.diagnosticCode || "WEBSITE_TARGET_INVALID",
+          severity: "P2",
+          recoveryClass: "TERMINAL",
+          message: `Candidate ${candidateId} enrichment blocked: ${eligibility.reason}`,
+          timestamp: (/* @__PURE__ */ new Date()).toISOString()
+        });
+      } else {
+        this._skippedCount++;
+      }
+      const nonEligibleResult = {
+        sessionCandidateId: candidateId,
+        websiteTarget: eligibility.targetUrl || "",
+        status: eligibility.status,
+        pagesVisited: [],
+        pagesDiscovered: 0,
+        qualityIssues: [eligibility.reason],
+        diagnostics: [],
+        startedAt: (/* @__PURE__ */ new Date()).toISOString(),
+        completedAt: (/* @__PURE__ */ new Date()).toISOString(),
+        durationMs: 0,
+        truncated: false,
+        terminationReason: "NONE",
+        crawlerVersion: ENRICHMENT_ADAPTER_VERSION,
+        retryCount: 0,
+        fromCache: false
+      };
+      this._completedResults.set(candidateId, nonEligibleResult);
+      return {
+        status: eligibility.status,
+        reason: eligibility.reason,
+        isQueued: false
+      };
+    }
+    this._totalEligible++;
+    if (this._pendingQueue.length >= this._policy.maxPendingEnrichmentJobs) {
+      this._deferredCount++;
+      this._recordDiagnostic({
+        code: "ENRICHMENT_QUEUE_FULL",
+        severity: "P2",
+        recoveryClass: "RECOVERABLE",
+        message: `Pending enrichment queue reached limit (${this._policy.maxPendingEnrichmentJobs}). Candidate ${candidateId} deferred.`,
+        timestamp: (/* @__PURE__ */ new Date()).toISOString()
+      });
+      const deferredResult = {
+        sessionCandidateId: candidateId,
+        websiteTarget: eligibility.targetUrl,
+        status: "ENRICHMENT_DEFERRED",
+        pagesVisited: [],
+        pagesDiscovered: 0,
+        qualityIssues: ["Pending enrichment queue reached capacity bound"],
+        diagnostics: [],
+        startedAt: (/* @__PURE__ */ new Date()).toISOString(),
+        completedAt: (/* @__PURE__ */ new Date()).toISOString(),
+        durationMs: 0,
+        truncated: false,
+        terminationReason: "NONE",
+        crawlerVersion: ENRICHMENT_ADAPTER_VERSION,
+        retryCount: 0,
+        fromCache: false
+      };
+      this._completedResults.set(candidateId, deferredResult);
+      return {
+        status: "ENRICHMENT_DEFERRED",
+        reason: "Pending enrichment queue reached capacity bound (backpressure)",
+        isQueued: false
+      };
+    }
+    const normDomain = eligibility.normalizedDomain || "";
+    if (normDomain && this._domainDeduplication.has(normDomain)) {
+      const priorCandidateId = this._domainDeduplication.get(normDomain);
+      const priorResult = this._completedResults.get(priorCandidateId);
+      if (priorResult) {
+        const clonedResult = {
+          ...priorResult,
+          sessionCandidateId: candidateId,
+          fromCache: true
+        };
+        this._completedResults.set(candidateId, clonedResult);
+        this._completedCount++;
+        const enriched = mergeEnrichmentIntoCandidate(candidate, clonedResult);
+        if (this._callbacks.onCandidateEnriched) {
+          this._callbacks.onCandidateEnriched(enriched, clonedResult);
+        }
+        return {
+          status: priorResult.status,
+          reason: `Reused existing enrichment result from domain ${normDomain}`,
+          isQueued: false
+        };
+      }
+    }
+    if (normDomain) {
+      this._domainDeduplication.set(normDomain, candidateId);
+    }
+    const job = {
+      candidateId,
+      targetUrl: eligibility.targetUrl,
+      normalizedDomain: normDomain,
+      candidate,
+      attemptCount: 0,
+      enqueuedAt: (/* @__PURE__ */ new Date()).toISOString()
+    };
+    this._pendingQueue.push(job);
+    this._jobMap.set(candidateId, job);
+    this._queuedCount++;
+    this._notifyProgress();
+    this._drainQueueAsync();
+    return {
+      status: "QUEUED",
+      reason: "Candidate queued for website intelligence enrichment",
+      isQueued: true
+    };
+  }
+  /**
+   * Pauses claiming new enrichment jobs. Active task reaches safe boundary.
+   */
+  pause() {
+    this._isPaused = true;
+    this._notifyProgress();
+  }
+  /**
+   * Resumes claiming queued enrichment jobs.
+   */
+  resume() {
+    if (this._isCancelled) {
+      throw new Error("Cannot resume cancelled enrichment queue");
+    }
+    if (!this._isPaused) return;
+    this._isPaused = false;
+    this._notifyProgress();
+    this._drainQueueAsync();
+  }
+  /**
+   * Cancels enrichment queue permanently.
+   */
+  cancel() {
+    this._isCancelled = true;
+    this._isPaused = false;
+    this._websiteEngine.cancel();
+    for (const job of this._pendingQueue) {
+      const cancelledResult = {
+        sessionCandidateId: job.candidateId,
+        websiteTarget: job.targetUrl,
+        status: "CANCELLED",
+        pagesVisited: [],
+        pagesDiscovered: 0,
+        qualityIssues: ["Enrichment cancelled by user"],
+        diagnostics: [],
+        startedAt: job.enqueuedAt,
+        completedAt: (/* @__PURE__ */ new Date()).toISOString(),
+        durationMs: 0,
+        truncated: false,
+        terminationReason: "USER_CANCELLED",
+        crawlerVersion: ENRICHMENT_ADAPTER_VERSION,
+        retryCount: job.attemptCount,
+        fromCache: false
+      };
+      this._completedResults.set(job.candidateId, cancelledResult);
+    }
+    this._pendingQueue.length = 0;
+    this._jobMap.clear();
+    this._notifyProgress();
+  }
+  /**
+   * Cleans up all session-scoped queue and worker state.
+   */
+  cleanup() {
+    this.cancel();
+    this._completedResults.clear();
+    this._domainDeduplication.clear();
+    this._websiteEngine.clearCache();
+  }
+  /**
+   * Returns current snapshot of the enrichment pipeline.
+   */
+  getSnapshot() {
+    return {
+      totalEligible: this._totalEligible,
+      eligible: this._totalEligible,
+      queued: this._pendingQueue.length,
+      running: this._activeWorkers,
+      completed: this._completedCount,
+      partial: this._partialCount,
+      failed: this._failedCount,
+      blocked: this._blockedCount,
+      skipped: this._skippedCount,
+      deferred: this._deferredCount,
+      currentCandidateId: this._currentCandidateId,
+      pagesAttempted: this._pagesAttempted,
+      pagesSucceeded: this._pagesSucceeded,
+      pagesFailed: this._pagesFailed,
+      emailsFound: this._emailsFound,
+      phonesFound: this._phonesFound,
+      socialLinksFound: this._socialLinksFound,
+      personsFound: this._personsFound,
+      websiteConflicts: this._websiteConflicts,
+      contactConflicts: this._contactConflicts,
+      isPaused: this._isPaused,
+      isCancelled: this._isCancelled
+    };
+  }
+  getResult(candidateId) {
+    return this._completedResults.get(candidateId);
+  }
+  getAllResults() {
+    return Array.from(this._completedResults.values());
+  }
+  // ==========================================================================
+  // Internal Worker & Execution Loop
+  // ==========================================================================
+  _drainQueueAsync() {
+    if (this._isPaused || this._isCancelled) return;
+    if (this._activeWorkers >= this._policy.maxConcurrentTasks) return;
+    if (this._pendingQueue.length === 0) return;
+    Promise.resolve().then(async () => {
+      if (this._isPaused || this._isCancelled) return;
+      if (this._activeWorkers >= this._policy.maxConcurrentTasks) return;
+      if (this._pendingQueue.length === 0) return;
+      this._activeWorkers++;
+      try {
+        while (!this._isPaused && !this._isCancelled && this._pendingQueue.length > 0) {
+          const job = this._pendingQueue.shift();
+          if (!job) break;
+          this._jobMap.delete(job.candidateId);
+          this._currentCandidateId = job.candidateId;
+          this._notifyProgress();
+          await this._processJob(job);
+        }
+      } finally {
+        this._activeWorkers--;
+        this._currentCandidateId = void 0;
+        this._notifyProgress();
+      }
+    });
+  }
+  async _processJob(job) {
+    job.attemptCount++;
+    const startTime = Date.now();
+    const input = {
+      targetUrl: job.targetUrl,
+      sourceContext: "GOOGLE_MAPS",
+      provenanceContext: "GOOGLE_DERIVED",
+      sourceRestrictions: {
+        isRestricted: true,
+        restrictionBasis: "GOOGLE_CONSUMER_WEB_RESTRICTED",
+        policyStatus: "POLICY_GATED",
+        persistenceEligibility: "NOT_PERSISTABLE",
+        exportEligibility: "NOT_EXPORTABLE"
+      },
+      businessContext: {
+        expectedName: job.candidate.businessName?.parsedValue || job.candidate.businessName?.rawValue,
+        expectedPhone: job.candidate.phone?.parsedValue || job.candidate.phone?.rawValue,
+        expectedAddress: job.candidate.address?.parsedValue || job.candidate.address?.rawValue
+      },
+      config: {
+        maxPages: this._policy.maxPagesPerDomain,
+        pageTimeoutMs: this._policy.pageTimeoutMs,
+        domainTimeoutMs: this._policy.domainTimeoutMs,
+        maxDocumentBytes: this._policy.maxDocumentBytes,
+        collectPeople: this._policy.collectPeople,
+        collectServices: this._policy.collectServices,
+        detectTechnology: this._policy.detectTechnology
+      }
+    };
+    try {
+      const websiteResult = await this._websiteEngine.process(input, this._customFetch);
+      const visitedCount = websiteResult.crawlStats?.pagesVisited?.length || 0;
+      this._pagesAttempted += visitedCount;
+      this._pagesSucceeded += visitedCount;
+      const contactInput = {
+        targetUrl: job.targetUrl,
+        websiteResult,
+        sourceContext: "GOOGLE_MAPS",
+        provenanceContext: "GOOGLE_DERIVED",
+        sourceRestrictions: {
+          isRestricted: true,
+          restrictionBasis: "GOOGLE_CONSUMER_WEB_RESTRICTED",
+          policyStatus: "POLICY_GATED",
+          persistenceEligibility: "NOT_PERSISTABLE",
+          exportEligibility: "NOT_EXPORTABLE"
+        }
+      };
+      const contactResult = this._contactEngine.process(contactInput);
+      const contactList = contactResult.contacts || [];
+      const peopleList = contactResult.people || [];
+      const emails = contactList.filter((c) => c.contactType === "EMAIL").map((c) => ({
+        email: c.normalizedValue,
+        rawEmail: c.rawValue,
+        classification: c.emailClassification || "GENERIC_BUSINESS",
+        sourceUrl: c.sourceUrl,
+        observedAt: c.lastObservedAt
+      }));
+      const phones = contactList.filter((c) => c.contactType === "PHONE").map((c) => ({
+        phone: c.normalizedValue,
+        rawPhone: c.rawValue,
+        sourceUrl: c.sourceUrl,
+        observedAt: c.lastObservedAt
+      }));
+      const socialProfiles = contactList.filter((c) => c.contactType === "SOCIAL_PROFILE").map((c) => ({
+        platform: String(c.socialPlatform || "UNKNOWN"),
+        url: c.normalizedValue,
+        sourceUrl: c.sourceUrl
+      }));
+      const people = peopleList.map((p) => ({
+        fullName: p.fullName,
+        jobTitle: p.jobTitle,
+        email: p.emailRefs?.length ? p.emailRefs[0] : void 0,
+        phone: p.phoneRefs?.length ? p.phoneRefs[0] : void 0,
+        linkedInUrl: p.socialRefs?.length ? p.socialRefs[0] : void 0,
+        sourceUrl: p.sourcePages?.[0] || job.targetUrl,
+        evidenceType: "VISIBLE_CONTENT",
+        observedAt: p.lastObservedAt
+      }));
+      this._emailsFound += emails.length;
+      this._phonesFound += phones.length;
+      this._socialLinksFound += socialProfiles.length;
+      this._personsFound += people.length;
+      if (contactResult.conflicts?.length) {
+        this._contactConflicts += contactResult.conflicts.length;
+      }
+      let status = "COMPLETED";
+      let termReason = "SUCCESS";
+      if (visitedCount === 0) {
+        if (job.attemptCount <= this._policy.maxRetries && !this._isCancelled) {
+          this._pendingQueue.unshift(job);
+          this._drainQueueAsync();
+          return;
+        }
+        status = "FAILED";
+        termReason = "ERROR";
+        this._failedCount++;
+      } else if (websiteResult.crawlStats?.pagesFailed && websiteResult.crawlStats.pagesFailed.length > 0) {
+        status = "PARTIAL";
+        termReason = "MAX_PAGES";
+        this._partialCount++;
+      } else {
+        this._completedCount++;
+      }
+      const enrichmentResult = {
+        sessionCandidateId: job.candidateId,
+        websiteTarget: job.targetUrl,
+        status,
+        pagesVisited: websiteResult.crawlStats?.pagesVisited || [],
+        pagesDiscovered: websiteResult.crawlStats?.pagesDiscovered || visitedCount,
+        websiteEvidence: {
+          targetUrl: job.targetUrl,
+          canonicalUrl: websiteResult.identity.canonicalUrl || job.targetUrl,
+          domain: websiteResult.identity.domain,
+          pageTitle: websiteResult.identity.pageTitle,
+          metaDescription: websiteResult.identity.metaDescription,
+          description: websiteResult.description?.text,
+          businessName: websiteResult.identity.businessName,
+          businessHours: websiteResult.identity.businessHours,
+          technologies: (websiteResult.technologySignals || []).map((t) => ({
+            name: t.name,
+            category: t.category,
+            state: t.state
+          })),
+          services: websiteResult.identity.services || [],
+          sourcePages: websiteResult.sourcePages || []
+        },
+        contactEvidence: {
+          emails,
+          phones,
+          socialProfiles,
+          address: websiteResult.address ? {
+            address: websiteResult.address.normalizedAddress,
+            sourceUrl: websiteResult.address.evidence?.[0]?.pageUrl || job.targetUrl
+          } : websiteResult.identity?.address ? {
+            address: websiteResult.identity.address,
+            sourceUrl: job.targetUrl
+          } : void 0,
+          contactForms: (websiteResult.contactForms || []).map((f) => ({
+            actionUrl: f.formAction,
+            formType: f.formMethod || (f.hasEmailField ? "EMAIL" : void 0)
+          }))
+        },
+        personEvidence: {
+          people
+        },
+        qualityIssues: [],
+        diagnostics: [],
+        startedAt: job.enqueuedAt,
+        completedAt: (/* @__PURE__ */ new Date()).toISOString(),
+        durationMs: Date.now() - startTime,
+        truncated: false,
+        terminationReason: termReason,
+        crawlerVersion: ENRICHMENT_ADAPTER_VERSION,
+        retryCount: job.attemptCount - 1,
+        fromCache: websiteResult.crawlStats?.fromCache || false
+      };
+      this._completedResults.set(job.candidateId, enrichmentResult);
+      const enrichedCandidate = mergeEnrichmentIntoCandidate(job.candidate, enrichmentResult);
+      if (this._callbacks.onCandidateEnriched) {
+        this._callbacks.onCandidateEnriched(enrichedCandidate, enrichmentResult);
+      }
+    } catch (err) {
+      const errMsg = err?.message || String(err);
+      const isTransient = this._isTransientError(errMsg);
+      const isSecurityBlock = errMsg.includes("SSRF") || errMsg.includes("Cross-origin") || errMsg.includes("redirect") || errMsg.includes("FORBIDDEN");
+      if (isTransient && !isSecurityBlock && job.attemptCount <= this._policy.maxRetries && !this._isCancelled) {
+        this._pendingQueue.unshift(job);
+        this._recordDiagnostic({
+          code: "ENRICHMENT_TIMEOUT",
+          severity: "P2",
+          recoveryClass: "RETRYABLE",
+          message: `Candidate ${job.candidateId} crawl attempt ${job.attemptCount} failed: ${errMsg}. Retrying.`,
+          timestamp: (/* @__PURE__ */ new Date()).toISOString()
+        });
+      } else {
+        const isBlocked = isSecurityBlock || errMsg.includes("Invalid target");
+        const status = isBlocked ? "BLOCKED" : "FAILED";
+        if (isBlocked) {
+          this._blockedCount++;
+        } else {
+          this._failedCount++;
+        }
+        const failedResult = {
+          sessionCandidateId: job.candidateId,
+          websiteTarget: job.targetUrl,
+          status,
+          pagesVisited: [],
+          pagesDiscovered: 0,
+          qualityIssues: [errMsg],
+          diagnostics: [],
+          startedAt: job.enqueuedAt,
+          completedAt: (/* @__PURE__ */ new Date()).toISOString(),
+          durationMs: Date.now() - startTime,
+          truncated: false,
+          terminationReason: isBlocked ? "SSRF_BLOCKED" : "ERROR",
+          crawlerVersion: ENRICHMENT_ADAPTER_VERSION,
+          retryCount: job.attemptCount - 1,
+          fromCache: false
+        };
+        this._completedResults.set(job.candidateId, failedResult);
+        this._recordDiagnostic({
+          code: isBlocked ? "WEBSITE_SSRF_BLOCKED" : "ENRICHMENT_TIMEOUT",
+          severity: "P2",
+          recoveryClass: "TERMINAL",
+          message: `Candidate ${job.candidateId} enrichment ${status.toLowerCase()}: ${errMsg}`,
+          timestamp: (/* @__PURE__ */ new Date()).toISOString()
+        });
+        const enrichedCandidate = mergeEnrichmentIntoCandidate(job.candidate, failedResult);
+        if (this._callbacks.onCandidateEnriched) {
+          this._callbacks.onCandidateEnriched(enrichedCandidate, failedResult);
+        }
+      }
+    }
+  }
+  _isTransientError(msg) {
+    const lower = msg.toLowerCase();
+    return lower.includes("timeout") || lower.includes("aborted") || lower.includes("econnreset") || lower.includes("network");
+  }
+  _recordDiagnostic(diag) {
+    if (this._callbacks.onDiagnostic) {
+      this._callbacks.onDiagnostic(diag);
+    }
+  }
+  _notifyProgress() {
+    if (this._callbacks.onQueueProgress) {
+      this._callbacks.onQueueProgress(this.getSnapshot());
+    }
+  }
+};
+
+// src/extension/acquisition/engine/bulkOrchestrator.ts
+var GoogleMapsBulkOrchestrator = class {
+  constructor(params) {
+    this._deduplicator = new SessionCandidateDeduplicator();
+    this._state = "PLAN_CREATED";
+    this._terminationReason = "NONE";
+    this._startedAt = "";
+    this._lastUpdatedAt = "";
+    this._unitSummaries = /* @__PURE__ */ new Map();
+    this._diagnostics = [];
+    // Concurrency & lifecycle locks
+    this._isExecuting = false;
+    this._isPaused = false;
+    this._isCancelled = false;
+    // Candidate observations tracking
+    this._rawCandidateObservations = 0;
+    this._duplicateObservationCount = 0;
+    this._plan = params.plan;
+    this._runId = params.runId || `brun_${hashStringDeterministic(params.plan.planFingerprint + Date.now().toString())}`;
+    this._tabDriver = params.tabDriver || {
+      async navigateTab() {
+        return true;
+      },
+      async getTab(id) {
+        return { tabId: id, url: "https://www.google.com/maps", status: "complete" };
+      },
+      async getTabInfo(id) {
+        return { tabId: id, url: "https://www.google.com/maps", status: "complete" };
+      },
+      async probeTabState() {
+        return { ready: true, pageKind: "SEARCH_RESULTS", confidence: 1, isValid: true };
+      }
+    };
+    this._tabId = params.tabId || 1;
+    this._callbacks = params.callbacks || {};
+    const rawPol = params.policy || {};
+    const maxRetries = rawPol.maxAttemptsPerUnit !== void 0 ? Math.max(0, rawPol.maxAttemptsPerUnit - 1) : rawPol.maxRetriesPerUnit !== void 0 ? rawPol.maxRetriesPerUnit : params.plan.executionPolicy.maxRetriesPerUnit;
+    const retryDelay = rawPol.delayBetweenRetriesMs !== void 0 ? rawPol.delayBetweenRetriesMs : rawPol.retryBackoffMs !== void 0 ? rawPol.retryBackoffMs : params.plan.executionPolicy.retryBackoffMs;
+    this._policy = {
+      ...params.plan.executionPolicy,
+      ...rawPol,
+      maxRetriesPerUnit: maxRetries,
+      retryBackoffMs: retryDelay
+    };
+    this._domProvider = params.domProvider || (() => typeof document !== "undefined" ? document : null);
+    this._queue = new GoogleMapsAcquisitionQueue(params.plan.searchUnits);
+    this._orchestrator = new GoogleMapsNavigationOrchestrator(this._tabDriver, {
+      timeoutMs: this._policy.navigationTimeoutMs,
+      pollIntervalMs: 50
+    });
+    this._checkpointManager = new GoogleMapsCheckpointManager(
+      params.storageAdapter || new InMemoryCheckpointStorage()
+    );
+    this._filterManager = new GoogleMapsFilterStateManager([], params.plan.initialFilter);
+    this._enrichmentQueue = new GoogleMapsEnrichmentQueue(
+      this._runId,
+      params.enrichmentPolicy || {},
+      {
+        onCandidateEnriched: (enrichedCandidate) => {
+          this._deduplicator.updateCandidate(enrichedCandidate);
+          this._filterManager.ingestCandidate(enrichedCandidate);
+          this._notifyProgress();
+        },
+        onQueueProgress: () => {
+          this._notifyProgress();
+        },
+        onDiagnostic: (diag) => {
+          this._diagnostics.push(diag);
+          if (this._callbacks.onDiagnostic) {
+            this._callbacks.onDiagnostic(diag);
+          }
+        }
+      },
+      params.enrichmentCustomFetch
+    );
+    for (const unit of params.plan.searchUnits) {
+      this._unitSummaries.set(unit.searchUnitId, {
+        searchUnitId: unit.searchUnitId,
+        keyword: unit.normalizedKeyword,
+        location: unit.normalizedLocation,
+        query: unit.normalizedQuery,
+        status: "PENDING",
+        attemptCount: 0,
+        elapsedMs: 0,
+        candidateCount: 0,
+        duplicateCount: 0
+      });
+    }
+    this._state = "QUEUED";
+    this._lastUpdatedAt = (/* @__PURE__ */ new Date()).toISOString();
+  }
+  // ==========================================================================
+  // Public Lifecycle Controls (Start, Pause, Resume, Cancel)
+  // ==========================================================================
+  /**
+   * Starts sequential execution of the bulk research plan.
+   * Enforces single-worker concurrency guard.
+   */
+  async start() {
+    if (this._isExecuting || this._state === "RUNNING") {
+      return Object.assign(this.getSnapshot(), {
+        success: false,
+        error: `A bulk research run is already active (${this._runId})`
+      });
+    }
+    if (this._isCancelled || this._state === "CANCELLED") {
+      throw new Error(`Cannot start a cancelled bulk research run (${this._runId})`);
+    }
+    if (this._state === "COMPLETED" || this._state === "PARTIALLY_COMPLETED") {
+      throw new Error(`Cannot start an already completed bulk research run (${this._runId})`);
+    }
+    this._state = "RUNNING";
+    this._isPaused = false;
+    this._isCancelled = false;
+    this._startedAt = this._startedAt || (/* @__PURE__ */ new Date()).toISOString();
+    this._lastUpdatedAt = (/* @__PURE__ */ new Date()).toISOString();
+    await this._saveCheckpoint();
+    this._notifyProgress();
+    this._executionPromise = this._runExecutionLoop().catch((err) => {
+      this._recordError("FATAL_RUN_ERROR", `Execution loop crashed: ${err.message || String(err)}`);
+    });
+    await this._executionPromise;
+    return this.getSnapshot();
+  }
+  /**
+   * Pauses the active bulk research run.
+   * Ongoing SearchUnit reaches a safe boundary; no further units are claimed.
+   */
+  async pause() {
+    if (this._state === "PAUSED" || this._isPaused) {
+      return this.getSnapshot();
+    }
+    if (this._isCancelled || this._state === "CANCELLED" || this._state === "COMPLETED" || this._state === "PARTIALLY_COMPLETED" || this._state === "FAILED") {
+      return this.getSnapshot();
+    }
+    this._isPaused = true;
+    this._state = "PAUSED";
+    this._queue.pause();
+    this._enrichmentQueue.pause();
+    this._lastUpdatedAt = (/* @__PURE__ */ new Date()).toISOString();
+    if (this._activeScrollEngine) {
+      try {
+        this._activeScrollEngine.requestPause();
+      } catch {
+      }
+    }
+    if (this._currentUnit) {
+      this._pausedUnitId = this._currentUnit.searchUnitId;
+      const summary = this._unitSummaries.get(this._currentUnit.searchUnitId);
+      if (summary && (summary.status === "RUNNING" || summary.status === "CLAIMED")) {
+        this._unitSummaries.set(this._currentUnit.searchUnitId, {
+          ...summary,
+          status: "PAUSED",
+          terminationReason: "USER_PAUSED"
+        });
+      }
+    }
+    await this._saveCheckpoint();
+    this._notifyProgress();
+    return this.getSnapshot();
+  }
+  /**
+   * Resumes a paused bulk research run.
+   */
+  async resume() {
+    if (this._isCancelled || this._state === "CANCELLED") {
+      return false;
+    }
+    if (this._state === "COMPLETED" || this._state === "PARTIALLY_COMPLETED" || this._state === "FAILED") {
+      return false;
+    }
+    if (this._state !== "PAUSED" && !this._isPaused) {
+      return this.getSnapshot();
+    }
+    this._isPaused = false;
+    this._state = "RUNNING";
+    this._queue.resume();
+    this._enrichmentQueue.resume();
+    this._lastUpdatedAt = (/* @__PURE__ */ new Date()).toISOString();
+    if (this._pausedUnitId) {
+      const summary = this._unitSummaries.get(this._pausedUnitId);
+      if (summary && summary.status === "PAUSED") {
+        this._unitSummaries.set(this._pausedUnitId, {
+          ...summary,
+          status: "RUNNING"
+        });
+      }
+    }
+    await this._saveCheckpoint();
+    this._notifyProgress();
+    if (!this._isExecuting) {
+      this._executionPromise = this._runExecutionLoop().catch((err) => {
+        this._recordError("FATAL_RUN_ERROR", `Execution loop crashed on resume: ${err.message || String(err)}`);
+      });
+      await this._executionPromise;
+    }
+    return this.getSnapshot();
+  }
+  /**
+   * Idempotently cancels the bulk research run.
+   * Ongoing SearchUnit halts; all pending units are marked CANCELLED.
+   */
+  async cancel(reason = "USER_CANCELLED") {
+    if (this._state === "CANCELLED" && this._isCancelled) {
+      return this.getSnapshot();
+    }
+    this._isCancelled = true;
+    this._isPaused = false;
+    this._state = "CANCELLED";
+    this._terminationReason = "USER_CANCELLED";
+    this._queue.cancel();
+    this._enrichmentQueue.cancel();
+    this._lastUpdatedAt = (/* @__PURE__ */ new Date()).toISOString();
+    this._completedAt = (/* @__PURE__ */ new Date()).toISOString();
+    if (this._activeScrollEngine) {
+      try {
+        this._activeScrollEngine.requestCancel();
+      } catch {
+      }
+    }
+    if (this._currentUnit) {
+      const summary = this._unitSummaries.get(this._currentUnit.searchUnitId);
+      if (summary && summary.status !== "COMPLETED" && summary.status !== "FAILED") {
+        this._unitSummaries.set(this._currentUnit.searchUnitId, {
+          ...summary,
+          status: "CANCELLED",
+          completedAt: (/* @__PURE__ */ new Date()).toISOString(),
+          terminationReason: "USER_CANCELLED"
+        });
+      }
+    }
+    for (const [id, summary] of this._unitSummaries.entries()) {
+      if (summary.status === "PENDING" || summary.status === "CLAIMED" || summary.status === "PAUSED") {
+        this._unitSummaries.set(id, {
+          ...summary,
+          status: "CANCELLED",
+          completedAt: (/* @__PURE__ */ new Date()).toISOString(),
+          terminationReason: "USER_CANCELLED"
+        });
+      }
+    }
+    await this._saveCheckpoint();
+    this._notifyProgress();
+    return this.getSnapshot();
+  }
+  // ==========================================================================
+  // Filter Integration (Post-Acquisition / View Layer)
+  // ==========================================================================
+  getFilterManager() {
+    return this._filterManager;
+  }
+  // ==========================================================================
+  // Snapshots & Metrics
+  // ==========================================================================
+  getMetrics() {
+    let completedUnits = 0;
+    let failedUnits = 0;
+    let cancelledUnits = 0;
+    let runningUnits = 0;
+    let queuedUnits = 0;
+    let blockedUnits = 0;
+    let retryingUnits = 0;
+    for (const summary of this._unitSummaries.values()) {
+      if (summary.attemptCount > 1 || summary.status === "RETRY_PENDING") {
+        retryingUnits++;
+      }
+      switch (summary.status) {
+        case "COMPLETED":
+          completedUnits++;
+          break;
+        case "FAILED":
+          failedUnits++;
+          break;
+        case "CANCELLED":
+          cancelledUnits++;
+          break;
+        case "RUNNING":
+          runningUnits++;
+          break;
+        case "CLAIMED":
+        case "PENDING":
+        case "PAUSED":
+        case "RETRY_PENDING":
+          queuedUnits++;
+          break;
+        case "BLOCKED":
+          blockedUnits++;
+          break;
+      }
+    }
+    const filteredView = this._filterManager.getFilteredView();
+    const enrichmentSnap = this._enrichmentQueue.getSnapshot();
+    return {
+      totalSearchUnits: this._plan.totalUnits,
+      queuedUnits,
+      runningUnits,
+      completedUnits,
+      failedUnits,
+      retryingUnits,
+      cancelledUnits,
+      blockedUnits,
+      rawCandidateObservations: this._rawCandidateObservations,
+      uniqueCandidateCount: this._deduplicator.size,
+      duplicateObservationCount: this._duplicateObservationCount,
+      currentFilteredMatchCount: filteredView.matchingCount,
+      eligibleForEnrichment: enrichmentSnap.totalEligible,
+      enrichmentQueued: enrichmentSnap.queued,
+      enrichmentRunning: enrichmentSnap.running,
+      enrichmentCompleted: enrichmentSnap.completed,
+      enrichmentPartial: enrichmentSnap.partial,
+      enrichmentFailed: enrichmentSnap.failed,
+      enrichmentBlocked: enrichmentSnap.blocked,
+      enrichmentSkipped: enrichmentSnap.skipped,
+      enrichmentDeferred: enrichmentSnap.deferred,
+      emailsFound: enrichmentSnap.emailsFound || void 0,
+      phonesFound: enrichmentSnap.phonesFound || void 0,
+      personsFound: enrichmentSnap.personsFound || void 0
+    };
+  }
+  verifyRunInvariants() {
+    const metrics = this.getMetrics();
+    const terminalCount = metrics.completedUnits + metrics.failedUnits + metrics.cancelledUnits;
+    const nonTerminalCount = Array.from(this._unitSummaries.values()).filter((s) => s.status === "PENDING" || s.status === "CLAIMED" || s.status === "RUNNING" || s.status === "PAUSED" || s.status === "RETRY_PENDING" || s.status === "BLOCKED").length;
+    const sum = terminalCount + nonTerminalCount;
+    const valid = sum === metrics.totalSearchUnits && metrics.completedUnits <= metrics.totalSearchUnits && metrics.failedUnits <= metrics.totalSearchUnits && metrics.cancelledUnits <= metrics.totalSearchUnits;
+    return {
+      valid,
+      sum,
+      total: metrics.totalSearchUnits,
+      details: {
+        completed: metrics.completedUnits,
+        failed: metrics.failedUnits,
+        cancelled: metrics.cancelledUnits,
+        queued: metrics.queuedUnits,
+        running: metrics.runningUnits,
+        retrying: metrics.retryingUnits,
+        blocked: metrics.blockedUnits
+      }
+    };
+  }
+  setFilter(criteria) {
+    if (criteria.ratingFilter !== void 0) {
+      this._filterManager.setRatingFilter(criteria.ratingFilter);
+    } else if (criteria.rating !== void 0) {
+      this._filterManager.setRatingFilter(criteria.rating);
+    }
+    if (criteria.websiteFilter !== void 0) {
+      this._filterManager.setWebsiteFilter(criteria.websiteFilter);
+    } else if (criteria.website !== void 0) {
+      this._filterManager.setWebsiteFilter(criteria.website);
+    }
+    this._notifyProgress();
+  }
+  ingestCandidate(cand) {
+    this._rawCandidateObservations++;
+    const dedupeResult = this._deduplicator.register(cand);
+    if (!dedupeResult.isNew) {
+      this._duplicateObservationCount++;
+    }
+    this._filterManager.ingestCandidate(dedupeResult.candidate);
+    if (dedupeResult.candidate && "websiteUrl" in dedupeResult.candidate) {
+      this._enrichmentQueue.enqueue(dedupeResult.candidate);
+    }
+    this._notifyProgress();
+  }
+  getEnrichmentQueue() {
+    return this._enrichmentQueue;
+  }
+  getEnrichmentSnapshot() {
+    return this._enrichmentQueue.getSnapshot();
+  }
+  setEnrichmentCustomFetch(fetcher) {
+    this._enrichmentQueue.setCustomFetch(fetcher);
+  }
+  getSessionDataset() {
+    return this._filterManager.getRawDataset();
+  }
+  getQualitySnapshot() {
+    return this._deduplicator.getQualitySnapshot();
+  }
+  getPotentialDuplicates() {
+    return this._deduplicator.getPotentialDuplicates();
+  }
+  getIdentityConflicts() {
+    return this._deduplicator.getIdentityConflicts();
+  }
+  get deduplicator() {
+    return this._deduplicator;
+  }
+  get queue() {
+    return this._queue;
+  }
+  get enrichmentQueue() {
+    return this._enrichmentQueue;
+  }
+  resetSearchUnitState() {
+    if (this._activeScrollEngine) {
+      this._activeScrollEngine = void 0;
+    }
+  }
+  isCancelled() {
+    return this._isCancelled;
+  }
+  createCheckpoint() {
+    const metrics = this.getMetrics();
+    const summariesArray = Array.from(this._unitSummaries.values());
+    return {
+      checkpointId: `bcp_${hashStringDeterministic(this._runId + this._lastUpdatedAt)}`,
+      runId: this._runId,
+      planId: this._plan.planId,
+      planFingerprint: this._plan.planFingerprint,
+      schemaVersion: BULK_PLAN_SCHEMA_VERSION,
+      engineVersion: ENGINE_ADAPTER_VERSION,
+      timestamp: this._lastUpdatedAt,
+      state: this._state,
+      terminationReason: this._terminationReason,
+      currentSearchUnitId: this._currentUnit?.searchUnitId || this._pausedUnitId,
+      currentQueueIndex: metrics.completedUnits + metrics.failedUnits,
+      tabId: this._tabId,
+      activeFilter: this._filterManager.getActiveFilter(),
+      metrics,
+      unitSummaries: summariesArray,
+      startedAt: this._startedAt,
+      lastUpdatedAt: this._lastUpdatedAt,
+      diagnosticsSummary: {
+        warningCount: this._diagnostics.filter((d) => d.severity === "P2").length,
+        errorCount: this._diagnostics.filter((d) => d.severity === "P0" || d.severity === "P1").length,
+        lastErrorCode: this._diagnostics[this._diagnostics.length - 1]?.code
+      }
+    };
+  }
+  restoreFromCheckpoint(cp) {
+    if (!cp || typeof cp !== "object") return false;
+    if (cp.schemaVersion !== BULK_PLAN_SCHEMA_VERSION) {
+      this._recordDiagnostic({
+        code: "INCOMPATIBLE_ADAPTER_VERSION",
+        severity: "P1",
+        recoveryClass: "TERMINAL",
+        message: `Incompatible checkpoint schema version: ${cp.schemaVersion}`,
+        timestamp: (/* @__PURE__ */ new Date()).toISOString()
+      });
+      return false;
+    }
+    if (cp.planFingerprint !== this._plan.planFingerprint) {
+      this._recordDiagnostic({
+        code: "STALE_METADATA",
+        severity: "P1",
+        recoveryClass: "TERMINAL",
+        message: `Checkpoint plan fingerprint mismatch: ${cp.planFingerprint} !== ${this._plan.planFingerprint}`,
+        timestamp: (/* @__PURE__ */ new Date()).toISOString()
+      });
+      return false;
+    }
+    this._runId = cp.runId || this._runId;
+    this._state = cp.state;
+    this._terminationReason = cp.terminationReason;
+    if (cp.activeFilter) {
+      this._filterManager.setFilter(cp.activeFilter);
+    }
+    return true;
+  }
+  async _executeLoop() {
+    return this._runExecutionLoop();
+  }
+  getSnapshot() {
+    const metrics = this.getMetrics();
+    const progressPercent = metrics.totalSearchUnits > 0 ? Math.round((metrics.completedUnits + metrics.failedUnits + metrics.cancelledUnits) / metrics.totalSearchUnits * 100) : 0;
+    const activeUnitObj = this._currentUnit || (this._pausedUnitId ? this._plan.searchUnits.find((u) => u.searchUnitId === this._pausedUnitId) : void 0);
+    const currentUnitSummary = activeUnitObj ? this._unitSummaries.get(activeUnitObj.searchUnitId) : void 0;
+    let currentUnitInfo = void 0;
+    if (activeUnitObj && currentUnitSummary) {
+      const allUnits = this._plan.searchUnits;
+      const unitIndex = allUnits.findIndex((u) => u.searchUnitId === activeUnitObj.searchUnitId) + 1;
+      currentUnitInfo = {
+        searchUnitId: activeUnitObj.searchUnitId,
+        keyword: activeUnitObj.normalizedKeyword,
+        location: activeUnitObj.normalizedLocation,
+        query: activeUnitObj.normalizedQuery,
+        unitIndex: unitIndex > 0 ? unitIndex : 1,
+        totalUnits: this._plan.totalUnits,
+        status: currentUnitSummary.status,
+        attemptCount: currentUnitSummary.attemptCount
+      };
+    }
+    return {
+      runId: this._runId,
+      planId: this._plan.planId,
+      state: this._state,
+      terminationReason: this._terminationReason,
+      currentSearchUnit: currentUnitInfo,
+      currentUnit: currentUnitInfo,
+      totalUnits: this._plan.totalUnits,
+      completedUnits: metrics.completedUnits,
+      failedUnits: metrics.failedUnits,
+      cancelledUnits: metrics.cancelledUnits,
+      pendingUnits: metrics.queuedUnits,
+      progress: {
+        unitsCompleted: metrics.completedUnits,
+        totalUnits: this._plan.totalUnits,
+        percent: progressPercent
+      },
+      progressPercent,
+      metrics,
+      activeFilter: this._filterManager.getActiveFilter(),
+      filterSnapshot: {
+        ...this._filterManager.getActiveFilter(),
+        ratingFilter: this._filterManager.getActiveFilter().rating,
+        websiteFilter: this._filterManager.getActiveFilter().website
+      },
+      isPausable: this._state === "RUNNING",
+      isResumable: this._state === "PAUSED",
+      isCancellable: this._state === "RUNNING" || this._state === "PAUSED" || this._state === "QUEUED",
+      startedAt: this._startedAt,
+      lastUpdatedAt: this._lastUpdatedAt,
+      completedAt: this._completedAt,
+      diagnostics: [...this._diagnostics],
+      enrichmentSnapshot: this._enrichmentQueue.getSnapshot()
+    };
+  }
+  // ==========================================================================
+  // Core Sequential Execution Loop
+  // ==========================================================================
+  async _runExecutionLoop() {
+    if (this._isExecuting) {
+      return;
+    }
+    this._isExecuting = true;
+    try {
+      while (!this._isPaused && !this._isCancelled) {
+        const elapsedRunMs = Date.now() - new Date(this._startedAt).getTime();
+        if (elapsedRunMs > this._policy.maxRunDurationMs) {
+          this._terminationReason = "TIME_LIMIT_REACHED";
+          this._recordDiagnostic({
+            code: "OBSERVATION_TIMEOUT",
+            severity: "P1",
+            recoveryClass: "TERMINAL",
+            message: `Bulk run duration exceeded limit of ${this._policy.maxRunDurationMs}ms`,
+            timestamp: (/* @__PURE__ */ new Date()).toISOString()
+          });
+          break;
+        }
+        if (this._plan.maxResults !== void 0 && this._filterManager.getFilteredView().matchingCount >= this._plan.maxResults) {
+          this._terminationReason = "PLAN_LIMIT_REACHED";
+          break;
+        }
+        let unit = null;
+        if (this._pausedUnitId) {
+          unit = this._plan.searchUnits.find((u) => u.searchUnitId === this._pausedUnitId) || null;
+          this._pausedUnitId = void 0;
+        }
+        if (!unit) {
+          unit = this._queue.claimNext();
+        }
+        if (!unit) {
+          break;
+        }
+        this._currentUnit = unit;
+        await this._executeSingleSearchUnit(unit);
+        this._currentUnit = void 0;
+      }
+    } finally {
+      this._isExecuting = false;
+      this._evaluateRunCompletion();
+    }
+  }
+  /**
+   * Executes a single claimed SearchUnit in the dedicated browser tab.
+   */
+  async _executeSingleSearchUnit(unit) {
+    const summary = this._unitSummaries.get(unit.searchUnitId) || {
+      searchUnitId: unit.searchUnitId,
+      keyword: unit.normalizedKeyword,
+      location: unit.normalizedLocation,
+      query: unit.normalizedQuery,
+      status: "PENDING",
+      attemptCount: 0,
+      elapsedMs: 0,
+      candidateCount: 0,
+      duplicateCount: 0
+    };
+    summary.attemptCount++;
+    summary.status = "RUNNING";
+    summary.startedAt = summary.startedAt || (/* @__PURE__ */ new Date()).toISOString();
+    this._currentUnitSummary = summary;
+    this._unitSummaries.set(unit.searchUnitId, summary);
+    const allUnits = this._plan.searchUnits;
+    const unitIndex = allUnits.findIndex((u) => u.searchUnitId === unit.searchUnitId) + 1;
+    const onStart = this._callbacks.onSearchUnitStarted || this._callbacks.onUnitStarted;
+    if (onStart) {
+      onStart(unit, unitIndex, this._plan.totalUnits);
+    }
+    this._notifyProgress();
+    if (this._isCancelled || this._state === "CANCELLED") {
+      return;
+    }
+    if (this._isPaused || this._state === "PAUSED") {
+      summary.status = "PAUSED";
+      summary.terminationReason = "USER_PAUSED";
+      this._pausedUnitId = unit.searchUnitId;
+      this._unitSummaries.set(unit.searchUnitId, summary);
+      return;
+    }
+    const startTime = Date.now();
+    try {
+      const tabOwnership = await this._orchestrator.validateTabOwnership(this._tabId, this._runId);
+      if (!tabOwnership.valid) {
+        throw new Error(tabOwnership.diagnostic?.message || "Dedicated acquisition tab ownership lost");
+      }
+      if (this._isPaused || this._state === "PAUSED") {
+        summary.status = "PAUSED";
+        summary.terminationReason = "USER_PAUSED";
+        this._pausedUnitId = unit.searchUnitId;
+        this._unitSummaries.set(unit.searchUnitId, summary);
+        return;
+      }
+      const navResult = await this._orchestrator.navigateToSearchUnit(
+        this._tabId,
+        unit,
+        this._runId
+      );
+      if (!navResult.success) {
+        throw new Error(navResult.error || "Navigation to Google Maps search failed");
+      }
+      if (this._isPaused || this._state === "PAUSED") {
+        summary.status = "PAUSED";
+        summary.terminationReason = "USER_PAUSED";
+        this._pausedUnitId = unit.searchUnitId;
+        this._unitSummaries.set(unit.searchUnitId, summary);
+        return;
+      }
+      const scrollResult = await this._executeFeedScrolling(unit);
+      if (this._isCancelled) {
+        return;
+      }
+      if (this._isPaused || this._state === "PAUSED" || scrollResult.terminationReason === "USER_PAUSED") {
+        summary.status = "PAUSED";
+        summary.terminationReason = "USER_PAUSED";
+        summary.elapsedMs += Date.now() - startTime;
+        summary.candidateCount = scrollResult.candidatesCount;
+        this._pausedUnitId = unit.searchUnitId;
+        this._unitSummaries.set(unit.searchUnitId, summary);
+        return;
+      }
+      summary.status = "COMPLETED";
+      summary.completedAt = (/* @__PURE__ */ new Date()).toISOString();
+      summary.elapsedMs += Date.now() - startTime;
+      summary.candidateCount = scrollResult.candidatesCount;
+      summary.terminationReason = scrollResult.terminationReason || "EXHAUSTED";
+      this._queue.complete(unit.searchUnitId, scrollResult.candidatesCount);
+      this._unitSummaries.set(unit.searchUnitId, summary);
+      const onComp = this._callbacks.onSearchUnitCompleted || this._callbacks.onUnitCompleted;
+      if (onComp) {
+        onComp(unit, summary);
+      }
+    } catch (err) {
+      if (this._isCancelled) {
+        return;
+      }
+      summary.elapsedMs += Date.now() - startTime;
+      const isTransient = this._isTransientError(err.message || String(err));
+      const maxAttempts = this._policy.maxAttemptsPerUnit || this._policy.maxRetriesPerUnit + 1;
+      if (isTransient && summary.attemptCount < maxAttempts && !this._isCancelled) {
+        summary.status = "RETRY_PENDING";
+        summary.lastError = err.message || String(err);
+        this._unitSummaries.set(unit.searchUnitId, summary);
+        this._recordDiagnostic({
+          code: "NAVIGATION_TIMEOUT",
+          severity: "P2",
+          recoveryClass: "RETRYABLE",
+          message: `SearchUnit ${unit.normalizedQuery} failed attempt ${summary.attemptCount}. Scheduling retry. Error: ${err.message}`,
+          timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+          searchUnitId: unit.searchUnitId
+        });
+        this._queue.fail(unit.searchUnitId, err.message || String(err));
+        if (this._policy.retryBackoffMs > 0) {
+          await new Promise((resolve) => setTimeout(resolve, this._policy.retryBackoffMs * summary.attemptCount));
+        }
+      } else {
+        summary.status = "FAILED";
+        summary.completedAt = (/* @__PURE__ */ new Date()).toISOString();
+        summary.lastError = err.message || String(err);
+        summary.terminationReason = summary.attemptCount >= maxAttempts ? "RETRY_EXHAUSTED" : "ERROR";
+        this._unitSummaries.set(unit.searchUnitId, summary);
+        this._queue.fail(unit.searchUnitId, err.message || String(err));
+        const onFailed = this._callbacks.onSearchUnitFailed || this._callbacks.onUnitFailed;
+        if (onFailed) {
+          onFailed(unit, summary);
+        }
+        this._recordDiagnostic({
+          code: "CANDIDATE_OBSERVATION_FAILED",
+          severity: "P1",
+          recoveryClass: "RECOVERABLE",
+          message: `SearchUnit ${unit.normalizedQuery} failed terminally: ${err.message}`,
+          timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+          searchUnitId: unit.searchUnitId
+        });
+      }
+    } finally {
+      this._cleanupUnitResources();
+      await this._saveCheckpoint();
+      this._notifyProgress();
+    }
+  }
+  /**
+   * Executes feed scroll engine on the active tab and collects candidate observations.
+   */
+  async _executeFeedScrolling(unit) {
+    return new Promise((resolve, reject) => {
+      let unitObservedCount = 0;
+      const engine = new GoogleMapsFeedScrollEngine(
+        this._domProvider,
+        {
+          sessionId: this._runId,
+          searchUnitId: unit.searchUnitId,
+          searchKeyword: unit.normalizedKeyword,
+          searchLocation: unit.normalizedLocation,
+          pageUrl: unit.navigationUrl
+        },
+        {
+          maxCandidates: this._policy.maxCandidatesPerUnit,
+          maxScrollSteps: this._policy.maxScrollStepsPerUnit,
+          maxDurationMs: this._policy.maxDurationPerUnitMs
+        },
+        {
+          onNewCandidates: (newCandidates) => {
+            unitObservedCount += newCandidates.length;
+            this._rawCandidateObservations += newCandidates.length;
+            this._filterManager.ingestCandidates(newCandidates);
+            for (const cand of newCandidates) {
+              if (cand && "websiteUrl" in cand) {
+                this._enrichmentQueue.enqueue(cand);
+              }
+            }
+            if (this._callbacks.onCandidateBatch) {
+              this._callbacks.onCandidateBatch(newCandidates);
+            }
+            this._notifyProgress();
+            if (this._plan.maxResults !== void 0 && this._filterManager.getFilteredView().matchingCount >= this._plan.maxResults) {
+              if (this._activeScrollEngine) {
+                this._activeScrollEngine.requestCancel();
+              }
+            }
+          },
+          onBatchCompleted: () => {
+          },
+          isPaused: () => this._isPaused,
+          isCancelled: () => this._isCancelled,
+          onDiagnostic: (diag) => {
+            this._diagnostics.push(diag);
+            if (this._callbacks.onDiagnostic) {
+              this._callbacks.onDiagnostic(diag);
+            }
+          }
+        },
+        this._deduplicator
+      );
+      this._activeScrollEngine = engine;
+      engine.startScrollLoop().then((result) => {
+        this._activeScrollEngine = void 0;
+        resolve({
+          candidatesCount: unitObservedCount,
+          terminationReason: result.terminationReason || "EXHAUSTED"
+        });
+      }).catch((err) => {
+        this._activeScrollEngine = void 0;
+        reject(err);
+      });
+    });
+  }
+  /**
+   * Cleans up unit-local state (disconnects observers, clears timers).
+   * Preserves session-level deduplication and filter manager.
+   */
+  _cleanupUnitResources() {
+    if (this._activeScrollEngine) {
+      try {
+        this._activeScrollEngine.cleanup();
+      } catch {
+      }
+      this._activeScrollEngine = void 0;
+    }
+  }
+  _isTransientError(msg) {
+    const lower = msg.toLowerCase();
+    if (lower.includes("closed") || lower.includes("tab not found") || lower.includes("ownership lost") || lower.includes("inaccessible")) {
+      return false;
+    }
+    return lower.includes("timeout") || lower.includes("stalled") || lower.includes("loading") || lower.includes("temporary") || lower.includes("surface not found");
+  }
+  _evaluateRunCompletion() {
+    if (this._isCancelled || this._state === "CANCELLED") {
+      return;
+    }
+    if (this._isPaused || this._state === "PAUSED") {
+      return;
+    }
+    const q = this._queue.getProgress();
+    if (q.queued === 0 && q.inProgress === 0) {
+      this._completedAt = (/* @__PURE__ */ new Date()).toISOString();
+      if (q.failed > 0 && q.completed === 0) {
+        this._state = "FAILED";
+        this._terminationReason = "PARTIAL_FAILURE";
+      } else if (q.failed > 0) {
+        this._state = "PARTIALLY_COMPLETED";
+        this._terminationReason = "PARTIAL_FAILURE";
+      } else if (q.cancelled > 0 && q.completed === 0) {
+        this._state = "CANCELLED";
+        this._terminationReason = "USER_CANCELLED";
+      } else {
+        this._state = "COMPLETED";
+        this._terminationReason = "ALL_UNITS_COMPLETED";
+      }
+      this._lastUpdatedAt = (/* @__PURE__ */ new Date()).toISOString();
+      this._saveCheckpoint().catch(() => {
+      });
+      const snapshot = this.getSnapshot();
+      if (this._callbacks.onRunCompleted) {
+        this._callbacks.onRunCompleted(snapshot);
+      }
+      this._notifyProgress();
+    }
+  }
+  // ==========================================================================
+  // Checkpoints & Metadata Persistence (Firewall Compliant)
+  // ==========================================================================
+  async _saveCheckpoint() {
+    const metrics = this.getMetrics();
+    const qProgress = this._queue.getProgress();
+    const summariesArray = Array.from(this._unitSummaries.values());
+    const checkpoint = {
+      checkpointId: `bcp_${hashStringDeterministic(this._runId + this._lastUpdatedAt)}`,
+      runId: this._runId,
+      planId: this._plan.planId,
+      planFingerprint: this._plan.planFingerprint,
+      schemaVersion: BULK_PLAN_SCHEMA_VERSION,
+      engineVersion: ENGINE_ADAPTER_VERSION,
+      timestamp: this._lastUpdatedAt,
+      state: this._state,
+      terminationReason: this._terminationReason,
+      currentSearchUnitId: this._currentUnit?.searchUnitId,
+      currentQueueIndex: metrics.completedUnits + metrics.failedUnits,
+      tabId: this._tabId,
+      activeFilter: this._filterManager.getActiveFilter(),
+      metrics,
+      unitSummaries: summariesArray,
+      startedAt: this._startedAt,
+      lastUpdatedAt: this._lastUpdatedAt,
+      diagnosticsSummary: {
+        warningCount: this._diagnostics.filter((d) => d.severity === "P2").length,
+        errorCount: this._diagnostics.filter((d) => d.severity === "P0" || d.severity === "P1").length,
+        lastErrorCode: this._diagnostics[this._diagnostics.length - 1]?.code
+      }
+    };
+    if (this._currentUnit) {
+      await this._checkpointManager.createCheckpoint({
+        sessionId: this._runId,
+        searchUnit: this._currentUnit,
+        state: this._state === "PAUSED" ? "PAUSED" : "OBSERVING",
+        pageUrl: this._currentUnit.navigationUrl,
+        progress: {
+          totalUnits: this._plan.totalUnits,
+          completedUnits: metrics.completedUnits,
+          pendingUnits: metrics.queuedUnits
+        }
+      });
+    }
+  }
+  _recordDiagnostic(diag) {
+    this._diagnostics.push(diag);
+    if (this._callbacks.onDiagnostic) {
+      this._callbacks.onDiagnostic(diag);
+    }
+  }
+  _recordError(reason, msg) {
+    this._state = "FAILED";
+    this._terminationReason = reason;
+    this._completedAt = (/* @__PURE__ */ new Date()).toISOString();
+    this._recordDiagnostic({
+      code: "INVALID_STATE_TRANSITION",
+      severity: "P0",
+      recoveryClass: "TERMINAL",
+      message: msg,
+      timestamp: (/* @__PURE__ */ new Date()).toISOString()
+    });
+    this._notifyProgress();
+  }
+  _notifyProgress() {
+    if (this._callbacks.onProgress) {
+      this._callbacks.onProgress(this.getSnapshot());
+    }
+  }
+};
+
+// src/extension/acquisition/engine/runtimeCoordinator.ts
+function createDefaultTabDriver() {
+  return {
+    async getTab(tabId) {
+      if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.get) {
+        try {
+          const tab = await chrome.tabs.get(tabId);
+          return {
+            id: tab.id ?? tabId,
+            url: tab.url ?? "",
+            active: tab.active ?? false,
+            status: tab.status === "loading" ? "loading" : tab.status === "complete" ? "complete" : void 0
+          };
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    },
+    async navigateTab(tabId, url) {
+      if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.update) {
+        try {
+          await chrome.tabs.update(tabId, { url });
+          return true;
+        } catch {
+          return false;
+        }
+      }
+      return false;
+    },
+    async probeTabState(tabId) {
+      if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.get) {
+        try {
+          const tab = await chrome.tabs.get(tabId);
+          return detectGoogleMapsPage(tab.url ?? "");
+        } catch {
+        }
+      }
+      return detectGoogleMapsPage("");
+    }
+  };
+}
+var GoogleMapsRuntimeCoordinator = class {
+  constructor(defaultDriver = createDefaultTabDriver()) {
+    this._sessions = /* @__PURE__ */ new Map();
+    this._bulkOrchestrators = /* @__PURE__ */ new Map();
+    this._defaultDriver = defaultDriver;
+  }
+  /**
+   * Dispatches incoming Chrome extension runtime messages to the acquisition engine.
+   */
+  async handleAcquisitionMessage(rawMessage, _sender, customDriver) {
+    const validation = validateAcquisitionMessage(rawMessage);
+    if (!validation.valid || !validation.message) {
+      return {
+        success: false,
+        error: validation.error || "Invalid acquisition message"
+      };
+    }
+    const msg = validation.message;
+    const sessionId = msg.payload.sessionId;
+    switch (msg.type) {
+      case "START_GMAPS_ACQUISITION": {
+        return this.startAcquisition(
+          sessionId,
+          msg.payload.searchUnits,
+          msg.payload.config,
+          customDriver
+        );
+      }
+      case "PAUSE_GMAPS_ACQUISITION": {
+        return this.pauseAcquisition(sessionId);
+      }
+      case "RESUME_GMAPS_ACQUISITION": {
+        return this.resumeAcquisition(sessionId);
+      }
+      case "CANCEL_GMAPS_ACQUISITION": {
+        return this.cancelAcquisition(sessionId, msg.payload.reason);
+      }
+      case "GET_GMAPS_ACQUISITION_STATUS": {
+        return this.getAcquisitionStatus(sessionId);
+      }
+      case "EXECUTE_GMAPS_FEED_SCROLL": {
+        return this.executeFeedScroll(sessionId, msg.payload?.policy);
+      }
+      case "PROBE_GMAPS_LIVE_CAPABILITY": {
+        return this.probeLiveCapability(void 0, msg.payload?.url);
+      }
+      case "SET_GMAPS_FILTER": {
+        const p = msg.payload;
+        return this.setSessionFilter(sessionId, {
+          rating: normalizeRatingFilter2(p?.rating),
+          website: normalizeWebsiteFilter2(p?.website)
+        });
+      }
+      case "RESET_GMAPS_FILTER": {
+        return this.resetSessionFilter(sessionId);
+      }
+      case "GET_GMAPS_FILTERED_VIEW": {
+        return this.getSessionFilteredView(sessionId);
+      }
+      case "START_GMAPS_BULK_RESEARCH": {
+        const p = msg.payload;
+        return this.startBulkResearch({
+          keywords: p.keywords,
+          locations: p.locations,
+          ratingFilter: p.ratingFilter,
+          websiteFilter: p.websiteFilter,
+          maxResults: p.maxResults,
+          executionPolicy: p.executionPolicy,
+          tabId: p.tabId,
+          planId: p.planId,
+          runId: p.runId || sessionId
+        }, customDriver);
+      }
+      case "PAUSE_GMAPS_BULK_RESEARCH": {
+        return this.pauseBulkResearch(sessionId);
+      }
+      case "RESUME_GMAPS_BULK_RESEARCH": {
+        return this.resumeBulkResearch(sessionId);
+      }
+      case "CANCEL_GMAPS_BULK_RESEARCH": {
+        return this.cancelBulkResearch(sessionId, msg.payload?.reason);
+      }
+      case "GET_GMAPS_BULK_RESEARCH_STATUS": {
+        return this.getBulkResearchStatus(sessionId);
+      }
+      default:
+        return {
+          success: false,
+          error: `Unhandled acquisition message type: ${msg.type}`
+        };
+    }
+  }
+  /**
+   * Starts a Google Maps acquisition session from units input.
+   */
+  async startAcquisition(sessionId, inputs, configOverrides, driver) {
+    if (!sessionId) {
+      return { success: false, error: "sessionId is required" };
+    }
+    if (!inputs || inputs.length === 0) {
+      return { success: false, error: "At least one searchUnit is required" };
+    }
+    const tabDriver = driver || this._defaultDriver;
+    const config = {
+      ...DEFAULT_MAPS_SESSION_CONFIG,
+      ...configOverrides,
+      sessionId
+    };
+    const stateMachine = new GoogleMapsStateMachine(sessionId);
+    stateMachine.transitionTo("STARTING", "Starting Google Maps acquisition session");
+    const queue = new GoogleMapsAcquisitionQueue();
+    const plannedUnits = inputs.map((inp) => createSearchUnit(inp));
+    queue.enqueue(plannedUnits);
+    const checkpointManager = new GoogleMapsCheckpointManager(new InMemoryCheckpointStorage());
+    const orchestrator = new GoogleMapsNavigationOrchestrator(tabDriver, {
+      timeoutMs: config.navigationTimeoutMs,
+      pollIntervalMs: 250
+    });
+    const ctx = {
+      sessionId,
+      stateMachine,
+      queue,
+      orchestrator,
+      checkpointManager,
+      config,
+      tabDriver,
+      candidatesObserved: [],
+      diagnostics: [],
+      deduplicator: new SessionCandidateDeduplicator(),
+      batches: [],
+      filterManager: new GoogleMapsFilterStateManager()
+    };
+    this._sessions.set(sessionId, ctx);
+    const claimedUnit = queue.claimNext();
+    if (!claimedUnit) {
+      stateMachine.transitionTo("FAILED", "Queue had no runnable search units");
+      return {
+        success: false,
+        sessionId,
+        state: stateMachine.state,
+        error: "No search units could be claimed"
+      };
+    }
+    ctx.currentSearchUnit = claimedUnit;
+    stateMachine.setSearchUnitId(claimedUnit.searchUnitId);
+    const tabOwnership = await orchestrator.validateTabOwnership(config.tabId, sessionId);
+    if (!tabOwnership.valid && tabOwnership.diagnostic) {
+      ctx.diagnostics.push(tabOwnership.diagnostic);
+      stateMachine.transitionTo("FAILED", tabOwnership.diagnostic.message);
+      return {
+        success: false,
+        sessionId,
+        state: stateMachine.state,
+        error: tabOwnership.diagnostic.message,
+        diagnostics: ctx.diagnostics
+      };
+    }
+    stateMachine.transitionTo("NAVIGATING", `Navigating to query: ${claimedUnit.normalizedQuery}`);
+    const navResult = await orchestrator.navigateToSearchUnit(
+      config.tabId,
+      claimedUnit,
+      sessionId
+    );
+    if (!navResult.success) {
+      if (navResult.diagnostics) {
+        ctx.diagnostics.push(...navResult.diagnostics);
+      }
+      stateMachine.transitionTo("FAILED", navResult.error || "Navigation failed");
+      queue.fail(claimedUnit.searchUnitId, navResult.error || "Navigation failed");
+      return {
+        success: false,
+        sessionId,
+        state: stateMachine.state,
+        error: navResult.error || "Navigation failed",
+        diagnostics: ctx.diagnostics
+      };
+    }
+    stateMachine.transitionTo("OBSERVING", "Page ready; observing rendered results");
+    const qProgress = queue.getProgress();
+    const checkpoint = await checkpointManager.createCheckpoint({
+      sessionId,
+      searchUnit: claimedUnit,
+      state: stateMachine.state,
+      pageUrl: navResult.url,
+      searchUnitProgressContext: {
+        unitIndex: 1,
+        totalUnits: qProgress.total,
+        query: claimedUnit.normalizedQuery
+      },
+      progress: {
+        totalUnits: qProgress.total,
+        completedUnits: qProgress.completed,
+        pendingUnits: qProgress.queued
+      }
+    });
+    return {
+      success: true,
+      sessionId,
+      state: stateMachine.state,
+      progress: this._buildSessionProgress(ctx),
+      candidatesCount: ctx.candidatesObserved.length,
+      diagnostics: ctx.diagnostics,
+      checkpointId: checkpoint.checkpointId,
+      details: {
+        searchUnitId: claimedUnit.searchUnitId,
+        query: claimedUnit.normalizedQuery,
+        navigationUrl: claimedUnit.navigationUrl
+      }
+    };
+  }
+  /**
+   * Pauses an active acquisition session, preserving checkpoint and current progress.
+   */
+  async pauseAcquisition(sessionId) {
+    const ctx = this._sessions.get(sessionId);
+    if (!ctx) {
+      return { success: false, error: `Session "${sessionId}" not found` };
+    }
+    ctx.queue.pause();
+    ctx.stateMachine.pause("Operator requested pause");
+    let checkpointId;
+    if (ctx.currentSearchUnit) {
+      const qProgress = ctx.queue.getProgress();
+      const cp = await ctx.checkpointManager.createCheckpoint({
+        sessionId,
+        searchUnit: ctx.currentSearchUnit,
+        state: ctx.stateMachine.state,
+        pageUrl: ctx.currentSearchUnit.navigationUrl,
+        lastObservedCandidateIdentity: ctx.candidatesObserved[ctx.candidatesObserved.length - 1]?.observationId,
+        progress: {
+          totalUnits: qProgress.total,
+          completedUnits: qProgress.completed,
+          pendingUnits: qProgress.queued
+        }
+      });
+      checkpointId = cp.checkpointId;
+    }
+    return {
+      success: true,
+      sessionId,
+      state: ctx.stateMachine.state,
+      progress: this._buildSessionProgress(ctx),
+      checkpointId,
+      diagnostics: ctx.diagnostics
+    };
+  }
+  /**
+   * Resumes a paused acquisition session safely using preserved checkpoint state.
+   */
+  async resumeAcquisition(sessionId) {
+    const ctx = this._sessions.get(sessionId);
+    if (!ctx) {
+      return { success: false, error: `Session "${sessionId}" not found` };
+    }
+    if (ctx.stateMachine.state === "CANCELLED" || ctx.queue.getProgress().isCancelled) {
+      return { success: false, error: "Cannot resume a cancelled session" };
+    }
+    if (ctx.stateMachine.state !== "PAUSED") {
+      return { success: false, error: `Cannot resume: session is in '${ctx.stateMachine.state}', expected 'PAUSED'` };
+    }
+    const latestCp = await ctx.checkpointManager.loadCheckpoint(sessionId);
+    const validation = ctx.checkpointManager.validateCheckpoint(latestCp);
+    if (!validation.valid) {
+      return { success: false, error: `Cannot resume: ${validation.reason}` };
+    }
+    ctx.queue.resume();
+    ctx.stateMachine.resume();
+    return {
+      success: true,
+      sessionId,
+      state: ctx.stateMachine.state,
+      progress: this._buildSessionProgress(ctx),
+      diagnostics: ctx.diagnostics
+    };
+  }
+  /**
+   * Cancels an active session, marking all remaining units cancelled.
+   */
+  async cancelAcquisition(sessionId, reason = "Operator cancelled session") {
+    const ctx = this._sessions.get(sessionId);
+    if (!ctx) {
+      return { success: false, error: `Session "${sessionId}" not found` };
+    }
+    ctx.queue.cancel();
+    ctx.stateMachine.cancel(reason);
+    if (ctx.currentSearchUnit) {
+      const qProgress = ctx.queue.getProgress();
+      await ctx.checkpointManager.createCheckpoint({
+        sessionId,
+        searchUnit: ctx.currentSearchUnit,
+        state: "CANCELLED",
+        pageUrl: ctx.currentSearchUnit.navigationUrl,
+        progress: {
+          totalUnits: qProgress.total,
+          completedUnits: qProgress.completed,
+          pendingUnits: 0
+        }
+      });
+    }
+    return {
+      success: true,
+      sessionId,
+      state: ctx.stateMachine.state,
+      progress: this._buildSessionProgress(ctx),
+      diagnostics: ctx.diagnostics
+    };
+  }
+  /**
+   * Gets current status of an acquisition session.
+   */
+  getAcquisitionStatus(sessionId) {
+    const ctx = this._sessions.get(sessionId);
+    if (!ctx) {
+      return { success: false, error: `Session "${sessionId}" not found` };
+    }
+    return {
+      success: true,
+      sessionId,
+      state: ctx.stateMachine.state,
+      progress: this._buildSessionProgress(ctx),
+      candidatesCount: ctx.candidatesObserved.length,
+      diagnostics: ctx.diagnostics,
+      details: {
+        currentSearchUnitId: ctx.currentSearchUnit?.searchUnitId,
+        pausedFromState: ctx.stateMachine.pausedFromState
+      }
+    };
+  }
+  /**
+   * Ingests observed raw candidates from content-script observation boundary into session context.
+   */
+  ingestCandidateObservations(sessionId, rawCandidates, pageUrl) {
+    const ctx = this._sessions.get(sessionId);
+    if (!ctx || !ctx.currentSearchUnit) {
+      return { count: 0, observations: [] };
+    }
+    const unit = ctx.currentSearchUnit;
+    const observations = rawCandidates.map(
+      (raw) => createCandidateObservation(raw, {
+        sessionId,
+        searchUnitId: unit.searchUnitId,
+        searchKeyword: unit.rawKeyword,
+        searchLocation: unit.rawLocation,
+        pageUrl,
+        pageKind: "SEARCH_RESULTS"
+      })
+    );
+    const registered = observations.map((obs) => ctx.deduplicator.register(obs).candidate);
+    ctx.candidatesObserved.push(...observations);
+    ctx.filterManager.ingestCandidates(registered);
+    unit.candidateCount = ctx.deduplicator.size;
+    return { count: observations.length, observations };
+  }
+  /**
+   * Executes feed scrolling and live candidate observation for an active session.
+   */
+  async executeFeedScroll(sessionId, policyOverrides, domProvider) {
+    const ctx = this._sessions.get(sessionId);
+    if (!ctx) {
+      return { success: false, error: `Session "${sessionId}" not found` };
+    }
+    if (!ctx.currentSearchUnit) {
+      return { success: false, error: "No active search unit in session" };
+    }
+    const unit = ctx.currentSearchUnit;
+    const provider = domProvider || (() => typeof document !== "undefined" ? document : null);
+    const scrollEngine = new GoogleMapsFeedScrollEngine(
+      provider,
+      {
+        sessionId,
+        searchUnitId: unit.searchUnitId,
+        searchKeyword: unit.rawKeyword,
+        searchLocation: unit.rawLocation,
+        pageUrl: unit.navigationUrl
+      },
+      policyOverrides,
+      {
+        onNewCandidates: (newObs) => {
+          ctx.candidatesObserved.push(...newObs);
+          ctx.filterManager.ingestCandidates(newObs);
+          unit.candidateCount = ctx.deduplicator.size;
+        },
+        onBatchCompleted: (batch) => {
+          ctx.batches.push(batch);
+        },
+        isPaused: () => ctx.stateMachine.state === "PAUSED",
+        isCancelled: () => ctx.stateMachine.state === "CANCELLED",
+        onDiagnostic: (diag) => {
+          ctx.diagnostics.push(diag);
+        }
+      },
+      ctx.deduplicator
+    );
+    ctx.scrollEngine = scrollEngine;
+    const result = await scrollEngine.execute();
+    const qProgress = ctx.queue.getProgress();
+    await ctx.checkpointManager.createCheckpoint({
+      sessionId,
+      searchUnit: unit,
+      state: ctx.stateMachine.state,
+      pageUrl: unit.navigationUrl,
+      observationSequence: scrollEngine.observationSequence,
+      lastObservedCandidateIdentity: ctx.candidatesObserved[ctx.candidatesObserved.length - 1]?.observationId,
+      duplicateSuppressionContext: {
+        observedIds: ctx.deduplicator.knownCandidateIds
+      },
+      progress: {
+        totalUnits: qProgress.total,
+        completedUnits: qProgress.completed,
+        pendingUnits: qProgress.queued
+      }
+    });
+    return {
+      success: true,
+      sessionId,
+      state: ctx.stateMachine.state,
+      candidatesCount: ctx.deduplicator.size,
+      newCandidatesCount: result.candidates.length,
+      metrics: result.metrics,
+      terminationReason: result.terminationReason,
+      diagnostics: ctx.diagnostics
+    };
+  }
+  /**
+   * Diagnostic capability probe against current DOM.
+   */
+  probeLiveCapability(domRoot, url) {
+    const root = domRoot || (typeof document !== "undefined" ? document : null);
+    const targetUrl = url || (typeof window !== "undefined" ? window.location.href : "");
+    const probe = probeGoogleMapsCapability(root, targetUrl);
+    return {
+      success: true,
+      probe
+    };
+  }
+  /**
+   * Updates filter criteria for an active acquisition session or bulk run and returns the re-evaluated view.
+   */
+  setSessionFilter(sessionId, filter) {
+    const validFilter = normalizeFilterCriteria(filter);
+    const ctx = sessionId ? this._sessions.get(sessionId) : void 0;
+    let bulk = sessionId ? this._bulkOrchestrators.get(sessionId) : void 0;
+    if (!ctx && !bulk && this._bulkOrchestrators.size > 0) {
+      const all = Array.from(this._bulkOrchestrators.values());
+      bulk = all[all.length - 1];
+    }
+    if (!ctx && !bulk) {
+      return { success: false, error: `Session "${sessionId || "default"}" not found` };
+    }
+    if (bulk) {
+      bulk.setFilter(validFilter);
+      const view2 = bulk.getFilterManager().getFilteredView();
+      return {
+        success: true,
+        sessionId: bulk.getSnapshot().runId,
+        view: view2,
+        snapshot: bulk.getSnapshot()
+      };
+    }
+    const manager = ctx.filterManager;
+    const view = manager.setFilter(filter);
+    return {
+      success: true,
+      sessionId,
+      view
+    };
+  }
+  /**
+   * Resets active filters to default ANY / ANY for a session or bulk run.
+   */
+  resetSessionFilter(sessionId) {
+    const ctx = this._sessions.get(sessionId);
+    const bulk = this._bulkOrchestrators.get(sessionId);
+    if (!ctx && !bulk) {
+      return { success: false, error: `Session "${sessionId}" not found` };
+    }
+    const manager = bulk ? bulk.getFilterManager() : ctx.filterManager;
+    const view = manager.resetFilters();
+    return {
+      success: true,
+      sessionId,
+      view
+    };
+  }
+  /**
+   * Retrieves the current filtered dataset view for a session or bulk run.
+   */
+  getSessionFilteredView(sessionId) {
+    const ctx = this._sessions.get(sessionId);
+    const bulk = this._bulkOrchestrators.get(sessionId);
+    if (!ctx && !bulk) {
+      return { success: false, error: `Session "${sessionId}" not found` };
+    }
+    const manager = bulk ? bulk.getFilterManager() : ctx.filterManager;
+    const view = manager.getFilteredView();
+    return {
+      success: true,
+      sessionId,
+      view
+    };
+  }
+  /**
+   * Starts a bulk research run across Keywords x Locations (Part 4).
+   * Guards against duplicate start if an active run exists.
+   */
+  async startBulkResearch(request, driver) {
+    const tabDriver = driver || this._defaultDriver;
+    let tabId = request.tabId ?? 0;
+    if (tabId <= 0 && typeof chrome !== "undefined" && chrome.tabs && typeof chrome.tabs.query === "function") {
+      try {
+        const tabs = await chrome.tabs.query({});
+        const targetTab = tabs.find((t) => t.url && !t.url.startsWith("chrome-extension://")) || tabs.find((t) => t.id && !t.active) || tabs[0];
+        if (targetTab?.id) {
+          tabId = targetTab.id;
+        }
+      } catch {
+      }
+    }
+    const validation = validateBulkRequest(request);
+    if (!validation.isValid) {
+      return {
+        success: false,
+        error: `Invalid bulk research request: ${validation.errors.join("; ")}`
+      };
+    }
+    const plan = createBulkResearchPlan(request);
+    const runId = request.runId || `brun_${plan.planFingerprint}`;
+    const existing = this._bulkOrchestrators.get(runId);
+    if (existing) {
+      const snap = existing.getSnapshot();
+      if (snap.state === "RUNNING" || snap.state === "QUEUED") {
+        return {
+          success: false,
+          error: `A bulk research run (${runId}) is already active. Duplicate execution prevented.`,
+          snapshot: snap
+        };
+      }
+    }
+    const orchestrator = new GoogleMapsBulkOrchestrator({
+      plan,
+      runId,
+      tabDriver,
+      tabId
+    });
+    this._bulkOrchestrators.set(runId, orchestrator);
+    this._bulkOrchestrators.set(plan.planId, orchestrator);
+    const snapshot = await orchestrator.start();
+    return {
+      success: true,
+      sessionId: runId,
+      snapshot
+    };
+  }
+  async pauseBulkResearch(sessionId) {
+    const orch = this._bulkOrchestrators.get(sessionId);
+    if (!orch) {
+      return { success: false, error: `Bulk research run "${sessionId}" not found` };
+    }
+    const snapshot = await orch.pause();
+    return { success: true, sessionId, snapshot };
+  }
+  async resumeBulkResearch(sessionId) {
+    const orch = this._bulkOrchestrators.get(sessionId);
+    if (!orch) {
+      return { success: false, error: `Bulk research run "${sessionId}" not found` };
+    }
+    const snapshot = await orch.resume();
+    return { success: true, sessionId, snapshot };
+  }
+  async cancelBulkResearch(sessionId, reason) {
+    const orch = this._bulkOrchestrators.get(sessionId);
+    if (!orch) {
+      return { success: false, error: `Bulk research run "${sessionId}" not found` };
+    }
+    const snapshot = await orch.cancel(reason);
+    return { success: true, sessionId, snapshot };
+  }
+  getBulkResearchStatus(sessionId) {
+    let orch = sessionId ? this._bulkOrchestrators.get(sessionId) : void 0;
+    if (!orch && this._bulkOrchestrators.size > 0) {
+      const all = Array.from(this._bulkOrchestrators.values());
+      orch = all[all.length - 1];
+    }
+    if (!orch) {
+      return { success: false, error: `Bulk research run "${sessionId || "default"}" not found` };
+    }
+    const snapshot = orch.getSnapshot();
+    return { success: true, sessionId: snapshot.runId, snapshot };
+  }
+  getBulkOrchestrator(sessionId) {
+    return this._bulkOrchestrators.get(sessionId);
+  }
+  getSession(sessionId) {
+    return this._sessions.get(sessionId);
+  }
+  _buildSessionProgress(ctx) {
+    const qp = ctx.queue.getProgress();
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    return {
+      sessionId: ctx.sessionId,
+      state: ctx.stateMachine.state,
+      totalSearchUnits: qp.total,
+      completedSearchUnits: qp.completed,
+      currentSearchUnitId: ctx.currentSearchUnit?.searchUnitId,
+      totalCandidatesObserved: ctx.candidatesObserved.length,
+      uniqueCandidatesObserved: new Set(ctx.candidatesObserved.map((c) => c.observationId)).size,
+      diagnosticsCount: ctx.diagnostics.length,
+      startedAt: ctx.currentSearchUnit?.startedAt || now,
+      lastActivityAt: now,
+      completedAt: ctx.stateMachine.state === "COMPLETED" ? now : void 0
+    };
+  }
+};
+var googleMapsRuntimeCoordinator = new GoogleMapsRuntimeCoordinator();
+
+// src/extension/leads/leadIdentity.ts
+function generateDeterministicLeadId(domain, sourceAnchorId, prefix = "lead") {
+  const normDomain = normalizeDomain(domain);
+  const key = `${normDomain}|${sourceAnchorId || ""}`;
+  let hash = 2166136261;
+  for (let i = 0; i < key.length; i++) {
+    hash ^= key.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  const hashHex = (hash >>> 0).toString(16).padStart(8, "0");
+  return `${prefix}_det_${hashHex}`;
+}
+function normalizeDomain(urlOrDomain) {
+  if (!urlOrDomain || typeof urlOrDomain !== "string") return "";
+  let cleaned = urlOrDomain.trim().toLowerCase();
+  cleaned = cleaned.replace(/^https?:\/\//i, "");
+  cleaned = cleaned.split("/")[0].split("?")[0].split("#")[0];
+  cleaned = cleaned.split(":")[0];
+  cleaned = cleaned.replace(/^www\./i, "");
+  return cleaned.trim();
+}
+
+// src/extension/leads/leadReducer.ts
+var INITIAL_LEAD_WORKSPACE_STATE = Object.freeze({
+  leads: Object.freeze({}),
+  independentSources: Object.freeze({}),
+  conflicts: Object.freeze([]),
+  selectedLeadId: null,
+  version: 1
+});
+
+// src/extension/leads/leadExportPolicy.ts
+function sanitizeCsvCell(value) {
+  if (value === null || value === void 0) return "";
+  let str = String(value);
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`;
+  }
+  if (str.includes('"') || str.includes(",") || str.includes("\n") || str.includes("\r")) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+var FORBIDDEN_EXPORT_GOOGLE_KEYS = [
+  "placeId",
+  "mapsUrl",
+  "rating",
+  "reviewCount",
+  "businessStatus",
+  "candidateId"
+];
+function validateExportSafeLead(lead) {
+  const errors = [];
+  if (!lead || typeof lead !== "object") {
+    return { isValid: false, errors: ["Export lead must be a non-null object"] };
+  }
+  const l = lead;
+  if (typeof l.leadId !== "string" || !l.leadId.startsWith("lead_")) {
+    errors.push(`Invalid leadId format: "${l.leadId}". Must begin with "lead_"`);
+  }
+  if (l.exportEligibility !== "ELIGIBLE") {
+    errors.push(`Lead is not eligible for export (status: ${String(l.exportEligibility)})`);
+  }
+  if (!l.identity || typeof l.identity !== "object") {
+    errors.push("Missing identity object");
+  } else {
+    if (typeof l.identity.businessName !== "string" || !l.identity.businessName.trim()) {
+      errors.push("Missing identity.businessName");
+    }
+    if (typeof l.identity.domain !== "string" || !l.identity.domain.trim()) {
+      errors.push("Missing identity.domain");
+    }
+  }
+  if (l.sourceClass !== "USER_PROVIDED" && l.sourceClass !== "WEBSITE_PUBLIC" && l.sourceClass !== "LEADNORIA_DERIVED_FROM_NON_RESTRICTED_INPUT") {
+    errors.push(`Disallowed export sourceClass: "${l.sourceClass}"`);
+  }
+  for (const forbidden of FORBIDDEN_EXPORT_GOOGLE_KEYS) {
+    if (forbidden in l) {
+      errors.push(`CRITICAL FIREWALL BREACH: Forbidden Google key "${forbidden}" present in export lead`);
+    }
+  }
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+function toExportRow(lead) {
+  const validation = validateExportSafeLead(lead);
+  if (!validation.isValid) {
+    throw new Error(`Cannot export invalid lead "${lead?.leadId}": ${validation.errors.join("; ")}`);
+  }
+  const primaryEmail = lead.contact.publicEmails[0]?.email || "";
+  const primaryPhone = lead.contact.publicPhones[0]?.phone || "";
+  const primaryPerson = lead.person.leadershipPeople[0]?.fullName || "";
+  const primaryRole = lead.person.leadershipPeople[0]?.jobTitle || "";
+  return Object.freeze({
+    leadId: lead.leadId,
+    businessName: lead.identity.businessName,
+    website: lead.identity.canonicalUrl,
+    publicEmail: primaryEmail,
+    publicPhone: primaryPhone,
+    publicPersonName: primaryPerson,
+    publicPersonRole: primaryRole,
+    qualificationOutcome: lead.qualification.status,
+    reviewOutcome: lead.reviewOutcome.reviewState,
+    sourceClass: lead.sourceClass,
+    evidenceTimestamp: lead.updatedAt
+  });
+}
+function prepareLeadsForExport(leads) {
+  const seenLeadIds = /* @__PURE__ */ new Set();
+  const seenDomains = /* @__PURE__ */ new Set();
+  const validLeads = [];
+  let duplicateCount = 0;
+  let rejectedCount = 0;
+  for (const lead of leads) {
+    const val = validateExportSafeLead(lead);
+    if (!val.isValid) {
+      rejectedCount++;
+      continue;
+    }
+    const domainKey = lead.identity.domain.trim().toLowerCase();
+    if (seenLeadIds.has(lead.leadId) || domainKey && seenDomains.has(domainKey)) {
+      duplicateCount++;
+      continue;
+    }
+    seenLeadIds.add(lead.leadId);
+    if (domainKey) seenDomains.add(domainKey);
+    validLeads.push(lead);
+  }
+  validLeads.sort((a, b) => {
+    const nameA = a.identity.businessName.toLowerCase();
+    const nameB = b.identity.businessName.toLowerCase();
+    if (nameA !== nameB) return nameA.localeCompare(nameB);
+    return a.leadId.localeCompare(b.leadId);
+  });
+  return { validLeads, duplicateCount, rejectedCount };
+}
+function exportLeadsToCsv(leads) {
+  const headers = [
+    "leadId",
+    "businessName",
+    "website",
+    "publicEmail",
+    "publicPhone",
+    "publicPersonName",
+    "publicPersonRole",
+    "qualificationOutcome",
+    "reviewOutcome",
+    "sourceClass",
+    "evidenceTimestamp"
+  ];
+  const headerRow = headers.map(sanitizeCsvCell).join(",");
+  const rows = [headerRow];
+  const { validLeads } = prepareLeadsForExport(leads);
+  for (const lead of validLeads) {
+    const rowObj = toExportRow(lead);
+    const rowValues = [
+      sanitizeCsvCell(rowObj.leadId),
+      sanitizeCsvCell(rowObj.businessName),
+      sanitizeCsvCell(rowObj.website),
+      sanitizeCsvCell(rowObj.publicEmail),
+      sanitizeCsvCell(rowObj.publicPhone),
+      sanitizeCsvCell(rowObj.publicPersonName),
+      sanitizeCsvCell(rowObj.publicPersonRole),
+      sanitizeCsvCell(rowObj.qualificationOutcome),
+      sanitizeCsvCell(rowObj.reviewOutcome),
+      sanitizeCsvCell(rowObj.sourceClass),
+      sanitizeCsvCell(rowObj.evidenceTimestamp)
+    ];
+    rows.push(rowValues.join(","));
+  }
+  return rows.join("\r\n");
+}
+function exportLeadsToJson(leads) {
+  const { validLeads } = prepareLeadsForExport(leads);
+  const exportable = validLeads.map(toExportRow);
+  return JSON.stringify(exportable, null, 2);
+}
+function exportLeadsWithReconciliation(leads) {
+  const { validLeads, duplicateCount, rejectedCount } = prepareLeadsForExport(leads);
+  const csv = exportLeadsToCsv(leads);
+  const json = exportLeadsToJson(leads);
+  const totalInputCount = leads.length;
+  const exportedCount = validLeads.length;
+  const isReconciled = totalInputCount === exportedCount + duplicateCount + rejectedCount;
+  return Object.freeze({
+    totalInputCount,
+    eligibleCount: exportedCount,
+    exportedCount,
+    duplicateSuppressedCount: duplicateCount,
+    rejectedCount,
+    csv,
+    json,
+    isReconciled
+  });
+}
+
+// src/extension/leads/workspace/workspaceReducer.ts
+var INITIAL_WORKSPACE_STATE = Object.freeze({
+  leads: Object.freeze([]),
+  filterCriteria: Object.freeze({ isArchived: false }),
+  sortCriteria: Object.freeze({ field: "updatedAt", direction: "DESC" }),
+  pagination: Object.freeze({ page: 1, pageSize: 20 }),
+  selectedLeadId: null,
+  isLoading: false,
+  error: null
+});
+
 // src/extension/service-worker.ts
 var canonicalRecordAssembler = new RecordAssembler();
 console.log("[Meta Ad Library Scraper] Service Worker initializing...");
@@ -9727,6 +21595,10 @@ async function executeResearchPipeline(payload, providedRunId, providedRun) {
 }
 if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage) {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message && typeof message === "object" && (message.source === "GMAPS_ENGINE" || typeof message.type === "string" && message.type.includes("_GMAPS_"))) {
+      googleMapsRuntimeCoordinator.handleAcquisitionMessage(message, sender).then((res) => sendResponse(res)).catch((err) => sendResponse({ success: false, error: err?.message || String(err) }));
+      return true;
+    }
     if (message.type === "START_RESEARCH") {
       chrome.storage.local.get(["activeResearchRun"], (data) => {
         const activeRun = data.activeResearchRun;
@@ -9930,6 +21802,100 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
         });
       } catch (err) {
         sendResponse({ success: false, error: err.message });
+      }
+      return true;
+    }
+    if (message.type === "EXPORT_LEADS_RECONCILED") {
+      try {
+        const payload = message.payload || {};
+        const leads = Array.isArray(payload.leads) ? payload.leads : [];
+        const summary = exportLeadsWithReconciliation(leads);
+        sendResponse({
+          success: true,
+          summary
+        });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message });
+      }
+      return true;
+    }
+    if (message.type === "GENERATE_DETERMINISTIC_LEAD_ID") {
+      try {
+        const payload = message.payload || {};
+        const leadId = generateDeterministicLeadId(payload.domain || "", payload.sourceAnchorId);
+        sendResponse({
+          success: true,
+          leadId
+        });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message });
+      }
+      return true;
+    }
+    if (message.type === "QUALIFY_GMAPS_CANDIDATE") {
+      try {
+        const payload = message.payload || {};
+        const candidate = payload.candidate;
+        const filters = payload.filters || {
+          rating: payload.ratingFilter || "ANY",
+          website: payload.websiteFilter || "ANY",
+          maxResults: payload.maxResults
+        };
+        const qualificationResult = qualifiesCandidate(candidate, filters);
+        sendResponse({
+          success: true,
+          qualificationResult,
+          ratingSignal: extractRatingSignal(candidate),
+          websiteState: determineWebsiteState2(candidate)
+        });
+      } catch (err) {
+        sendResponse({ success: false, error: err?.message || String(err) });
+      }
+      return true;
+    }
+    if (message.type === "QUALIFY_GMAPS_BATCH") {
+      try {
+        const payload = message.payload || {};
+        const candidates = Array.isArray(payload.candidates) ? payload.candidates : [];
+        const filters = payload.filters || {
+          rating: payload.ratingFilter || "ANY",
+          website: payload.websiteFilter || "ANY",
+          maxResults: payload.maxResults
+        };
+        const results = candidates.map((c) => ({
+          candidate: c,
+          qualification: qualifiesCandidate(c, filters)
+        }));
+        sendResponse({
+          success: true,
+          total: results.length,
+          qualifiedCount: results.filter((r) => r.qualification.qualified).length,
+          results
+        });
+      } catch (err) {
+        sendResponse({ success: false, error: err?.message || String(err) });
+      }
+      return true;
+    }
+    if (message.type === "EXECUTE_GMAPS_MULTI_QUERY_RESEARCH") {
+      try {
+        const payload = message.payload || {};
+        const queries = Array.isArray(payload.queries) ? payload.queries : [];
+        const filters = payload.filters || {
+          rating: payload.ratingFilter || "ANY",
+          website: payload.websiteFilter || "ANY",
+          maxResults: payload.maxResults
+        };
+        const options = {
+          keywords: queries,
+          filters,
+          maxResults: filters.maxResults,
+          ...payload.options
+        };
+        const executeQueryFn = payload.executeQuery || (async () => []);
+        executeMultiQueryResearch(options, executeQueryFn).then((result) => sendResponse({ success: true, result })).catch((err) => sendResponse({ success: false, error: err?.message || String(err) }));
+      } catch (err) {
+        sendResponse({ success: false, error: err?.message || String(err) });
       }
       return true;
     }

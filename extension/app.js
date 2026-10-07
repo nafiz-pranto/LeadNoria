@@ -794,7 +794,7 @@ var require_scheduler = __commonJS({
 var require_react_dom_production = __commonJS({
   "node_modules/react-dom/cjs/react-dom.production.js"(exports) {
     "use strict";
-    var React13 = require_react();
+    var React14 = require_react();
     function formatProdErrorMessage(code) {
       var url = "https://react.dev/errors/" + code;
       if (1 < arguments.length) {
@@ -836,7 +836,7 @@ var require_react_dom_production = __commonJS({
         implementation
       };
     }
-    var ReactSharedInternals = React13.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+    var ReactSharedInternals = React14.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
     function getCrossOriginStringAs(as, input) {
       if ("font" === as) return "";
       if ("string" === typeof input)
@@ -978,7 +978,7 @@ var require_react_dom_client_production = __commonJS({
   "node_modules/react-dom/cjs/react-dom-client.production.js"(exports) {
     "use strict";
     var Scheduler = require_scheduler();
-    var React13 = require_react();
+    var React14 = require_react();
     var ReactDOM2 = require_react_dom();
     function formatProdErrorMessage(code) {
       var url = "https://react.dev/errors/" + code;
@@ -1269,7 +1269,7 @@ var require_react_dom_client_production = __commonJS({
       return null;
     }
     var isArrayImpl = Array.isArray;
-    var ReactSharedInternals = React13.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+    var ReactSharedInternals = React14.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
     var ReactDOMSharedInternals = ReactDOM2.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
     var sharedNotPendingObject = {
       pending: false,
@@ -14418,7 +14418,7 @@ var require_react_dom_client_production = __commonJS({
         0 === i && attemptExplicitHydrationTarget(target);
       }
     };
-    var isomorphicReactPackageVersion$jscomp$inline_2043 = React13.version;
+    var isomorphicReactPackageVersion$jscomp$inline_2043 = React14.version;
     if ("19.3.0" !== isomorphicReactPackageVersion$jscomp$inline_2043)
       throw Error(
         formatProdErrorMessage(
@@ -17223,11 +17223,11 @@ var init_relevanceEngine = __esm({
 });
 
 // src/extension/ui/index.tsx
-var import_react12 = __toESM(require_react(), 1);
+var import_react13 = __toESM(require_react(), 1);
 var import_client = __toESM(require_client(), 1);
 
 // src/extension/ui/App.tsx
-var import_react11 = __toESM(require_react(), 1);
+var import_react12 = __toESM(require_react(), 1);
 
 // src/extension/ui/components/Header.tsx
 var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
@@ -17592,8 +17592,1385 @@ var ResearchConfigView = ({
   ] });
 };
 
-// src/extension/ui/components/PlanReviewModal.tsx
+// src/extension/ui/components/GoogleMapsBulkResearchView.tsx
 var import_react2 = __toESM(require_react(), 1);
+
+// src/extension/acquisition/engine/bulkPlanTypes.ts
+var DEFAULT_BULK_EXECUTION_POLICY = Object.freeze({
+  maxSearchUnits: 500,
+  maxCandidatesPerUnit: 50,
+  maxScrollStepsPerUnit: 15,
+  maxDurationPerUnitMs: 6e4,
+  maxRunDurationMs: 18e5,
+  maxRetriesPerUnit: 2,
+  retryBackoffMs: 1e3,
+  navigationTimeoutMs: 15e3,
+  readinessTimeoutMs: 1e4
+});
+
+// src/extension/acquisition/engine/filterTypes.ts
+var DEFAULT_GOOGLE_MAPS_FILTER = Object.freeze({
+  rating: "ANY",
+  website: "ANY"
+});
+
+// src/extension/acquisition/engine/bulkPlanner.ts
+var MAX_KEYWORD_LENGTH = 200;
+var MAX_LOCATION_LENGTH = 200;
+var MAX_RECOMMENDED_SEARCH_UNITS = 500;
+function normalizeKeywordList(rawKeywords) {
+  if (!rawKeywords || !Array.isArray(rawKeywords)) {
+    return [];
+  }
+  const seenKeys = /* @__PURE__ */ new Set();
+  const normalized = [];
+  for (const raw of rawKeywords) {
+    if (typeof raw !== "string") continue;
+    const trimmed = raw.replace(/[\x00-\x1F\x7F]/g, " ").replace(/\s+/g, " ").trim();
+    if (trimmed.length === 0 || trimmed.length > MAX_KEYWORD_LENGTH) {
+      continue;
+    }
+    const key = trimmed.toLowerCase();
+    if (!seenKeys.has(key)) {
+      seenKeys.add(key);
+      normalized.push(key);
+    }
+  }
+  return normalized;
+}
+function normalizeLocationList(rawLocations) {
+  if (!rawLocations || !Array.isArray(rawLocations)) {
+    return [];
+  }
+  const seenKeys = /* @__PURE__ */ new Set();
+  const normalized = [];
+  for (const raw of rawLocations) {
+    if (typeof raw !== "string") continue;
+    const trimmed = raw.replace(/[\x00-\x1F\x7F]/g, " ").replace(/\s+/g, " ").trim();
+    if (trimmed.length === 0 || trimmed.length > MAX_LOCATION_LENGTH) {
+      continue;
+    }
+    const key = trimmed.toLowerCase();
+    if (!seenKeys.has(key)) {
+      seenKeys.add(key);
+      normalized.push(trimmed);
+    }
+  }
+  return normalized;
+}
+
+// src/extension/websiteUrlNormalizer.ts
+var TRACKING_PARAM_PREFIXES = [
+  "utm_",
+  "_hs",
+  "mc_"
+];
+var TRACKING_PARAMS = /* @__PURE__ */ new Set([
+  "fbclid",
+  "gclid",
+  "msclkid",
+  "ref",
+  "ref_src",
+  "source",
+  "campaign",
+  "affiliate",
+  "tracking_id",
+  "trk"
+]);
+function normalizeWebsiteUrl(inputUrl) {
+  const original = (inputUrl || "").trim();
+  if (!original) {
+    return {
+      isValid: false,
+      originalUrl: original,
+      normalizedUrl: "",
+      finalUrl: "",
+      finalOrigin: "",
+      finalHostname: "",
+      isMetaRedirect: false,
+      error: "EMPTY_URL"
+    };
+  }
+  if (/^(javascript|data|blob|file|about|chrome|chrome-extension):/i.test(original)) {
+    return {
+      isValid: false,
+      originalUrl: original,
+      normalizedUrl: "",
+      finalUrl: "",
+      finalOrigin: "",
+      finalHostname: "",
+      isMetaRedirect: false,
+      error: "UNSUPPORTED_SCHEME"
+    };
+  }
+  let workingUrl = original;
+  let isMetaRedirect = false;
+  if (!/^https?:\/\//i.test(workingUrl)) {
+    workingUrl = "https://" + workingUrl;
+  }
+  try {
+    let parsed = new URL(workingUrl);
+    if (parsed.hostname.toLowerCase().includes("facebook.com") && (parsed.pathname.toLowerCase().endsWith("/l.php") || parsed.pathname.toLowerCase().endsWith("/l/"))) {
+      const destinationParam = parsed.searchParams.get("u");
+      if (destinationParam) {
+        try {
+          const decoded = decodeURIComponent(destinationParam);
+          if (/^https?:\/\//i.test(decoded)) {
+            workingUrl = decoded;
+            parsed = new URL(workingUrl);
+            isMetaRedirect = true;
+          }
+        } catch {
+        }
+      }
+    }
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return {
+        isValid: false,
+        originalUrl: original,
+        normalizedUrl: "",
+        finalUrl: "",
+        finalOrigin: "",
+        finalHostname: "",
+        isMetaRedirect,
+        error: "INVALID_PROTOCOL"
+      };
+    }
+    let hostname = parsed.hostname.toLowerCase().trim();
+    if (hostname.endsWith(".")) {
+      hostname = hostname.slice(0, -1);
+    }
+    if (!hostname || !hostname.includes(".") || hostname.includes(" ")) {
+      return {
+        isValid: false,
+        originalUrl: original,
+        normalizedUrl: "",
+        finalUrl: "",
+        finalOrigin: "",
+        finalHostname: "",
+        isMetaRedirect,
+        error: "INVALID_HOSTNAME"
+      };
+    }
+    const cleanedSearchParams = new URLSearchParams();
+    for (const [key, value] of parsed.searchParams.entries()) {
+      const lowerKey = key.toLowerCase();
+      const isTracking = TRACKING_PARAMS.has(lowerKey) || TRACKING_PARAM_PREFIXES.some((prefix) => lowerKey.startsWith(prefix));
+      if (!isTracking) {
+        cleanedSearchParams.append(key, value);
+      }
+    }
+    let pathname = parsed.pathname;
+    if (pathname.length > 1 && pathname.endsWith("/")) {
+      pathname = pathname.slice(0, -1);
+    }
+    if (!pathname) {
+      pathname = "/";
+    }
+    const searchString = cleanedSearchParams.toString() ? `?${cleanedSearchParams.toString()}` : "";
+    const finalUrl = `${parsed.protocol}//${hostname}${pathname}${searchString}`;
+    const finalOrigin = `${parsed.protocol}//${hostname}`;
+    const baseHost = hostname.startsWith("www.") ? hostname.slice(4) : hostname;
+    const normalizedUrl = `https://${baseHost}${pathname === "/" ? "" : pathname}${searchString}`;
+    return {
+      isValid: true,
+      originalUrl: original,
+      normalizedUrl,
+      finalUrl,
+      finalOrigin,
+      finalHostname: hostname,
+      isMetaRedirect
+    };
+  } catch (err) {
+    return {
+      isValid: false,
+      originalUrl: original,
+      normalizedUrl: "",
+      finalUrl: "",
+      finalOrigin: "",
+      finalHostname: "",
+      isMetaRedirect: false,
+      error: err.message || "MALFORMED_URL"
+    };
+  }
+}
+
+// src/extension/acquisition/engine/candidateMerger.ts
+var DEFAULT_EVIDENCE_BOUNDS = {
+  maxObservationReferences: 50,
+  maxSearchUnitContexts: 50,
+  maxFieldConflicts: 20,
+  maxFieldEvidencePerField: 10
+};
+var MAX_BOUNDED_OBSERVATIONS = DEFAULT_EVIDENCE_BOUNDS.maxObservationReferences;
+var MAX_BOUNDED_SEARCH_UNITS = DEFAULT_EVIDENCE_BOUNDS.maxSearchUnitContexts;
+var MAX_BOUNDED_CONFLICTS = DEFAULT_EVIDENCE_BOUNDS.maxFieldConflicts;
+var MAX_BOUNDED_FIELD_EVIDENCE = DEFAULT_EVIDENCE_BOUNDS.maxFieldEvidencePerField;
+
+// src/extension/qualification/googleMaps/researchQualificationEngine.ts
+var DEFAULT_RESEARCH_FILTERS = Object.freeze({
+  rating: "ANY",
+  website: "ANY"
+});
+function normalizeRatingFilter2(input) {
+  if (typeof input !== "string") return "ANY";
+  const trimmed = input.trim();
+  if (trimmed === "FOUR_POINT_FIVE_PLUS" || trimmed === "MIN_4_5" || trimmed === "4.5+" || trimmed === "4.5") {
+    return "FOUR_POINT_FIVE_PLUS";
+  }
+  if (trimmed === "FOUR_PLUS" || trimmed === "MIN_4_0" || trimmed === "4.0+" || trimmed === "4.0") {
+    return "FOUR_PLUS";
+  }
+  return "ANY";
+}
+function normalizeWebsiteFilter2(input) {
+  if (typeof input !== "string") return "ANY";
+  const trimmed = input.trim();
+  if (trimmed === "WITH_WEBSITE" || trimmed === "WITH" || trimmed === "YES" || trimmed === "PRESENT") {
+    return "WITH_WEBSITE";
+  }
+  if (trimmed === "WITHOUT_WEBSITE" || trimmed === "WITHOUT" || trimmed === "NO" || trimmed === "ABSENT") {
+    return "WITHOUT_WEBSITE";
+  }
+  return "ANY";
+}
+function normalizeResearchFilters(input) {
+  if (!input || typeof input !== "object") {
+    return DEFAULT_RESEARCH_FILTERS;
+  }
+  const obj = input;
+  const rating = normalizeRatingFilter2(obj.rating);
+  const website = normalizeWebsiteFilter2(obj.website);
+  const maxResults = typeof obj.maxResults === "number" && obj.maxResults > 0 ? Math.floor(obj.maxResults) : void 0;
+  return Object.freeze({
+    rating,
+    website,
+    ...maxResults !== void 0 ? { maxResults } : {}
+  });
+}
+function extractRatingSignal(candidate) {
+  if (!candidate || typeof candidate !== "object") {
+    return { availability: "UNKNOWN" };
+  }
+  const rawRating = candidate.rating;
+  if (typeof rawRating === "number") {
+    if (Number.isFinite(rawRating)) {
+      return { availability: "PRESENT", value: rawRating };
+    }
+    return { availability: "UNKNOWN" };
+  }
+  if (rawRating === null || rawRating === void 0) {
+    return { availability: "UNKNOWN" };
+  }
+  if (typeof rawRating === "object") {
+    const field = rawRating;
+    const avail = field.availability || "UNKNOWN";
+    if (avail === "PRESENT") {
+      if (typeof field.parsedValue === "number" && Number.isFinite(field.parsedValue)) {
+        return { availability: "PRESENT", value: field.parsedValue };
+      }
+      if (typeof field.rawValue === "string") {
+        const parsed = parseFloat(field.rawValue);
+        if (Number.isFinite(parsed)) {
+          return { availability: "PRESENT", value: parsed };
+        }
+      }
+      return { availability: "AMBIGUOUS" };
+    }
+    return { availability: avail };
+  }
+  return { availability: "UNKNOWN" };
+}
+function determineWebsiteState(candidate) {
+  if (!candidate || typeof candidate !== "object") {
+    return "UNKNOWN";
+  }
+  const explicitState = candidate.websiteState;
+  if (explicitState === "YES" || explicitState === "NO" || explicitState === "UNKNOWN") {
+    return explicitState;
+  }
+  const webField = candidate.websiteUrl || candidate.website;
+  if (!webField) {
+    return "UNKNOWN";
+  }
+  if (typeof webField === "string") {
+    const trimmed = webField.trim();
+    if (trimmed.length === 0) return "UNKNOWN";
+    const norm = normalizeWebsiteUrl(trimmed);
+    if (norm.isValid && !norm.normalizedUrl.includes("google.com/maps")) {
+      return "YES";
+    }
+    return "UNKNOWN";
+  }
+  if (typeof webField === "object") {
+    const field = webField;
+    const avail = field.availability || "UNKNOWN";
+    if (avail === "PRESENT") {
+      const target = typeof field.parsedValue === "string" && field.parsedValue || typeof field.rawValue === "string" && field.rawValue;
+      if (target) {
+        const norm = normalizeWebsiteUrl(target);
+        if (norm.isValid && !norm.normalizedUrl.includes("google.com/maps")) {
+          return "YES";
+        }
+      }
+      return "UNKNOWN";
+    }
+    if (avail === "ABSENT") {
+      return "NO";
+    }
+    return "UNKNOWN";
+  }
+  return "UNKNOWN";
+}
+function qualifiesCandidate(candidate, filtersInput) {
+  const filters = normalizeResearchFilters(filtersInput);
+  let ratingQualified = false;
+  let ratingRejectionReason;
+  const ratingSignal = extractRatingSignal(candidate);
+  if (filters.rating === "ANY") {
+    ratingQualified = true;
+  } else {
+    const threshold = filters.rating === "FOUR_POINT_FIVE_PLUS" ? 4.5 : 4;
+    if (ratingSignal.availability === "PRESENT" && ratingSignal.value !== void 0) {
+      if (ratingSignal.value >= threshold) {
+        ratingQualified = true;
+      } else {
+        ratingQualified = false;
+        ratingRejectionReason = "RATING_BELOW_THRESHOLD";
+      }
+    } else {
+      ratingQualified = false;
+      ratingRejectionReason = "RATING_UNKNOWN";
+    }
+  }
+  let websiteQualified = false;
+  let websiteRejectionReason;
+  const webState = determineWebsiteState(candidate);
+  if (filters.website === "ANY") {
+    websiteQualified = true;
+  } else if (filters.website === "WITH_WEBSITE") {
+    if (webState === "YES") {
+      websiteQualified = true;
+    } else if (webState === "NO") {
+      websiteQualified = false;
+      websiteRejectionReason = "WEBSITE_MISSING";
+    } else {
+      websiteQualified = false;
+      websiteRejectionReason = "WEBSITE_UNKNOWN";
+    }
+  } else if (filters.website === "WITHOUT_WEBSITE") {
+    if (webState === "NO") {
+      websiteQualified = true;
+    } else if (webState === "YES") {
+      websiteQualified = false;
+      websiteRejectionReason = "WEBSITE_MISSING";
+    } else {
+      websiteQualified = false;
+      websiteRejectionReason = "WEBSITE_UNKNOWN";
+    }
+  }
+  const qualified = ratingQualified && websiteQualified;
+  let rejectionReason;
+  if (!ratingQualified) {
+    rejectionReason = ratingRejectionReason;
+  } else if (!websiteQualified) {
+    rejectionReason = websiteRejectionReason;
+  }
+  return {
+    qualified,
+    ratingQualified,
+    websiteQualified,
+    ...rejectionReason ? { rejectionReason } : {}
+  };
+}
+
+// src/extension/clipboard/tsvSerializer.ts
+function sanitizeCellValue(value) {
+  if (value === null || value === void 0) {
+    return "";
+  }
+  let str;
+  if (typeof value === "string") {
+    str = value;
+  } else if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      return "";
+    }
+    str = String(value);
+  } else if (typeof value === "boolean") {
+    str = value ? "true" : "false";
+  } else {
+    return "";
+  }
+  str = str.replace(/\r\n|\r|\n/g, " ");
+  str = str.replace(/\t/g, " ");
+  return str;
+}
+function serializeToTsv(columns, rows, options) {
+  const colDelimiter = options?.columnDelimiter ?? "	";
+  const rowDelimiter = options?.lineDelimiter ?? "\n";
+  const includeHeader = options?.includeHeader ?? true;
+  const lines = [];
+  if (includeHeader && columns.length > 0) {
+    const headerLine = columns.map((col) => sanitizeCellValue(col.header)).join(colDelimiter);
+    lines.push(headerLine);
+  }
+  for (const row of rows) {
+    const rowValues = columns.map((col) => {
+      const rawVal = row ? row[col.key] : void 0;
+      return sanitizeCellValue(rawVal);
+    });
+    lines.push(rowValues.join(colDelimiter));
+  }
+  return lines.join(rowDelimiter);
+}
+
+// src/extension/clipboard/googleMapsClipboard.ts
+var GOOGLE_MAPS_CLIPBOARD_COLUMNS = Object.freeze([
+  { key: "businessName", header: "Business Name" },
+  { key: "googleMaps", header: "Google Maps" },
+  { key: "website", header: "Website" },
+  { key: "rating", header: "Rating" },
+  { key: "phone", header: "Phone" },
+  { key: "facebook", header: "Facebook" },
+  { key: "instagram", header: "Instagram" },
+  { key: "otherSocial", header: "Other Social" }
+]);
+function extractObservedString(val) {
+  if (typeof val === "string") {
+    return val.trim();
+  }
+  if (val && typeof val === "object") {
+    const field = val;
+    if (field.availability === "PRESENT" || !field.availability) {
+      if (typeof field.parsedValue === "string") {
+        return field.parsedValue.trim();
+      }
+      if (typeof field.rawValue === "string") {
+        return field.rawValue.trim();
+      }
+    }
+  }
+  return "";
+}
+function extractRating(val) {
+  if (val === null || val === void 0) {
+    return "";
+  }
+  if (typeof val === "number") {
+    return Number.isFinite(val) ? String(val) : "";
+  }
+  if (typeof val === "object") {
+    const field = val;
+    if (field.availability === "PRESENT") {
+      if (typeof field.parsedValue === "number" && Number.isFinite(field.parsedValue)) {
+        return String(field.parsedValue);
+      }
+      if (typeof field.rawValue === "string" && field.rawValue.trim().length > 0) {
+        const parsed = parseFloat(field.rawValue.trim());
+        if (Number.isFinite(parsed)) {
+          return String(parsed);
+        }
+      }
+    }
+    return "";
+  }
+  if (typeof val === "string" && val.trim().length > 0) {
+    const parsed = parseFloat(val.trim());
+    return Number.isFinite(parsed) ? String(parsed) : "";
+  }
+  return "";
+}
+function extractWebsiteState(candidate) {
+  const explicitState = candidate.websiteState;
+  if (explicitState === "YES") return "YES";
+  if (explicitState === "NO") return "NO";
+  if (explicitState === "UNKNOWN") return "";
+  const explicitWebsite = candidate.website;
+  if (explicitWebsite === "YES") return "YES";
+  if (explicitWebsite === "NO") return "NO";
+  if (explicitWebsite === "UNKNOWN") return "";
+  const webTarget = candidate.websiteUrl || candidate.website;
+  if (typeof webTarget === "string") {
+    const trimmed = webTarget.trim();
+    if (trimmed.length > 0 && !trimmed.includes("google.com/maps")) {
+      return "YES";
+    }
+    return "";
+  }
+  if (webTarget && typeof webTarget === "object") {
+    const field = webTarget;
+    if (field.availability === "PRESENT") {
+      const u = field.parsedValue || field.rawValue;
+      if (typeof u === "string" && u.trim().length > 0 && !u.includes("google.com/maps")) {
+        return "YES";
+      }
+      return "";
+    }
+    if (field.availability === "ABSENT") {
+      return "NO";
+    }
+    return "";
+  }
+  return "";
+}
+function extractPhone(candidate) {
+  const directPhone = extractObservedString(candidate.phone);
+  if (directPhone) {
+    return directPhone;
+  }
+  const contactSummary = candidate.contactSummary;
+  if (typeof contactSummary?.phoneText === "string" && contactSummary.phoneText.trim()) {
+    return contactSummary.phoneText.trim();
+  }
+  const enrichment = candidate.enrichmentResult;
+  const enrichedPhones = enrichment?.contactEvidence?.phones;
+  if (Array.isArray(enrichedPhones) && enrichedPhones.length > 0) {
+    const first = enrichedPhones[0];
+    const p = first?.phone || first?.rawPhone;
+    if (typeof p === "string" && p.trim()) {
+      return p.trim();
+    }
+  }
+  return "";
+}
+function extractSocialProfiles(candidate) {
+  let fb = "";
+  let ig = "";
+  const other = [];
+  if (typeof candidate.facebook === "string" && candidate.facebook.trim()) {
+    fb = candidate.facebook.trim();
+  } else if (typeof candidate.facebookUrl === "string" && candidate.facebookUrl.trim()) {
+    fb = candidate.facebookUrl.trim();
+  } else if (typeof candidate.facebookPageUrl === "string" && candidate.facebookPageUrl.trim()) {
+    fb = candidate.facebookPageUrl.trim();
+  }
+  if (typeof candidate.instagram === "string" && candidate.instagram.trim()) {
+    ig = candidate.instagram.trim();
+  } else if (typeof candidate.instagramUrl === "string" && candidate.instagramUrl.trim()) {
+    ig = candidate.instagramUrl.trim();
+  }
+  if (typeof candidate.otherSocial === "string" && candidate.otherSocial.trim()) {
+    other.push(candidate.otherSocial.trim());
+  } else if (typeof candidate.linkedInUrl === "string" && candidate.linkedInUrl.trim()) {
+    other.push(candidate.linkedInUrl.trim());
+  }
+  const candidateProfiles = candidate.socialProfiles || [];
+  const enrichment = candidate.enrichmentResult;
+  const enrichedProfiles = enrichment?.contactEvidence?.socialProfiles || [];
+  const allProfiles = [...candidateProfiles, ...enrichedProfiles];
+  for (const p of allProfiles) {
+    if (!p || !p.url) continue;
+    const url = String(p.url).trim();
+    if (!url) continue;
+    const platform = String(p.platform || "").toUpperCase();
+    const urlLower = url.toLowerCase();
+    if (platform === "FACEBOOK" || urlLower.includes("facebook.com")) {
+      if (!fb) fb = url;
+    } else if (platform === "INSTAGRAM" || urlLower.includes("instagram.com")) {
+      if (!ig) ig = url;
+    } else {
+      if (!other.includes(url)) {
+        other.push(url);
+      }
+    }
+  }
+  return {
+    facebook: fb,
+    instagram: ig,
+    otherSocial: other.join(", ")
+  };
+}
+function googleMapsCandidateToClipboardRow(candidate) {
+  if (!candidate || typeof candidate !== "object") {
+    return Object.freeze({
+      businessName: "",
+      googleMaps: "",
+      website: "",
+      rating: "",
+      phone: "",
+      facebook: "",
+      instagram: "",
+      otherSocial: ""
+    });
+  }
+  const cand = candidate;
+  const businessIdentity = cand.businessIdentity;
+  const businessName = extractObservedString(cand.businessName) || extractObservedString(cand.name) || extractObservedString(cand.displayName) || extractObservedString(businessIdentity?.businessName) || "";
+  const googleMaps = extractObservedString(cand.mapsUrl) || extractObservedString(cand.googleMapsUrl) || extractObservedString(cand.googleMaps) || "";
+  const website = extractWebsiteState(cand);
+  const rating = extractRating(cand.rating);
+  const phone = extractPhone(cand);
+  const { facebook, instagram, otherSocial } = extractSocialProfiles(cand);
+  return Object.freeze({
+    businessName,
+    googleMaps,
+    website,
+    rating,
+    phone,
+    facebook,
+    instagram,
+    otherSocial
+  });
+}
+function googleMapsResultsToClipboardRows(candidates) {
+  if (!Array.isArray(candidates)) {
+    return [];
+  }
+  return candidates.map(googleMapsCandidateToClipboardRow);
+}
+function googleMapsResultsToTsv(candidates, options) {
+  const rows = googleMapsResultsToClipboardRows(candidates);
+  return serializeToTsv(GOOGLE_MAPS_CLIPBOARD_COLUMNS, rows, options);
+}
+
+// src/extension/clipboard/metaClipboard.ts
+var META_CLIPBOARD_COLUMNS = Object.freeze([
+  { key: "facebookPageName", header: "Facebook Page Name" },
+  { key: "facebookPage", header: "Facebook Page" },
+  { key: "website", header: "Website" }
+]);
+function extractMetaWebsiteState(item) {
+  const web = item.website;
+  if (web === "YES") return "YES";
+  if (web === "NO") return "NO";
+  if (web === "UNKNOWN") return "";
+  const ws = item.websiteState;
+  if (ws === "found") return "YES";
+  if (ws === "not_found") return "NO";
+  if (ws === "unknown") return "";
+  if (typeof item.websiteUrl === "string" && item.websiteUrl.trim().length > 0) {
+    return "YES";
+  }
+  if (typeof item.destinationUrl === "string" && item.destinationUrl.trim().length > 0) {
+    return "YES";
+  }
+  if (typeof item.destinationDomain === "string" && item.destinationDomain.trim().length > 0) {
+    return "YES";
+  }
+  return "";
+}
+function metaResultToClipboardRow(result) {
+  if (!result || typeof result !== "object") {
+    return Object.freeze({
+      facebookPageName: "",
+      facebookPage: "",
+      website: ""
+    });
+  }
+  const item = result;
+  const facebookPageName = typeof item.displayName === "string" && item.displayName.trim() || typeof item.facebookPageName === "string" && item.facebookPageName.trim() || typeof item.advertiserName === "string" && item.advertiserName.trim() || typeof item.pageName === "string" && item.pageName.trim() || typeof item.name === "string" && item.name.trim() || typeof item.canonicalName === "string" && item.canonicalName.trim() || "";
+  const facebookPage = typeof item.facebookPageUrl === "string" && item.facebookPageUrl.trim() || typeof item.facebookPage === "string" && item.facebookPage.trim() || typeof item.adLibraryUrl === "string" && item.adLibraryUrl.trim() || "";
+  const website = extractMetaWebsiteState(item);
+  return Object.freeze({
+    facebookPageName,
+    facebookPage,
+    website
+  });
+}
+function metaResultsToClipboardRows(results) {
+  if (!Array.isArray(results)) {
+    return [];
+  }
+  return results.map(metaResultToClipboardRow);
+}
+function metaResultsToTsv(results, options) {
+  const rows = metaResultsToClipboardRows(results);
+  return serializeToTsv(META_CLIPBOARD_COLUMNS, rows, options);
+}
+
+// src/extension/clipboard/clipboardWriter.ts
+async function writeClipboardText(text, options) {
+  try {
+    const provider = options?.clipboard ?? (typeof navigator !== "undefined" && navigator.clipboard ? navigator.clipboard : void 0);
+    if (!provider || typeof provider.writeText !== "function") {
+      return {
+        success: false,
+        error: "System clipboard API is not available in current environment"
+      };
+    }
+    await provider.writeText(text);
+    return {
+      success: true
+    };
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    return {
+      success: false,
+      error: errorMsg
+    };
+  }
+}
+
+// src/extension/ui/components/GoogleMapsBulkResearchView.tsx
+var import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
+var GoogleMapsBulkResearchView = ({
+  onStartBulkResearch,
+  onPauseBulkResearch,
+  onResumeBulkResearch,
+  onCancelBulkResearch,
+  onFilterChange,
+  activeSnapshot,
+  candidates,
+  disabled = false
+}) => {
+  const [keywordsInput, setKeywordsInput] = (0, import_react2.useState)(
+    "real estate developer\nproperty developer\nconstruction company"
+  );
+  const [locationsInput, setLocationsInput] = (0, import_react2.useState)(
+    "Dhaka\nChattogram\nSylhet"
+  );
+  const [ratingFilter, setRatingFilter] = (0, import_react2.useState)("ANY");
+  const [websiteFilter, setWebsiteFilter] = (0, import_react2.useState)("ANY");
+  const [maxResultsPreset, setMaxResultsPreset] = (0, import_react2.useState)("100");
+  const [customMaxResults, setCustomMaxResults] = (0, import_react2.useState)(100);
+  const [isCopying, setIsCopying] = (0, import_react2.useState)(false);
+  const [copyFeedback, setCopyFeedback] = (0, import_react2.useState)(null);
+  const [largePlanConfirmed, setLargePlanConfirmed] = (0, import_react2.useState)(false);
+  const normalizedKeywords = (0, import_react2.useMemo)(() => normalizeKeywordList(keywordsInput.split("\n")), [keywordsInput]);
+  const normalizedLocations = (0, import_react2.useMemo)(() => normalizeLocationList(locationsInput.split("\n")), [locationsInput]);
+  const plannedUnitsCount = normalizedKeywords.length * normalizedLocations.length;
+  const isLargePlan = plannedUnitsCount > MAX_RECOMMENDED_SEARCH_UNITS;
+  const validationError = (0, import_react2.useMemo)(() => {
+    if (normalizedKeywords.length === 0) {
+      return "Please enter at least one valid keyword.";
+    }
+    if (normalizedLocations.length === 0) {
+      return "Please enter at least one valid location.";
+    }
+    if (isLargePlan && !largePlanConfirmed) {
+      return `Plan size of ${plannedUnitsCount.toLocaleString()} SearchUnits exceeds policy threshold (${MAX_RECOMMENDED_SEARCH_UNITS}). Please reduce scope or check confirmation.`;
+    }
+    return null;
+  }, [normalizedKeywords.length, normalizedLocations.length, isLargePlan, largePlanConfirmed, plannedUnitsCount]);
+  const isRunning = activeSnapshot?.state === "RUNNING";
+  const isPaused = activeSnapshot?.state === "PAUSED";
+  const isActive = isRunning || isPaused || activeSnapshot?.state === "QUEUED" || activeSnapshot?.state === "COMPLETING";
+  const isTerminal = activeSnapshot ? ["COMPLETED", "PARTIALLY_COMPLETED", "FAILED", "CANCELLED", "BLOCKED"].includes(activeSnapshot.state) : false;
+  const effectiveMaxResults = maxResultsPreset === "CUSTOM" ? customMaxResults : parseInt(maxResultsPreset, 10);
+  const handleStart = () => {
+    if (validationError || !onStartBulkResearch || disabled || isActive) return;
+    onStartBulkResearch({
+      keywords: normalizedKeywords,
+      locations: normalizedLocations,
+      ratingFilter,
+      websiteFilter,
+      maxResults: effectiveMaxResults
+    });
+  };
+  const checkCandidateQualification = (0, import_react2.useMemo)(() => {
+    return (cand) => qualifiesCandidate(cand, {
+      rating: ratingFilter,
+      website: websiteFilter,
+      maxResults: effectiveMaxResults
+    });
+  }, [ratingFilter, websiteFilter, effectiveMaxResults]);
+  const handleRatingChange = (newRating) => {
+    setRatingFilter(newRating);
+    if (onFilterChange) {
+      onFilterChange(newRating, websiteFilter);
+    }
+  };
+  const handleWebsiteChange = (newWebsite) => {
+    setWebsiteFilter(newWebsite);
+    if (onFilterChange) {
+      onFilterChange(ratingFilter, newWebsite);
+    }
+  };
+  const getStatusCopy = (snapshot) => {
+    switch (snapshot.state) {
+      case "QUEUED":
+        return "Queued \u2014 Preparing research run...";
+      case "RUNNING":
+        if (snapshot.currentUnit) {
+          return `Running search ${snapshot.progress.unitsCompleted + 1} of ${snapshot.totalUnits}...`;
+        }
+        return "Running bulk research...";
+      case "PAUSED":
+        return "Research run paused.";
+      case "COMPLETING":
+        return "Finalizing research results...";
+      case "COMPLETED":
+        return `Completed all ${snapshot.totalUnits} searches.`;
+      case "PARTIALLY_COMPLETED":
+        return `Partially completed \u2014 ${snapshot.completedUnits} finished, ${snapshot.failedUnits} failed, ${snapshot.cancelledUnits} cancelled.`;
+      case "FAILED":
+        return `Run failed: ${snapshot.terminationReason || "Execution error"}`;
+      case "CANCELLED":
+        return "Research run cancelled by user.";
+      case "BLOCKED":
+        return "Research run blocked by policy guardrails.";
+      default:
+        return "Ready to start bulk research.";
+    }
+  };
+  const availableCandidatesCount = candidates ? candidates.length : activeSnapshot?.metrics.currentFilteredMatchCount ?? 0;
+  const handleCopyAll = async () => {
+    if (isCopying) return;
+    setIsCopying(true);
+    setCopyFeedback(null);
+    try {
+      let candidateList = [];
+      if (candidates && candidates.length > 0) {
+        candidateList = candidates;
+      } else if (activeSnapshot?.runId && typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+        const resp = await new Promise((resolve) => {
+          chrome.runtime.sendMessage(
+            {
+              type: "GET_GMAPS_FILTERED_VIEW",
+              source: "GMAPS_ENGINE",
+              payload: { sessionId: activeSnapshot.runId }
+            },
+            (response) => resolve(response)
+          );
+        });
+        if (resp?.success && resp.view?.matchingObservations) {
+          candidateList = resp.view.matchingObservations;
+        } else if (resp?.success && resp.view?.visibleCandidates) {
+          candidateList = resp.view.visibleCandidates;
+        }
+      }
+      if (candidateList.length === 0) {
+        setCopyFeedback({
+          type: "error",
+          message: "No results available to copy."
+        });
+        setIsCopying(false);
+        return;
+      }
+      const tsv = googleMapsResultsToTsv(candidateList);
+      const writeResult = await writeClipboardText(tsv);
+      if (writeResult.success) {
+        setCopyFeedback({
+          type: "success",
+          message: `${candidateList.length} results copied`
+        });
+        setTimeout(() => {
+          setCopyFeedback((prev) => prev?.type === "success" ? null : prev);
+        }, 3e3);
+      } else {
+        setCopyFeedback({
+          type: "error",
+          message: "Could not copy results to clipboard."
+        });
+      }
+    } catch (_err) {
+      setCopyFeedback({
+        type: "error",
+        message: "Could not copy results to clipboard."
+      });
+    } finally {
+      setIsCopying(false);
+    }
+  };
+  return /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
+    "div",
+    {
+      className: "flex flex-col gap-4 p-4 bg-slate-900 border border-slate-800 rounded-xl",
+      role: "region",
+      "aria-label": "Google Maps bulk research orchestration",
+      children: [
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex items-center justify-between pb-3 border-b border-slate-800", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("h2", { className: "text-sm font-bold text-white flex items-center gap-2", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: "\u{1F5FA}\uFE0F" }),
+              " Google Maps Bulk Research"
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "text-xs text-slate-400 mt-0.5", children: "Sequential multi-keyword & multi-location acquisition with live filtering" })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "px-2 py-0.5 text-[10px] font-semibold bg-sky-950 text-sky-400 border border-sky-800 rounded-full", children: "Concurrency: 1" })
+        ] }),
+        !isActive && /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex flex-col gap-3", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-3", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex flex-col gap-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("label", { htmlFor: "bulk-keywords-input", className: "text-xs font-semibold uppercase tracking-wider text-slate-300", children: [
+                "Keywords ",
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "text-slate-500 font-normal", children: "(one per line)" })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                "textarea",
+                {
+                  id: "bulk-keywords-input",
+                  rows: 4,
+                  value: keywordsInput,
+                  onChange: (e) => {
+                    setKeywordsInput(e.target.value);
+                    setLargePlanConfirmed(false);
+                  },
+                  disabled,
+                  placeholder: "e.g. real estate developer\nproperty developer\nconstruction company",
+                  className: "w-full px-3 py-2 text-xs bg-slate-950 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400 font-mono resize-y",
+                  "aria-label": "Search keywords, one per line"
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("span", { className: "text-[11px] text-slate-400", children: [
+                normalizedKeywords.length,
+                " valid keyword",
+                normalizedKeywords.length === 1 ? "" : "s"
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex flex-col gap-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("label", { htmlFor: "bulk-locations-input", className: "text-xs font-semibold uppercase tracking-wider text-slate-300", children: [
+                "Locations ",
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "text-slate-500 font-normal", children: "(one per line)" })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                "textarea",
+                {
+                  id: "bulk-locations-input",
+                  rows: 4,
+                  value: locationsInput,
+                  onChange: (e) => {
+                    setLocationsInput(e.target.value);
+                    setLargePlanConfirmed(false);
+                  },
+                  disabled,
+                  placeholder: "e.g. Dhaka\nChattogram\nSylhet",
+                  className: "w-full px-3 py-2 text-xs bg-slate-950 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400 font-mono resize-y",
+                  "aria-label": "Search locations, one per line"
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("span", { className: "text-[11px] text-slate-400", children: [
+                normalizedLocations.length,
+                " valid location",
+                normalizedLocations.length === 1 ? "" : "s"
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "p-3 bg-slate-950/70 border border-slate-800 rounded-lg flex items-center justify-between text-xs", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex items-center gap-3", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "text-slate-400 font-medium", children: "Deterministic Plan:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("span", { className: "px-2 py-0.5 bg-slate-800 text-sky-300 rounded font-semibold font-mono text-xs", children: [
+                normalizedKeywords.length,
+                " keywords \xD7 ",
+                normalizedLocations.length,
+                " locations = ",
+                plannedUnitsCount,
+                " searches"
+              ] })
+            ] }),
+            isLargePlan && /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("span", { className: "text-amber-400 font-medium flex items-center gap-1 text-[11px]", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: "\u26A0\uFE0F" }),
+              " High volume"
+            ] })
+          ] }),
+          isLargePlan && /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "p-3 bg-amber-950/40 border border-amber-800/80 rounded-lg text-xs flex flex-col gap-2", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex items-start gap-2", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "text-amber-400 text-sm font-bold", children: "\u26A0\uFE0F" }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("h4", { className: "font-semibold text-amber-300", children: "Large Research Plan Warning" }),
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("p", { className: "text-amber-200/80 text-[11px] mt-0.5", children: [
+                  "This plan contains ",
+                  plannedUnitsCount.toLocaleString(),
+                  " SearchUnits, exceeding the recommended limit of ",
+                  MAX_RECOMMENDED_SEARCH_UNITS,
+                  ". Sequential browser acquisition may take a prolonged duration."
+                ] })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("label", { className: "flex items-center gap-2 text-amber-200 cursor-pointer pt-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                "input",
+                {
+                  type: "checkbox",
+                  id: "bulk-large-plan-confirm",
+                  checked: largePlanConfirmed,
+                  onChange: (e) => setLargePlanConfirmed(e.target.checked),
+                  className: "rounded border-amber-600 bg-slate-950 text-amber-500 focus:ring-2 focus:ring-amber-400"
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "text-[11px] font-medium", children: "I understand this is a large research plan and want to proceed." })
+            ] })
+          ] }),
+          validationError && /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("p", { className: "text-xs text-rose-400 flex items-center gap-1.5", role: "alert", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: "\u26A0\uFE0F" }),
+            " ",
+            validationError
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "p-3 bg-slate-950/60 border border-slate-800 rounded-lg flex flex-col gap-2.5", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex items-center justify-between text-xs", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("span", { className: "font-semibold text-slate-300 uppercase tracking-wider text-[11px]", children: [
+              "Result Filters ",
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "text-slate-500 font-normal lowercase", children: "(view-only, changes live)" })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+              "button",
+              {
+                type: "button",
+                onClick: () => {
+                  handleRatingChange("ANY");
+                  handleWebsiteChange("ANY");
+                },
+                disabled: ratingFilter === "ANY" && websiteFilter === "ANY",
+                className: "text-[11px] text-sky-400 hover:text-sky-300 disabled:text-slate-600 disabled:cursor-not-allowed cursor-pointer",
+                children: "Reset Filters"
+              }
+            )
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex flex-wrap items-center gap-6 pt-1 border-t border-slate-800/80", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("fieldset", { className: "flex items-center gap-3 border-none p-0 m-0", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("legend", { className: "text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1", children: "Rating:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("label", { className: "flex items-center gap-1.5 text-xs text-slate-300 hover:text-white cursor-pointer", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                  "input",
+                  {
+                    type: "radio",
+                    name: "bulk-rating-filter",
+                    value: "ANY",
+                    checked: ratingFilter === "ANY",
+                    onChange: () => handleRatingChange("ANY"),
+                    className: "rounded-full border-slate-700 bg-slate-950 text-sky-500 focus:ring-2 focus:ring-sky-400"
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: "Any" })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("label", { className: "flex items-center gap-1.5 text-xs text-slate-300 hover:text-white cursor-pointer", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                  "input",
+                  {
+                    type: "radio",
+                    name: "bulk-rating-filter",
+                    value: "MIN_4_0",
+                    checked: ratingFilter === "MIN_4_0",
+                    onChange: () => handleRatingChange("MIN_4_0"),
+                    className: "rounded-full border-slate-700 bg-slate-950 text-sky-500 focus:ring-2 focus:ring-sky-400"
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: "4.0+" })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("label", { className: "flex items-center gap-1.5 text-xs text-slate-300 hover:text-white cursor-pointer", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                  "input",
+                  {
+                    type: "radio",
+                    name: "bulk-rating-filter",
+                    value: "MIN_4_5",
+                    checked: ratingFilter === "MIN_4_5",
+                    onChange: () => handleRatingChange("MIN_4_5"),
+                    className: "rounded-full border-slate-700 bg-slate-950 text-sky-500 focus:ring-2 focus:ring-sky-400"
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: "4.5+" })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("fieldset", { className: "flex items-center gap-3 border-none p-0 m-0", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("legend", { className: "text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1", children: "Website:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("label", { className: "flex items-center gap-1.5 text-xs text-slate-300 hover:text-white cursor-pointer", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                  "input",
+                  {
+                    type: "radio",
+                    name: "bulk-website-filter",
+                    value: "ANY",
+                    checked: websiteFilter === "ANY",
+                    onChange: () => handleWebsiteChange("ANY"),
+                    className: "rounded-full border-slate-700 bg-slate-950 text-sky-500 focus:ring-2 focus:ring-sky-400"
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: "Any" })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("label", { className: "flex items-center gap-1.5 text-xs text-slate-300 hover:text-white cursor-pointer", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                  "input",
+                  {
+                    type: "radio",
+                    name: "bulk-website-filter",
+                    value: "WITH_WEBSITE",
+                    checked: websiteFilter === "WITH_WEBSITE",
+                    onChange: () => handleWebsiteChange("WITH_WEBSITE"),
+                    className: "rounded-full border-slate-700 bg-slate-950 text-sky-500 focus:ring-2 focus:ring-sky-400"
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: "With Website" })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("label", { className: "flex items-center gap-1.5 text-xs text-slate-300 hover:text-white cursor-pointer", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                  "input",
+                  {
+                    type: "radio",
+                    name: "bulk-website-filter",
+                    value: "WITHOUT_WEBSITE",
+                    checked: websiteFilter === "WITHOUT_WEBSITE",
+                    onChange: () => handleWebsiteChange("WITHOUT_WEBSITE"),
+                    className: "rounded-full border-slate-700 bg-slate-950 text-sky-500 focus:ring-2 focus:ring-sky-400"
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: "Without Website" })
+              ] })
+            ] })
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "p-3 bg-slate-950/60 border border-slate-800 rounded-lg flex flex-col gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex items-center justify-between text-xs", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "font-semibold text-slate-300 uppercase tracking-wider text-[11px]", children: "Maximum Results Target" }),
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("span", { className: "text-slate-400 font-mono text-[11px]", children: [
+              "Target: ",
+              effectiveMaxResults,
+              " qualified leads"
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex flex-wrap items-center gap-2 pt-1 border-t border-slate-800/80", children: [
+            ["50", "100", "250", "500"].map((preset) => /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+              "button",
+              {
+                type: "button",
+                onClick: () => setMaxResultsPreset(preset),
+                className: `px-2.5 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer ${maxResultsPreset === preset ? "bg-sky-600 text-white font-semibold" : "bg-slate-800 text-slate-300 hover:bg-slate-700"}`,
+                children: preset
+              },
+              preset
+            )),
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+              "button",
+              {
+                type: "button",
+                onClick: () => setMaxResultsPreset("CUSTOM"),
+                className: `px-2.5 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer ${maxResultsPreset === "CUSTOM" ? "bg-sky-600 text-white font-semibold" : "bg-slate-800 text-slate-300 hover:bg-slate-700"}`,
+                children: "Custom"
+              }
+            ),
+            maxResultsPreset === "CUSTOM" && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+              "input",
+              {
+                type: "number",
+                min: 1,
+                max: 1e3,
+                value: customMaxResults,
+                onChange: (e) => setCustomMaxResults(Math.max(1, Math.min(1e3, parseInt(e.target.value) || 100))),
+                className: "w-20 px-2 py-1 text-xs bg-slate-950 border border-slate-700 rounded text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-400 font-mono",
+                "aria-label": "Custom maximum results target"
+              }
+            )
+          ] })
+        ] }),
+        activeSnapshot && /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "p-3 bg-slate-950/80 border border-slate-800 rounded-lg flex flex-col gap-3", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex items-center justify-between", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex items-center gap-2", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: `w-2.5 h-2.5 rounded-full ${isRunning ? "bg-emerald-400 animate-pulse" : isPaused ? "bg-amber-400" : activeSnapshot.state === "COMPLETED" ? "bg-sky-400" : activeSnapshot.state === "PARTIALLY_COMPLETED" ? "bg-amber-400" : "bg-rose-400"}` }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "text-xs font-semibold text-slate-200", "aria-live": "polite", children: getStatusCopy(activeSnapshot) })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("span", { className: "text-xs font-mono text-slate-400", children: [
+              activeSnapshot.progress.percent,
+              "%"
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "w-full h-2 bg-slate-800 rounded-full overflow-hidden", children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+            "div",
+            {
+              className: `h-full transition-all duration-300 ${activeSnapshot.state === "FAILED" ? "bg-rose-500" : activeSnapshot.state === "CANCELLED" ? "bg-slate-500" : activeSnapshot.state === "PARTIALLY_COMPLETED" ? "bg-amber-500" : "bg-sky-500"}`,
+              style: { width: `${Math.min(100, Math.max(0, activeSnapshot.progress.percent))}%` },
+              role: "progressbar",
+              "aria-valuenow": activeSnapshot.progress.percent,
+              "aria-valuemin": 0,
+              "aria-valuemax": 100,
+              "aria-label": `Bulk research progress: ${activeSnapshot.progress.unitsCompleted} of ${activeSnapshot.totalUnits} searches`
+            }
+          ) }),
+          activeSnapshot.currentUnit && /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "p-2.5 bg-slate-900 border border-slate-800 rounded text-xs flex flex-col gap-1", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex items-center justify-between text-slate-400", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("span", { className: "font-semibold text-slate-300", children: [
+                "Current Search: ",
+                activeSnapshot.progress.unitsCompleted + 1,
+                " of ",
+                activeSnapshot.totalUnits
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("span", { className: "text-[11px] font-mono bg-slate-800 px-1.5 py-0.5 rounded text-sky-300", children: [
+                "Attempt ",
+                activeSnapshot.currentUnit.attemptCount
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "grid grid-cols-2 gap-2 pt-1 text-slate-300", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "text-slate-500 text-[11px]", children: "Keyword:" }),
+                " ",
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "font-medium", children: activeSnapshot.currentUnit.keyword })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "text-slate-500 text-[11px]", children: "Location:" }),
+                " ",
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "font-medium", children: activeSnapshot.currentUnit.location })
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "p-2 bg-slate-900 rounded border border-slate-800/80", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "text-[11px] text-slate-500", children: "Searches" }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "font-semibold text-slate-200 mt-0.5", children: [
+                activeSnapshot.completedUnits,
+                "/",
+                activeSnapshot.totalUnits
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "p-2 bg-slate-900 rounded border border-slate-800/80", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "text-[11px] text-slate-500", children: "Observed" }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "font-semibold text-slate-200 mt-0.5", children: activeSnapshot.metrics.rawCandidateObservations })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "p-2 bg-slate-900 rounded border border-slate-800/80", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "text-[11px] text-slate-500", children: "Duplicates Suppressed" }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "font-semibold text-amber-400 mt-0.5", children: activeSnapshot.metrics.duplicateObservationCount })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "p-2 bg-slate-900 rounded border border-slate-800/80", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "text-[11px] text-slate-500", children: "Unique Leads" }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "font-semibold text-emerald-400 mt-0.5", children: activeSnapshot.metrics.uniqueCandidateCount })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "p-2 bg-slate-900 rounded border border-slate-800/80", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "text-[11px] text-slate-500", children: "Filtered Matches" }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "font-semibold text-sky-400 mt-0.5", children: activeSnapshot.metrics.currentFilteredMatchCount })
+            ] })
+          ] }),
+          activeSnapshot.enrichmentSnapshot && /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "p-2.5 bg-slate-900/90 border border-slate-800 rounded text-xs flex flex-col gap-2", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex items-center justify-between", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("span", { className: "font-semibold text-slate-300 text-[11px] flex items-center gap-1.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: "\u{1F310}" }),
+                " Website & Contact Enrichment"
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("span", { className: "text-[11px] font-mono text-sky-400", children: [
+                activeSnapshot.enrichmentSnapshot.completed + activeSnapshot.enrichmentSnapshot.partial,
+                " / ",
+                activeSnapshot.enrichmentSnapshot.totalEligible,
+                " eligible"
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "grid grid-cols-4 gap-2 text-center text-xs", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "p-1.5 bg-slate-950/60 rounded border border-slate-800/60", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "text-[10px] text-slate-500", children: "Enriched" }),
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "font-semibold text-emerald-400 mt-0.5", children: [
+                  activeSnapshot.enrichmentSnapshot.completed,
+                  activeSnapshot.enrichmentSnapshot.partial > 0 && /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("span", { className: "text-[10px] text-amber-400 font-normal", children: [
+                    " (+",
+                    activeSnapshot.enrichmentSnapshot.partial,
+                    " partial)"
+                  ] })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "p-1.5 bg-slate-950/60 rounded border border-slate-800/60", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "text-[10px] text-slate-500", children: "In Queue" }),
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "font-semibold text-slate-300 mt-0.5", children: [
+                  activeSnapshot.enrichmentSnapshot.queued,
+                  activeSnapshot.enrichmentSnapshot.running > 0 && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "text-[10px] text-sky-400 animate-pulse font-normal", children: " (1 active)" })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "p-1.5 bg-slate-950/60 rounded border border-slate-800/60", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "text-[10px] text-slate-500", children: "Contacts" }),
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "font-semibold text-sky-300 mt-0.5", children: [
+                  activeSnapshot.enrichmentSnapshot.emailsFound,
+                  " \u2709 / ",
+                  activeSnapshot.enrichmentSnapshot.phonesFound,
+                  " \u260E"
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "p-1.5 bg-slate-950/60 rounded border border-slate-800/60", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "text-[10px] text-slate-500", children: "People" }),
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "font-semibold text-indigo-300 mt-0.5", children: [
+                  activeSnapshot.enrichmentSnapshot.personsFound,
+                  " \u{1F464}"
+                ] })
+              ] })
+            ] })
+          ] })
+        ] }),
+        copyFeedback && /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
+          "div",
+          {
+            role: "status",
+            "aria-live": "polite",
+            className: `px-3 py-1.5 rounded-lg text-xs flex items-center justify-between transition-all ${copyFeedback.type === "success" ? "bg-emerald-950/80 border border-emerald-800/80 text-emerald-200" : "bg-rose-950/80 border border-rose-800/80 text-rose-200"}`,
+            children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex items-center gap-1.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: copyFeedback.type === "success" ? "\u2713" : "\u26A0\uFE0F" }),
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: copyFeedback.message })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => setCopyFeedback(null),
+                  className: "text-slate-400 hover:text-white cursor-pointer ml-2 text-xs",
+                  "aria-label": "Dismiss feedback",
+                  children: "\u2715"
+                }
+              )
+            ]
+          }
+        ),
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex items-center justify-between gap-2 pt-1", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
+            "button",
+            {
+              type: "button",
+              id: "gmaps-copy-all-btn",
+              onClick: handleCopyAll,
+              disabled: availableCandidatesCount === 0 || isCopying,
+              className: `px-3 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 cursor-pointer ${availableCandidatesCount > 0 && !isCopying ? "bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700" : "bg-slate-900 text-slate-600 cursor-not-allowed border border-slate-800"}`,
+              "aria-label": `Copy all ${availableCandidatesCount} Google Maps results to clipboard`,
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: "\u{1F4CB}" }),
+                " ",
+                isCopying ? "Copying..." : `Copy All (${availableCandidatesCount})`
+              ]
+            }
+          ) }),
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "flex items-center gap-2", children: !isActive ? /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
+            "button",
+            {
+              type: "button",
+              id: "start-bulk-research-btn",
+              onClick: handleStart,
+              disabled: !!validationError || disabled,
+              className: `px-4 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-400 ${!validationError && !disabled ? "bg-sky-600 hover:bg-sky-500 text-white shadow-lg shadow-sky-950" : "bg-slate-800 text-slate-500 cursor-not-allowed"}`,
+              "aria-label": `Start bulk research for ${plannedUnitsCount} searches`,
+              children: [
+                "Start Bulk Research (",
+                plannedUnitsCount,
+                " Searches)"
+              ]
+            }
+          ) : /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(import_jsx_runtime4.Fragment, { children: [
+            isRunning ? /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+              "button",
+              {
+                type: "button",
+                id: "pause-bulk-research-btn",
+                onClick: onPauseBulkResearch,
+                disabled,
+                className: "px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-500 text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400",
+                "aria-label": "Pause bulk research execution",
+                children: "Pause"
+              }
+            ) : isPaused ? /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+              "button",
+              {
+                type: "button",
+                id: "resume-bulk-research-btn",
+                onClick: onResumeBulkResearch,
+                disabled,
+                className: "px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-400",
+                "aria-label": "Resume bulk research execution",
+                children: "Resume"
+              }
+            ) : null,
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+              "button",
+              {
+                type: "button",
+                id: "cancel-bulk-research-btn",
+                onClick: onCancelBulkResearch,
+                disabled,
+                className: "px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-600/80 hover:bg-rose-500 text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-400",
+                "aria-label": "Cancel bulk research execution",
+                children: "Cancel"
+              }
+            )
+          ] }) })
+        ] })
+      ]
+    }
+  );
+};
+
+// src/extension/ui/components/PlanReviewModal.tsx
+var import_react3 = __toESM(require_react(), 1);
 
 // src/extension/ui/designSystem.ts
 function getSemanticStatusBadge(status) {
@@ -17654,7 +19031,7 @@ function getSemanticStatusBadge(status) {
 }
 
 // src/extension/ui/components/StatusBadge.tsx
-var import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
 var StatusBadge = ({
   status,
   size = "md",
@@ -17664,7 +19041,7 @@ var StatusBadge = ({
   const { colorClass, iconSymbol, accessibleLabel } = getSemanticStatusBadge(status);
   const text = customLabel || status.replace(/_/g, " ");
   const sizeClasses = size === "sm" ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-0.5 text-xs";
-  return /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
     "span",
     {
       role: "status",
@@ -17672,15 +19049,15 @@ var StatusBadge = ({
       "aria-label": accessibleLabel,
       title: accessibleLabel,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { "aria-hidden": "true", className: "font-bold", children: iconSymbol }),
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: text })
+        /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { "aria-hidden": "true", className: "font-bold", children: iconSymbol }),
+        /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { children: text })
       ]
     }
   );
 };
 
 // src/extension/ui/components/PlanReviewModal.tsx
-var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
 var PlanReviewModal = ({
   isOpen,
   plan,
@@ -17688,9 +19065,9 @@ var PlanReviewModal = ({
   onCancel,
   isSubmitting = false
 }) => {
-  const modalRef = (0, import_react2.useRef)(null);
-  const confirmBtnRef = (0, import_react2.useRef)(null);
-  (0, import_react2.useEffect)(() => {
+  const modalRef = (0, import_react3.useRef)(null);
+  const confirmBtnRef = (0, import_react3.useRef)(null);
+  (0, import_react3.useEffect)(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
@@ -17704,28 +19081,28 @@ var PlanReviewModal = ({
     };
   }, [isOpen, onCancel]);
   if (!isOpen) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
     "div",
     {
       className: "fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm",
       role: "dialog",
       "aria-modal": "true",
       "aria-labelledby": "plan-review-title",
-      children: /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
+      children: /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
         "div",
         {
           ref: modalRef,
           className: "w-full max-w-lg bg-slate-900 border border-slate-700 rounded-xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden",
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "p-4 border-b border-slate-800 flex items-center justify-between", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("h2", { id: "plan-review-title", className: "text-base font-semibold text-slate-100 flex items-center gap-2", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { children: "\u{1F4CB}" }),
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-4 border-b border-slate-800 flex items-center justify-between", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("h2", { id: "plan-review-title", className: "text-base font-semibold text-slate-100 flex items-center gap-2", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { children: "\u{1F4CB}" }),
                   " Research Plan Review"
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("p", { className: "text-xs text-slate-400", children: "Review planned parameters before starting execution" })
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("p", { className: "text-xs text-slate-400", children: "Review planned parameters before starting execution" })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
                 "button",
                 {
                   type: "button",
@@ -17736,41 +19113,41 @@ var PlanReviewModal = ({
                 }
               )
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "p-4 overflow-y-auto flex flex-col gap-4 text-xs text-slate-300", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "grid grid-cols-2 gap-3 p-3 bg-slate-950/60 rounded-lg border border-slate-800", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "text-[11px] text-slate-500 uppercase tracking-wider block mb-1", children: "Source Type" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "font-semibold text-slate-200", children: plan.sourceType })
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-4 overflow-y-auto flex flex-col gap-4 text-xs text-slate-300", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "grid grid-cols-2 gap-3 p-3 bg-slate-950/60 rounded-lg border border-slate-800", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[11px] text-slate-500 uppercase tracking-wider block mb-1", children: "Source Type" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "font-semibold text-slate-200", children: plan.sourceType })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "text-[11px] text-slate-500 uppercase tracking-wider block mb-1", children: "Execution Mode" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(StatusBadge, { status: plan.executionMode, size: "sm" })
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[11px] text-slate-500 uppercase tracking-wider block mb-1", children: "Execution Mode" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(StatusBadge, { status: plan.executionMode, size: "sm" })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "grid grid-cols-3 gap-2", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "p-2.5 bg-slate-800/60 rounded border border-slate-700/60 text-center", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "text-[11px] text-slate-400 block mb-0.5", children: "Planned Units" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "text-base font-bold text-sky-400", children: plan.plannedSearchUnitsCount })
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "grid grid-cols-3 gap-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-2.5 bg-slate-800/60 rounded border border-slate-700/60 text-center", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[11px] text-slate-400 block mb-0.5", children: "Planned Units" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-base font-bold text-sky-400", children: plan.plannedSearchUnitsCount })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "p-2.5 bg-slate-800/60 rounded border border-slate-700/60 text-center", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "text-[11px] text-slate-400 block mb-0.5", children: "Max Candidates" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "text-base font-bold text-slate-200", children: plan.maxCandidatesLimit })
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-2.5 bg-slate-800/60 rounded border border-slate-700/60 text-center", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[11px] text-slate-400 block mb-0.5", children: "Max Candidates" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-base font-bold text-slate-200", children: plan.maxCandidatesLimit })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "p-2.5 bg-slate-800/60 rounded border border-slate-700/60 text-center", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "text-[11px] text-slate-400 block mb-0.5", children: "Timeout" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("span", { className: "text-base font-bold text-slate-200", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-2.5 bg-slate-800/60 rounded border border-slate-700/60 text-center", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[11px] text-slate-400 block mb-0.5", children: "Timeout" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { className: "text-base font-bold text-slate-200", children: [
                     plan.timeoutSeconds,
                     "s"
                   ] })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("span", { className: "text-[11px] text-slate-400 uppercase tracking-wider block mb-1.5 font-medium", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { className: "text-[11px] text-slate-400 uppercase tracking-wider block mb-1.5 font-medium", children: [
                   "Enabled Pipeline Stages (",
                   plan.enabledStages.length,
                   ")"
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: "flex flex-wrap gap-1.5", children: plan.enabledStages.map((stage) => /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "flex flex-wrap gap-1.5", children: plan.enabledStages.map((stage) => /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
                   "span",
                   {
                     className: "px-2 py-0.5 text-[10px] font-mono bg-slate-800 border border-slate-700 text-slate-300 rounded",
@@ -17779,34 +19156,34 @@ var PlanReviewModal = ({
                   stage
                 )) })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "p-2.5 bg-slate-950/40 rounded border border-slate-800 flex items-center justify-between", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "text-slate-400", children: "Qualification Profile:" }),
-                /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "font-semibold text-slate-200", children: plan.qualificationProfileName })
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-2.5 bg-slate-950/40 rounded border border-slate-800 flex items-center justify-between", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-slate-400", children: "Qualification Profile:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "font-semibold text-slate-200", children: plan.qualificationProfileName })
               ] }),
-              !plan.canExecuteLive && /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
+              !plan.canExecuteLive && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
                 "div",
                 {
                   className: "p-3 rounded-lg bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs flex items-start gap-2",
                   role: "alert",
                   children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "text-rose-400 text-sm font-bold", children: "\u2298" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("strong", { className: "block font-semibold", children: "Execution Blocked:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-rose-400 text-sm font-bold", children: "\u2298" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("strong", { className: "block font-semibold", children: "Execution Blocked:" }),
                       plan.blockedReason || "Google Maps operates strictly in CONTRACT_ONLY mode and cannot execute live extraction."
                     ] })
                   ]
                 }
               ),
-              plan.safetyWarnings.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "p-3 rounded-lg bg-amber-950/30 border border-amber-500/30 text-amber-300 text-xs flex flex-col gap-1", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("strong", { className: "font-semibold flex items-center gap-1", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { children: "\u26A0\uFE0F" }),
+              plan.safetyWarnings.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-3 rounded-lg bg-amber-950/30 border border-amber-500/30 text-amber-300 text-xs flex flex-col gap-1", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("strong", { className: "font-semibold flex items-center gap-1", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { children: "\u26A0\uFE0F" }),
                   " Plan Safety Advisories:"
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("ul", { className: "list-disc list-inside space-y-0.5 text-[11px] text-amber-200", children: plan.safetyWarnings.map((w, idx) => /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("li", { children: w }, idx)) })
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("ul", { className: "list-disc list-inside space-y-0.5 text-[11px] text-amber-200", children: plan.safetyWarnings.map((w, idx) => /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("li", { children: w }, idx)) })
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-end gap-2", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-end gap-2", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
                 "button",
                 {
                   type: "button",
@@ -17815,7 +19192,7 @@ var PlanReviewModal = ({
                   children: "Cancel"
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
                 "button",
                 {
                   ref: confirmBtnRef,
@@ -17823,11 +19200,11 @@ var PlanReviewModal = ({
                   disabled: !plan.canExecuteLive || isSubmitting,
                   onClick: onConfirm,
                   className: `px-4 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 ${plan.canExecuteLive && !isSubmitting ? "bg-sky-600 hover:bg-sky-500 text-white shadow-sm shadow-sky-600/20" : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"}`,
-                  children: isSubmitting ? /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(import_jsx_runtime5.Fragment, { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: "animate-spin", children: "\u27F3" }),
+                  children: isSubmitting ? /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(import_jsx_runtime6.Fragment, { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "animate-spin", children: "\u27F3" }),
                     "Starting..."
-                  ] }) : /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(import_jsx_runtime5.Fragment, { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { children: "\u25B6" }),
+                  ] }) : /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(import_jsx_runtime6.Fragment, { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { children: "\u25B6" }),
                     "Confirm & Run"
                   ] })
                 }
@@ -17841,7 +19218,7 @@ var PlanReviewModal = ({
 };
 
 // src/extension/ui/components/RunStatusView.tsx
-var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime7 = __toESM(require_jsx_runtime(), 1);
 var RunStatusView = ({
   runStatus,
   onPause,
@@ -17851,42 +19228,42 @@ var RunStatusView = ({
   onInspectDiagnostics
 }) => {
   if (!runStatus) {
-    return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex flex-col items-center justify-center p-8 text-center text-slate-400", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-3xl mb-2", children: "\u23F1" }),
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("h3", { className: "text-sm font-semibold text-slate-200 mb-1", children: "No Active Run" }),
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("p", { className: "text-xs text-slate-500 max-w-xs", children: "Active run data not available. Select a source and launch a research plan to observe live pipeline execution." })
+    return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-col items-center justify-center p-8 text-center text-slate-400", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-3xl mb-2", children: "\u23F1" }),
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("h3", { className: "text-sm font-semibold text-slate-200 mb-1", children: "No Active Run" }),
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("p", { className: "text-xs text-slate-500 max-w-xs", children: "Active run data not available. Select a source and launch a research plan to observe live pipeline execution." })
     ] });
   }
   const isRunning = runStatus.globalStatus === "RUNNING";
   const isCompleted = runStatus.globalStatus === "COMPLETED" || runStatus.globalStatus === "COMPLETED_WITH_WARNINGS";
   const isPartial = runStatus.globalStatus === "PARTIAL";
-  return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex flex-col gap-4 p-4 bg-slate-900 border border-slate-800 rounded-xl", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "sr-only", role: "status", "aria-live": "polite", children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-col gap-4 p-4 bg-slate-900 border border-slate-800 rounded-xl", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "sr-only", role: "status", "aria-live": "polite", children: [
       "Current run status: ",
       runStatus.globalStatusText,
       ". Active source: ",
       runStatus.activeSource,
       "."
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between p-3 bg-slate-950/80 rounded-lg border border-slate-800", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center gap-2.5", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(StatusBadge, { status: runStatus.globalStatus }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { className: "text-xs font-semibold text-slate-200 block", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center justify-between p-3 bg-slate-950/80 rounded-lg border border-slate-800", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-2.5", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(StatusBadge, { status: runStatus.globalStatus }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "text-xs font-semibold text-slate-200 block", children: [
             "Run: ",
             runStatus.runId
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { className: "text-[11px] text-slate-400", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "text-[11px] text-slate-400", children: [
             "Source: ",
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("strong", { className: "text-slate-300", children: runStatus.activeSource }),
+            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("strong", { className: "text-slate-300", children: runStatus.activeSource }),
             " (",
             runStatus.sourceStatus,
             ")"
           ] })
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center gap-1.5", children: [
-        isRunning && onPause && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-1.5", children: [
+        isRunning && onPause && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
           "button",
           {
             type: "button",
@@ -17897,7 +19274,7 @@ var RunStatusView = ({
             children: "\u23F8 Pause"
           }
         ),
-        isPartial && onResume && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+        isPartial && onResume && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
           "button",
           {
             type: "button",
@@ -17908,7 +19285,7 @@ var RunStatusView = ({
             children: "\u25B6 Resume"
           }
         ),
-        (isRunning || isPartial) && onStop && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+        (isRunning || isPartial) && onStop && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
           "button",
           {
             type: "button",
@@ -17919,7 +19296,7 @@ var RunStatusView = ({
             children: "\u23F9 Stop"
           }
         ),
-        isCompleted && onViewResults && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+        isCompleted && onViewResults && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
           "button",
           {
             type: "button",
@@ -17931,31 +19308,31 @@ var RunStatusView = ({
         )
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "grid grid-cols-3 gap-2 text-center", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-2.5 bg-slate-950/40 rounded border border-slate-800", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[10px] uppercase text-slate-500 block mb-0.5", children: "Candidates" }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-base font-bold text-slate-100", children: runStatus.candidatesProcessed })
+    /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "grid grid-cols-3 gap-2 text-center", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "p-2.5 bg-slate-950/40 rounded border border-slate-800", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-[10px] uppercase text-slate-500 block mb-0.5", children: "Candidates" }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-base font-bold text-slate-100", children: runStatus.candidatesProcessed })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-2.5 bg-slate-950/40 rounded border border-slate-800", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[10px] uppercase text-slate-500 block mb-0.5", children: "Elapsed Time" }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { className: "text-base font-bold text-slate-100", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "p-2.5 bg-slate-950/40 rounded border border-slate-800", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-[10px] uppercase text-slate-500 block mb-0.5", children: "Elapsed Time" }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "text-base font-bold text-slate-100", children: [
           (runStatus.elapsedMs / 1e3).toFixed(1),
           "s"
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-2.5 bg-slate-950/40 rounded border border-slate-800", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[10px] uppercase text-slate-500 block mb-0.5", children: "Checkpoint" }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-xs font-mono text-slate-300 truncate block", children: runStatus.checkpointId ? runStatus.checkpointId.substring(0, 10) : "None" })
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "p-2.5 bg-slate-950/40 rounded border border-slate-800", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-[10px] uppercase text-slate-500 block mb-0.5", children: "Checkpoint" }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-xs font-mono text-slate-300 truncate block", children: runStatus.checkpointId ? runStatus.checkpointId.substring(0, 10) : "None" })
       ] })
     ] }),
-    runStatus.hasWarnings && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-2.5 bg-amber-950/30 border border-amber-500/30 rounded text-xs text-amber-200", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("strong", { className: "block font-semibold mb-0.5", children: "Run Completed With Warnings:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("ul", { className: "list-disc list-inside text-[11px] text-amber-300/90 space-y-0.5", children: runStatus.warningMessages.map((msg, i) => /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("li", { children: msg }, i)) })
+    runStatus.hasWarnings && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "p-2.5 bg-amber-950/30 border border-amber-500/30 rounded text-xs text-amber-200", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("strong", { className: "block font-semibold mb-0.5", children: "Run Completed With Warnings:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("ul", { className: "list-disc list-inside text-[11px] text-amber-300/90 space-y-0.5", children: runStatus.warningMessages.map((msg, i) => /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("li", { children: msg }, i)) })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between mb-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "Pipeline Stage Graph (12 Stages)" }),
-        onInspectDiagnostics && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center justify-between mb-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "Pipeline Stage Graph (12 Stages)" }),
+        onInspectDiagnostics && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
           "button",
           {
             type: "button",
@@ -17965,14 +19342,14 @@ var RunStatusView = ({
           }
         )
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "grid grid-cols-2 sm:grid-cols-3 gap-2", children: runStatus.stages.map((stage) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "grid grid-cols-2 sm:grid-cols-3 gap-2", children: runStatus.stages.map((stage) => /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
         "div",
         {
           className: `p-2 rounded border text-xs flex flex-col justify-between transition-colors ${stage.isActive ? "bg-sky-950/40 border-sky-500/60 text-sky-200" : stage.isCompleted ? "bg-slate-950/50 border-slate-800 text-slate-300" : stage.isBlocked ? "bg-purple-950/30 border-purple-500/40 text-purple-300" : stage.isSkipped ? "bg-slate-950/30 border-slate-800/80 text-slate-500" : stage.isFailed ? "bg-rose-950/30 border-rose-500/40 text-rose-300" : "bg-slate-950/20 border-slate-900 text-slate-600"}`,
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between mb-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "font-mono text-[10px] truncate max-w-[130px] font-medium", title: stage.label, children: stage.label }),
-              /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { className: "text-[10px] font-bold", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center justify-between mb-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "font-mono text-[10px] truncate max-w-[130px] font-medium", title: stage.label, children: stage.label }),
+              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "text-[10px] font-bold", children: [
                 stage.isCompleted && "\u2713",
                 stage.isActive && "\u27F3",
                 stage.isBlocked && "\u2298",
@@ -17980,7 +19357,7 @@ var RunStatusView = ({
                 stage.isFailed && "\u2715"
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[10px] uppercase tracking-wider font-semibold opacity-80", children: stage.stateText })
+            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-[10px] uppercase tracking-wider font-semibold opacity-80", children: stage.stateText })
           ]
         },
         stage.stageId
@@ -17990,7 +19367,7 @@ var RunStatusView = ({
 };
 
 // src/extension/ui/components/ResultsTableView.tsx
-var import_react3 = __toESM(require_react(), 1);
+var import_react4 = __toESM(require_react(), 1);
 
 // src/extension/ui/humanLabels.ts
 function toFriendlyStatus(status) {
@@ -18153,8 +19530,160 @@ function sanitizePassiveText(text, maxLength = 1e3) {
   return bounded.trim();
 }
 
+// src/extension/ui/components/GoogleMapsFilterControls.tsx
+var import_jsx_runtime8 = __toESM(require_jsx_runtime(), 1);
+var GoogleMapsFilterControls = ({
+  ratingFilter,
+  websiteFilter,
+  onRatingChange,
+  onWebsiteChange,
+  onResetFilters,
+  totalObserved,
+  matchingCount
+}) => {
+  const isDefault = ratingFilter === "ANY" && websiteFilter === "ANY";
+  const ratingLabel = ratingFilter === "ANY" ? "All ratings" : ratingFilter === "MIN_4_5" ? "4.5+ stars" : "4.0+ stars";
+  const websiteLabel = websiteFilter === "ANY" ? "Any website" : websiteFilter === "WITH_WEBSITE" ? "With website" : "Without website";
+  const summaryText = `${ratingLabel} \xB7 ${websiteLabel}`;
+  return /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
+    "div",
+    {
+      className: "p-3 bg-slate-900/90 border border-slate-800 rounded-lg flex flex-col gap-2.5",
+      role: "region",
+      "aria-label": "Google Maps candidate filter controls",
+      children: [
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between flex-wrap gap-2 text-xs", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "font-semibold text-slate-200 flex items-center gap-1.5", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "\u2699\uFE0F" }),
+              " Filter Leads:"
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-2 py-0.5 rounded text-[11px] font-medium bg-slate-800 text-sky-300 border border-slate-700", children: summaryText }),
+            /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-[11px] text-slate-400", children: [
+              "(",
+              matchingCount,
+              " of ",
+              totalObserved,
+              " matching)"
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+            "button",
+            {
+              type: "button",
+              onClick: onResetFilters,
+              disabled: isDefault,
+              className: `px-2.5 py-1 text-xs rounded font-medium transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-400 ${!isDefault ? "bg-slate-800 hover:bg-slate-750 text-sky-400 hover:text-sky-300 border border-slate-700" : "text-slate-600 bg-slate-950 border border-slate-850 cursor-not-allowed"}`,
+              "aria-label": "Reset all filters to Any",
+              children: "Reset Filters"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex flex-wrap items-center gap-6 pt-1 border-t border-slate-800/80", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("fieldset", { className: "flex items-center gap-3 border-none p-0 m-0", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("legend", { className: "text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1", children: "Rating:" }),
+            /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("label", { className: "flex items-center gap-1.5 text-xs text-slate-300 hover:text-white cursor-pointer", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                "input",
+                {
+                  type: "radio",
+                  name: "leadnoria-rating-filter",
+                  value: "ANY",
+                  checked: ratingFilter === "ANY",
+                  onChange: () => onRatingChange("ANY"),
+                  className: "rounded-full border-slate-700 bg-slate-950 text-sky-500 focus:ring-2 focus:ring-sky-400",
+                  "aria-label": "Any rating"
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "Any" })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("label", { className: "flex items-center gap-1.5 text-xs text-slate-300 hover:text-white cursor-pointer", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                "input",
+                {
+                  type: "radio",
+                  name: "leadnoria-rating-filter",
+                  value: "MIN_4_0",
+                  checked: ratingFilter === "MIN_4_0",
+                  onChange: () => onRatingChange("MIN_4_0"),
+                  className: "rounded-full border-slate-700 bg-slate-950 text-sky-500 focus:ring-2 focus:ring-sky-400",
+                  "aria-label": "Rating 4.0 and above"
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "4.0+" })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("label", { className: "flex items-center gap-1.5 text-xs text-slate-300 hover:text-white cursor-pointer", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                "input",
+                {
+                  type: "radio",
+                  name: "leadnoria-rating-filter",
+                  value: "MIN_4_5",
+                  checked: ratingFilter === "MIN_4_5",
+                  onChange: () => onRatingChange("MIN_4_5"),
+                  className: "rounded-full border-slate-700 bg-slate-950 text-sky-500 focus:ring-2 focus:ring-sky-400",
+                  "aria-label": "Rating 4.5 and above"
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "4.5+" })
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("fieldset", { className: "flex items-center gap-3 border-none p-0 m-0", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("legend", { className: "text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1", children: "Website:" }),
+            /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("label", { className: "flex items-center gap-1.5 text-xs text-slate-300 hover:text-white cursor-pointer", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                "input",
+                {
+                  type: "radio",
+                  name: "leadnoria-website-filter",
+                  value: "ANY",
+                  checked: websiteFilter === "ANY",
+                  onChange: () => onWebsiteChange("ANY"),
+                  className: "rounded-full border-slate-700 bg-slate-950 text-sky-500 focus:ring-2 focus:ring-sky-400",
+                  "aria-label": "Any website status"
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "Any" })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("label", { className: "flex items-center gap-1.5 text-xs text-slate-300 hover:text-white cursor-pointer", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                "input",
+                {
+                  type: "radio",
+                  name: "leadnoria-website-filter",
+                  value: "WITH_WEBSITE",
+                  checked: websiteFilter === "WITH_WEBSITE",
+                  onChange: () => onWebsiteChange("WITH_WEBSITE"),
+                  className: "rounded-full border-slate-700 bg-slate-950 text-sky-500 focus:ring-2 focus:ring-sky-400",
+                  "aria-label": "With verified website"
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "With Website" })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("label", { className: "flex items-center gap-1.5 text-xs text-slate-300 hover:text-white cursor-pointer", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                "input",
+                {
+                  type: "radio",
+                  name: "leadnoria-website-filter",
+                  value: "WITHOUT_WEBSITE",
+                  checked: websiteFilter === "WITHOUT_WEBSITE",
+                  onChange: () => onWebsiteChange("WITHOUT_WEBSITE"),
+                  className: "rounded-full border-slate-700 bg-slate-950 text-sky-500 focus:ring-2 focus:ring-sky-400",
+                  "aria-label": "Without website (confirmed absent)"
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "Without Website" })
+            ] })
+          ] })
+        ] })
+      ]
+    }
+  );
+};
+
 // src/extension/ui/components/ResultsTableView.tsx
-var import_jsx_runtime7 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime9 = __toESM(require_jsx_runtime(), 1);
 var ResultsTableView = ({
   results,
   selectedRecordIds,
@@ -18164,26 +19693,30 @@ var ResultsTableView = ({
   onInspectRecord,
   onOpenExportModal
 }) => {
-  const [searchTerm, setSearchTerm] = (0, import_react3.useState)("");
-  const [sourceFilter, setSourceFilter] = (0, import_react3.useState)("ALL");
-  const [qualificationFilter, setQualificationFilter] = (0, import_react3.useState)("ALL");
-  const [freshnessFilter, setFreshnessFilter] = (0, import_react3.useState)("ALL");
-  const [categoryFilter, setCategoryFilter] = (0, import_react3.useState)("ALL");
-  const [requirePhone, setRequirePhone] = (0, import_react3.useState)(false);
-  const [requireEmail, setRequireEmail] = (0, import_react3.useState)(false);
-  const [requireWebsite, setRequireWebsite] = (0, import_react3.useState)(false);
-  const [requirePerson, setRequirePerson] = (0, import_react3.useState)(false);
-  const [sortBy, setSortBy] = (0, import_react3.useState)("NAME_ASC");
-  const [page, setPage] = (0, import_react3.useState)(1);
+  const [searchTerm, setSearchTerm] = (0, import_react4.useState)("");
+  const [sourceFilter, setSourceFilter] = (0, import_react4.useState)("ALL");
+  const [qualificationFilter, setQualificationFilter] = (0, import_react4.useState)("ALL");
+  const [freshnessFilter, setFreshnessFilter] = (0, import_react4.useState)("ALL");
+  const [categoryFilter, setCategoryFilter] = (0, import_react4.useState)("ALL");
+  const [ratingFilter, setRatingFilter] = (0, import_react4.useState)("ANY");
+  const [websiteFilter, setWebsiteFilter] = (0, import_react4.useState)("ANY");
+  const [requirePhone, setRequirePhone] = (0, import_react4.useState)(false);
+  const [requireEmail, setRequireEmail] = (0, import_react4.useState)(false);
+  const [requireWebsite, setRequireWebsite] = (0, import_react4.useState)(false);
+  const [requirePerson, setRequirePerson] = (0, import_react4.useState)(false);
+  const [sortBy, setSortBy] = (0, import_react4.useState)("NAME_ASC");
+  const [page, setPage] = (0, import_react4.useState)(1);
   const PAGE_SIZE = 50;
-  const availableCategories = (0, import_react3.useMemo)(() => {
+  const [isCopying, setIsCopying] = (0, import_react4.useState)(false);
+  const [copyFeedback, setCopyFeedback] = (0, import_react4.useState)(null);
+  const availableCategories = (0, import_react4.useMemo)(() => {
     const set = /* @__PURE__ */ new Set();
     for (const r of results) {
       if (r.category) set.add(r.category);
     }
     return Array.from(set).sort();
   }, [results]);
-  const filteredResults = (0, import_react3.useMemo)(() => {
+  const filteredResults = (0, import_react4.useMemo)(() => {
     return results.filter((r) => {
       if (searchTerm.trim() !== "") {
         const q = searchTerm.toLowerCase();
@@ -18218,6 +19751,18 @@ var ResultsTableView = ({
       if (requireEmail && !r.contactSummary.hasEmail) return false;
       if (requireWebsite && !r.dataSignals?.websiteVerified) return false;
       if (requirePerson && !r.dataSignals?.publicPersonAvailable) return false;
+      if (ratingFilter !== "ANY") {
+        const minRating = ratingFilter === "MIN_4_5" ? 4.5 : 4;
+        if (!r.rating || r.rating.availability !== "PRESENT" || typeof r.rating.parsedValue !== "number" || !Number.isFinite(r.rating.parsedValue) || r.rating.parsedValue < minRating) {
+          return false;
+        }
+      }
+      if (websiteFilter === "WITH_WEBSITE") {
+        if (r.websiteAvailability !== "PRESENT") return false;
+        if (!r.websiteUrl || r.websiteUrl.trim() === "") return false;
+      } else if (websiteFilter === "WITHOUT_WEBSITE") {
+        if (r.websiteAvailability !== "ABSENT") return false;
+      }
       return true;
     });
   }, [
@@ -18227,12 +19772,14 @@ var ResultsTableView = ({
     qualificationFilter,
     freshnessFilter,
     categoryFilter,
+    ratingFilter,
+    websiteFilter,
     requirePhone,
     requireEmail,
     requireWebsite,
     requirePerson
   ]);
-  const sortedResults = (0, import_react3.useMemo)(() => {
+  const sortedResults = (0, import_react4.useMemo)(() => {
     const list = [...filteredResults];
     list.sort((a, b) => {
       let diff = 0;
@@ -18279,7 +19826,7 @@ var ResultsTableView = ({
   }, [filteredResults, sortBy]);
   const totalPages = Math.max(1, Math.ceil(sortedResults.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
-  const paginatedResults = (0, import_react3.useMemo)(() => {
+  const paginatedResults = (0, import_react4.useMemo)(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
     return sortedResults.slice(start, start + PAGE_SIZE);
   }, [sortedResults, currentPage]);
@@ -18291,12 +19838,42 @@ var ResultsTableView = ({
       onSelectAll(paginatedResults.map((r) => r.entityId || r.recordId));
     }
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-col gap-3", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "p-3 bg-slate-900 border border-slate-800 rounded-lg flex flex-col gap-2.5", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "relative flex-1", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "absolute left-2.5 top-2.5 text-xs text-slate-500", "aria-hidden": "true", children: "\u{1F50D}" }),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+  const handleCopyAll = async () => {
+    if (filteredResults.length === 0 || isCopying) return;
+    setIsCopying(true);
+    setCopyFeedback(null);
+    try {
+      const tsv = metaResultsToTsv(filteredResults);
+      const result = await writeClipboardText(tsv);
+      if (result.success) {
+        setCopyFeedback({
+          type: "success",
+          message: `${filteredResults.length} results copied`
+        });
+        setTimeout(() => {
+          setCopyFeedback((prev) => prev?.type === "success" ? null : prev);
+        }, 3e3);
+      } else {
+        setCopyFeedback({
+          type: "error",
+          message: "Could not copy results to clipboard."
+        });
+      }
+    } catch (_err) {
+      setCopyFeedback({
+        type: "error",
+        message: "Could not copy results to clipboard."
+      });
+    } finally {
+      setIsCopying(false);
+    }
+  };
+  return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex flex-col gap-3", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-3 bg-slate-900 border border-slate-800 rounded-lg flex flex-col gap-2.5", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center gap-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "relative flex-1", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "absolute left-2.5 top-2.5 text-xs text-slate-500", "aria-hidden": "true", children: "\u{1F50D}" }),
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
             "input",
             {
               type: "text",
@@ -18311,7 +19888,23 @@ var ResultsTableView = ({
             }
           )
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
+          "button",
+          {
+            type: "button",
+            id: "meta-copy-all-btn",
+            onClick: handleCopyAll,
+            disabled: filteredResults.length === 0 || isCopying,
+            className: `px-3 py-1.5 text-xs font-semibold rounded transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 cursor-pointer ${filteredResults.length > 0 && !isCopying ? "bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700" : "bg-slate-900 text-slate-600 cursor-not-allowed border border-slate-800"}`,
+            "aria-label": `Copy all ${filteredResults.length} results to clipboard`,
+            children: [
+              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { children: "\u{1F4CB}" }),
+              " ",
+              isCopying ? "Copying..." : `Copy All (${filteredResults.length})`
+            ]
+          }
+        ),
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
           "button",
           {
             type: "button",
@@ -18319,7 +19912,7 @@ var ResultsTableView = ({
             disabled: results.length === 0,
             className: `px-3 py-1.5 text-xs font-semibold rounded transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 cursor-pointer ${results.length > 0 ? "bg-sky-600 hover:bg-sky-500 text-white" : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"}`,
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u2B73" }),
+              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { children: "\u2B73" }),
               " Export (",
               selectedRecordIds.size > 0 ? selectedRecordIds.size : results.length,
               ")"
@@ -18327,9 +19920,33 @@ var ResultsTableView = ({
           }
         )
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-wrap items-center justify-between gap-2 text-xs", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-wrap items-center gap-1.5", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+      copyFeedback && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
+        "div",
+        {
+          role: "status",
+          "aria-live": "polite",
+          className: `px-3 py-1.5 rounded text-xs flex items-center justify-between transition-all ${copyFeedback.type === "success" ? "bg-emerald-950/80 border border-emerald-800/80 text-emerald-200" : "bg-rose-950/80 border border-rose-800/80 text-rose-200"}`,
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center gap-1.5", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { children: copyFeedback.type === "success" ? "\u2713" : "\u26A0\uFE0F" }),
+              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { children: copyFeedback.message })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+              "button",
+              {
+                type: "button",
+                onClick: () => setCopyFeedback(null),
+                className: "text-slate-400 hover:text-white cursor-pointer ml-2 text-xs",
+                "aria-label": "Dismiss feedback",
+                children: "\u2715"
+              }
+            )
+          ]
+        }
+      ),
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex flex-wrap items-center justify-between gap-2 text-xs", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex flex-wrap items-center gap-1.5", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
             "select",
             {
               value: qualificationFilter,
@@ -18340,15 +19957,15 @@ var ResultsTableView = ({
               className: "px-2 py-1 bg-slate-950 border border-slate-700 rounded text-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-400",
               "aria-label": "Filter by qualification status",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "ALL", children: "All Qualifications" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "QUALIFIED", children: "Qualified" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "NOT_QUALIFIED", children: "Does not meet criteria" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "UNCERTAIN", children: "Needs review" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "BLOCKED", children: "Unavailable" })
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "ALL", children: "All Qualifications" }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "QUALIFIED", children: "Qualified" }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "NOT_QUALIFIED", children: "Does not meet criteria" }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "UNCERTAIN", children: "Needs review" }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "BLOCKED", children: "Unavailable" })
               ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
             "select",
             {
               value: sourceFilter,
@@ -18359,14 +19976,14 @@ var ResultsTableView = ({
               className: "px-2 py-1 bg-slate-950 border border-slate-700 rounded text-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-400",
               "aria-label": "Filter by source",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "ALL", children: "All Sources" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "META", children: "Meta" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "WEBSITE", children: "Website" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "GOOGLE_MAPS", children: "Restricted Google" })
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "ALL", children: "All Sources" }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "META", children: "Meta" }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "WEBSITE", children: "Website" }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "GOOGLE_MAPS", children: "Restricted Google" })
               ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
             "select",
             {
               value: freshnessFilter,
@@ -18377,14 +19994,14 @@ var ResultsTableView = ({
               className: "px-2 py-1 bg-slate-950 border border-slate-700 rounded text-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-400",
               "aria-label": "Filter by data freshness",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "ALL", children: "All Freshness" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "CURRENT", children: "Recently observed" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "STALE", children: "May be outdated" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "UNKNOWN", children: "Not enough info" })
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "ALL", children: "All Freshness" }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "CURRENT", children: "Recently observed" }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "STALE", children: "May be outdated" }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "UNKNOWN", children: "Not enough info" })
               ]
             }
           ),
-          availableCategories.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+          availableCategories.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
             "select",
             {
               value: categoryFilter,
@@ -18395,13 +20012,13 @@ var ResultsTableView = ({
               className: "px-2 py-1 bg-slate-950 border border-slate-700 rounded text-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-400 max-w-[140px]",
               "aria-label": "Filter by business category",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "ALL", children: "All Categories" }),
-                availableCategories.map((cat) => /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: cat, children: cat }, cat))
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "ALL", children: "All Categories" }),
+                availableCategories.map((cat) => /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: cat, children: cat }, cat))
               ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("label", { className: "flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer ml-1", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("label", { className: "flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer ml-1", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
               "input",
               {
                 type: "checkbox",
@@ -18415,8 +20032,8 @@ var ResultsTableView = ({
             ),
             "Phone"
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("label", { className: "flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("label", { className: "flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
               "input",
               {
                 type: "checkbox",
@@ -18430,8 +20047,8 @@ var ResultsTableView = ({
             ),
             "Email"
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("label", { className: "flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("label", { className: "flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
               "input",
               {
                 type: "checkbox",
@@ -18445,8 +20062,8 @@ var ResultsTableView = ({
             ),
             "Website"
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("label", { className: "flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("label", { className: "flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
               "input",
               {
                 type: "checkbox",
@@ -18461,9 +20078,9 @@ var ResultsTableView = ({
             "Person"
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-1.5 ml-auto", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-slate-500 text-[11px]", children: "Sort:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center gap-1.5 ml-auto", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-slate-500 text-[11px]", children: "Sort:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
             "select",
             {
               value: sortBy,
@@ -18471,24 +20088,46 @@ var ResultsTableView = ({
               className: "px-2 py-1 bg-slate-950 border border-slate-700 rounded text-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-400 text-xs",
               "aria-label": "Sort records",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "NAME_ASC", children: "Name (A-Z)" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "NAME_DESC", children: "Name (Z-A)" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "LOCATION", children: "Location" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "QUALIFICATION", children: "Qualification" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "COMPLETENESS", children: "Completeness" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "CONTACT_COMPLETENESS", children: "Contact Depth" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "LAST_OBSERVED", children: "Recently Observed" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("option", { value: "SOURCE", children: "Source" })
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "NAME_ASC", children: "Name (A-Z)" }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "NAME_DESC", children: "Name (Z-A)" }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "LOCATION", children: "Location" }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "QUALIFICATION", children: "Qualification" }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "COMPLETENESS", children: "Completeness" }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "CONTACT_COMPLETENESS", children: "Contact Depth" }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "LAST_OBSERVED", children: "Recently Observed" }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("option", { value: "SOURCE", children: "Source" })
               ]
             }
           )
         ] })
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center justify-between px-1 text-xs text-slate-400", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-3", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("label", { className: "flex items-center gap-1.5 cursor-pointer", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+      GoogleMapsFilterControls,
+      {
+        ratingFilter,
+        websiteFilter,
+        onRatingChange: (newRating) => {
+          setRatingFilter(newRating);
+          setPage(1);
+        },
+        onWebsiteChange: (newWebsite) => {
+          setWebsiteFilter(newWebsite);
+          setPage(1);
+        },
+        onResetFilters: () => {
+          setRatingFilter("ANY");
+          setWebsiteFilter("ANY");
+          setPage(1);
+        },
+        totalObserved: results.length,
+        matchingCount: filteredResults.length
+      }
+    ),
+    /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center justify-between px-1 text-xs text-slate-400", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center gap-3", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("label", { className: "flex items-center gap-1.5 cursor-pointer", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
             "input",
             {
               type: "checkbox",
@@ -18498,24 +20137,24 @@ var ResultsTableView = ({
               "aria-label": "Select all visible records"
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-[11px]", children: "Select Visible" })
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-[11px]", children: "Select Visible" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-[11px] text-slate-500", children: "\u2022" }),
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "text-[11px]", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-[11px] text-slate-500", children: "\u2022" }),
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "text-[11px]", children: [
           "Showing ",
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("strong", { children: paginatedResults.length }),
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("strong", { children: paginatedResults.length }),
           " of ",
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("strong", { children: sortedResults.length }),
-          " records",
-          results.length !== sortedResults.length && ` (filtered from ${results.length})`
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("strong", { children: sortedResults.length }),
+          " matching leads",
+          results.length !== sortedResults.length && ` (from ${results.length} unique candidates)`
         ] })
       ] }),
-      selectedRecordIds.size > 0 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "text-sky-300 font-semibold text-[11px]", children: [
+      selectedRecordIds.size > 0 && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center gap-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "text-sky-300 font-semibold text-[11px]", children: [
           selectedRecordIds.size,
           " selected"
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
           "button",
           {
             type: "button",
@@ -18526,24 +20165,24 @@ var ResultsTableView = ({
         )
       ] })
     ] }),
-    paginatedResults.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "p-8 text-center bg-slate-900/60 border border-slate-800 rounded-lg", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-2xl block mb-1", children: "\u{1F50D}" }),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("p", { className: "text-xs font-semibold text-slate-300 mb-0.5", children: results.length === 0 ? "No Research Results Available" : "No Matching Businesses Found" }),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("p", { className: "text-[11px] text-slate-500", children: results.length === 0 ? "Data not available. Start a research run to discover leads." : "Try adjusting your search terms or relaxing your filter criteria." })
+    paginatedResults.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-8 text-center bg-slate-900/60 border border-slate-800 rounded-lg", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-2xl block mb-1", children: "\u{1F50D}" }),
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("p", { className: "text-xs font-semibold text-slate-300 mb-0.5", children: results.length === 0 ? "No Research Results Available" : ratingFilter !== "ANY" || websiteFilter !== "ANY" ? `0 businesses match ${ratingFilter !== "ANY" ? ratingFilter : "Any"} + ${websiteFilter === "WITH_WEBSITE" ? "With Website" : websiteFilter === "WITHOUT_WEBSITE" ? "Without Website" : "Any"}` : "No Matching Businesses Found" }),
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("p", { className: "text-[11px] text-slate-500", children: results.length === 0 ? "Data not available. Start a research run to discover leads." : ratingFilter !== "ANY" || websiteFilter !== "ANY" ? "Try relaxing your rating or website filter criteria to view more candidates." : "Try adjusting your search terms or relaxing your filter criteria." })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "flex flex-col gap-2", role: "list", "aria-label": "Research results list", children: paginatedResults.map((r) => {
+    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "flex flex-col gap-2", role: "list", "aria-label": "Research results list", children: paginatedResults.map((r) => {
       const isSelected = selectedRecordIds.has(r.entityId) || selectedRecordIds.has(r.recordId);
       const safeWeb = getSafeExternalUrl(r.websiteUrl);
-      return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+      return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
         "div",
         {
           role: "listitem",
           onClick: () => onInspectRecord(r.recordId),
           className: `p-3 rounded-lg border transition-all cursor-pointer flex flex-col gap-2 ${isSelected ? "bg-slate-850 border-sky-500/50 shadow-sm" : "bg-slate-900 border-slate-800 hover:border-slate-700 hover:bg-slate-850/80"}`,
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-start justify-between gap-2", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-start gap-2.5", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-start justify-between gap-2", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-start gap-2.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
                   "input",
                   {
                     type: "checkbox",
@@ -18554,31 +20193,39 @@ var ResultsTableView = ({
                     "aria-label": `Select ${r.displayName}`
                   }
                 ),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("h4", { className: "text-sm font-semibold text-slate-100 leading-tight hover:text-sky-300", children: r.displayName }),
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-1.5 flex-wrap mt-1 text-[11px] text-slate-400", children: [
-                    r.category && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-slate-300 font-medium", children: r.category }),
-                    r.geographicContext && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(import_jsx_runtime7.Fragment, { children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-slate-600", children: "\u2022" }),
-                      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("h4", { className: "text-sm font-semibold text-slate-100 leading-tight hover:text-sky-300", children: r.displayName }),
+                  /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center gap-1.5 flex-wrap mt-1 text-[11px] text-slate-400", children: [
+                    r.category && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-slate-300 font-medium", children: r.category }),
+                    r.geographicContext && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(import_jsx_runtime9.Fragment, { children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-slate-600", children: "\u2022" }),
+                      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { children: [
                         "\u{1F4CD} ",
                         r.geographicContext
                       ] })
                     ] }),
-                    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-slate-600", children: "\u2022" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "flex items-center gap-1", children: r.sourceBadges && r.sourceBadges.length > 0 ? r.sourceBadges.map((badge, bIdx) => /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+                    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-slate-600", children: "\u2022" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "flex items-center gap-1", children: r.sourceBadges && r.sourceBadges.length > 0 ? r.sourceBadges.map((badge, bIdx) => /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
                       "span",
                       {
                         className: `px-1.5 py-0.2 text-[9px] font-semibold rounded border ${badge.isRestricted ? "text-purple-300 bg-purple-950/60 border-purple-500/40" : badge.sourceType === "WEBSITE" ? "text-emerald-300 bg-emerald-950/60 border-emerald-500/40" : "text-sky-300 bg-sky-950/60 border-sky-500/40"}`,
                         children: badge.label
                       },
                       bIdx
-                    )) : /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "font-mono text-slate-500 text-[10px]", children: r.primarySource }) })
+                    )) : /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "font-mono text-slate-500 text-[10px]", children: r.primarySource }) }),
+                    r.rating && r.rating.availability === "PRESENT" && typeof r.rating.parsedValue === "number" && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(import_jsx_runtime9.Fragment, { children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-slate-600", children: "\u2022" }),
+                      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "text-amber-400 font-semibold flex items-center gap-0.5", title: `Observed Rating: ${r.rating.parsedValue.toFixed(1)}`, children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { children: "\u2605" }),
+                        " ",
+                        r.rating.parsedValue.toFixed(1)
+                      ] })
+                    ] })
                   ] })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-wrap items-center gap-1.5 justify-end", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex flex-wrap items-center gap-1.5 justify-end", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
                   StatusBadge,
                   {
                     status: r.qualificationState,
@@ -18586,7 +20233,7 @@ var ResultsTableView = ({
                     size: "sm"
                   }
                 ),
-                r.isRestricted && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+                r.isRestricted && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
                   "span",
                   {
                     className: "px-1.5 py-0.5 text-[10px] font-semibold text-purple-300 bg-purple-950/60 border border-purple-500/40 rounded",
@@ -18596,42 +20243,42 @@ var ResultsTableView = ({
                 )
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-wrap items-center justify-between text-[11px] text-slate-400 pt-1.5 border-t border-slate-800/60 gap-2", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-wrap items-center gap-3", children: [
-                r.contactSummary.hasPhone ? /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "flex items-center gap-1 font-mono text-slate-300", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u{1F4DE}" }),
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex flex-wrap items-center justify-between text-[11px] text-slate-400 pt-1.5 border-t border-slate-800/60 gap-2", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex flex-wrap items-center gap-3", children: [
+                r.contactSummary.hasPhone ? /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "flex items-center gap-1 font-mono text-slate-300", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { children: "\u{1F4DE}" }),
                   " ",
                   r.contactSummary.phoneText
-                ] }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-slate-600", children: "No phone" }),
-                r.contactSummary.hasEmail ? /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "flex items-center gap-1 font-mono text-slate-300", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u2709" }),
+                ] }) : /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-slate-600", children: "No phone" }),
+                r.contactSummary.hasEmail ? /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "flex items-center gap-1 font-mono text-slate-300", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { children: "\u2709" }),
                   " ",
                   r.contactSummary.emailText
-                ] }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-slate-600", children: "No email" }),
-                safeWeb ? /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "flex items-center gap-1 text-sky-400", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u{1F310}" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "truncate max-w-[150px]", children: safeWeb.replace(/^https?:\/\//, "") }),
-                  r.dataSignals?.websiteVerified && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-emerald-400 font-bold", title: "Verified business website", children: "\u2713" })
-                ] }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-slate-600", children: "No website" }),
-                r.dataSignals?.publicPersonAvailable && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "flex items-center gap-0.5 text-slate-300", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u{1F464}" }),
+                ] }) : /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-slate-600", children: "No email" }),
+                safeWeb ? /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "flex items-center gap-1 text-sky-400", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { children: "\u{1F310}" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "truncate max-w-[150px]", children: safeWeb.replace(/^https?:\/\//, "") }),
+                  r.dataSignals?.websiteVerified && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-emerald-400 font-bold", title: "Verified business website", children: "\u2713" })
+                ] }) : /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-slate-600", children: "No website" }),
+                r.dataSignals?.publicPersonAvailable && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "flex items-center gap-0.5 text-slate-300", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { children: "\u{1F464}" }),
                   " Person"
                 ] }),
-                r.dataSignals?.freshness && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: `px-1.5 py-0.2 text-[9px] rounded font-medium ${r.dataSignals.freshness === "CURRENT" ? "bg-slate-800 text-slate-400" : "bg-amber-950/50 text-amber-300 border border-amber-500/30"}`, children: r.dataSignals.freshnessLabel })
+                r.dataSignals?.freshness && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: `px-1.5 py-0.2 text-[9px] rounded font-medium ${r.dataSignals.freshness === "CURRENT" ? "bg-slate-800 text-slate-400" : "bg-amber-950/50 text-amber-300 border border-amber-500/30"}`, children: r.dataSignals.freshnessLabel })
               ] }),
-              r.qualityMetrics && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center gap-2 text-[10px] text-slate-500 ml-auto", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { children: [
+              r.qualityMetrics && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center gap-2 text-[10px] text-slate-500 ml-auto", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { children: [
                   "Quality: ",
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("strong", { className: "text-slate-300", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("strong", { className: "text-slate-300", children: [
                     r.qualityMetrics.completenessPercent,
                     "%"
                   ] })
                 ] }),
-                r.qualityMetrics.corroborationCount > 1 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "text-sky-400 font-semibold", children: [
+                r.qualityMetrics.corroborationCount > 1 && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "text-sky-400 font-semibold", children: [
                   r.qualityMetrics.corroborationCount,
                   " sources"
                 ] }),
-                r.qualityMetrics.contradictionCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: "text-amber-400 font-semibold", children: [
+                r.qualityMetrics.contradictionCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "text-amber-400 font-semibold", children: [
                   "\u26A0\uFE0F ",
                   r.qualityMetrics.contradictionCount,
                   " conflict"
@@ -18643,8 +20290,8 @@ var ResultsTableView = ({
         r.recordId
       );
     }) }),
-    totalPages > 1 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center justify-between p-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-slate-400", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+    totalPages > 1 && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center justify-between p-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-slate-400", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
         "button",
         {
           type: "button",
@@ -18654,13 +20301,13 @@ var ResultsTableView = ({
           children: "\u2190 Previous"
         }
       ),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { children: [
         "Page ",
         currentPage,
         " of ",
         totalPages
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
         "button",
         {
           type: "button",
@@ -18675,17 +20322,17 @@ var ResultsTableView = ({
 };
 
 // src/extension/ui/components/ResultDetailDrawer.tsx
-var import_react4 = __toESM(require_react(), 1);
-var import_jsx_runtime8 = __toESM(require_jsx_runtime(), 1);
+var import_react5 = __toESM(require_react(), 1);
+var import_jsx_runtime10 = __toESM(require_jsx_runtime(), 1);
 var ResultDetailDrawer = ({
   isOpen,
   lead,
   onClose
 }) => {
-  const drawerRef = (0, import_react4.useRef)(null);
-  const [expandedConflicts, setExpandedConflicts] = (0, import_react4.useState)(/* @__PURE__ */ new Set());
-  const [expandedFieldEvidence, setExpandedFieldEvidence] = (0, import_react4.useState)(/* @__PURE__ */ new Set());
-  (0, import_react4.useEffect)(() => {
+  const drawerRef = (0, import_react5.useRef)(null);
+  const [expandedConflicts, setExpandedConflicts] = (0, import_react5.useState)(/* @__PURE__ */ new Set());
+  const [expandedFieldEvidence, setExpandedFieldEvidence] = (0, import_react5.useState)(/* @__PURE__ */ new Set());
+  (0, import_react5.useEffect)(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
@@ -18777,24 +20424,24 @@ var ResultDetailDrawer = ({
     corroborationCount: lead.corroborationCount,
     contradictionCount: 0
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
     "div",
     {
       className: "fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-xs",
       role: "dialog",
       "aria-modal": "true",
       "aria-labelledby": "detail-drawer-title",
-      children: /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
+      children: /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
         "div",
         {
           ref: drawerRef,
           tabIndex: -1,
           className: "w-full max-w-xl bg-slate-900 border-l border-slate-700 h-full flex flex-col shadow-2xl overflow-hidden focus:outline-none",
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-4 border-b border-slate-800 bg-slate-950 flex items-start justify-between gap-3", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex-1", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex flex-wrap items-center gap-1.5 mb-1.5", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "p-4 border-b border-slate-800 bg-slate-950 flex items-start justify-between gap-3", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex-1", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex flex-wrap items-center gap-1.5 mb-1.5", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                     StatusBadge,
                     {
                       status: lead.qualificationState,
@@ -18802,37 +20449,37 @@ var ResultDetailDrawer = ({
                       size: "sm"
                     }
                   ),
-                  lead.sourceBadges && lead.sourceBadges.length > 0 ? lead.sourceBadges.map((badge, idx) => /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                  lead.sourceBadges && lead.sourceBadges.length > 0 ? lead.sourceBadges.map((badge, idx) => /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                     "span",
                     {
                       className: `px-1.5 py-0.5 text-[10px] font-semibold rounded border ${badge.isRestricted ? "text-purple-300 bg-purple-950/60 border-purple-500/40" : badge.sourceType === "WEBSITE" ? "text-emerald-300 bg-emerald-950/60 border-emerald-500/40" : "text-sky-300 bg-sky-950/60 border-sky-500/40"}`,
                       children: badge.label
                     },
                     idx
-                  )) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-1.5 py-0.5 text-[10px] font-semibold text-sky-300 bg-sky-950/60 border border-sky-500/40 rounded", children: toFriendlyStatus(lead.primarySource) }),
-                  lead.isRestricted && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-1.5 py-0.5 text-[10px] font-semibold text-purple-300 bg-purple-950/60 border border-purple-500/40 rounded", children: "\u2298 RESTRICTED SOURCE" })
+                  )) : /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "px-1.5 py-0.5 text-[10px] font-semibold text-sky-300 bg-sky-950/60 border border-sky-500/40 rounded", children: toFriendlyStatus(lead.primarySource) }),
+                  lead.isRestricted && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "px-1.5 py-0.5 text-[10px] font-semibold text-purple-300 bg-purple-950/60 border border-purple-500/40 rounded", children: "\u2298 RESTRICTED SOURCE" })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h2", { id: "detail-drawer-title", className: "text-base font-bold text-slate-100 leading-snug", children: identity.canonicalBusinessName }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] text-slate-400 mt-1 flex flex-wrap items-center gap-2", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("h2", { id: "detail-drawer-title", className: "text-base font-bold text-slate-100 leading-snug", children: identity.canonicalBusinessName }),
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "text-[11px] text-slate-400 mt-1 flex flex-wrap items-center gap-2", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { children: [
                     "Type: ",
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: identity.entityTypeLabel })
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { className: "text-slate-200", children: identity.entityTypeLabel })
                   ] }),
-                  location.city && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(import_jsx_runtime8.Fragment, { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "\u2022" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
+                  location.city && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(import_jsx_runtime10.Fragment, { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: "\u2022" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { children: [
                       "\u{1F4CD} ",
                       location.city,
                       location.country ? `, ${location.country}` : ""
                     ] })
                   ] }),
-                  business.categories.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(import_jsx_runtime8.Fragment, { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "\u2022" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-sky-300", children: business.categories[0] })
+                  business.categories.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(import_jsx_runtime10.Fragment, { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: "\u2022" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-sky-300", children: business.categories[0] })
                   ] })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                 "button",
                 {
                   type: "button",
@@ -18843,111 +20490,111 @@ var ResultDetailDrawer = ({
                 }
               )
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "px-4 py-2.5 bg-slate-950/80 border-b border-slate-800 grid grid-cols-4 gap-2 text-center text-xs", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-slate-500 block", children: "Data Completeness" }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("strong", { className: "text-slate-200 text-xs", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "px-4 py-2.5 bg-slate-950/80 border-b border-slate-800 grid grid-cols-4 gap-2 text-center text-xs", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[10px] text-slate-500 block", children: "Data Completeness" }),
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("strong", { className: "text-slate-200 text-xs", children: [
                   quality.completenessPercent,
                   "%"
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-slate-500 block", children: "Contact Depth" }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("strong", { className: "text-slate-200 text-xs", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[10px] text-slate-500 block", children: "Contact Depth" }),
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("strong", { className: "text-slate-200 text-xs", children: [
                   quality.contactCompletenessPercent,
                   "%"
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-slate-500 block", children: "Corroborated Sources" }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-sky-300 text-xs", children: quality.corroborationCount })
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[10px] text-slate-500 block", children: "Corroborated Sources" }),
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { className: "text-sky-300 text-xs", children: quality.corroborationCount })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-slate-500 block", children: "Contradictions" }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: `text-xs ${quality.contradictionCount > 0 ? "text-amber-400" : "text-slate-400"}`, children: quality.contradictionCount })
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[10px] text-slate-500 block", children: "Contradictions" }),
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { className: `text-xs ${quality.contradictionCount > 0 ? "text-amber-400" : "text-slate-400"}`, children: quality.contradictionCount })
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-4 overflow-y-auto flex flex-col gap-4 text-xs text-slate-300", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "1. Identity" }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "grid grid-cols-2 gap-2 text-[11px]", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Canonical Business Name:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-semibold text-slate-100", children: identity.canonicalBusinessName })
+            /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "p-4 overflow-y-auto flex flex-col gap-4 text-xs text-slate-300", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "1. Identity" }),
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "grid grid-cols-2 gap-2 text-[11px]", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500 block", children: "Canonical Business Name:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "font-semibold text-slate-100", children: identity.canonicalBusinessName })
                   ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Entity Classification:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-medium text-slate-200", children: identity.entityTypeLabel })
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500 block", children: "Entity Classification:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "font-medium text-slate-200", children: identity.entityTypeLabel })
                   ] }),
-                  identity.aliases.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "col-span-2", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Known Aliases:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-300", children: identity.aliases.join(", ") })
+                  identity.aliases.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "col-span-2", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500 block", children: "Known Aliases:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-300", children: identity.aliases.join(", ") })
                   ] }),
-                  identity.branchInfo && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "col-span-2 p-2 bg-slate-900 rounded border border-slate-800 text-[11px]", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-semibold text-slate-200 block mb-0.5", children: identity.branchInfo.isBranch ? "Branch Location" : "Parent Organization" }),
-                    identity.branchInfo.parentEntityId && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-slate-400 block", children: [
+                  identity.branchInfo && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "col-span-2 p-2 bg-slate-900 rounded border border-slate-800 text-[11px]", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "font-semibold text-slate-200 block mb-0.5", children: identity.branchInfo.isBranch ? "Branch Location" : "Parent Organization" }),
+                    identity.branchInfo.parentEntityId && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "text-slate-400 block", children: [
                       "Parent ID: ",
-                      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("code", { className: "font-mono text-slate-300", children: identity.branchInfo.parentEntityId })
+                      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("code", { className: "font-mono text-slate-300", children: identity.branchInfo.parentEntityId })
                     ] }),
-                    identity.branchInfo.branchSignals && identity.branchInfo.branchSignals.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-slate-400 block mt-0.5", children: [
+                    identity.branchInfo.branchSignals && identity.branchInfo.branchSignals.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "text-slate-400 block mt-0.5", children: [
                       "Signals: ",
                       identity.branchInfo.branchSignals.join("; ")
                     ] })
                   ] })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "2. Business" }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex flex-col gap-1.5 text-[11px]", children: [
-                  business.categories.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Categories:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "flex flex-wrap gap-1 mt-0.5", children: business.categories.map((c, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-2 py-0.5 bg-slate-900 text-sky-300 rounded border border-slate-800 font-medium", children: c }, i)) })
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "2. Business" }),
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex flex-col gap-1.5 text-[11px]", children: [
+                  business.categories.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500 block", children: "Categories:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "flex flex-wrap gap-1 mt-0.5", children: business.categories.map((c, i) => /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "px-2 py-0.5 bg-slate-900 text-sky-300 rounded border border-slate-800 font-medium", children: c }, i)) })
                   ] }),
-                  business.services.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Identified Services:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "flex flex-wrap gap-1 mt-0.5", children: business.services.map((s, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-1.5 py-0.2 bg-slate-900 text-slate-300 rounded border border-slate-800", children: s }, i)) })
+                  business.services.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500 block", children: "Identified Services:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "flex flex-wrap gap-1 mt-0.5", children: business.services.map((s, i) => /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "px-1.5 py-0.2 bg-slate-900 text-slate-300 rounded border border-slate-800", children: s }, i)) })
                   ] }),
-                  business.description && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Business Description:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("p", { className: "text-slate-300 leading-relaxed mt-0.5", children: business.description })
+                  business.description && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500 block", children: "Business Description:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("p", { className: "text-slate-300 leading-relaxed mt-0.5", children: business.description })
                   ] }),
-                  business.hours && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Business Hours:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-300 font-mono", children: business.hours })
+                  business.hours && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500 block", children: "Business Hours:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-300 font-mono", children: business.hours })
                   ] }),
-                  business.serviceAreas && business.serviceAreas.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block", children: "Service Areas:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-300", children: business.serviceAreas.join(", ") })
+                  business.serviceAreas && business.serviceAreas.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500 block", children: "Service Areas:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-300", children: business.serviceAreas.join(", ") })
                   ] }),
-                  business.businessStatus && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "Operational Status: " }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: business.businessStatus })
+                  business.businessStatus && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500", children: "Operational Status: " }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { className: "text-slate-200", children: business.businessStatus })
                   ] })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "3. Location" }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] flex flex-col gap-1", children: [
-                  location.addresses.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1", children: location.addresses.map((addr, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "p-1.5 bg-slate-900 rounded border border-slate-800 text-slate-200 flex items-start gap-1.5", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "\u{1F4CD}" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: addr })
-                  ] }, i)) }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "Physical address data not available." }),
-                  location.city && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "mt-1 text-slate-400", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "Geographic Scope: " }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: [location.city, location.region, location.country].filter(Boolean).join(", ") })
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "3. Location" }),
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "text-[11px] flex flex-col gap-1", children: [
+                  location.addresses.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("ul", { className: "space-y-1", children: location.addresses.map((addr, i) => /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("li", { className: "p-1.5 bg-slate-900 rounded border border-slate-800 text-slate-200 flex items-start gap-1.5", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: "\u{1F4CD}" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: addr })
+                  ] }, i)) }) : /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500", children: "Physical address data not available." }),
+                  location.city && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "mt-1 text-slate-400", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: "Geographic Scope: " }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { className: "text-slate-200", children: [location.city, location.region, location.country].filter(Boolean).join(", ") })
                   ] }),
-                  location.coordinates && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-slate-500 font-mono text-[10px]", children: [
+                  location.coordinates && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "text-slate-500 font-mono text-[10px]", children: [
                     "Coordinates: ",
                     location.coordinates
                   ] })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "4. Digital Presence" }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] flex flex-col gap-1.5", children: [
-                  safeWebsiteUrl ? /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center gap-2 p-1.5 bg-slate-900 rounded border border-slate-800", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "Website:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "4. Digital Presence" }),
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "text-[11px] flex flex-col gap-1.5", children: [
+                  safeWebsiteUrl ? /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center gap-2 p-1.5 bg-slate-900 rounded border border-slate-800", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500", children: "Website:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
                       "a",
                       {
                         href: safeWebsiteUrl,
@@ -18960,22 +20607,22 @@ var ResultDetailDrawer = ({
                         ]
                       }
                     ),
-                    lead.dataSignals?.websiteVerified && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-1.5 py-0.2 text-[9px] bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 rounded font-semibold ml-auto", children: "\u2713 VERIFIED" })
-                  ] }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "Website data not available." }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex flex-wrap gap-1.5 mt-0.5", children: [
-                    digital.cms && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "px-1.5 py-0.5 bg-slate-900 text-slate-300 rounded border border-slate-800 text-[10px]", children: [
+                    lead.dataSignals?.websiteVerified && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "px-1.5 py-0.2 text-[9px] bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 rounded font-semibold ml-auto", children: "\u2713 VERIFIED" })
+                  ] }) : /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500", children: "Website data not available." }),
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex flex-wrap gap-1.5 mt-0.5", children: [
+                    digital.cms && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "px-1.5 py-0.5 bg-slate-900 text-slate-300 rounded border border-slate-800 text-[10px]", children: [
                       "CMS: ",
                       digital.cms
                     ] }),
-                    digital.ecommerce && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-1.5 py-0.5 bg-sky-950/50 text-sky-300 rounded border border-sky-500/30 text-[10px]", children: "\u{1F6D2} E-Commerce" }),
-                    digital.booking && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-1.5 py-0.5 bg-purple-950/50 text-purple-300 rounded border border-purple-500/30 text-[10px]", children: "\u{1F4C5} Booking Available" }),
-                    digital.chat && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "px-1.5 py-0.5 bg-emerald-950/50 text-emerald-300 rounded border border-emerald-500/30 text-[10px]", children: "\u{1F4AC} Live Chat" })
+                    digital.ecommerce && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "px-1.5 py-0.5 bg-sky-950/50 text-sky-300 rounded border border-sky-500/30 text-[10px]", children: "\u{1F6D2} E-Commerce" }),
+                    digital.booking && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "px-1.5 py-0.5 bg-purple-950/50 text-purple-300 rounded border border-purple-500/30 text-[10px]", children: "\u{1F4C5} Booking Available" }),
+                    digital.chat && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "px-1.5 py-0.5 bg-emerald-950/50 text-emerald-300 rounded border border-emerald-500/30 text-[10px]", children: "\u{1F4AC} Live Chat" })
                   ] }),
-                  digital.socialLinks && digital.socialLinks.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block mb-1", children: "Public Profiles:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "flex flex-wrap gap-1.5", children: digital.socialLinks.map((s, i) => {
+                  digital.socialLinks && digital.socialLinks.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500 block mb-1", children: "Public Profiles:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "flex flex-wrap gap-1.5", children: digital.socialLinks.map((s, i) => {
                       const safe = getSafeExternalUrl(s.url);
-                      return /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
+                      return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
                         "a",
                         {
                           href: safe || "#",
@@ -18983,7 +20630,7 @@ var ResultDetailDrawer = ({
                           rel: "noreferrer noopener",
                           className: "px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-sky-300 rounded border border-slate-800 flex items-center gap-1 text-[10px]",
                           children: [
-                            /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "\u{1F517}" }),
+                            /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: "\u{1F517}" }),
                             " ",
                             s.platform
                           ]
@@ -18994,19 +20641,19 @@ var ResultDetailDrawer = ({
                   ] })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "5. Contacts" }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] font-medium text-slate-400 block mb-1", children: "Public Business Phones:" }),
-                  contacts.phones.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1.5", children: contacts.phones.map((p, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "p-2 bg-slate-900 rounded border border-slate-800 text-[11px]", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "font-mono text-slate-100 font-medium", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "5. Contacts" }),
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[11px] font-medium text-slate-400 block mb-1", children: "Public Business Phones:" }),
+                  contacts.phones.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("ul", { className: "space-y-1.5", children: contacts.phones.map((p, i) => /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("li", { className: "p-2 bg-slate-900 rounded border border-slate-800 text-[11px]", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center justify-between", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "font-mono text-slate-100 font-medium", children: [
                         "\u{1F4DE} ",
                         p.number
                       ] }),
-                      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center gap-1.5", children: [
-                        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-slate-400", children: p.type }),
-                        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center gap-1.5", children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[10px] text-slate-400", children: p.type }),
+                        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                           "button",
                           {
                             type: "button",
@@ -19017,30 +20664,30 @@ var ResultDetailDrawer = ({
                         )
                       ] })
                     ] }),
-                    expandedFieldEvidence.has(`phone_${i}`) && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "mt-1.5 p-1.5 bg-slate-950/80 rounded border border-slate-800 text-[10px] text-slate-400 flex flex-col gap-0.5", children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                    expandedFieldEvidence.has(`phone_${i}`) && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "mt-1.5 p-1.5 bg-slate-950/80 rounded border border-slate-800 text-[10px] text-slate-400 flex flex-col gap-0.5", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
                         "Source Attribution: ",
-                        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-300", children: p.source || "Public Web Observation" })
+                        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { className: "text-slate-300", children: p.source || "Public Web Observation" })
                       ] }),
-                      p.observedAt && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                      p.observedAt && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
                         "Observed: ",
                         p.observedAt
                       ] }),
-                      p.hasConflict && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "text-amber-400", children: "\u26A0\uFE0F Multiple phone numbers observed across sources" })
+                      p.hasConflict && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "text-amber-400", children: "\u26A0\uFE0F Multiple phone numbers observed across sources" })
                     ] })
-                  ] }, i)) }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] text-slate-500", children: "Public phone data not available." })
+                  ] }, i)) }) : /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[11px] text-slate-500", children: "Public phone data not available." })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] font-medium text-slate-400 block mb-1", children: "Public Business Emails:" }),
-                  contacts.emails.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1.5", children: contacts.emails.map((e, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "p-2 bg-slate-900 rounded border border-slate-800 text-[11px]", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "font-mono text-slate-100 font-medium", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[11px] font-medium text-slate-400 block mb-1", children: "Public Business Emails:" }),
+                  contacts.emails.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("ul", { className: "space-y-1.5", children: contacts.emails.map((e, i) => /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("li", { className: "p-2 bg-slate-900 rounded border border-slate-800 text-[11px]", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center justify-between", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "font-mono text-slate-100 font-medium", children: [
                         "\u2709 ",
                         e.address
                       ] }),
-                      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center gap-1.5", children: [
-                        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-slate-400", children: e.classification }),
-                        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center gap-1.5", children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[10px] text-slate-400", children: e.classification }),
+                        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                           "button",
                           {
                             type: "button",
@@ -19051,44 +20698,44 @@ var ResultDetailDrawer = ({
                         )
                       ] })
                     ] }),
-                    expandedFieldEvidence.has(`email_${i}`) && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "mt-1.5 p-1.5 bg-slate-950/80 rounded border border-slate-800 text-[10px] text-slate-400 flex flex-col gap-0.5", children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                    expandedFieldEvidence.has(`email_${i}`) && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "mt-1.5 p-1.5 bg-slate-950/80 rounded border border-slate-800 text-[10px] text-slate-400 flex flex-col gap-0.5", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
                         "Source Attribution: ",
-                        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-300", children: e.source || "Public Web Observation" })
+                        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { className: "text-slate-300", children: e.source || "Public Web Observation" })
                       ] }),
-                      e.observedAt && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+                      e.observedAt && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
                         "Observed: ",
                         e.observedAt
                       ] }),
-                      e.hasConflict && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "text-amber-400", children: "\u26A0\uFE0F Conflicting email observed" })
+                      e.hasConflict && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "text-amber-400", children: "\u26A0\uFE0F Conflicting email observed" })
                     ] })
-                  ] }, i)) }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] text-slate-500", children: "Public email data not available." })
+                  ] }, i)) }) : /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[11px] text-slate-500", children: "Public email data not available." })
                 ] }),
-                contacts.forms && contacts.forms.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] text-slate-400 pt-1 border-t border-slate-800/60", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "Contact Form: " }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: "Observed on public website" })
+                contacts.forms && contacts.forms.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "text-[11px] text-slate-400 pt-1 border-t border-slate-800/60", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: "Contact Form: " }),
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { className: "text-slate-200", children: "Observed on public website" })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "6. People & Roles" }),
-                people.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1.5 text-[11px]", children: people.map((p, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "p-2 bg-slate-900 rounded border border-slate-800 flex flex-col gap-1", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("strong", { className: "text-slate-100 flex items-center gap-1.5", children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "\u{1F464}" }),
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "6. People & Roles" }),
+                people.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("ul", { className: "space-y-1.5 text-[11px]", children: people.map((p, i) => /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("li", { className: "p-2 bg-slate-900 rounded border border-slate-800 flex flex-col gap-1", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center justify-between", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("strong", { className: "text-slate-100 flex items-center gap-1.5", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: "\u{1F464}" }),
                       " ",
                       p.name
                     ] }),
-                    p.titles && p.titles.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] text-sky-400 font-medium", children: p.titles.join(", ") })
+                    p.titles && p.titles.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[10px] text-sky-400 font-medium", children: p.titles.join(", ") })
                   ] }),
-                  p.emails && p.emails.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[10px] text-slate-400 font-mono", children: [
+                  p.emails && p.emails.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "text-[10px] text-slate-400 font-mono", children: [
                     "Email: ",
                     p.emails.join(", ")
                   ] }),
-                  p.phones && p.phones.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[10px] text-slate-400 font-mono", children: [
+                  p.phones && p.phones.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "text-[10px] text-slate-400 font-mono", children: [
                     "Phone: ",
                     p.phones.join(", ")
                   ] }),
-                  p.linkedInUrl && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
+                  p.linkedInUrl && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
                     "a",
                     {
                       href: p.linkedInUrl,
@@ -19096,17 +20743,17 @@ var ResultDetailDrawer = ({
                       rel: "noreferrer noopener",
                       className: "text-[10px] text-sky-400 hover:underline flex items-center gap-1",
                       children: [
-                        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "\u{1F517}" }),
+                        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: "\u{1F517}" }),
                         " Public Profile \u2197"
                       ]
                     }
                   )
-                ] }, i)) }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] text-slate-500", children: "No public individual roles observed for this business." })
+                ] }, i)) }) : /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[11px] text-slate-500", children: "No public individual roles observed for this business." })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2.5", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "7. Qualification Evaluation" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center justify-between", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "7. Qualification Evaluation" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                     StatusBadge,
                     {
                       status: qualification.finalState,
@@ -19115,61 +20762,61 @@ var ResultDetailDrawer = ({
                     }
                   )
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] text-slate-400", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "text-[11px] text-slate-400", children: [
                   "Profile: ",
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: qualification.profileName })
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { className: "text-slate-200", children: qualification.profileName })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("p", { className: "text-[11px] text-slate-300 leading-relaxed bg-slate-900/60 p-2 rounded border border-slate-800", children: qualification.explanation }),
-                qualification.whyReasons && qualification.whyReasons.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] font-semibold uppercase text-emerald-400 block mb-1", children: "Why Qualified:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1 text-[11px]", children: qualification.whyReasons.map((r, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "flex items-start gap-1.5 text-slate-200", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-emerald-400 font-bold", children: "\u2713" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("p", { className: "text-[11px] text-slate-300 leading-relaxed bg-slate-900/60 p-2 rounded border border-slate-800", children: qualification.explanation }),
+                qualification.whyReasons && qualification.whyReasons.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[10px] font-semibold uppercase text-emerald-400 block mb-1", children: "Why Qualified:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("ul", { className: "space-y-1 text-[11px]", children: qualification.whyReasons.map((r, i) => /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("li", { className: "flex items-start gap-1.5 text-slate-200", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-emerald-400 font-bold", children: "\u2713" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { children: [
                       r.label,
                       r.explanation ? ` \u2014 ${r.explanation}` : ""
                     ] })
                   ] }, i)) })
                 ] }),
-                qualification.potentialIssues && qualification.potentialIssues.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] font-semibold uppercase text-amber-400 block mb-1", children: "Potential Issues / Observations:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1 text-[11px]", children: qualification.potentialIssues.map((issue, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "flex items-start gap-1.5 text-amber-200", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-amber-400 font-bold", children: "!" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
+                qualification.potentialIssues && qualification.potentialIssues.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[10px] font-semibold uppercase text-amber-400 block mb-1", children: "Potential Issues / Observations:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("ul", { className: "space-y-1 text-[11px]", children: qualification.potentialIssues.map((issue, i) => /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("li", { className: "flex items-start gap-1.5 text-amber-200", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-amber-400 font-bold", children: "!" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { children: [
                       issue.label,
                       issue.explanation ? ` \u2014 ${issue.explanation}` : ""
                     ] })
                   ] }, i)) })
                 ] }),
-                qualification.criteria && qualification.criteria.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "pt-2 border-t border-slate-800/80 flex flex-col gap-1", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] font-semibold uppercase text-slate-400", children: "Criteria Outcomes:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "space-y-1", children: qualification.criteria.map((c, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-1.5 bg-slate-900 rounded border border-slate-800 text-[11px] flex items-center justify-between", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-200 font-medium", children: c.name }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(StatusBadge, { status: c.status, customLabel: c.friendlyStatus, size: "sm" })
+                qualification.criteria && qualification.criteria.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "pt-2 border-t border-slate-800/80 flex flex-col gap-1", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[10px] font-semibold uppercase text-slate-400", children: "Criteria Outcomes:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "space-y-1", children: qualification.criteria.map((c, i) => /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "p-1.5 bg-slate-900 rounded border border-slate-800 text-[11px] flex items-center justify-between", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-200 font-medium", children: c.name }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(StatusBadge, { status: c.status, customLabel: c.friendlyStatus, size: "sm" })
                   ] }, i)) })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2.5", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "8. Evidence & Conflicts" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-[10px] text-slate-500", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center justify-between", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "8. Evidence & Conflicts" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "text-[10px] text-slate-500", children: [
                     evidence.totalCount,
                     " public facts"
                   ] })
                 ] }),
-                evidence.conflicts && evidence.conflicts.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-2.5 rounded bg-amber-950/30 border border-amber-500/40 flex flex-col gap-2", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-xs font-semibold text-amber-300 flex items-center gap-1.5", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: "\u26A0\uFE0F" }),
+                evidence.conflicts && evidence.conflicts.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "p-2.5 rounded bg-amber-950/30 border border-amber-500/40 flex flex-col gap-2", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "text-xs font-semibold text-amber-300 flex items-center gap-1.5", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: "\u26A0\uFE0F" }),
                     " Conflicting Information Found (",
                     evidence.conflicts.length,
                     ")"
                   ] }),
-                  evidence.conflicts.map((conf, cIdx) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-2 bg-slate-900/90 rounded border border-amber-500/30 flex flex-col gap-1 text-[11px]", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("strong", { className: "text-slate-100", children: [
+                  evidence.conflicts.map((conf, cIdx) => /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "p-2 bg-slate-900/90 rounded border border-amber-500/30 flex flex-col gap-1 text-[11px]", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center justify-between", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("strong", { className: "text-slate-100", children: [
                         conf.field,
                         " differs between sources"
                       ] }),
-                      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
                         "button",
                         {
                           type: "button",
@@ -19179,51 +20826,51 @@ var ResultDetailDrawer = ({
                         }
                       )
                     ] }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("p", { className: "text-[10px] text-slate-400", children: conf.description }),
-                    expandedConflicts.has(cIdx) && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "mt-1 space-y-1 pt-1 border-t border-slate-800", children: conf.conflictingValues.map((cv, vIdx) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-1.5 bg-slate-950 rounded text-[10px] flex items-center justify-between text-slate-300", children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "Source: " }),
-                        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: cv.source }),
-                        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "ml-2 font-mono text-sky-300", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("p", { className: "text-[10px] text-slate-400", children: conf.description }),
+                    expandedConflicts.has(cIdx) && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "mt-1 space-y-1 pt-1 border-t border-slate-800", children: conf.conflictingValues.map((cv, vIdx) => /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "p-1.5 bg-slate-950 rounded text-[10px] flex items-center justify-between text-slate-300", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500", children: "Source: " }),
+                        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { className: "text-slate-200", children: cv.source }),
+                        /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "ml-2 font-mono text-sky-300", children: [
                           '"',
                           cv.value,
                           '"'
                         ] })
                       ] }),
-                      cv.observedAt && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 text-[9px]", children: cv.observedAt })
+                      cv.observedAt && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500 text-[9px]", children: cv.observedAt })
                     ] }, vIdx)) })
                   ] }, cIdx))
-                ] }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[11px] text-slate-500", children: "No field conflicts detected across public sources." }),
-                evidence.items && evidence.items.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "space-y-1", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] uppercase font-semibold text-slate-400 block mb-0.5", children: "Observed Facts:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("ul", { className: "space-y-1 text-[11px]", children: evidence.items.slice(0, 5).map((ev) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("li", { className: "p-2 bg-slate-900 rounded border border-slate-800 flex flex-col gap-0.5", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between text-[10px] text-slate-400", children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "font-semibold text-slate-300", children: toFriendlyStatus(ev.source) }),
-                      ev.isRestricted && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-purple-400 font-semibold", children: "RESTRICTED" })
+                ] }) : /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[11px] text-slate-500", children: "No field conflicts detected across public sources." }),
+                evidence.items && evidence.items.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "space-y-1", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[10px] uppercase font-semibold text-slate-400 block mb-0.5", children: "Observed Facts:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("ul", { className: "space-y-1 text-[11px]", children: evidence.items.slice(0, 5).map((ev) => /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("li", { className: "p-2 bg-slate-900 rounded border border-slate-800 flex flex-col gap-0.5", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center justify-between text-[10px] text-slate-400", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "font-semibold text-slate-300", children: toFriendlyStatus(ev.source) }),
+                      ev.isRestricted && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-purple-400 font-semibold", children: "RESTRICTED" })
                     ] }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-200", children: ev.fact })
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-200", children: ev.fact })
                   ] }, ev.id)) })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "9. Data Freshness" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: `px-2 py-0.5 text-[10px] font-semibold rounded border ${freshness.overallState === "CURRENT" ? "text-emerald-400 bg-emerald-950/50 border-emerald-500/40" : "text-amber-400 bg-amber-950/50 border-amber-500/40"}`, children: freshness.friendlyLabel })
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center justify-between", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "9. Data Freshness" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: `px-2 py-0.5 text-[10px] font-semibold rounded border ${freshness.overallState === "CURRENT" ? "text-emerald-400 bg-emerald-950/50 border-emerald-500/40" : "text-amber-400 bg-amber-950/50 border-amber-500/40"}`, children: freshness.friendlyLabel })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[11px] flex flex-col gap-1", children: [
-                  freshness.lastObservedAt && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "Last Public Observation: " }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { className: "text-slate-200", children: freshness.lastObservedAt })
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "text-[11px] flex flex-col gap-1", children: [
+                  freshness.lastObservedAt && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500", children: "Last Public Observation: " }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { className: "text-slate-200", children: freshness.lastObservedAt })
                   ] }),
-                  freshness.firstObservedAt && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500", children: "First Public Observation: " }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-300", children: freshness.firstObservedAt })
+                  freshness.firstObservedAt && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500", children: "First Public Observation: " }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-300", children: freshness.firstObservedAt })
                   ] }),
-                  freshness.perSource && freshness.perSource.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "mt-1 space-y-1", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[10px] uppercase font-semibold text-slate-400 block", children: "By Source:" }),
-                    freshness.perSource.map((s, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center justify-between p-1 bg-slate-900 rounded text-[10px] text-slate-300", children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { children: s.source }),
-                      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-slate-400", children: [
+                  freshness.perSource && freshness.perSource.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "mt-1 space-y-1", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[10px] uppercase font-semibold text-slate-400 block", children: "By Source:" }),
+                    freshness.perSource.map((s, i) => /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center justify-between p-1 bg-slate-900 rounded text-[10px] text-slate-300", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: s.source }),
+                      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "text-slate-400", children: [
                         s.friendlyState,
                         " (",
                         s.lastObservedAt,
@@ -19233,20 +20880,20 @@ var ResultDetailDrawer = ({
                   ] })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "10. Policy & Compliance" }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "grid grid-cols-2 gap-2 text-[11px]", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-2 bg-slate-900 rounded border border-slate-800 text-center", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block mb-0.5 text-[10px] uppercase", children: "Export Eligibility" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: `font-semibold ${lead.isExportable ? "text-emerald-400" : "text-rose-400"}`, children: lead.isExportable ? "\u2713 Eligible for Export" : "\u2298 Not Exportable" })
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-1.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-400", children: "10. Policy & Compliance" }),
+                /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "grid grid-cols-2 gap-2 text-[11px]", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "p-2 bg-slate-900 rounded border border-slate-800 text-center", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500 block mb-0.5 text-[10px] uppercase", children: "Export Eligibility" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: `font-semibold ${lead.isExportable ? "text-emerald-400" : "text-rose-400"}`, children: lead.isExportable ? "\u2713 Eligible for Export" : "\u2298 Not Exportable" })
                   ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "p-2 bg-slate-900 rounded border border-slate-800 text-center", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-slate-500 block mb-0.5 text-[10px] uppercase", children: "Storage Eligibility" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: `font-semibold ${lead.isPersistable ? "text-emerald-400" : "text-rose-400"}`, children: lead.isPersistable ? "\u2713 Persistable" : "\u2298 Not Persistable" })
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "p-2 bg-slate-900 rounded border border-slate-800 text-center", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-slate-500 block mb-0.5 text-[10px] uppercase", children: "Storage Eligibility" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: `font-semibold ${lead.isPersistable ? "text-emerald-400" : "text-rose-400"}`, children: lead.isPersistable ? "\u2713 Persistable" : "\u2298 Not Persistable" })
                   ] })
                 ] }),
-                lead.isRestricted && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("p", { className: "text-[11px] text-purple-300 bg-purple-950/40 p-2.5 rounded border border-purple-500/30 mt-1 leading-relaxed", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("strong", { children: "Policy Notice:" }),
+                lead.isRestricted && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("p", { className: "text-[11px] text-purple-300 bg-purple-950/40 p-2.5 rounded border border-purple-500/30 mt-1 leading-relaxed", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { children: "Policy Notice:" }),
                   " ",
                   lead.restrictionExplanation || "Protected by source compliance policy. Consumer-web records cannot be exported or stored persistently."
                 ] })
@@ -19260,8 +20907,8 @@ var ResultDetailDrawer = ({
 };
 
 // src/extension/ui/components/ExportModal.tsx
-var import_react5 = __toESM(require_react(), 1);
-var import_jsx_runtime9 = __toESM(require_jsx_runtime(), 1);
+var import_react6 = __toESM(require_react(), 1);
+var import_jsx_runtime11 = __toESM(require_jsx_runtime(), 1);
 var ExportModal = ({
   isOpen,
   preview,
@@ -19269,8 +20916,8 @@ var ExportModal = ({
   onCancel,
   isExporting = false
 }) => {
-  const confirmBtnRef = (0, import_react5.useRef)(null);
-  (0, import_react5.useEffect)(() => {
+  const confirmBtnRef = (0, import_react6.useRef)(null);
+  (0, import_react6.useEffect)(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
       if (e.key === "Escape") onCancel();
@@ -19282,20 +20929,20 @@ var ExportModal = ({
     };
   }, [isOpen, onCancel]);
   if (!isOpen) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
     "div",
     {
       className: "fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm",
       role: "dialog",
       "aria-modal": "true",
       "aria-labelledby": "export-modal-title",
-      children: /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl shadow-2xl flex flex-col overflow-hidden", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-4 border-b border-slate-800 bg-slate-950 flex items-center justify-between", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("h2", { id: "export-modal-title", className: "text-base font-semibold text-slate-100 flex items-center gap-2", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { children: "\u2B73" }),
+      children: /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl shadow-2xl flex flex-col overflow-hidden", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "p-4 border-b border-slate-800 bg-slate-950 flex items-center justify-between", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("h2", { id: "export-modal-title", className: "text-base font-semibold text-slate-100 flex items-center gap-2", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: "\u2B73" }),
             " Export Research Data"
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
             "button",
             {
               type: "button",
@@ -19306,20 +20953,20 @@ var ExportModal = ({
             }
           )
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-4 flex flex-col gap-3 text-xs text-slate-300", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("p", { className: "text-[11px] text-slate-400 leading-relaxed", children: "Data export complies strictly with the LeadNoria source policy firewall. Records with restricted consumer-web provenance are protected and excluded." }),
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "grid grid-cols-2 gap-2 text-center", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-2.5 bg-slate-950/60 rounded border border-slate-800", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-[10px] uppercase text-slate-500 block mb-0.5", children: "Selected Records" }),
-              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-base font-bold text-slate-200", children: preview.totalSelectedRecords })
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "p-4 flex flex-col gap-3 text-xs text-slate-300", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("p", { className: "text-[11px] text-slate-400 leading-relaxed", children: "Data export complies strictly with the LeadNoria source policy firewall. Records with restricted consumer-web provenance are protected and excluded." }),
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "grid grid-cols-2 gap-2 text-center", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "p-2.5 bg-slate-950/60 rounded border border-slate-800", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-[10px] uppercase text-slate-500 block mb-0.5", children: "Selected Records" }),
+              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-base font-bold text-slate-200", children: preview.totalSelectedRecords })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-2.5 bg-emerald-950/30 rounded border border-emerald-500/30", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-[10px] uppercase text-emerald-400 block mb-0.5", children: "Eligible for Export" }),
-              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-base font-bold text-emerald-300", children: preview.exportableRecordsCount })
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "p-2.5 bg-emerald-950/30 rounded border border-emerald-500/30", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-[10px] uppercase text-emerald-400 block mb-0.5", children: "Eligible for Export" }),
+              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-base font-bold text-emerald-300", children: preview.exportableRecordsCount })
             ] })
           ] }),
-          preview.restrictedRecordsCount > 0 ? /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-2.5 bg-purple-950/40 border border-purple-500/40 rounded text-[11px] text-purple-200", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "font-semibold text-purple-300 block mb-0.5", children: "\u2298 Partial Export Eligibility:" }),
+          preview.restrictedRecordsCount > 0 ? /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "p-2.5 bg-purple-950/40 border border-purple-500/40 rounded text-[11px] text-purple-200", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "font-semibold text-purple-300 block mb-0.5", children: "\u2298 Partial Export Eligibility:" }),
             "You selected ",
             preview.totalSelectedRecords,
             " records. ",
@@ -19327,22 +20974,22 @@ var ExportModal = ({
             " are unavailable for export due to source restrictions. ",
             preview.exportableRecordsCount,
             " are eligible."
-          ] }) : /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-2 bg-emerald-950/20 border border-emerald-500/30 rounded text-[11px] text-emerald-300", children: [
+          ] }) : /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "p-2 bg-emerald-950/20 border border-emerald-500/30 rounded text-[11px] text-emerald-300", children: [
             "\u2713 All ",
             preview.totalSelectedRecords,
             " selected records satisfy export policy requirements."
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-[10px] uppercase tracking-wider text-slate-400 block mb-1", children: "Included Export Fields:" }),
-            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "flex flex-wrap gap-1", children: preview.eligibleFields.map((f) => /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "px-1.5 py-0.2 text-[10px] font-mono bg-slate-800 text-slate-300 rounded", children: f }, f)) })
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-[10px] uppercase tracking-wider text-slate-400 block mb-1", children: "Included Export Fields:" }),
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "flex flex-wrap gap-1", children: preview.eligibleFields.map((f) => /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "px-1.5 py-0.2 text-[10px] font-mono bg-slate-800 text-slate-300 rounded", children: f }, f)) })
           ] }),
-          preview.restrictedFieldsOmitted.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-[10px] uppercase tracking-wider text-slate-500 block mb-1", children: "Restricted Fields Protected:" }),
-            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("ul", { className: "list-disc list-inside text-[10px] text-slate-400 space-y-0.5", children: preview.restrictedFieldsOmitted.map((rf, i) => /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("li", { children: rf }, i)) })
+          preview.restrictedFieldsOmitted.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-[10px] uppercase tracking-wider text-slate-500 block mb-1", children: "Restricted Fields Protected:" }),
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("ul", { className: "list-disc list-inside text-[10px] text-slate-400 space-y-0.5", children: preview.restrictedFieldsOmitted.map((rf, i) => /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("li", { children: rf }, i)) })
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-end gap-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-end gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
             "button",
             {
               type: "button",
@@ -19351,7 +20998,7 @@ var ExportModal = ({
               children: "Cancel"
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
             "button",
             {
               ref: confirmBtnRef,
@@ -19359,7 +21006,7 @@ var ExportModal = ({
               disabled: !preview.isExportReady || isExporting,
               onClick: onConfirmExport,
               className: `px-4 py-1.5 text-xs font-semibold rounded transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-400 cursor-pointer ${preview.isExportReady && !isExporting ? "bg-emerald-600 hover:bg-emerald-500 text-white" : "bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed opacity-50"}`,
-              children: isExporting ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { children: "Exporting CSV..." }) : /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { children: [
+              children: isExporting ? /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: "Exporting CSV..." }) : /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { children: [
                 "Download CSV (",
                 preview.exportableRecordsCount,
                 ")"
@@ -19373,27 +21020,27 @@ var ExportModal = ({
 };
 
 // src/extension/ui/components/HistoryView.tsx
-var import_jsx_runtime10 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime12 = __toESM(require_jsx_runtime(), 1);
 var HistoryView = ({
   runs,
   onSelectRun,
   onClearHistory
 }) => {
   if (runs.length === 0) {
-    return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex flex-col items-center justify-center p-8 text-center text-slate-400 bg-slate-900 border border-slate-800 rounded-xl", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-3xl mb-2", children: "\u{1F4DC}" }),
-      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("h3", { className: "text-sm font-semibold text-slate-200 mb-1", children: "No Saved Research Runs" }),
-      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("p", { className: "text-xs text-slate-500 max-w-xs", children: "Historical research data not available. Completed research runs are automatically archived locally for inspection and export." })
+    return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "flex flex-col items-center justify-center p-8 text-center text-slate-400 bg-slate-900 border border-slate-800 rounded-xl", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-3xl mb-2", children: "\u{1F4DC}" }),
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("h3", { className: "text-sm font-semibold text-slate-200 mb-1", children: "No Saved Research Runs" }),
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("p", { className: "text-xs text-slate-500 max-w-xs", children: "Historical research data not available. Completed research runs are automatically archived locally for inspection and export." })
     ] });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex flex-col gap-3", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center justify-between px-1", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "text-xs text-slate-400", children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "flex flex-col gap-3", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "flex items-center justify-between px-1", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("span", { className: "text-xs text-slate-400", children: [
         "Showing ",
-        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("strong", { children: runs.length }),
+        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("strong", { children: runs.length }),
         " archived runs"
       ] }),
-      onClearHistory && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+      onClearHistory && /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
         "button",
         {
           type: "button",
@@ -19403,33 +21050,33 @@ var HistoryView = ({
         }
       )
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "flex flex-col gap-2", children: runs.map((run) => {
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: "flex flex-col gap-2", children: runs.map((run) => {
       const leadCount = run.leads ? run.leads.length : 0;
       const dateStr = run.timestamp ? new Date(run.timestamp).toLocaleString() : "Recent";
-      return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
+      return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(
         "div",
         {
           onClick: () => onSelectRun(run),
           className: "p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 rounded-lg cursor-pointer transition-colors flex items-center justify-between",
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center gap-2 mb-1", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("h4", { className: "text-xs font-semibold text-slate-200", children: run.researchName || `Run ${run.runId.substring(0, 8)}` }),
-                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(StatusBadge, { status: run.status, size: "sm" })
+            /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "flex items-center gap-2 mb-1", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("h4", { className: "text-xs font-semibold text-slate-200", children: run.researchName || `Run ${run.runId.substring(0, 8)}` }),
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(StatusBadge, { status: run.status, size: "sm" })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "text-[11px] text-slate-400 flex items-center gap-2", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: dateStr }),
-                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: "\u2022" }),
-                /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: run.locationName || run.countryCode }),
-                run.keywords && run.keywords.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(import_jsx_runtime10.Fragment, { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { children: "\u2022" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "truncate max-w-[120px] font-mono", children: run.keywords.join(", ") })
+              /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "text-[11px] text-slate-400 flex items-center gap-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { children: dateStr }),
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { children: "\u2022" }),
+                /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { children: run.locationName || run.countryCode }),
+                run.keywords && run.keywords.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(import_jsx_runtime12.Fragment, { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { children: "\u2022" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "truncate max-w-[120px] font-mono", children: run.keywords.join(", ") })
                 ] })
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "text-right shrink-0", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-sm font-bold text-sky-400 block", children: leadCount }),
-              /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[10px] text-slate-500 uppercase", children: "Leads" })
+            /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "text-right shrink-0", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-sm font-bold text-sky-400 block", children: leadCount }),
+              /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-[10px] text-slate-500 uppercase", children: "Leads" })
             ] })
           ]
         },
@@ -19440,10 +21087,10 @@ var HistoryView = ({
 };
 
 // src/extension/ui/components/SettingsView.tsx
-var import_react7 = __toESM(require_react(), 1);
+var import_react8 = __toESM(require_react(), 1);
 
 // src/extension/ui/components/DiagnosticsView.tsx
-var import_react6 = __toESM(require_react(), 1);
+var import_react7 = __toESM(require_react(), 1);
 
 // src/extension/reliability/types.ts
 var DIAGNOSTICS_SCHEMA_VERSION = "diagnostics-v1";
@@ -19785,7 +21432,7 @@ function createDiagnosticReproductionPackage(opts) {
 }
 
 // src/extension/ui/components/DiagnosticsView.tsx
-var import_jsx_runtime11 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime13 = __toESM(require_jsx_runtime(), 1);
 var DiagnosticsView = ({
   version,
   reliabilityMetrics,
@@ -19795,11 +21442,11 @@ var DiagnosticsView = ({
   onUpdateIssueResolution,
   onClearDiagnostics
 }) => {
-  const [filterCategory, setFilterCategory] = (0, import_react6.useState)("ALL");
-  const [filterSeverity, setFilterSeverity] = (0, import_react6.useState)("ALL");
-  const [copyFeedback, setCopyFeedback] = (0, import_react6.useState)(null);
-  const [showClearConfirm, setShowClearConfirm] = (0, import_react6.useState)(false);
-  const filteredIssues = (0, import_react6.useMemo)(() => {
+  const [filterCategory, setFilterCategory] = (0, import_react7.useState)("ALL");
+  const [filterSeverity, setFilterSeverity] = (0, import_react7.useState)("ALL");
+  const [copyFeedback, setCopyFeedback] = (0, import_react7.useState)(null);
+  const [showClearConfirm, setShowClearConfirm] = (0, import_react7.useState)(false);
+  const filteredIssues = (0, import_react7.useMemo)(() => {
     return issues.filter((issue) => {
       if (filterCategory !== "ALL" && issue.category !== filterCategory) return false;
       if (filterSeverity !== "ALL" && issue.severity !== filterSeverity) return false;
@@ -19858,42 +21505,42 @@ var DiagnosticsView = ({
         return "bg-slate-800 text-slate-300 border-slate-700";
     }
   };
-  const categories = (0, import_react6.useMemo)(() => {
+  const categories = (0, import_react7.useMemo)(() => {
     const set = new Set(issues.map((i) => i.category));
     return Array.from(set).sort();
   }, [issues]);
-  return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(
     "div",
     {
       role: "region",
       "aria-label": "System Diagnostics & Reliability Health",
       className: "flex flex-col gap-4 text-xs text-slate-300",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3 bg-slate-950/80 rounded-lg border border-slate-800", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("h3", { className: "text-sm font-semibold text-slate-100 flex items-center gap-1.5", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: "\u{1F6E1}" }),
+        /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3 bg-slate-950/80 rounded-lg border border-slate-800", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("h3", { className: "text-sm font-semibold text-slate-100 flex items-center gap-1.5", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { children: "\u{1F6E1}" }),
               " Operational Diagnostics & Reliability"
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("p", { className: "text-[11px] text-slate-400", children: "Local operational monitoring, bounded error taxonomy, and evidence-based reliability metrics." })
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("p", { className: "text-[11px] text-slate-400", children: "Local operational monitoring, bounded error taxonomy, and evidence-based reliability metrics." })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "flex items-center gap-2 flex-wrap", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-600/40", children: "LOCAL-FIRST (0 TELEMETRY)" }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { className: "px-2 py-0.5 rounded text-[10px] font-semibold bg-sky-950/80 text-sky-300 border border-sky-600/40", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "flex items-center gap-2 flex-wrap", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-600/40", children: "LOCAL-FIRST (0 TELEMETRY)" }),
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "px-2 py-0.5 rounded text-[10px] font-semibold bg-sky-950/80 text-sky-300 border border-sky-600/40", children: [
               "v",
               version
             ] })
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col justify-between", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-[11px] text-slate-400", children: "Run Success Rate" }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "flex items-baseline gap-1 my-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { className: "text-lg font-bold text-slate-100", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col justify-between", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-[11px] text-slate-400", children: "Run Success Rate" }),
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "flex items-baseline gap-1 my-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "text-lg font-bold text-slate-100", children: [
                 reliabilityMetrics.runSuccessRate,
                 "%"
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { className: "text-[10px] text-slate-500", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "text-[10px] text-slate-500", children: [
                 "(",
                 reliabilityMetrics.successfulRuns,
                 "/",
@@ -19901,84 +21548,84 @@ var DiagnosticsView = ({
                 ")"
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { className: "text-[10px] text-slate-400 font-medium", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "text-[10px] text-slate-400 font-medium", children: [
               "Sample: ",
               reliabilityMetrics.sampleSufficiency
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col justify-between", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-[11px] text-slate-400", children: "Issue Rate Per Run" }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "flex items-baseline gap-1 my-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { className: "text-lg font-bold text-slate-100", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col justify-between", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-[11px] text-slate-400", children: "Issue Rate Per Run" }),
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "flex items-baseline gap-1 my-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "text-lg font-bold text-slate-100", children: [
                 reliabilityMetrics.issueRatePerRun,
                 "%"
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-[10px] text-slate-500", children: "of runs" })
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-[10px] text-slate-500", children: "of runs" })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { className: "text-[10px] text-slate-400 font-medium", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "text-[10px] text-slate-400 font-medium", children: [
               issues.length,
               " distinct fingerprints"
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col justify-between", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-[11px] text-slate-400", children: "Recovery Rate" }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "flex items-baseline gap-1 my-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { className: "text-lg font-bold text-slate-100", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col justify-between", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-[11px] text-slate-400", children: "Recovery Rate" }),
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "flex items-baseline gap-1 my-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "text-lg font-bold text-slate-100", children: [
                 reliabilityMetrics.recoveryRate,
                 "%"
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { className: "text-[10px] text-slate-500", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "text-[10px] text-slate-500", children: [
                 "(",
                 reliabilityMetrics.recoveryCount,
                 " recovered)"
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { className: "text-[10px] text-slate-400 font-medium", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "text-[10px] text-slate-400 font-medium", children: [
               "Retries: ",
               reliabilityMetrics.retryCount
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col justify-between", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-[11px] text-slate-400", children: "P95 Run Duration" }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "flex items-baseline gap-1 my-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-lg font-bold text-slate-100", children: reliabilityMetrics.p95RunDurationMs > 0 ? `${(reliabilityMetrics.p95RunDurationMs / 1e3).toFixed(1)}s` : "N/A" }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { className: "text-[10px] text-slate-500", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col justify-between", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-[11px] text-slate-400", children: "P95 Run Duration" }),
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "flex items-baseline gap-1 my-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-lg font-bold text-slate-100", children: reliabilityMetrics.p95RunDurationMs > 0 ? `${(reliabilityMetrics.p95RunDurationMs / 1e3).toFixed(1)}s` : "N/A" }),
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "text-[10px] text-slate-500", children: [
                 "Avg: ",
                 (reliabilityMetrics.averageRunDurationMs / 1e3).toFixed(1),
                 "s"
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { className: "text-[10px] text-slate-400 font-medium", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "text-[10px] text-slate-400 font-medium", children: [
               "Timeouts: ",
               reliabilityMetrics.websiteTimeoutCount
             ] })
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("h4", { className: "text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2 flex items-center justify-between", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: "Operational Guardrails & Health Alerts" }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-[10px] text-slate-400 normal-case", children: guardrailAlerts.length === 0 ? "All metrics within normal bounds" : `${guardrailAlerts.length} active alerts` })
+        /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("h4", { className: "text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2 flex items-center justify-between", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { children: "Operational Guardrails & Health Alerts" }),
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-[10px] text-slate-400 normal-case", children: guardrailAlerts.length === 0 ? "All metrics within normal bounds" : `${guardrailAlerts.length} active alerts` })
           ] }),
-          guardrailAlerts.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "flex items-center gap-2 p-2 bg-emerald-950/30 rounded border border-emerald-800/40 text-emerald-300 text-[11px]", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: "\u2713" }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: "All internal reliability thresholds normal. No operational alerts active." })
-          ] }) : /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "space-y-2", children: guardrailAlerts.map((alert) => /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
+          guardrailAlerts.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "flex items-center gap-2 p-2 bg-emerald-950/30 rounded border border-emerald-800/40 text-emerald-300 text-[11px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { children: "\u2713" }),
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { children: "All internal reliability thresholds normal. No operational alerts active." })
+          ] }) : /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: "space-y-2", children: guardrailAlerts.map((alert) => /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(
             "div",
             {
               role: "alert",
               className: `p-2.5 rounded border text-[11px] flex flex-col gap-1 ${getSeverityBadgeClass(alert.severity)}`,
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "flex items-center justify-between", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { className: "font-semibold flex items-center gap-1.5", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: "\u26A0" }),
+                /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "flex items-center justify-between", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "font-semibold flex items-center gap-1.5", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { children: "\u26A0" }),
                     " ",
                     alert.title
                   ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "px-1.5 py-0.2 rounded text-[10px] font-bold border border-current", children: alert.severity })
+                  /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "px-1.5 py-0.2 rounded text-[10px] font-bold border border-current", children: alert.severity })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("p", { className: "text-slate-300", children: alert.description }),
-                /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("p", { className: "text-[10px] text-slate-400 italic", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("strong", { children: "Remediation:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("p", { className: "text-slate-300", children: alert.description }),
+                /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("p", { className: "text-[10px] text-slate-400 italic", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("strong", { children: "Remediation:" }),
                   " ",
                   alert.remediationRecommendation
                 ] })
@@ -19987,17 +21634,17 @@ var DiagnosticsView = ({
             alert.alertId
           )) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("h4", { className: "text-xs font-semibold uppercase tracking-wider text-slate-300", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("h4", { className: "text-xs font-semibold uppercase tracking-wider text-slate-300", children: [
               "Recorded Issues (",
               filteredIssues.length,
               " of ",
               issues.length,
               ")"
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "flex items-center gap-2 flex-wrap", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "flex items-center gap-2 flex-wrap", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(
                 "select",
                 {
                   "aria-label": "Filter by Category",
@@ -20005,12 +21652,12 @@ var DiagnosticsView = ({
                   onChange: (e) => setFilterCategory(e.target.value),
                   className: "bg-slate-900 border border-slate-700 text-slate-200 text-[11px] rounded px-2 py-1 focus:ring-1 focus:ring-sky-500",
                   children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("option", { value: "ALL", children: "All Categories" }),
-                    categories.map((c) => /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("option", { value: c, children: c }, c))
+                    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("option", { value: "ALL", children: "All Categories" }),
+                    categories.map((c) => /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("option", { value: c, children: c }, c))
                   ]
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(
                 "select",
                 {
                   "aria-label": "Filter by Severity",
@@ -20018,45 +21665,45 @@ var DiagnosticsView = ({
                   onChange: (e) => setFilterSeverity(e.target.value),
                   className: "bg-slate-900 border border-slate-700 text-slate-200 text-[11px] rounded px-2 py-1 focus:ring-1 focus:ring-sky-500",
                   children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("option", { value: "ALL", children: "All Severities" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("option", { value: "P0", children: "P0 (Critical)" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("option", { value: "P1", children: "P1 (High)" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("option", { value: "P2", children: "P2 (Medium)" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("option", { value: "P3", children: "P3 (Low)" })
+                    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("option", { value: "ALL", children: "All Severities" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("option", { value: "P0", children: "P0 (Critical)" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("option", { value: "P1", children: "P1 (High)" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("option", { value: "P2", children: "P2 (Medium)" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("option", { value: "P3", children: "P3 (Low)" })
                   ]
                 }
               )
             ] })
           ] }),
-          filteredIssues.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("p", { className: "text-[11px] text-slate-400 py-3 text-center", children: issues.length === 0 ? "No production issues recorded in local diagnostic history." : "No issues match the selected category and severity filters." }) : /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "overflow-x-auto", children: /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("table", { className: "w-full text-left border-collapse text-[11px]", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("tr", { className: "border-b border-slate-800 text-slate-400", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("th", { scope: "col", className: "pb-1.5 font-semibold", children: "Severity" }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("th", { scope: "col", className: "pb-1.5 font-semibold", children: "Category" }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("th", { scope: "col", className: "pb-1.5 font-semibold", children: "Technical Code / Stage" }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("th", { scope: "col", className: "pb-1.5 font-semibold text-center", children: "Occurrences" }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("th", { scope: "col", className: "pb-1.5 font-semibold", children: "User Impact & Message" }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("th", { scope: "col", className: "pb-1.5 font-semibold text-right", children: "Status" })
+          filteredIssues.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("p", { className: "text-[11px] text-slate-400 py-3 text-center", children: issues.length === 0 ? "No production issues recorded in local diagnostic history." : "No issues match the selected category and severity filters." }) : /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: "overflow-x-auto", children: /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("table", { className: "w-full text-left border-collapse text-[11px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("tr", { className: "border-b border-slate-800 text-slate-400", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("th", { scope: "col", className: "pb-1.5 font-semibold", children: "Severity" }),
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("th", { scope: "col", className: "pb-1.5 font-semibold", children: "Category" }),
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("th", { scope: "col", className: "pb-1.5 font-semibold", children: "Technical Code / Stage" }),
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("th", { scope: "col", className: "pb-1.5 font-semibold text-center", children: "Occurrences" }),
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("th", { scope: "col", className: "pb-1.5 font-semibold", children: "User Impact & Message" }),
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("th", { scope: "col", className: "pb-1.5 font-semibold text-right", children: "Status" })
             ] }) }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("tbody", { className: "divide-y divide-slate-800/60", children: filteredIssues.map((issue) => /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("tr", { className: "hover:bg-slate-900/40", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("td", { className: "py-2 pr-2", children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: `px-1.5 py-0.5 rounded text-[10px] font-bold border ${getSeverityBadgeClass(issue.severity)}`, children: issue.severity }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("td", { className: "py-2 pr-2 font-medium text-slate-200", children: issue.category }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("td", { className: "py-2 pr-2", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "font-mono text-[10px] text-sky-300", children: issue.sanitizedTechnicalCode }),
-                /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "text-[10px] text-slate-400", children: issue.workflowStage })
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("tbody", { className: "divide-y divide-slate-800/60", children: filteredIssues.map((issue) => /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("tr", { className: "hover:bg-slate-900/40", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("td", { className: "py-2 pr-2", children: /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: `px-1.5 py-0.5 rounded text-[10px] font-bold border ${getSeverityBadgeClass(issue.severity)}`, children: issue.severity }) }),
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("td", { className: "py-2 pr-2 font-medium text-slate-200", children: issue.category }),
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("td", { className: "py-2 pr-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: "font-mono text-[10px] text-sky-300", children: issue.sanitizedTechnicalCode }),
+                /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: "text-[10px] text-slate-400", children: issue.workflowStage })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("td", { className: "py-2 pr-2 text-center", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "font-semibold text-slate-200", children: issue.occurrenceCount }),
-                /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { className: "text-[10px] text-slate-400 block", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("td", { className: "py-2 pr-2 text-center", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "font-semibold text-slate-200", children: issue.occurrenceCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "text-[10px] text-slate-400 block", children: [
                   "(",
                   issue.affectedRunCount,
                   " runs)"
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("td", { className: "py-2 pr-2 max-w-[260px]", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("p", { className: "text-slate-300 line-clamp-2", children: issue.humanReadableMessage }),
-                /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("p", { className: "text-[10px] text-slate-400 mt-0.5", children: issue.userImpact })
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("td", { className: "py-2 pr-2 max-w-[260px]", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("p", { className: "text-slate-300 line-clamp-2", children: issue.humanReadableMessage }),
+                /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("p", { className: "text-[10px] text-slate-400 mt-0.5", children: issue.userImpact })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("td", { className: "py-2 text-right", children: onUpdateIssueResolution ? /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("td", { className: "py-2 text-right", children: onUpdateIssueResolution ? /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
                 "button",
                 {
                   type: "button",
@@ -20067,53 +21714,53 @@ var DiagnosticsView = ({
                   className: `px-2 py-0.5 rounded text-[10px] font-medium border transition-colors ${issue.resolutionState === "RESOLVED" ? "bg-emerald-950/60 text-emerald-300 border-emerald-600/40 hover:bg-emerald-900/60" : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"}`,
                   children: issue.resolutionState
                 }
-              ) : /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-[10px] text-slate-400", children: issue.resolutionState }) })
+              ) : /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-[10px] text-slate-400", children: issue.resolutionState }) })
             ] }, issue.fingerprint)) })
           ] }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("h4", { className: "text-xs font-semibold uppercase tracking-wider text-slate-300", children: "Local Storage Health & Retention Bounds" }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "flex items-center justify-between text-[11px] mb-1", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("h4", { className: "text-xs font-semibold uppercase tracking-wider text-slate-300", children: "Local Storage Health & Retention Bounds" }),
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "flex items-center justify-between text-[11px] mb-1", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { children: [
               "Capacity Usage (",
               Math.round(storageHealth.estimatedBytes / 1024),
               " KB of ",
               Math.round(storageHealth.quotaLimitBytes / (1024 * 1024)),
               " MB)"
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { className: `font-semibold ${storageHealth.isPressureHigh ? "text-amber-400" : "text-emerald-400"}`, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: `font-semibold ${storageHealth.isPressureHigh ? "text-amber-400" : "text-emerald-400"}`, children: [
               storageHealth.quotaUsagePercent,
               "%"
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-800", children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: "w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-800", children: /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
             "div",
             {
               className: `h-full transition-all duration-300 ${storageHealth.isPressureHigh ? "bg-amber-500" : "bg-sky-500"}`,
               style: { width: `${Math.min(100, storageHealth.quotaUsagePercent)}%` }
             }
           ) }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1 text-[10px] text-slate-400", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1 text-[10px] text-slate-400", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
               "Diagnostics: ",
               storageHealth.collectionCounts["production_diagnostic_issues"] || 0,
               " / 100 max"
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
               "Research Runs: ",
               storageHealth.collectionCounts["research_runs"] || 0,
               " / 100 max"
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
               "Snapshots: ",
               storageHealth.collectionCounts["research_optimization_snapshots"] || 0,
               " / 20 max"
             ] })
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 p-3 bg-slate-950/60 rounded-lg border border-slate-800", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "flex items-center gap-2 flex-wrap", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 p-3 bg-slate-950/60 rounded-lg border border-slate-800", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "flex items-center gap-2 flex-wrap", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
               "button",
               {
                 type: "button",
@@ -20123,7 +21770,7 @@ var DiagnosticsView = ({
                 children: "Export Diagnostic Package (JSON)"
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
               "button",
               {
                 type: "button",
@@ -20133,9 +21780,9 @@ var DiagnosticsView = ({
                 children: "Copy Summary"
               }
             ),
-            copyFeedback && /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { role: "status", className: "text-[11px] text-emerald-400 font-medium", children: copyFeedback })
+            copyFeedback && /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { role: "status", className: "text-[11px] text-emerald-400 font-medium", children: copyFeedback })
           ] }),
-          onClearDiagnostics && /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { children: !showClearConfirm ? /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+          onClearDiagnostics && /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { children: !showClearConfirm ? /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
             "button",
             {
               type: "button",
@@ -20144,9 +21791,9 @@ var DiagnosticsView = ({
               className: "px-3 py-1.5 text-[11px] font-medium text-rose-300 hover:text-rose-100 bg-rose-950/30 hover:bg-rose-900/40 rounded border border-rose-500/30 transition-colors",
               children: "Clear Diagnostic History"
             }
-          ) : /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "flex items-center gap-2", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-[10px] text-amber-300", children: "Clear diagnostics only?" }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+          ) : /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-[10px] text-amber-300", children: "Clear diagnostics only?" }),
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
               "button",
               {
                 type: "button",
@@ -20158,7 +21805,7 @@ var DiagnosticsView = ({
                 children: "Yes, Clear"
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
               "button",
               {
                 type: "button",
@@ -20175,7 +21822,7 @@ var DiagnosticsView = ({
 };
 
 // src/extension/ui/components/SettingsView.tsx
-var import_jsx_runtime12 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime14 = __toESM(require_jsx_runtime(), 1);
 var SettingsView = ({
   onOpenDiagnostics,
   onClearLocalHistory,
@@ -20187,7 +21834,7 @@ var SettingsView = ({
   onUpdateIssueResolution,
   onClearDiagnostics
 }) => {
-  const [activeSection, setActiveSection] = (0, import_react7.useState)("GENERAL");
+  const [activeSection, setActiveSection] = (0, import_react8.useState)("GENERAL");
   const defaultMetrics = reliabilityMetrics || {
     totalRuns: 0,
     successfulRuns: 0,
@@ -20216,22 +21863,22 @@ var SettingsView = ({
     isPressureHigh: false,
     retentionPolicies: {}
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "flex flex-col gap-4 p-4 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-300", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "border-b border-slate-800 pb-2", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("h2", { className: "text-sm font-semibold text-slate-100 flex items-center gap-1.5", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { children: "\u2699" }),
+  return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex flex-col gap-4 p-4 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-300", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "border-b border-slate-800 pb-2", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("h2", { className: "text-sm font-semibold text-slate-100 flex items-center gap-1.5", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: "\u2699" }),
         " Settings, Compliance & Operational Health"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("p", { className: "text-[11px] text-slate-500", children: "Local runtime configuration, privacy boundaries, and diagnostic health" })
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("p", { className: "text-[11px] text-slate-500", children: "Local runtime configuration, privacy boundaries, and diagnostic health" })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("nav", { className: "flex items-center px-1 border-b border-slate-800 gap-1 overflow-x-auto scrollbar-none", role: "tablist", "aria-label": "Settings sections", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("nav", { className: "flex items-center px-1 border-b border-slate-800 gap-1 overflow-x-auto scrollbar-none", role: "tablist", "aria-label": "Settings sections", children: [
       { id: "GENERAL", label: "General & Compliance" },
       { id: "SOURCES", label: "Source Capabilities" },
       { id: "STORAGE", label: "Data & Storage" },
       { id: "DIAGNOSTICS", label: `Diagnostics & Health (${issues.length})`, badge: guardrailAlerts.length > 0 ? guardrailAlerts.length : void 0 }
     ].map((sec) => {
       const isActive = activeSection === sec.id;
-      return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(
+      return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
         "button",
         {
           role: "tab",
@@ -20240,32 +21887,32 @@ var SettingsView = ({
           onClick: () => setActiveSection(sec.id),
           className: `px-3 py-2 text-[11px] font-medium border-b-2 transition-colors whitespace-nowrap focus:outline-none focus:ring-1 focus:ring-sky-400 flex items-center gap-1.5 ${isActive ? "border-sky-500 text-sky-400 font-semibold" : "border-transparent text-slate-400 hover:text-slate-200"}`,
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { children: sec.label }),
-            sec.badge && /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "px-1.5 py-0.2 text-[9px] font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40", children: sec.badge })
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { children: sec.label }),
+            sec.badge && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "px-1.5 py-0.2 text-[9px] font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40", children: sec.badge })
           ]
         },
         sec.id
       );
     }) }),
-    activeSection === "GENERAL" && /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "flex flex-col gap-3", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-300", children: "Local Processing & Privacy Architecture" }),
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("p", { className: "text-[11px] text-slate-400 leading-relaxed", children: "LeadNoria processes supported research data locally in the extension runtime while accessing permitted public sources. Pipeline orchestration, normalization, entity deduplication, relevance scoring, and qualification profile evaluations occur entirely within your local browser environment." }),
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("p", { className: "text-[11px] text-slate-400 leading-relaxed", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("strong", { children: "Compliance Invariant:" }),
+    activeSection === "GENERAL" && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex flex-col gap-3", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-300", children: "Local Processing & Privacy Architecture" }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("p", { className: "text-[11px] text-slate-400 leading-relaxed", children: "LeadNoria processes supported research data locally in the extension runtime while accessing permitted public sources. Pipeline orchestration, normalization, entity deduplication, relevance scoring, and qualification profile evaluations occur entirely within your local browser environment." }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("p", { className: "text-[11px] text-slate-400 leading-relaxed", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("strong", { children: "Compliance Invariant:" }),
           " Data derived from Google consumer-web sources is strictly designated ",
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("code", { className: "text-purple-300", children: "NOT_PERSISTABLE" }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("code", { className: "text-purple-300", children: "NOT_PERSISTABLE" }),
           " and ",
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("code", { className: "text-purple-300", children: "NOT_EXPORTABLE" }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("code", { className: "text-purple-300", children: "NOT_EXPORTABLE" }),
           " to prevent policy breaches."
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex items-center justify-between", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "font-semibold text-slate-200 block mb-0.5", children: "Pipeline Diagnostics Drawer" }),
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-[11px] text-slate-500", children: "Inspect low-level versioning, adapter contracts, and checkpoint metadata" })
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex items-center justify-between", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "font-semibold text-slate-200 block mb-0.5", children: "Pipeline Diagnostics Drawer" }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-[11px] text-slate-500", children: "Inspect low-level versioning, adapter contracts, and checkpoint metadata" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
           "button",
           {
             type: "button",
@@ -20276,39 +21923,39 @@ var SettingsView = ({
         )
       ] })
     ] }),
-    activeSection === "SOURCES" && /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-300", children: "Source Capabilities & Access Controls" }),
-      /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("ul", { className: "space-y-2 text-[11px]", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("li", { className: "flex items-start gap-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-emerald-400 font-bold", children: "\u2713" }),
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("strong", { className: "text-slate-200", children: "Meta Ad Library:" }),
+    activeSection === "SOURCES" && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex flex-col gap-2", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("h3", { className: "text-xs font-semibold uppercase tracking-wider text-slate-300", children: "Source Capabilities & Access Controls" }),
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("ul", { className: "space-y-2 text-[11px]", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("li", { className: "flex items-start gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-emerald-400 font-bold", children: "\u2713" }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("strong", { className: "text-slate-200", children: "Meta Ad Library:" }),
             " Public UI advertiser search, creative signals, and domain pointers."
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("li", { className: "flex items-start gap-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-purple-400 font-bold", children: "\u2298" }),
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("strong", { className: "text-slate-200", children: "Google Maps:" }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("li", { className: "flex items-start gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-purple-400 font-bold", children: "\u2298" }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("strong", { className: "text-slate-200", children: "Google Maps:" }),
             " Contract planning & geographic partitioning only. Live extraction is not enabled."
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("li", { className: "flex items-start gap-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-emerald-400 font-bold", children: "\u2713" }),
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("strong", { className: "text-slate-200", children: "Public Websites:" }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("li", { className: "flex items-start gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-emerald-400 font-bold", children: "\u2713" }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("strong", { className: "text-slate-200", children: "Public Websites:" }),
             " Bounded same-origin verification and contact discovery."
           ] })
         ] })
       ] })
     ] }),
-    activeSection === "STORAGE" && /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "flex flex-col gap-3", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex items-center justify-between", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "font-semibold text-slate-200 block mb-0.5", children: "Local Research History" }),
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-[11px] text-slate-500", children: "Clear persisted runs stored in chrome.storage.local" })
+    activeSection === "STORAGE" && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex flex-col gap-3", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800 flex items-center justify-between", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "font-semibold text-slate-200 block mb-0.5", children: "Local Research History" }),
+          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-[11px] text-slate-500", children: "Clear persisted runs stored in chrome.storage.local" })
         ] }),
-        onClearLocalHistory && /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+        onClearLocalHistory && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
           "button",
           {
             type: "button",
@@ -20318,12 +21965,12 @@ var SettingsView = ({
           }
         )
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "font-semibold text-slate-200 block mb-1", children: "Bounded Retention Policy" }),
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("p", { className: "text-[11px] text-slate-400 leading-relaxed", children: "LeadNoria enforces deterministic retention bounds across all collections. Diagnostic records are capped at 100 entries, research runs at 100 runs, and optimization snapshots at 20 snapshots." })
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "p-3 bg-slate-950/60 rounded-lg border border-slate-800", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "font-semibold text-slate-200 block mb-1", children: "Bounded Retention Policy" }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("p", { className: "text-[11px] text-slate-400 leading-relaxed", children: "LeadNoria enforces deterministic retention bounds across all collections. Diagnostic records are capped at 100 entries, research runs at 100 runs, and optimization snapshots at 20 snapshots." })
       ] })
     ] }),
-    activeSection === "DIAGNOSTICS" && /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+    activeSection === "DIAGNOSTICS" && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
       DiagnosticsView,
       {
         version,
@@ -20339,15 +21986,15 @@ var SettingsView = ({
 };
 
 // src/extension/ui/components/DiagnosticsDrawer.tsx
-var import_react8 = __toESM(require_react(), 1);
-var import_jsx_runtime13 = __toESM(require_jsx_runtime(), 1);
+var import_react9 = __toESM(require_react(), 1);
+var import_jsx_runtime15 = __toESM(require_jsx_runtime(), 1);
 var DiagnosticsDrawer = ({
   isOpen,
   diagnostics,
   onClose
 }) => {
-  const drawerRef = (0, import_react8.useRef)(null);
-  (0, import_react8.useEffect)(() => {
+  const drawerRef = (0, import_react9.useRef)(null);
+  (0, import_react9.useEffect)(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
       if (e.key === "Escape") onClose();
@@ -20357,29 +22004,29 @@ var DiagnosticsDrawer = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
   if (!isOpen || !diagnostics) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
     "div",
     {
       className: "fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-xs",
       role: "dialog",
       "aria-modal": "true",
       "aria-labelledby": "diag-title",
-      children: /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(
+      children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
         "div",
         {
           ref: drawerRef,
           tabIndex: -1,
           className: "w-full max-w-md bg-slate-900 border-l border-slate-700 h-full flex flex-col shadow-2xl overflow-hidden focus:outline-none",
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "p-4 border-b border-slate-800 bg-slate-950 flex items-center justify-between", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("h2", { id: "diag-title", className: "text-sm font-semibold text-slate-100 flex items-center gap-1.5", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { children: "\u{1F527}" }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-4 border-b border-slate-800 bg-slate-950 flex items-center justify-between", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("h2", { id: "diag-title", className: "text-sm font-semibold text-slate-100 flex items-center gap-1.5", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { children: "\u{1F527}" }),
                   " Technical Diagnostics"
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("p", { className: "text-[11px] text-slate-500", children: "Pipeline runtime execution metadata" })
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("p", { className: "text-[11px] text-slate-500", children: "Pipeline runtime execution metadata" })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
                 "button",
                 {
                   type: "button",
@@ -20390,59 +22037,59 @@ var DiagnosticsDrawer = ({
                 }
               )
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "p-4 overflow-y-auto flex flex-col gap-3 text-xs text-slate-300", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "p-2.5 bg-slate-950/60 rounded border border-slate-800 flex flex-col gap-1.5 font-mono text-[11px]", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-slate-500", children: "runId:" }),
+            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-4 overflow-y-auto flex flex-col gap-3 text-xs text-slate-300", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2.5 bg-slate-950/60 rounded border border-slate-800 flex flex-col gap-1.5 font-mono text-[11px]", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-500", children: "runId:" }),
                   " ",
-                  /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-slate-200", children: diagnostics.runId })
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-200", children: diagnostics.runId })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-slate-500", children: "pipelineVersion:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-500", children: "pipelineVersion:" }),
                   " ",
-                  /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-slate-200", children: diagnostics.pipelineVersion })
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-200", children: diagnostics.pipelineVersion })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-slate-500", children: "planVersion:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-500", children: "planVersion:" }),
                   " ",
-                  /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-slate-200", children: diagnostics.planVersion })
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-200", children: diagnostics.planVersion })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-slate-500", children: "currentStage:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-500", children: "currentStage:" }),
                   " ",
-                  /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-sky-300", children: diagnostics.currentStage || "None" })
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-sky-300", children: diagnostics.currentStage || "None" })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-slate-500", children: "elapsedDuration:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-500", children: "elapsedDuration:" }),
                   " ",
-                  /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "text-slate-200", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { className: "text-slate-200", children: [
                     diagnostics.elapsedDurationMs,
                     "ms"
                   ] })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-slate-500", children: "retriesAttempted:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-500", children: "retriesAttempted:" }),
                   " ",
-                  /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-slate-200", children: diagnostics.retriesAttempted })
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-200", children: diagnostics.retriesAttempted })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-slate-500", children: "checkpointId:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-500", children: "checkpointId:" }),
                   " ",
-                  /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-slate-200", children: diagnostics.checkpointId || "None" })
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-200", children: diagnostics.checkpointId || "None" })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-[11px] uppercase tracking-wider text-slate-400 font-semibold block mb-1", children: "Source Adapter Versions:" }),
-                /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: "p-2 bg-slate-950/40 rounded border border-slate-800 font-mono text-[11px] space-y-1", children: Object.entries(diagnostics.adapterVersions).map(([src, ver]) => /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "flex justify-between", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { className: "text-slate-400", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-[11px] uppercase tracking-wider text-slate-400 font-semibold block mb-1", children: "Source Adapter Versions:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "p-2 bg-slate-950/40 rounded border border-slate-800 font-mono text-[11px] space-y-1", children: Object.entries(diagnostics.adapterVersions).map(([src, ver]) => /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex justify-between", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { className: "text-slate-400", children: [
                     src,
                     ":"
                   ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "text-slate-200", children: ver })
+                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-200", children: ver })
                 ] }, src)) })
               ] }),
-              diagnostics.blockedOperationsCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "p-2.5 bg-purple-950/30 border border-purple-500/30 rounded text-[11px] text-purple-200", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("strong", { className: "block text-purple-300", children: "Policy Blocked Operations:" }),
+              diagnostics.blockedOperationsCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2.5 bg-purple-950/30 border border-purple-500/30 rounded text-[11px] text-purple-200", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("strong", { className: "block text-purple-300", children: "Policy Blocked Operations:" }),
                 diagnostics.blockedOperationsCount,
                 " operations gated by source capability or compliance rules."
               ] })
@@ -20455,40 +22102,40 @@ var DiagnosticsDrawer = ({
 };
 
 // src/extension/ui/components/RecoveryBanner.tsx
-var import_jsx_runtime14 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime16 = __toESM(require_jsx_runtime(), 1);
 var RecoveryBanner = ({
   recoveryInfo,
   onResume,
   onDiscard
 }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
     "div",
     {
       className: "p-3 bg-sky-950/50 border border-sky-500/40 rounded-lg flex items-start justify-between gap-3 text-xs text-sky-200",
       role: "region",
       "aria-label": "Resumable run notification",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-start gap-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("span", { className: "text-base text-sky-400 leading-none mt-0.5", "aria-hidden": "true", children: "\u23F1" }),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("strong", { className: "font-semibold block text-slate-100", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "flex items-start gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "text-base text-sky-400 leading-none mt-0.5", "aria-hidden": "true", children: "\u23F1" }),
+          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("strong", { className: "font-semibold block text-slate-100", children: [
               "Resumable Run Detected (",
               recoveryInfo.runId,
               ")"
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("p", { className: "text-[11px] text-slate-300 mt-0.5", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("p", { className: "text-[11px] text-slate-300 mt-0.5", children: [
               "Source: ",
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("strong", { className: "text-slate-100", children: recoveryInfo.sourceType }),
+              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("strong", { className: "text-slate-100", children: recoveryInfo.sourceType }),
               " \u2022 Last stage: ",
-              /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("code", { className: "px-1 py-0.2 bg-slate-900 rounded font-mono text-[10px]", children: recoveryInfo.lastCompletedStage }),
+              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("code", { className: "px-1 py-0.2 bg-slate-900 rounded font-mono text-[10px]", children: recoveryInfo.lastCompletedStage }),
               " \u2022 ",
               recoveryInfo.savedCandidateCount,
               " candidates saved."
             ] })
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "flex items-center gap-1.5 shrink-0", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "flex items-center gap-1.5 shrink-0", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
             "button",
             {
               type: "button",
@@ -20497,7 +22144,7 @@ var RecoveryBanner = ({
               children: "Resume Run"
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
             "button",
             {
               type: "button",
@@ -20513,7 +22160,7 @@ var RecoveryBanner = ({
 };
 
 // src/extension/ui/components/AnalyticsView.tsx
-var import_react10 = __toESM(require_react(), 1);
+var import_react11 = __toESM(require_react(), 1);
 
 // src/extension/analytics/types.ts
 var ANALYTICS_SCHEMA_VERSION = "lead-analytics-v1";
@@ -21048,7 +22695,14 @@ function toResultRowViewModel(record) {
     qualityMetrics,
     friendlyQualificationState: toFriendlyStatus(qualificationState),
     friendlyFreshnessState: toFriendlyStatus("CURRENT"),
-    lastObservedText: record.createdAt
+    lastObservedText: record.createdAt,
+    // Part 3 Google Maps Rating & Website Filter fields
+    rating: record.rating ? {
+      availability: record.rating.availability || "UNKNOWN",
+      parsedValue: record.rating.parsedValue,
+      rawValue: record.rating.rawValue
+    } : void 0,
+    websiteAvailability: record.websiteUrl?.availability || (record.digital?.verifiedWebsite?.value || websiteUrl ? "PRESENT" : "UNKNOWN")
   };
 }
 function toResultDetailViewModel(record) {
@@ -22081,8 +23735,8 @@ function compareRuns(baseSnapshot, compareSnapshot, baseRecords = [], compareRec
 }
 
 // src/extension/ui/components/ResearchOptimizationView.tsx
-var import_react9 = __toESM(require_react(), 1);
-var import_jsx_runtime15 = __toESM(require_jsx_runtime(), 1);
+var import_react10 = __toESM(require_react(), 1);
+var import_jsx_runtime17 = __toESM(require_jsx_runtime(), 1);
 function getSaturationBadgeColor(state) {
   if (state === "HIGHLY_SATURATED") return "#dc2626";
   if (state === "ACTIVE") return "#16a34a";
@@ -22095,29 +23749,29 @@ var ResearchOptimizationView = ({
   onNavigateToResultsWithFilter,
   onPrefillResearchConfig
 }) => {
-  const [activeTab, setActiveTab] = (0, import_react9.useState)("RECOMMENDATIONS");
-  const [selectedUnitId, setSelectedUnitId] = (0, import_react9.useState)("");
-  const [compareUnitA, setCompareUnitA] = (0, import_react9.useState)("");
-  const [compareUnitB, setCompareUnitB] = (0, import_react9.useState)("");
+  const [activeTab, setActiveTab] = (0, import_react10.useState)("RECOMMENDATIONS");
+  const [selectedUnitId, setSelectedUnitId] = (0, import_react10.useState)("");
+  const [compareUnitA, setCompareUnitA] = (0, import_react10.useState)("");
+  const [compareUnitB, setCompareUnitB] = (0, import_react10.useState)("");
   const handleFilterClick = (filter) => {
     if (onFilterResults) onFilterResults(filter);
     if (onNavigateToResultsWithFilter) onNavigateToResultsWithFilter(filter);
   };
-  const selectedUnit = (0, import_react9.useMemo)(() => {
+  const selectedUnit = (0, import_react10.useMemo)(() => {
     if (!snapshot || !selectedUnitId) return snapshot?.searchUnitPerformances[0] || null;
     return snapshot.searchUnitPerformances.find((p) => p.searchUnitId === selectedUnitId) || null;
   }, [snapshot, selectedUnitId]);
   if (!snapshot || snapshot.searchUnitPerformances.length === 0) {
-    return /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-400 min-h-[300px]", role: "region", "aria-label": "Research Optimization and Saturation Intelligence", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-amber-400 mb-3 text-xl", children: "\u{1F9ED}" }),
-      /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("h2", { className: "text-base font-semibold text-slate-200", children: "No Research Optimization Data" }),
-      /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("p", { className: "text-xs text-slate-400 mt-1 max-w-xs", children: "No search units have been recorded yet. Execute research runs across search units to analyze coverage saturation, marginal yield, duplicate pressure, and next-research opportunities." })
+    return /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-400 min-h-[300px]", role: "region", "aria-label": "Research Optimization and Saturation Intelligence", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-amber-400 mb-3 text-xl", children: "\u{1F9ED}" }),
+      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("h2", { className: "text-base font-semibold text-slate-200", children: "No Research Optimization Data" }),
+      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("p", { className: "text-xs text-slate-400 mt-1 max-w-xs", children: "No search units have been recorded yet. Execute research runs across search units to analyze coverage saturation, marginal yield, duplicate pressure, and next-research opportunities." })
     ] });
   }
   const { searchUnitPerformances, recommendations, warnings, geographicBreakdown, overallCoverage } = snapshot;
   const getSaturationBadge = (state) => {
     const color = getSaturationBadgeColor(state);
-    return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
       "span",
       {
         className: "px-1.5 py-0.5 rounded text-[10px] font-semibold border",
@@ -22130,67 +23784,67 @@ var ResearchOptimizationView = ({
   const getDuplicateBadge = (level) => {
     switch (level) {
       case "CRITICAL":
-        return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rose-950/80 text-rose-300 border border-rose-700", children: "CRITICAL DUPES" });
+        return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rose-950/80 text-rose-300 border border-rose-700", children: "CRITICAL DUPES" });
       case "HIGH":
-        return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-950/80 text-orange-400 border border-orange-800", children: "HIGH DUPES" });
+        return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-950/80 text-orange-400 border border-orange-800", children: "HIGH DUPES" });
       case "MODERATE":
-        return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-950/80 text-amber-400 border border-amber-800", children: "MODERATE DUPES" });
+        return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-950/80 text-amber-400 border border-amber-800", children: "MODERATE DUPES" });
       default:
-        return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-400", children: "LOW DUPES" });
+        return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-400", children: "LOW DUPES" });
     }
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex-1 flex flex-col min-w-0 w-full overflow-y-auto bg-slate-900 text-slate-100 text-xs", role: "region", "aria-label": "Research Optimization and Saturation Intelligence", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-3 bg-slate-950 border-b border-slate-800 shrink-0 flex flex-wrap items-center justify-between gap-2", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("h2", { className: "text-sm font-bold text-slate-100 flex items-center gap-1.5", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { children: "\u{1F9ED}" }),
+  return /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex-1 flex flex-col min-w-0 w-full overflow-y-auto bg-slate-900 text-slate-100 text-xs", role: "region", "aria-label": "Research Optimization and Saturation Intelligence", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "p-3 bg-slate-950 border-b border-slate-800 shrink-0 flex flex-wrap items-center justify-between gap-2", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("h2", { className: "text-sm font-bold text-slate-100 flex items-center gap-1.5", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "\u{1F9ED}" }),
           " Research Optimization & Saturation Intelligence"
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("p", { className: "text-[11px] text-slate-400 mt-0.5", children: "Evidence-based research guidance, marginal yield, duplicate pressure, and saturation accounting." })
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("p", { className: "text-[11px] text-slate-400 mt-0.5", children: "Evidence-based research guidance, marginal yield, duplicate pressure, and saturation accounting." })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex items-center gap-3 text-[11px] text-slate-400", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex items-center gap-3 text-[11px] text-slate-400", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { children: [
           "Search Units: ",
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("strong", { className: "text-slate-200", children: snapshot.totalSearchUnitsAnalyzed })
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("strong", { className: "text-slate-200", children: snapshot.totalSearchUnitsAnalyzed })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { children: [
           "Runs: ",
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("strong", { className: "text-slate-200", children: snapshot.totalRunsAnalyzed })
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("strong", { className: "text-slate-200", children: snapshot.totalRunsAnalyzed })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { children: [
           "Leads: ",
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("strong", { className: "text-slate-200", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("strong", { className: "text-slate-200", children: [
             snapshot.totalCanonicalLeadsObserved,
             " leads"
           ] })
         ] })
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 bg-slate-950/80 border-b border-slate-800 text-center", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2 rounded bg-slate-900 border border-slate-800", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-[10px] uppercase text-slate-400", children: "Observed Records" }),
-        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("p", { className: "text-base font-bold text-slate-100 mt-0.5", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 bg-slate-950/80 border-b border-slate-800 text-center", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "p-2 rounded bg-slate-900 border border-slate-800", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "text-[10px] uppercase text-slate-400", children: "Observed Records" }),
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("p", { className: "text-base font-bold text-slate-100 mt-0.5", children: [
           overallCoverage?.totalObservedRecords ?? snapshot.totalCanonicalLeadsObserved,
           " leads"
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2 rounded bg-slate-900 border border-slate-800", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-[10px] uppercase text-slate-400", children: "Unique Entities" }),
-        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("p", { className: "text-base font-bold text-emerald-400 mt-0.5", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "p-2 rounded bg-slate-900 border border-slate-800", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "text-[10px] uppercase text-slate-400", children: "Unique Entities" }),
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("p", { className: "text-base font-bold text-emerald-400 mt-0.5", children: [
           overallCoverage?.uniqueCanonicalEntities ?? snapshot.totalCanonicalLeadsObserved,
           " entities"
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2 rounded bg-slate-900 border border-slate-800", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-[10px] uppercase text-slate-400", children: "Duplicate Candidate Ratio" }),
-        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("p", { className: "text-base font-bold text-amber-400 mt-0.5", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "p-2 rounded bg-slate-900 border border-slate-800", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "text-[10px] uppercase text-slate-400", children: "Duplicate Candidate Ratio" }),
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("p", { className: "text-base font-bold text-amber-400 mt-0.5", children: [
           overallCoverage?.totalObservedRecords ? Math.round((overallCoverage.duplicateCandidateCount || 0) / overallCoverage.totalObservedRecords * 100) : 0,
           "%"
         ] })
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex items-center border-b border-slate-800 bg-slate-950/60 px-3 overflow-x-auto shrink-0", role: "tablist", "aria-label": "Optimization Views", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
+    /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex items-center border-b border-slate-800 bg-slate-950/60 px-3 overflow-x-auto shrink-0", role: "tablist", "aria-label": "Optimization Views", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
         "button",
         {
           role: "tab",
@@ -22198,14 +23852,14 @@ var ResearchOptimizationView = ({
           onClick: () => setActiveTab("RECOMMENDATIONS"),
           className: `py-2 px-3 border-b-2 text-[11px] font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${activeTab === "RECOMMENDATIONS" ? "border-amber-400 text-amber-300 font-semibold bg-amber-950/20" : "border-transparent text-slate-400 hover:text-slate-200"}`,
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { children: "\u{1F3AF}" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "\u{1F3AF}" }),
             " Recommendations (",
             recommendations.length,
             ")"
           ]
         }
       ),
-      /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
+      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
         "button",
         {
           role: "tab",
@@ -22213,12 +23867,12 @@ var ResearchOptimizationView = ({
           onClick: () => setActiveTab("PERFORMANCE"),
           className: `py-2 px-3 border-b-2 text-[11px] font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${activeTab === "PERFORMANCE" ? "border-amber-400 text-amber-300 font-semibold bg-amber-950/20" : "border-transparent text-slate-400 hover:text-slate-200"}`,
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { children: "\u{1F4CA}" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "\u{1F4CA}" }),
             " Search Unit Performance"
           ]
         }
       ),
-      /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
+      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
         "button",
         {
           role: "tab",
@@ -22226,12 +23880,12 @@ var ResearchOptimizationView = ({
           onClick: () => setActiveTab("SATURATION"),
           className: `py-2 px-3 border-b-2 text-[11px] font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${activeTab === "SATURATION" ? "border-amber-400 text-amber-300 font-semibold bg-amber-950/20" : "border-transparent text-slate-400 hover:text-slate-200"}`,
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { children: "\u{1F310}" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "\u{1F310}" }),
             " Saturation & Coverage"
           ]
         }
       ),
-      /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
+      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
         "button",
         {
           role: "tab",
@@ -22239,12 +23893,12 @@ var ResearchOptimizationView = ({
           onClick: () => setActiveTab("YIELD_PRESSURE"),
           className: `py-2 px-3 border-b-2 text-[11px] font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${activeTab === "YIELD_PRESSURE" ? "border-amber-400 text-amber-300 font-semibold bg-amber-950/20" : "border-transparent text-slate-400 hover:text-slate-200"}`,
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { children: "\u26A1" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "\u26A1" }),
             " Marginal Yield & Duplicates"
           ]
         }
       ),
-      /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
+      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
         "button",
         {
           role: "tab",
@@ -22252,50 +23906,50 @@ var ResearchOptimizationView = ({
           onClick: () => setActiveTab("COMPARISON"),
           className: `py-2 px-3 border-b-2 text-[11px] font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${activeTab === "COMPARISON" ? "border-amber-400 text-amber-300 font-semibold bg-amber-950/20" : "border-transparent text-slate-400 hover:text-slate-200"}`,
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { children: "\u2696\uFE0F" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "\u2696\uFE0F" }),
             " Unit Comparison"
           ]
         }
       )
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-3 space-y-4", children: [
-      activeTab === "RECOMMENDATIONS" && /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "space-y-3", role: "tabpanel", "aria-label": "Next Research Recommendations", children: [
-        warnings.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "p-2 text-center text-slate-500 text-[10px]", role: "status", children: "No optimization warnings detected" }) : /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "space-y-2", children: warnings.map((w) => /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { role: "alert", className: "p-2.5 rounded border border-rose-800/60 bg-rose-950/30 flex items-start gap-2.5", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-base", children: "\u26A0\uFE0F" }),
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex-1 min-w-0", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex items-center justify-between", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("strong", { className: "text-rose-200 text-xs font-semibold", children: w.title }),
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-[10px] px-1.5 py-0.2 bg-rose-900/60 text-rose-300 rounded uppercase font-semibold", children: w.severity })
+    /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "p-3 space-y-4", children: [
+      activeTab === "RECOMMENDATIONS" && /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "space-y-3", role: "tabpanel", "aria-label": "Next Research Recommendations", children: [
+        warnings.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "p-2 text-center text-slate-500 text-[10px]", role: "status", children: "No optimization warnings detected" }) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "space-y-2", children: warnings.map((w) => /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { role: "alert", className: "p-2.5 rounded border border-rose-800/60 bg-rose-950/30 flex items-start gap-2.5", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "text-base", children: "\u26A0\uFE0F" }),
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex-1 min-w-0", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex items-center justify-between", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("strong", { className: "text-rose-200 text-xs font-semibold", children: w.title }),
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "text-[10px] px-1.5 py-0.2 bg-rose-900/60 text-rose-300 rounded uppercase font-semibold", children: w.severity })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("p", { className: "text-[11px] text-slate-300 mt-0.5", children: w.message }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("p", { className: "text-[10px] text-rose-300/80 mt-1 font-mono", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("p", { className: "text-[11px] text-slate-300 mt-0.5", children: w.message }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("p", { className: "text-[10px] text-rose-300/80 mt-1 font-mono", children: [
               "Action: ",
               w.remedy
             ] })
           ] })
         ] }, w.id)) }),
-        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "space-y-2.5", children: recommendations.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "p-4 text-center text-slate-400 bg-slate-950/40 rounded border border-slate-800", children: "Zero critical bottlenecks detected. Research coverage is balanced." }) : recommendations.map((rec) => /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "p-3 rounded bg-slate-950 border border-slate-800 hover:border-slate-700 transition-colors", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex items-start justify-between gap-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex-1 min-w-0", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex items-center gap-2 flex-wrap", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-xs font-bold text-amber-300", children: rec.headline }),
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { className: "px-1.5 py-0.2 rounded text-[10px] font-mono bg-slate-800 text-slate-400", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "space-y-2.5", children: recommendations.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "p-4 text-center text-slate-400 bg-slate-950/40 rounded border border-slate-800", children: "Zero critical bottlenecks detected. Research coverage is balanced." }) : recommendations.map((rec) => /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "p-3 rounded bg-slate-950 border border-slate-800 hover:border-slate-700 transition-colors", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex items-start justify-between gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex-1 min-w-0", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex items-center gap-2 flex-wrap", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "text-xs font-bold text-amber-300", children: rec.headline }),
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { className: "px-1.5 py-0.2 rounded text-[10px] font-mono bg-slate-800 text-slate-400", children: [
                 "Confidence: ",
                 rec.sampleSufficiency
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("p", { className: "text-[11px] text-slate-300 mt-1", children: rec.evidenceBasis }),
-            rec.observedEvidence && rec.observedEvidence.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "mt-2 text-[10px] text-slate-400", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "font-semibold text-slate-300", children: "Observed Evidence:" }),
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("ul", { children: rec.observedEvidence.map((e, i) => /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("li", { className: "list-disc ml-4 mt-0.5", children: e }, i)) })
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("p", { className: "text-[11px] text-slate-300 mt-1", children: rec.evidenceBasis }),
+            rec.observedEvidence && rec.observedEvidence.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "mt-2 text-[10px] text-slate-400", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "font-semibold text-slate-300", children: "Observed Evidence:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("ul", { children: rec.observedEvidence.map((e, i) => /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("li", { className: "list-disc ml-4 mt-0.5", children: e }, i)) })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "mt-2 text-[10px] text-slate-400", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "mt-2 text-[10px] text-slate-400", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { children: [
               "Threshold: ",
               rec.thresholds?.threshold ?? rec.thresholds?.duplicateRatioThreshold ?? 0,
               "%"
             ] }) })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex flex-col items-end gap-1.5 shrink-0", children: [
-            rec.actionableNextQuery && onPrefillResearchConfig && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex flex-col items-end gap-1.5 shrink-0", children: [
+            rec.actionableNextQuery && onPrefillResearchConfig && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
               "button",
               {
                 id: `prefill-btn-${rec.recommendationId}`,
@@ -22310,7 +23964,7 @@ var ResearchOptimizationView = ({
                 children: "Prefill Config"
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
               "button",
               {
                 id: `filter-btn-${rec.recommendationId}`,
@@ -22324,19 +23978,19 @@ var ResearchOptimizationView = ({
           ] })
         ] }) }, rec.recommendationId)) })
       ] }),
-      activeTab === "PERFORMANCE" && /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "space-y-3", role: "tabpanel", "aria-label": "Search Unit Performance Matrix", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "overflow-x-auto rounded border border-slate-800 bg-slate-950", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("table", { className: "w-full text-left border-collapse text-[11px]", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("tr", { className: "border-b border-slate-800 bg-slate-900/60 text-slate-400", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Area / Search Unit" }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Attempts" }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Unique / Raw" }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Marginal Yield" }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Dup Ratio" }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Web Cov" }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Contact Cov" }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Saturation" })
+      activeTab === "PERFORMANCE" && /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "space-y-3", role: "tabpanel", "aria-label": "Search Unit Performance Matrix", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "overflow-x-auto rounded border border-slate-800 bg-slate-950", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("table", { className: "w-full text-left border-collapse text-[11px]", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("tr", { className: "border-b border-slate-800 bg-slate-900/60 text-slate-400", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Area / Search Unit" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Attempts" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Unique / Raw" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Marginal Yield" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Dup Ratio" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Web Cov" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Contact Cov" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("th", { scope: "col", className: "p-2 font-medium", children: "Saturation" })
           ] }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("tbody", { children: searchUnitPerformances.map((p) => /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("tbody", { children: searchUnitPerformances.map((p) => /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
             "tr",
             {
               onClick: () => {
@@ -22345,87 +23999,87 @@ var ResearchOptimizationView = ({
               },
               className: `hover:bg-slate-800/40 cursor-pointer transition-colors ${selectedUnit?.searchUnitId === p.searchUnitId ? "bg-slate-800/60 font-semibold" : ""}`,
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("td", { className: "p-2 text-slate-200 font-medium", children: p.areaName }),
-                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("td", { className: "p-2 text-slate-300", children: p.attempts }),
-                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("td", { className: "p-2 text-slate-300", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("td", { className: "p-2 text-slate-200 font-medium", children: p.areaName }),
+                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("td", { className: "p-2 text-slate-300", children: p.attempts }),
+                /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("td", { className: "p-2 text-slate-300", children: [
                   p.uniqueEntitiesCount || p.uniqueCanonicalEntities,
                   " / ",
                   p.rawCandidatesCount || p.rawCandidateCount
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("td", { className: "p-2 text-amber-300 font-mono", children: typeof p.marginalYield === "number" ? p.marginalYield : p.marginalYieldResult?.marginalEntityYield }),
-                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("td", { className: "p-2", children: getDuplicateBadge(p.duplicatePressure.level) }),
-                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("td", { className: "p-2 text-slate-300", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("td", { className: "p-2 text-amber-300 font-mono", children: typeof p.marginalYield === "number" ? p.marginalYield : p.marginalYieldResult?.marginalEntityYield }),
+                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("td", { className: "p-2", children: getDuplicateBadge(p.duplicatePressure.level) }),
+                /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("td", { className: "p-2 text-slate-300", children: [
                   p.websiteCoverage,
                   "%"
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("td", { className: "p-2 text-slate-300", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("td", { className: "p-2 text-slate-300", children: [
                   p.contactCoverage,
                   "%"
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("td", { className: "p-2", children: getSaturationBadge(p.saturationAssessment?.state || p.saturation?.state || "INSUFFICIENT_DATA") })
+                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("td", { className: "p-2", children: getSaturationBadge(p.saturationAssessment?.state || p.saturation?.state || "INSUFFICIENT_DATA") })
               ]
             },
             p.searchUnitId
           )) })
         ] }) }),
-        selectedUnit && /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-3 bg-slate-950 rounded border border-slate-800 space-y-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex items-center justify-between border-b border-slate-900 pb-2", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("h3", { className: "text-xs font-bold text-slate-200 flex items-center gap-2", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { children: "\u{1F50D}" }),
+        selectedUnit && /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "p-3 bg-slate-950 rounded border border-slate-800 space-y-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex items-center justify-between border-b border-slate-900 pb-2", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("h3", { className: "text-xs font-bold text-slate-200 flex items-center gap-2", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "\u{1F50D}" }),
               " Evidence Profile: ",
               selectedUnit.areaName,
               " (",
               selectedUnit.category,
               ")"
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { className: "text-[10px] text-slate-500 font-mono", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { className: "text-[10px] text-slate-500 font-mono", children: [
               "ID: ",
               selectedUnit.searchUnitId
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2 rounded bg-slate-900/60 border border-slate-800", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-400 text-[10px]", children: "Marginal Entity Yield" }),
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("p", { className: "text-sm font-bold text-amber-400 mt-0.5", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "p-2 rounded bg-slate-900/60 border border-slate-800", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "text-slate-400 text-[10px]", children: "Marginal Entity Yield" }),
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("p", { className: "text-sm font-bold text-amber-400 mt-0.5", children: [
                 selectedUnit.marginalYieldResult.marginalEntityYield,
                 " / attempt"
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2 rounded bg-slate-900/60 border border-slate-800", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-400 text-[10px]", children: "Website Coverage" }),
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("p", { className: "text-sm font-bold text-sky-400 mt-0.5", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "p-2 rounded bg-slate-900/60 border border-slate-800", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "text-slate-400 text-[10px]", children: "Website Coverage" }),
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("p", { className: "text-sm font-bold text-sky-400 mt-0.5", children: [
                 selectedUnit.websiteCoverage,
                 "%"
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2 rounded bg-slate-900/60 border border-slate-800", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-400 text-[10px]", children: "Direct Contactability" }),
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("p", { className: "text-sm font-bold text-emerald-400 mt-0.5", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "p-2 rounded bg-slate-900/60 border border-slate-800", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "text-slate-400 text-[10px]", children: "Direct Contactability" }),
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("p", { className: "text-sm font-bold text-emerald-400 mt-0.5", children: [
                 selectedUnit.contactCoverage,
                 "%"
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2 rounded bg-slate-900/60 border border-slate-800", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { className: "text-slate-400 text-[10px]", children: "Contradiction Conflict Rate" }),
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("p", { className: "text-sm font-bold text-rose-400 mt-0.5", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "p-2 rounded bg-slate-900/60 border border-slate-800", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "text-slate-400 text-[10px]", children: "Contradiction Conflict Rate" }),
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("p", { className: "text-sm font-bold text-rose-400 mt-0.5", children: [
                 selectedUnit.conflictRate,
                 "%"
               ] })
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("p", { className: "text-[11px] text-slate-300 italic pt-1", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("p", { className: "text-[11px] text-slate-300 italic pt-1", children: [
             '"',
             selectedUnit.saturationAssessment.evidenceStatement,
             '"'
           ] })
         ] })
       ] }),
-      activeTab === "SATURATION" && /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "space-y-3", role: "tabpanel", "aria-label": "Saturation and Geographic Coverage", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-3", children: geographicBreakdown.map((geo) => /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-3 rounded bg-slate-950 border border-slate-800 space-y-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex items-center justify-between", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("strong", { className: "text-xs font-bold text-slate-200", children: geo.areaName }),
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("span", { className: "text-[10px] text-slate-500 ml-1.5 font-mono uppercase", children: [
+      activeTab === "SATURATION" && /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "space-y-3", role: "tabpanel", "aria-label": "Saturation and Geographic Coverage", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-3", children: geographicBreakdown.map((geo) => /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "p-3 rounded bg-slate-950 border border-slate-800 space-y-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex items-center justify-between", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("strong", { className: "text-xs font-bold text-slate-200", children: geo.areaName }),
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { className: "text-[10px] text-slate-500 ml-1.5 font-mono uppercase", children: [
                 "(",
                 geo.level,
                 ")"
@@ -22433,35 +24087,35 @@ var ResearchOptimizationView = ({
             ] }),
             getSaturationBadge(geo.saturationState)
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex items-center justify-between text-[11px] text-slate-400", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { children: "Unique Discovered Entities:" }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("strong", { className: "text-slate-200", children: geo.uniqueEntitiesCount })
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex items-center justify-between text-[11px] text-slate-400", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "Unique Discovered Entities:" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("strong", { className: "text-slate-200", children: geo.uniqueEntitiesCount })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex items-center justify-between text-[11px] text-slate-400", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { children: "Observed Domain Coverage:" }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("strong", { className: "text-slate-200", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex items-center justify-between text-[11px] text-slate-400", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "Observed Domain Coverage:" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("strong", { className: "text-slate-200", children: [
               geo.observedCoveragePercent,
               "%"
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex items-center justify-between text-[11px] text-slate-400", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { children: "Average Marginal Yield:" }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("strong", { className: "text-amber-400", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex items-center justify-between text-[11px] text-slate-400", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "Average Marginal Yield:" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("strong", { className: "text-amber-400", children: [
               geo.marginalYield,
               " / run"
             ] })
           ] })
         ] }, geo.areaId)) }),
-        snapshot.restrictedRecordsAggregate.restrictedCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-2.5 rounded bg-slate-950 border border-slate-800 text-[10px] text-slate-400", children: [
+        snapshot.restrictedRecordsAggregate.restrictedCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "p-2.5 rounded bg-slate-950 border border-slate-800 text-[10px] text-slate-400", children: [
           "\u{1F512} ",
           snapshot.restrictedRecordsAggregate.complianceNote
         ] })
       ] }),
-      activeTab === "YIELD_PRESSURE" && /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "space-y-3", role: "tabpanel", "aria-label": "Marginal Yield and Duplicate Pressure", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("h3", { className: "text-sm font-bold text-slate-200", children: "Marginal Yield & Discovery" }),
-        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-3", children: searchUnitPerformances.map((p) => /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-3 rounded bg-slate-950 border border-slate-800 space-y-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex items-center justify-between border-b border-slate-900 pb-1.5", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("strong", { className: "text-xs font-semibold text-slate-200", children: [
+      activeTab === "YIELD_PRESSURE" && /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "space-y-3", role: "tabpanel", "aria-label": "Marginal Yield and Duplicate Pressure", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("h3", { className: "text-sm font-bold text-slate-200", children: "Marginal Yield & Discovery" }),
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-3", children: searchUnitPerformances.map((p) => /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "p-3 rounded bg-slate-950 border border-slate-800 space-y-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex items-center justify-between border-b border-slate-900 pb-1.5", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("strong", { className: "text-xs font-semibold text-slate-200", children: [
               p.areaName,
               " (",
               p.category,
@@ -22469,41 +24123,41 @@ var ResearchOptimizationView = ({
             ] }),
             getDuplicateBadge(p.duplicatePressure.level)
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("h3", { className: "text-xs font-semibold text-slate-300", children: "Duplicate Candidate Pressure" }),
-          p.duplicatePressure.level === "HIGH" && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "text-rose-400 text-xs font-bold", children: "HIGH DUPLICATE PRESSURE" }),
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("p", { className: "text-[11px] text-slate-300", children: p.duplicatePressure.explanation }),
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "grid grid-cols-3 gap-1 pt-1 text-[10px] text-slate-400", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { children: "New Entities:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("h3", { className: "text-xs font-semibold text-slate-300", children: "Duplicate Candidate Pressure" }),
+          p.duplicatePressure.level === "HIGH" && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "text-rose-400 text-xs font-bold", children: "HIGH DUPLICATE PRESSURE" }),
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("p", { className: "text-[11px] text-slate-300", children: p.duplicatePressure.explanation }),
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "grid grid-cols-3 gap-1 pt-1 text-[10px] text-slate-400", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "New Entities:" }),
               " ",
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("strong", { className: "text-slate-200", children: p.newEntitiesCount })
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("strong", { className: "text-slate-200", children: p.newEntitiesCount })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { children: "New Websites" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "New Websites" }),
               ": ",
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("strong", { className: "text-slate-200", children: p.marginalYieldResult.newWebsitesDiscovered ?? 0 })
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("strong", { className: "text-slate-200", children: p.marginalYieldResult.newWebsitesDiscovered ?? 0 })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { children: "Marginal Yield:" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "Marginal Yield:" }),
               " ",
-              /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("strong", { className: "text-amber-400", children: p.marginalYieldResult.marginalEntityYield })
+              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("strong", { className: "text-amber-400", children: p.marginalYieldResult.marginalEntityYield })
             ] })
           ] })
         ] }, p.searchUnitId)) })
       ] }),
-      activeTab === "COMPARISON" && /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "space-y-3", role: "tabpanel", "aria-label": "Unit Comparison for Planning", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "p-3 rounded bg-slate-950 border border-slate-800 flex flex-wrap items-center gap-3", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex-1 min-w-[200px]", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("label", { className: "text-[10px] uppercase text-slate-400 block mb-1", children: "Target Unit A" }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
+      activeTab === "COMPARISON" && /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "space-y-3", role: "tabpanel", "aria-label": "Unit Comparison for Planning", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "p-3 rounded bg-slate-950 border border-slate-800 flex flex-wrap items-center gap-3", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex-1 min-w-[200px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("label", { className: "text-[10px] uppercase text-slate-400 block mb-1", children: "Target Unit A" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
               "select",
               {
                 value: compareUnitA,
                 onChange: (e) => setCompareUnitA(e.target.value),
                 className: "w-full p-1.5 rounded bg-slate-900 border border-slate-700 text-slate-200 text-xs",
                 children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("option", { value: "", children: "Select Search Unit A" }),
-                  searchUnitPerformances.map((p) => /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("option", { value: p.searchUnitId, children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("option", { value: "", children: "Select Search Unit A" }),
+                  searchUnitPerformances.map((p) => /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("option", { value: p.searchUnitId, children: [
                     p.areaName,
                     " \u2014 ",
                     p.category,
@@ -22515,17 +24169,17 @@ var ResearchOptimizationView = ({
               }
             )
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: "flex-1 min-w-[200px]", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("label", { className: "text-[10px] uppercase text-slate-400 block mb-1", children: "Baseline Unit B" }),
-            /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex-1 min-w-[200px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("label", { className: "text-[10px] uppercase text-slate-400 block mb-1", children: "Baseline Unit B" }),
+            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
               "select",
               {
                 value: compareUnitB,
                 onChange: (e) => setCompareUnitB(e.target.value),
                 className: "w-full p-1.5 rounded bg-slate-900 border border-slate-700 text-slate-200 text-xs",
                 children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("option", { value: "", children: "Select Search Unit B" }),
-                  searchUnitPerformances.map((p) => /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("option", { value: p.searchUnitId, children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("option", { value: "", children: "Select Search Unit B" }),
+                  searchUnitPerformances.map((p) => /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("option", { value: p.searchUnitId, children: [
                     p.areaName,
                     " \u2014 ",
                     p.category,
@@ -22538,14 +24192,14 @@ var ResearchOptimizationView = ({
             )
           ] })
         ] }),
-        compareUnitA && compareUnitB && /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: "p-3 rounded bg-slate-950 border border-slate-800 text-[11px] text-slate-300", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("p", { children: "Comparison between selected research units active." }) })
+        compareUnitA && compareUnitB && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "p-3 rounded bg-slate-950 border border-slate-800 text-[11px] text-slate-300", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("p", { children: "Comparison between selected research units active." }) })
       ] })
     ] })
   ] });
 };
 
 // src/extension/ui/components/AnalyticsView.tsx
-var import_jsx_runtime16 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime18 = __toESM(require_jsx_runtime(), 1);
 var AnalyticsView = ({
   currentSnapshot,
   optimizationSnapshot,
@@ -22555,43 +24209,43 @@ var AnalyticsView = ({
   onNavigateToResultsWithFilter,
   onPrefillResearchConfig
 }) => {
-  const [activeSection, setActiveSection] = (0, import_react10.useState)("SUMMARY");
-  const [compareRunId, setCompareRunId] = (0, import_react10.useState)("");
-  const compareSnapshot = (0, import_react10.useMemo)(() => {
+  const [activeSection, setActiveSection] = (0, import_react11.useState)("SUMMARY");
+  const [compareRunId, setCompareRunId] = (0, import_react11.useState)("");
+  const compareSnapshot = (0, import_react11.useMemo)(() => {
     if (!compareRunId) return null;
     return historySnapshots.find((s) => s.runId === compareRunId) || null;
   }, [compareRunId, historySnapshots]);
-  const comparisonResult = (0, import_react10.useMemo)(() => {
+  const comparisonResult = (0, import_react11.useMemo)(() => {
     if (!currentSnapshot || !compareSnapshot) return null;
     return compareRuns(currentSnapshot, compareSnapshot, rawRecords, []);
   }, [currentSnapshot, compareSnapshot, rawRecords]);
   if (!currentSnapshot) {
-    return /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-400 min-h-[300px]", role: "region", "aria-label": "Analytics empty state", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-sky-400 mb-3 text-xl", children: "\u{1F4CA}" }),
-      /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("h2", { className: "text-base font-semibold text-slate-200", children: "No Analytics Data Available" }),
-      /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("p", { className: "text-xs text-slate-400 mt-1 max-w-xs", children: "Execute or load a research run to view comprehensive lead quality, website intelligence, and coverage analytics." })
+    return /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-400 min-h-[300px]", role: "region", "aria-label": "Analytics empty state", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-sky-400 mb-3 text-xl", children: "\u{1F4CA}" }),
+      /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("h2", { className: "text-base font-semibold text-slate-200", children: "No Analytics Data Available" }),
+      /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("p", { className: "text-xs text-slate-400 mt-1 max-w-xs", children: "Execute or load a research run to view comprehensive lead quality, website intelligence, and coverage analytics." })
     ] });
   }
   const { runMetrics, coverage, contactability, website, qualification, warnings, restrictedAggregate } = currentSnapshot;
-  return /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "flex-1 flex flex-col min-w-0 w-full overflow-y-auto bg-slate-900 text-slate-100 text-xs", role: "region", "aria-label": "LeadNoria Intelligence Analytics", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-3 bg-slate-950 border-b border-slate-800 shrink-0 flex flex-wrap items-center justify-between gap-2", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "flex items-center gap-2 min-w-0", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("span", { className: "text-sm font-bold text-sky-400 flex items-center gap-1.5", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { children: "\u{1F4C8}" }),
+  return /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "flex-1 flex flex-col min-w-0 w-full overflow-y-auto bg-slate-900 text-slate-100 text-xs", role: "region", "aria-label": "LeadNoria Intelligence Analytics", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-3 bg-slate-950 border-b border-slate-800 shrink-0 flex flex-wrap items-center justify-between gap-2", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "flex items-center gap-2 min-w-0", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("span", { className: "text-sm font-bold text-sky-400 flex items-center gap-1.5", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { children: "\u{1F4C8}" }),
           " Intelligence Analytics"
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "text-[10px] text-slate-400 border border-slate-700 px-1.5 py-0.5 rounded font-mono truncate max-w-[140px]", children: currentSnapshot.runId })
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "text-[10px] text-slate-400 border border-slate-700 px-1.5 py-0.5 rounded font-mono truncate max-w-[140px]", children: currentSnapshot.runId })
       ] }),
-      historySnapshots.length > 1 && onSelectRun && /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "flex items-center gap-1", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("label", { htmlFor: "analytics-run-select", className: "text-[10px] text-slate-400", children: "Run:" }),
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+      historySnapshots.length > 1 && onSelectRun && /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "flex items-center gap-1", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("label", { htmlFor: "analytics-run-select", className: "text-[10px] text-slate-400", children: "Run:" }),
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
           "select",
           {
             id: "analytics-run-select",
             value: currentSnapshot.runId,
             onChange: (e) => onSelectRun(e.target.value),
             className: "bg-slate-900 border border-slate-700 text-slate-200 text-[11px] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-sky-500",
-            children: historySnapshots.map((s) => /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("option", { value: s.runId, children: [
+            children: historySnapshots.map((s) => /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("option", { value: s.runId, children: [
               s.runTitle || s.runId,
               " (",
               s.totalRecords,
@@ -22601,7 +24255,7 @@ var AnalyticsView = ({
         )
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("nav", { className: "flex items-center px-2 border-b border-slate-800 bg-slate-950/80 gap-1 overflow-x-auto scrollbar-none shrink-0", role: "tablist", "aria-label": "Analytics view sections", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("nav", { className: "flex items-center px-2 border-b border-slate-800 bg-slate-950/80 gap-1 overflow-x-auto scrollbar-none shrink-0", role: "tablist", "aria-label": "Analytics view sections", children: [
       { id: "SUMMARY", label: "Summary" },
       { id: "COVERAGE", label: "Coverage" },
       { id: "CONTACTS", label: "Contacts" },
@@ -22612,7 +24266,7 @@ var AnalyticsView = ({
       { id: "COMPARISON", label: "Compare" }
     ].map((sec) => {
       const isActive = activeSection === sec.id;
-      return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+      return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
         "button",
         {
           role: "tab",
@@ -22624,115 +24278,115 @@ var AnalyticsView = ({
         sec.id
       );
     }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-3 space-y-3 min-w-0", children: [
-      activeSection === "SUMMARY" && /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "space-y-3", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-2.5 bg-slate-800/80 border border-slate-700/60 rounded", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] text-slate-400 uppercase font-medium tracking-wider", children: "Total Discovered" }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-lg font-bold text-slate-100 mt-0.5", children: runMetrics.recordsDiscovered }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "text-[10px] text-slate-400 mt-0.5", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-3 space-y-3 min-w-0", children: [
+      activeSection === "SUMMARY" && /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "space-y-3", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-2.5 bg-slate-800/80 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] text-slate-400 uppercase font-medium tracking-wider", children: "Total Discovered" }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-lg font-bold text-slate-100 mt-0.5", children: runMetrics.recordsDiscovered }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "text-[10px] text-slate-400 mt-0.5", children: [
               runMetrics.recordsAccepted,
               " accepted"
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
             "div",
             {
               onClick: () => onNavigateToResultsWithFilter?.("QUALIFIED"),
               className: `p-2.5 bg-emerald-950/30 border border-emerald-500/30 rounded ${onNavigateToResultsWithFilter ? "cursor-pointer hover:border-emerald-500 transition-colors" : ""}`,
               title: "Click to filter results by QUALIFIED",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] text-emerald-400 uppercase font-medium tracking-wider", children: "Qualified" }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-lg font-bold text-emerald-300 mt-0.5", children: runMetrics.qualifiedCount }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "text-[10px] text-emerald-400/80 mt-0.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] text-emerald-400 uppercase font-medium tracking-wider", children: "Qualified" }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-lg font-bold text-emerald-300 mt-0.5", children: runMetrics.qualifiedCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "text-[10px] text-emerald-400/80 mt-0.5", children: [
                   currentSnapshot.totalRecords > 0 ? Math.round(runMetrics.qualifiedCount / currentSnapshot.totalRecords * 100) : 0,
                   "% of leads"
                 ] })
               ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
             "div",
             {
               onClick: () => onNavigateToResultsWithFilter?.("UNCERTAIN"),
               className: `p-2.5 bg-amber-950/30 border border-amber-500/30 rounded ${onNavigateToResultsWithFilter ? "cursor-pointer hover:border-amber-500 transition-colors" : ""}`,
               title: "Click to filter results by UNCERTAIN",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] text-amber-400 uppercase font-medium tracking-wider", children: "Uncertain" }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-lg font-bold text-amber-300 mt-0.5", children: runMetrics.uncertainCount }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] text-amber-400/80 mt-0.5", children: "Needs review" })
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] text-amber-400 uppercase font-medium tracking-wider", children: "Uncertain" }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-lg font-bold text-amber-300 mt-0.5", children: runMetrics.uncertainCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] text-amber-400/80 mt-0.5", children: "Needs review" })
               ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
             "div",
             {
               onClick: () => onNavigateToResultsWithFilter?.("BLOCKED"),
               className: `p-2.5 bg-rose-950/30 border border-rose-500/30 rounded ${onNavigateToResultsWithFilter ? "cursor-pointer hover:border-rose-500 transition-colors" : ""}`,
               title: "Click to filter results by BLOCKED",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] text-rose-400 uppercase font-medium tracking-wider", children: "Blocked / Excluded" }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-lg font-bold text-rose-300 mt-0.5", children: runMetrics.blockedCount }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] text-rose-400/80 mt-0.5", children: "Firewall protected" })
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] text-rose-400 uppercase font-medium tracking-wider", children: "Blocked / Excluded" }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-lg font-bold text-rose-300 mt-0.5", children: runMetrics.blockedCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] text-rose-400/80 mt-0.5", children: "Firewall protected" })
               ]
             }
           )
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Observed Processing Ledger" }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "text-slate-400", children: "Duplicates Detected:" }),
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "font-mono text-slate-200", children: runMetrics.duplicatesDetected })
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Observed Processing Ledger" }),
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "text-slate-400", children: "Duplicates Detected:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "font-mono text-slate-200", children: runMetrics.duplicatesDetected })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "text-slate-400", children: "Records Merged:" }),
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "font-mono text-slate-200", children: runMetrics.recordsMerged })
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "text-slate-400", children: "Records Merged:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "font-mono text-slate-200", children: runMetrics.recordsMerged })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "text-slate-400", children: "Records Rejected:" }),
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "font-mono text-slate-200", children: runMetrics.recordsRejected })
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "text-slate-400", children: "Records Rejected:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "font-mono text-slate-200", children: runMetrics.recordsRejected })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
               "div",
               {
                 onClick: () => onNavigateToResultsWithFilter?.("CONFLICTED"),
                 className: `flex justify-between border-b border-slate-700/40 pb-1 ${onNavigateToResultsWithFilter ? "cursor-pointer hover:text-sky-300" : ""}`,
                 children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "text-slate-400", children: "Field Conflicts:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "font-mono text-amber-300", children: runMetrics.conflictedCount })
+                  /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "text-slate-400", children: "Field Conflicts:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "font-mono text-amber-300", children: runMetrics.conflictedCount })
                 ]
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
               "div",
               {
                 onClick: () => onNavigateToResultsWithFilter?.("INCOMPLETE"),
                 className: `flex justify-between border-b border-slate-700/40 pb-1 ${onNavigateToResultsWithFilter ? "cursor-pointer hover:text-sky-300" : ""}`,
                 children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "text-slate-400", children: "Incomplete Records:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "font-mono text-slate-300", children: runMetrics.incompleteCount })
+                  /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "text-slate-400", children: "Incomplete Records:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "font-mono text-slate-300", children: runMetrics.incompleteCount })
                 ]
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "text-slate-400", children: "Exportable Records:" }),
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "font-mono text-emerald-400", children: runMetrics.exportableCount })
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "flex justify-between border-b border-slate-700/40 pb-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "text-slate-400", children: "Exportable Records:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "font-mono text-emerald-400", children: runMetrics.exportableCount })
             ] })
           ] })
         ] }),
-        restrictedAggregate.restrictedRecordCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-2.5 bg-slate-950 border border-amber-500/40 rounded flex items-start gap-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "text-amber-400 text-sm", children: "\u{1F512}" }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[11px] font-semibold text-amber-300", children: "Data Firewall Invariant Active" }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] text-slate-400 mt-0.5", children: restrictedAggregate.policyMessage })
+        restrictedAggregate.restrictedRecordCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-2.5 bg-slate-950 border border-amber-500/40 rounded flex items-start gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "text-amber-400 text-sm", children: "\u{1F512}" }),
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[11px] font-semibold text-amber-300", children: "Data Firewall Invariant Active" }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] text-slate-400 mt-0.5", children: restrictedAggregate.policyMessage })
           ] })
         ] })
       ] }),
-      activeSection === "COVERAGE" && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2.5", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "flex justify-between items-center", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Field Coverage Distribution" }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("span", { className: "text-[10px] text-slate-400", children: [
+      activeSection === "COVERAGE" && /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2.5", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "flex justify-between items-center", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Field Coverage Distribution" }),
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("span", { className: "text-[10px] text-slate-400", children: [
             "Denominator: ",
             coverage.totalEligibleRecords,
             " eligible records"
@@ -22747,22 +24401,22 @@ var AnalyticsView = ({
           { label: "Published Services", pct: coverage.servicesCoverage, count: coverage.rawCounts.servicesCount, filter: void 0 },
           { label: "Social Profiles", pct: coverage.socialCoverage, count: coverage.rawCounts.socialCount, filter: void 0 },
           { label: "Qualification Evaluated", pct: coverage.qualificationCoverage, count: coverage.rawCounts.qualificationCount, filter: void 0 }
-        ].map((item) => /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "space-y-1", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "flex justify-between items-center text-[11px]", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "text-slate-300", children: item.label }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "flex items-center gap-2 font-mono", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("span", { className: "text-slate-400", children: [
+        ].map((item) => /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "space-y-1", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "flex justify-between items-center text-[11px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "text-slate-300", children: item.label }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "flex items-center gap-2 font-mono", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("span", { className: "text-slate-400", children: [
                 item.count,
                 " / ",
                 coverage.totalEligibleRecords
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("span", { className: `font-semibold ${item.pct >= 75 ? "text-emerald-400" : item.pct >= 40 ? "text-amber-400" : "text-rose-400"}`, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("span", { className: `font-semibold ${item.pct >= 75 ? "text-emerald-400" : item.pct >= 40 ? "text-amber-400" : "text-rose-400"}`, children: [
                 item.pct,
                 "%"
               ] })
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "w-full h-1.5 bg-slate-700/60 rounded-full overflow-hidden", children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "w-full h-1.5 bg-slate-700/60 rounded-full overflow-hidden", children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
             "div",
             {
               className: `h-full rounded-full ${item.pct >= 75 ? "bg-emerald-500" : item.pct >= 40 ? "bg-amber-500" : "bg-rose-500"}`,
@@ -22771,185 +24425,185 @@ var AnalyticsView = ({
           ) })
         ] }, item.label))
       ] }) }),
-      activeSection === "CONTACTS" && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2.5", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Observed Contactability Breakdown" }),
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("p", { className: "text-[10px] text-slate-400", children: "Categorization based strictly on actual observed channels. No predictive conversion scoring." }),
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "grid grid-cols-2 gap-2 mt-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Email + Phone Available" }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-base font-bold text-emerald-400 font-mono mt-0.5", children: contactability.emailAndPhoneCount }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+      activeSection === "CONTACTS" && /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2.5", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Observed Contactability Breakdown" }),
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("p", { className: "text-[10px] text-slate-400", children: "Categorization based strictly on actual observed channels. No predictive conversion scoring." }),
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "grid grid-cols-2 gap-2 mt-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Email + Phone Available" }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-base font-bold text-emerald-400 font-mono mt-0.5", children: contactability.emailAndPhoneCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
               contactability.fullContactabilityPercentage,
               "% of total"
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
             "div",
             {
               onClick: () => onNavigateToResultsWithFilter?.("MISSING_PHONE"),
               className: "p-2 bg-slate-900 border border-slate-700/60 rounded cursor-pointer hover:border-slate-500",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Email Only" }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-base font-bold text-sky-400 font-mono mt-0.5", children: contactability.emailOnlyCount }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Email Only" }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-base font-bold text-sky-400 font-mono mt-0.5", children: contactability.emailOnlyCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
                   contactability.totalEmailAvailableCount,
                   " total with email"
                 ] })
               ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
             "div",
             {
               onClick: () => onNavigateToResultsWithFilter?.("MISSING_EMAIL"),
               className: "p-2 bg-slate-900 border border-slate-700/60 rounded cursor-pointer hover:border-slate-500",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Phone Only" }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-base font-bold text-amber-400 font-mono mt-0.5", children: contactability.phoneOnlyCount }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Phone Only" }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-base font-bold text-amber-400 font-mono mt-0.5", children: contactability.phoneOnlyCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
                   contactability.totalPhoneAvailableCount,
                   " total with phone"
                 ] })
               ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Contact Form Only" }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-base font-bold text-indigo-400 font-mono mt-0.5", children: contactability.contactFormOnlyCount }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] text-slate-400", children: "Website form detected" })
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Contact Form Only" }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-base font-bold text-indigo-400 font-mono mt-0.5", children: contactability.contactFormOnlyCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] text-slate-400", children: "Website form detected" })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
             "div",
             {
               onClick: () => onNavigateToResultsWithFilter?.("PUBLIC_PEOPLE"),
               className: "p-2 bg-slate-900 border border-slate-700/60 rounded cursor-pointer hover:border-slate-500",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Person Available Only" }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-base font-bold text-purple-400 font-mono mt-0.5", children: contactability.personAvailableOnlyCount }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Person Available Only" }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-base font-bold text-purple-400 font-mono mt-0.5", children: contactability.personAvailableOnlyCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
                   contactability.totalPublicPersonAvailableCount,
                   " with named people"
                 ] })
               ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-slate-400 text-[10px]", children: "No Public Contact Signal" }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-base font-bold text-rose-400 font-mono mt-0.5", children: contactability.noPublicContactSignalCount }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-slate-400 text-[10px]", children: "No Public Contact Signal" }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-base font-bold text-rose-400 font-mono mt-0.5", children: contactability.noPublicContactSignalCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
               contactability.noContactSignalPercentage,
               "% missing contact"
             ] })
           ] })
         ] })
       ] }) }),
-      activeSection === "WEBSITE" && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "flex justify-between items-center", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Website Intelligence (Phase 21 Limits)" }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "text-[10px] text-slate-400 font-mono", children: "Max 5 pgs \u2022 10s timeout" })
+      activeSection === "WEBSITE" && /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "flex justify-between items-center", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Website Intelligence (Phase 21 Limits)" }),
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "text-[10px] text-slate-400 font-mono", children: "Max 5 pgs \u2022 10s timeout" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
             "div",
             {
               onClick: () => onNavigateToResultsWithFilter?.("VERIFIED_WEBSITE"),
               className: "p-2 bg-slate-900 border border-slate-700/60 rounded cursor-pointer hover:border-emerald-500",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Verified Business Site" }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-base font-bold text-emerald-400 font-mono mt-0.5", children: website.websiteVerifiedCount }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Verified Business Site" }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-base font-bold text-emerald-400 font-mono mt-0.5", children: website.websiteVerifiedCount }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
                   website.verificationRate,
                   "% of present sites"
                 ] })
               ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Website Present" }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-base font-bold text-slate-200 font-mono mt-0.5", children: website.websitePresentCount }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Website Present" }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-base font-bold text-slate-200 font-mono mt-0.5", children: website.websitePresentCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
               website.pagesSuccessfullyInspected,
               " pages inspected"
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Site Unavailable / Timeout" }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-base font-bold text-amber-400 font-mono mt-0.5", children: website.websiteUnavailableCount }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Site Unavailable / Timeout" }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-base font-bold text-amber-400 font-mono mt-0.5", children: website.websiteUnavailableCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "text-[10px] text-slate-400", children: [
               website.websiteTimeoutCount,
               " timed out"
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Blocked by Safety Policy" }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-base font-bold text-rose-400 font-mono mt-0.5", children: website.websiteBlockedBySafetyCount }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] text-slate-400", children: "SSRF / origin protection" })
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Blocked by Safety Policy" }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-base font-bold text-rose-400 font-mono mt-0.5", children: website.websiteBlockedBySafetyCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] text-slate-400", children: "SSRF / origin protection" })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Tech Signals Discovered" }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-base font-bold text-sky-400 font-mono mt-0.5", children: website.technologySignalsDiscovered }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] text-slate-400", children: "CMS, Analytics, Chat" })
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Tech Signals Discovered" }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-base font-bold text-sky-400 font-mono mt-0.5", children: website.technologySignalsDiscovered }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] text-slate-400", children: "CMS, Analytics, Chat" })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Non-Business / Parked" }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-base font-bold text-slate-400 font-mono mt-0.5", children: website.websiteNonBusinessCount + website.websiteParkedCount }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] text-slate-400", children: "Filtered generic domains" })
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-2 bg-slate-900 border border-slate-700/60 rounded", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-slate-400 text-[10px]", children: "Non-Business / Parked" }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-base font-bold text-slate-400 font-mono mt-0.5", children: website.websiteNonBusinessCount + website.websiteParkedCount }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] text-slate-400", children: "Filtered generic domains" })
           ] })
         ] })
       ] }) }),
-      activeSection === "QUALIFICATION" && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2.5", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Qualification Decision Rationale" }),
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "grid grid-cols-3 gap-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-2 bg-emerald-950/40 border border-emerald-500/30 rounded text-center", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] text-emerald-400", children: "QUALIFIED" }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-base font-bold text-emerald-300 font-mono", children: qualification.qualifiedCount })
+      activeSection === "QUALIFICATION" && /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2.5", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Qualification Decision Rationale" }),
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "grid grid-cols-3 gap-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-2 bg-emerald-950/40 border border-emerald-500/30 rounded text-center", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] text-emerald-400", children: "QUALIFIED" }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-base font-bold text-emerald-300 font-mono", children: qualification.qualifiedCount })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-2 bg-amber-950/40 border border-amber-500/30 rounded text-center", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] text-amber-400", children: "UNCERTAIN" }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-base font-bold text-amber-300 font-mono", children: qualification.uncertainCount })
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-2 bg-amber-950/40 border border-amber-500/30 rounded text-center", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] text-amber-400", children: "UNCERTAIN" }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-base font-bold text-amber-300 font-mono", children: qualification.uncertainCount })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-2 bg-rose-950/40 border border-rose-500/30 rounded text-center", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] text-rose-400", children: "NOT QUALIFIED / BLOCKED" }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-base font-bold text-rose-300 font-mono", children: qualification.notQualifiedCount + qualification.blockedCount })
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-2 bg-rose-950/40 border border-rose-500/30 rounded text-center", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] text-rose-400", children: "NOT QUALIFIED / BLOCKED" }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-base font-bold text-rose-300 font-mono", children: qualification.notQualifiedCount + qualification.blockedCount })
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "mt-3 space-y-1.5", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[11px] font-semibold text-slate-300", children: "Observed Reason Codes" }),
-          qualification.reasonBreakdown.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] text-slate-400 py-1", children: "No detailed reason codes recorded." }) : /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "space-y-1 max-h-[220px] overflow-y-auto pr-1", children: qualification.reasonBreakdown.map((r) => /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-1.5 bg-slate-900 border border-slate-800 rounded flex items-center justify-between gap-2 text-[11px]", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "min-w-0", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "font-mono text-slate-200 truncate", children: r.code }),
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] text-slate-400 truncate", children: r.description })
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "mt-3 space-y-1.5", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[11px] font-semibold text-slate-300", children: "Observed Reason Codes" }),
+          qualification.reasonBreakdown.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] text-slate-400 py-1", children: "No detailed reason codes recorded." }) : /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "space-y-1 max-h-[220px] overflow-y-auto pr-1", children: qualification.reasonBreakdown.map((r) => /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-1.5 bg-slate-900 border border-slate-800 rounded flex items-center justify-between gap-2 text-[11px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "min-w-0", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "font-mono text-slate-200 truncate", children: r.code }),
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] text-slate-400 truncate", children: r.description })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "font-mono font-bold text-sky-400 bg-slate-800 px-1.5 py-0.5 rounded text-[10px] shrink-0", children: r.count })
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "font-mono font-bold text-sky-400 bg-slate-800 px-1.5 py-0.5 rounded text-[10px] shrink-0", children: r.count })
           ] }, r.code)) })
         ] })
       ] }) }),
-      activeSection === "WARNINGS" && /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "space-y-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("h3", { className: "text-xs font-semibold text-slate-200", children: [
+      activeSection === "WARNINGS" && /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "space-y-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("h3", { className: "text-xs font-semibold text-slate-200", children: [
           "Quality Warnings (",
           warnings.length,
           ")"
         ] }),
-        warnings.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-4 bg-slate-800/40 border border-slate-700/60 rounded text-center text-slate-400", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "text-emerald-400 text-lg", children: "\u2713" }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-xs font-semibold text-slate-200 mt-1", children: "Zero Quality Warnings" }),
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] text-slate-400 mt-0.5", children: "All observed data quality metrics satisfied defined thresholds." })
-        ] }) : warnings.map((w) => /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
+        warnings.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-4 bg-slate-800/40 border border-slate-700/60 rounded text-center text-slate-400", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "text-emerald-400 text-lg", children: "\u2713" }),
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-xs font-semibold text-slate-200 mt-1", children: "Zero Quality Warnings" }),
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] text-slate-400 mt-0.5", children: "All observed data quality metrics satisfied defined thresholds." })
+        ] }) : warnings.map((w) => /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
           "div",
           {
             className: `p-3 rounded border text-xs space-y-1 ${w.severity === "HIGH" ? "bg-rose-950/20 border-rose-500/40 text-rose-200" : w.severity === "MEDIUM" ? "bg-amber-950/20 border-amber-500/40 text-amber-200" : "bg-slate-800/60 border-slate-700 text-slate-300"}`,
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "flex items-center justify-between gap-2", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("span", { className: "font-semibold text-slate-100 flex items-center gap-1.5", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { children: w.severity === "HIGH" ? "\u26A0\uFE0F" : "\u2139\uFE0F" }),
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "flex items-center justify-between gap-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("span", { className: "font-semibold text-slate-100 flex items-center gap-1.5", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { children: w.severity === "HIGH" ? "\u26A0\uFE0F" : "\u2139\uFE0F" }),
                   " ",
                   w.title
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800", children: w.code })
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800", children: w.code })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("p", { className: "text-[11px] text-slate-300", children: w.message }),
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "text-[10px] text-slate-400 mt-1 pt-1 border-t border-slate-800/60", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("strong", { className: "text-slate-300", children: "Action:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("p", { className: "text-[11px] text-slate-300", children: w.message }),
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "text-[10px] text-slate-400 mt-1 pt-1 border-t border-slate-800/60", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("strong", { className: "text-slate-300", children: "Action:" }),
                 " ",
                 w.actionableRemedy
               ] })
@@ -22958,21 +24612,21 @@ var AnalyticsView = ({
           w.id
         ))
       ] }),
-      activeSection === "COMPARISON" && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Run Comparison Studio" }),
-        /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("p", { className: "text-[10px] text-slate-400", children: "Select another completed run to evaluate variances, deduplication shifts, and entity modifications." }),
-        historySnapshots.length < 2 ? /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "p-3 bg-slate-900 border border-slate-800 rounded text-slate-400 text-center", children: "At least two completed runs are required for comparative analysis." }) : /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "space-y-3", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "flex items-center gap-2", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "text-slate-400", children: "Compare with:" }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)(
+      activeSection === "COMPARISON" && /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "space-y-3", children: /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-3 bg-slate-800/60 border border-slate-700/60 rounded space-y-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("h3", { className: "text-xs font-semibold text-slate-200", children: "Run Comparison Studio" }),
+        /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("p", { className: "text-[10px] text-slate-400", children: "Select another completed run to evaluate variances, deduplication shifts, and entity modifications." }),
+        historySnapshots.length < 2 ? /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "p-3 bg-slate-900 border border-slate-800 rounded text-slate-400 text-center", children: "At least two completed runs are required for comparative analysis." }) : /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "space-y-3", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "text-slate-400", children: "Compare with:" }),
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)(
               "select",
               {
                 value: compareRunId,
                 onChange: (e) => setCompareRunId(e.target.value),
                 className: "bg-slate-900 border border-slate-700 text-slate-200 text-[11px] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-sky-500",
                 children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("option", { value: "", children: "Select a run to compare..." }),
-                  historySnapshots.filter((s) => s.runId !== currentSnapshot.runId).map((s) => /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("option", { value: s.runId, children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("option", { value: "", children: "Select a run to compare..." }),
+                  historySnapshots.filter((s) => s.runId !== currentSnapshot.runId).map((s) => /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("option", { value: s.runId, children: [
                     s.runTitle || s.runId,
                     " (",
                     s.totalRecords,
@@ -22982,53 +24636,53 @@ var AnalyticsView = ({
               }
             )
           ] }),
-          comparisonResult && /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "space-y-3 mt-3", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-2.5 bg-slate-900 border border-slate-800 rounded space-y-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] font-semibold text-sky-400 uppercase tracking-wider", children: "Descriptive Summary" }),
-              comparisonResult.descriptiveSummary.map((line, idx) => /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "text-[11px] text-slate-300", children: [
+          comparisonResult && /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "space-y-3 mt-3", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-2.5 bg-slate-900 border border-slate-800 rounded space-y-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] font-semibold text-sky-400 uppercase tracking-wider", children: "Descriptive Summary" }),
+              comparisonResult.descriptiveSummary.map((line, idx) => /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "text-[11px] text-slate-300", children: [
                 "\u2022 ",
                 line
               ] }, idx))
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "border border-slate-800 rounded overflow-hidden", children: /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("table", { className: "w-full text-[11px] text-left", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("thead", { className: "bg-slate-950 text-slate-400 uppercase text-[9px]", children: /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("tr", { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("th", { className: "p-2", children: "Metric" }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("th", { className: "p-2 text-right", children: "Base Run" }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("th", { className: "p-2 text-right", children: "Compare Run" }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("th", { className: "p-2 text-right", children: "Delta" })
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "border border-slate-800 rounded overflow-hidden", children: /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("table", { className: "w-full text-[11px] text-left", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("thead", { className: "bg-slate-950 text-slate-400 uppercase text-[9px]", children: /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("tr", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("th", { className: "p-2", children: "Metric" }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("th", { className: "p-2 text-right", children: "Base Run" }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("th", { className: "p-2 text-right", children: "Compare Run" }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("th", { className: "p-2 text-right", children: "Delta" })
               ] }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("tbody", { className: "divide-y divide-slate-800/60 font-mono", children: comparisonResult.metricsDiff.map((d) => /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("tr", { className: "hover:bg-slate-800/40", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("td", { className: "p-2 font-sans text-slate-300", children: d.metricName }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("td", { className: "p-2 text-right text-slate-400", children: d.baseValue }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("td", { className: "p-2 text-right text-slate-200", children: d.compareValue }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("td", { className: `p-2 text-right font-bold ${d.delta > 0 ? "text-emerald-400" : d.delta < 0 ? "text-rose-400" : "text-slate-500"}`, children: d.delta > 0 ? `+${d.delta}` : d.delta })
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("tbody", { className: "divide-y divide-slate-800/60 font-mono", children: comparisonResult.metricsDiff.map((d) => /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("tr", { className: "hover:bg-slate-800/40", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("td", { className: "p-2 font-sans text-slate-300", children: d.metricName }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("td", { className: "p-2 text-right text-slate-400", children: d.baseValue }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("td", { className: "p-2 text-right text-slate-200", children: d.compareValue }),
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("td", { className: `p-2 text-right font-bold ${d.delta > 0 ? "text-emerald-400" : d.delta < 0 ? "text-rose-400" : "text-slate-500"}`, children: d.delta > 0 ? `+${d.delta}` : d.delta })
               ] }, d.metricName)) })
             ] }) }),
-            /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "p-2.5 bg-slate-900 border border-slate-800 rounded space-y-1", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "text-[10px] font-semibold text-slate-400 uppercase tracking-wider", children: "Entity Change Summary" }),
-              /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 font-mono text-[10px]", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "p-2.5 bg-slate-900 border border-slate-800 rounded space-y-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "text-[10px] font-semibold text-slate-400 uppercase tracking-wider", children: "Entity Change Summary" }),
+              /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 font-mono text-[10px]", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { children: [
                   "New: ",
-                  /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "text-emerald-400 font-bold", children: comparisonResult.changeAnalysis.newRecordsCount })
+                  /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "text-emerald-400 font-bold", children: comparisonResult.changeAnalysis.newRecordsCount })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { children: [
                   "Removed: ",
-                  /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "text-rose-400 font-bold", children: comparisonResult.changeAnalysis.removedRecordsCount })
+                  /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "text-rose-400 font-bold", children: comparisonResult.changeAnalysis.removedRecordsCount })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { children: [
                   "Modified: ",
-                  /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "text-amber-400 font-bold", children: comparisonResult.changeAnalysis.changedRecordsCount })
+                  /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "text-amber-400 font-bold", children: comparisonResult.changeAnalysis.changedRecordsCount })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("div", { children: [
                   "Unchanged: ",
-                  /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("span", { className: "text-slate-400 font-bold", children: comparisonResult.changeAnalysis.unchangedRecordsCount })
+                  /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { className: "text-slate-400 font-bold", children: comparisonResult.changeAnalysis.unchangedRecordsCount })
                 ] })
               ] })
             ] })
           ] })
         ] })
       ] }) }),
-      activeSection === "OPTIMIZATION" && /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: "flex-1 flex flex-col min-h-0", role: "tabpanel", "aria-label": "Research Optimization View", children: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+      activeSection === "OPTIMIZATION" && /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: "flex-1 flex flex-col min-h-0", role: "tabpanel", "aria-label": "Research Optimization View", children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
         ResearchOptimizationView,
         {
           snapshot: optimizationSnapshot || null,
@@ -24025,27 +25679,29 @@ function exportLeadsToCsv(leads, run) {
 var PIPELINE_VERSION = "1.0.0-phase14";
 
 // src/extension/ui/App.tsx
-var import_jsx_runtime17 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime19 = __toESM(require_jsx_runtime(), 1);
 var ExtensionApp = () => {
-  const [activeTab, setActiveTab] = (0, import_react11.useState)("RESEARCH");
-  const [selectedSource, setSelectedSource] = (0, import_react11.useState)("META");
-  const [pendingPlan, setPendingPlan] = (0, import_react11.useState)(null);
-  const [isPlanReviewOpen, setIsPlanReviewOpen] = (0, import_react11.useState)(false);
-  const [isSubmitting, setIsSubmitting] = (0, import_react11.useState)(false);
-  const [activeRun, setActiveRun] = (0, import_react11.useState)(null);
-  const [runStatusVM, setRunStatusVM] = (0, import_react11.useState)(null);
-  const [elapsedSeconds, setElapsedSeconds] = (0, import_react11.useState)(0);
-  const [rawLeads, setRawLeads] = (0, import_react11.useState)([]);
-  const [selectedRecordIds, setSelectedRecordIds] = (0, import_react11.useState)(/* @__PURE__ */ new Set());
-  const [inspectedLead, setInspectedLead] = (0, import_react11.useState)(null);
-  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = (0, import_react11.useState)(false);
-  const [isExportModalOpen, setIsExportModalOpen] = (0, import_react11.useState)(false);
-  const [isExporting, setIsExporting] = (0, import_react11.useState)(false);
-  const [historyRuns, setHistoryRuns] = (0, import_react11.useState)([]);
-  const [recoveryInfo, setRecoveryInfo] = (0, import_react11.useState)(null);
-  const [isDiagnosticsOpen, setIsDiagnosticsOpen] = (0, import_react11.useState)(false);
-  const [diagnosticsVM, setDiagnosticsVM] = (0, import_react11.useState)(null);
-  const [reliabilityMetrics, setReliabilityMetrics] = (0, import_react11.useState)({
+  const [activeTab, setActiveTab] = (0, import_react12.useState)("RESEARCH");
+  const [selectedSource, setSelectedSource] = (0, import_react12.useState)("META");
+  const [pendingPlan, setPendingPlan] = (0, import_react12.useState)(null);
+  const [isPlanReviewOpen, setIsPlanReviewOpen] = (0, import_react12.useState)(false);
+  const [isSubmitting, setIsSubmitting] = (0, import_react12.useState)(false);
+  const [activeRun, setActiveRun] = (0, import_react12.useState)(null);
+  const [runStatusVM, setRunStatusVM] = (0, import_react12.useState)(null);
+  const [elapsedSeconds, setElapsedSeconds] = (0, import_react12.useState)(0);
+  const [rawLeads, setRawLeads] = (0, import_react12.useState)([]);
+  const [selectedRecordIds, setSelectedRecordIds] = (0, import_react12.useState)(/* @__PURE__ */ new Set());
+  const [inspectedLead, setInspectedLead] = (0, import_react12.useState)(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = (0, import_react12.useState)(false);
+  const [isExportModalOpen, setIsExportModalOpen] = (0, import_react12.useState)(false);
+  const [isExporting, setIsExporting] = (0, import_react12.useState)(false);
+  const [historyRuns, setHistoryRuns] = (0, import_react12.useState)([]);
+  const [recoveryInfo, setRecoveryInfo] = (0, import_react12.useState)(null);
+  const [isDiagnosticsOpen, setIsDiagnosticsOpen] = (0, import_react12.useState)(false);
+  const [diagnosticsVM, setDiagnosticsVM] = (0, import_react12.useState)(null);
+  const [researchSourceMode, setResearchSourceMode] = (0, import_react12.useState)("META");
+  const [bulkSnapshot, setBulkSnapshot] = (0, import_react12.useState)(null);
+  const [reliabilityMetrics, setReliabilityMetrics] = (0, import_react12.useState)({
     totalRuns: 0,
     successfulRuns: 0,
     failedRuns: 0,
@@ -24065,9 +25721,9 @@ var ExtensionApp = () => {
     recoveryRate: 100,
     sampleSufficiency: "NO_DATA"
   });
-  const [guardrailAlerts, setGuardrailAlerts] = (0, import_react11.useState)([]);
-  const [aggregatedIssues, setAggregatedIssues] = (0, import_react11.useState)([]);
-  const [storageHealth, setStorageHealth] = (0, import_react11.useState)({
+  const [guardrailAlerts, setGuardrailAlerts] = (0, import_react12.useState)([]);
+  const [aggregatedIssues, setAggregatedIssues] = (0, import_react12.useState)([]);
+  const [storageHealth, setStorageHealth] = (0, import_react12.useState)({
     collectionCounts: {},
     estimatedBytes: 0,
     quotaLimitBytes: 50 * 1024 * 1024,
@@ -24075,7 +25731,7 @@ var ExtensionApp = () => {
     isPressureHigh: false,
     retentionPolicies: {}
   });
-  (0, import_react11.useEffect)(() => {
+  (0, import_react12.useEffect)(() => {
     loadStorageState();
     const messageListener = (msg) => {
       if (msg.type === "RESEARCH_PROGRESS" && msg.payload?.run) {
@@ -24084,10 +25740,24 @@ var ExtensionApp = () => {
         handleRunUpdate(msg.payload.run);
         setIsSubmitting(false);
         loadHistoryState();
+      } else if (msg.type === "BULK_RESEARCH_PROGRESS" || msg.type === "BULK_RESEARCH_STARTED" || msg.type === "BULK_RESEARCH_COMPLETED" || msg.type === "BULK_RESEARCH_PAUSED" || msg.type === "BULK_RESEARCH_RESUMED" || msg.type === "BULK_RESEARCH_CANCELLED" || msg.type === "BULK_RESEARCH_PARTIAL" || msg.type === "SEARCH_UNIT_STARTED" || msg.type === "SEARCH_UNIT_COMPLETED") {
+        if (msg.payload?.snapshot) {
+          setBulkSnapshot(msg.payload.snapshot);
+        }
       }
     };
     if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
       chrome.runtime.onMessage.addListener(messageListener);
+    }
+    if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+      chrome.runtime.sendMessage(
+        { type: "GET_GMAPS_BULK_RESEARCH_STATUS", source: "GMAPS_ENGINE" },
+        (res) => {
+          if (res?.snapshot) {
+            setBulkSnapshot(res.snapshot);
+          }
+        }
+      );
     }
     return () => {
       if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
@@ -24095,8 +25765,109 @@ var ExtensionApp = () => {
       }
     };
   }, []);
+  const handleStartBulkResearch = (request) => {
+    if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+      const sendStart = (tabId) => {
+        chrome.runtime.sendMessage(
+          {
+            type: "START_GMAPS_BULK_RESEARCH",
+            source: "GMAPS_ENGINE",
+            payload: {
+              keywords: request.keywords,
+              locations: request.locations,
+              ratingFilter: request.ratingFilter,
+              websiteFilter: request.websiteFilter,
+              maxResults: request.maxResults,
+              tabId
+            }
+          },
+          (resp) => {
+            if (resp?.snapshot) {
+              setBulkSnapshot(resp.snapshot);
+            }
+          }
+        );
+      };
+      if (chrome.tabs?.query) {
+        chrome.tabs.query({}, (tabs) => {
+          const targetTab = tabs?.find((t) => t.url && !t.url.startsWith("chrome-extension://")) || tabs?.find((t) => !t.active);
+          sendStart(targetTab?.id);
+        });
+      } else {
+        sendStart();
+      }
+    }
+  };
+  const handlePauseBulkResearch = () => {
+    if (bulkSnapshot && typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+      chrome.runtime.sendMessage(
+        {
+          type: "PAUSE_GMAPS_BULK_RESEARCH",
+          source: "GMAPS_ENGINE",
+          payload: { runId: bulkSnapshot.runId }
+        },
+        (resp) => {
+          if (resp?.snapshot) {
+            setBulkSnapshot(resp.snapshot);
+          }
+        }
+      );
+    }
+  };
+  const handleResumeBulkResearch = () => {
+    if (bulkSnapshot && typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+      chrome.runtime.sendMessage(
+        {
+          type: "RESUME_GMAPS_BULK_RESEARCH",
+          source: "GMAPS_ENGINE",
+          payload: { runId: bulkSnapshot.runId }
+        },
+        (resp) => {
+          if (resp?.snapshot) {
+            setBulkSnapshot(resp.snapshot);
+          }
+        }
+      );
+    }
+  };
+  const handleCancelBulkResearch = () => {
+    if (bulkSnapshot && typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+      chrome.runtime.sendMessage(
+        {
+          type: "CANCEL_GMAPS_BULK_RESEARCH",
+          source: "GMAPS_ENGINE",
+          payload: { runId: bulkSnapshot.runId }
+        },
+        (resp) => {
+          if (resp?.snapshot) {
+            setBulkSnapshot(resp.snapshot);
+          }
+        }
+      );
+    }
+  };
+  const handleBulkFilterChange = (rating, website) => {
+    if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+      chrome.runtime.sendMessage(
+        {
+          type: "SET_GMAPS_FILTER",
+          source: "GMAPS_ENGINE",
+          payload: {
+            sessionId: bulkSnapshot?.runId,
+            rating,
+            website
+          }
+        },
+        (resp) => {
+          if (resp?.snapshot) {
+            setBulkSnapshot(resp.snapshot);
+          }
+        }
+      );
+    }
+  };
   const isJobRunning = (status) => status === "COLLECTING" || status === "NAVIGATING" || status === "STARTING" || status === "NORMALIZING";
-  (0, import_react11.useEffect)(() => {
+  (0, import_react12.useEffect)(() => {
     let interval;
     if (isJobRunning(activeRun?.status)) {
       interval = setInterval(() => {
@@ -24176,7 +25947,7 @@ var ExtensionApp = () => {
     };
     setRunStatusVM(toRunStatusViewModel(mockRun, elapsedSeconds * 1e3));
   };
-  const resultsVM = (0, import_react11.useMemo)(() => {
+  const resultsVM = (0, import_react12.useMemo)(() => {
     return rawLeads.map((item, idx) => {
       if (isCanonicalLeadRecord(item)) {
         return toResultRowViewModel(item);
@@ -24412,7 +26183,7 @@ var ExtensionApp = () => {
       setIsDetailDrawerOpen(true);
     }
   };
-  const exportPreviewVM = (0, import_react11.useMemo)(() => {
+  const exportPreviewVM = (0, import_react12.useMemo)(() => {
     const selectedLeads = selectedRecordIds.size > 0 ? resultsVM.filter((r) => selectedRecordIds.has(r.entityId) || selectedRecordIds.has(r.recordId)) : resultsVM;
     const totalSelected = selectedLeads.length;
     const exportableCount = selectedLeads.filter((r) => r.isExportable && !r.isRestricted).length;
@@ -24429,14 +26200,14 @@ var ExtensionApp = () => {
       isExportReady: exportableCount > 0
     };
   }, [resultsVM, selectedRecordIds]);
-  const analyticsSnapshot = (0, import_react11.useMemo)(() => {
+  const analyticsSnapshot = (0, import_react12.useMemo)(() => {
     if (!rawLeads || rawLeads.length === 0) return null;
     return computeRunAnalytics(activeRun?.runId || "current-run", rawLeads, {
       sourceType: selectedSource,
       runTitle: activeRun?.queryScope?.rawInput || activeRun?.runId || "Current Run"
     });
   }, [rawLeads, activeRun, selectedSource]);
-  const optimizationSnapshot = (0, import_react11.useMemo)(() => {
+  const optimizationSnapshot = (0, import_react12.useMemo)(() => {
     if (!rawLeads || rawLeads.length === 0) return null;
     const canonical = rawLeads.filter(isCanonicalLeadRecord);
     return computeResearchOptimization(
@@ -24489,8 +26260,8 @@ var ExtensionApp = () => {
   const handleClearDiagnostics = () => {
     setAggregatedIssues([]);
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "min-w-[360px] w-full max-w-[800px] h-full min-h-[600px] max-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans select-none", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: "min-w-[360px] w-full max-w-[800px] h-full min-h-[600px] max-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans select-none", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
       Header,
       {
         activeTab,
@@ -24499,8 +26270,8 @@ var ExtensionApp = () => {
         isRunning: isJobRunning(activeRun?.status)
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("main", { className: "flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 flex flex-col gap-3", children: [
-      recoveryInfo && activeTab !== "RUN_STATUS" && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("main", { className: "flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 flex flex-col gap-3", children: [
+      recoveryInfo && activeTab !== "RUN_STATUS" && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
         RecoveryBanner,
         {
           recoveryInfo,
@@ -24516,16 +26287,54 @@ var ExtensionApp = () => {
           }
         }
       ),
-      activeTab === "RESEARCH" && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { role: "tabpanel", id: "tabpanel-RESEARCH", "aria-labelledby": "tab-RESEARCH", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-        ResearchConfigView,
-        {
-          selectedSource,
-          onSelectSource: setSelectedSource,
-          onOpenPlanReview: handleOpenPlanReview,
-          disabled: isSubmitting || isJobRunning(activeRun?.status)
-        }
-      ) }),
-      activeTab === "RUN_STATUS" && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { role: "tabpanel", id: "tabpanel-RUN_STATUS", "aria-labelledby": "tab-RUN_STATUS", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+      activeTab === "RESEARCH" && /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { role: "tabpanel", id: "tabpanel-RESEARCH", "aria-labelledby": "tab-RESEARCH", className: "flex flex-col gap-3", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: "flex items-center gap-2 bg-slate-900 p-1.5 rounded-lg border border-slate-800", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+            "button",
+            {
+              type: "button",
+              id: "source-switch-meta-btn",
+              onClick: () => setResearchSourceMode("META"),
+              className: `flex-1 py-1.5 px-3 text-xs font-semibold rounded-md transition-colors cursor-pointer ${researchSourceMode === "META" ? "bg-sky-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-200"}`,
+              children: "Meta Ad Library"
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)(
+            "button",
+            {
+              type: "button",
+              id: "source-switch-gmaps-btn",
+              onClick: () => setResearchSourceMode("GMAPS"),
+              className: `flex-1 py-1.5 px-3 text-xs font-semibold rounded-md transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${researchSourceMode === "GMAPS" ? "bg-sky-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-200"}`,
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { children: "\u{1F5FA}\uFE0F" }),
+                " Google Maps Bulk"
+              ]
+            }
+          )
+        ] }),
+        researchSourceMode === "GMAPS" ? /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+          GoogleMapsBulkResearchView,
+          {
+            onStartBulkResearch: handleStartBulkResearch,
+            onPauseBulkResearch: handlePauseBulkResearch,
+            onResumeBulkResearch: handleResumeBulkResearch,
+            onCancelBulkResearch: handleCancelBulkResearch,
+            onFilterChange: handleBulkFilterChange,
+            activeSnapshot: bulkSnapshot,
+            disabled: isSubmitting
+          }
+        ) : /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+          ResearchConfigView,
+          {
+            selectedSource,
+            onSelectSource: setSelectedSource,
+            onOpenPlanReview: handleOpenPlanReview,
+            disabled: isSubmitting || isJobRunning(activeRun?.status)
+          }
+        )
+      ] }),
+      activeTab === "RUN_STATUS" && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { role: "tabpanel", id: "tabpanel-RUN_STATUS", "aria-labelledby": "tab-RUN_STATUS", children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
         RunStatusView,
         {
           runStatus: runStatusVM,
@@ -24547,7 +26356,7 @@ var ExtensionApp = () => {
           }
         }
       ) }),
-      activeTab === "RESULTS" && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { role: "tabpanel", id: "tabpanel-RESULTS", "aria-labelledby": "tab-RESULTS", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+      activeTab === "RESULTS" && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { role: "tabpanel", id: "tabpanel-RESULTS", "aria-labelledby": "tab-RESULTS", children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
         ResultsTableView,
         {
           results: resultsVM,
@@ -24566,7 +26375,7 @@ var ExtensionApp = () => {
           onOpenExportModal: () => setIsExportModalOpen(true)
         }
       ) }),
-      activeTab === "ANALYTICS" && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { role: "tabpanel", id: "tabpanel-ANALYTICS", "aria-labelledby": "tab-ANALYTICS", className: "flex-1 flex flex-col min-h-0", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+      activeTab === "ANALYTICS" && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { role: "tabpanel", id: "tabpanel-ANALYTICS", "aria-labelledby": "tab-ANALYTICS", className: "flex-1 flex flex-col min-h-0", children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
         AnalyticsView,
         {
           currentSnapshot: analyticsSnapshot,
@@ -24580,7 +26389,7 @@ var ExtensionApp = () => {
           }
         }
       ) }),
-      activeTab === "HISTORY" && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { role: "tabpanel", id: "tabpanel-HISTORY", "aria-labelledby": "tab-HISTORY", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+      activeTab === "HISTORY" && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { role: "tabpanel", id: "tabpanel-HISTORY", "aria-labelledby": "tab-HISTORY", children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
         HistoryView,
         {
           runs: historyRuns,
@@ -24591,7 +26400,7 @@ var ExtensionApp = () => {
           onClearHistory: handleClearHistory
         }
       ) }),
-      activeTab === "SETTINGS" && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { role: "tabpanel", id: "tabpanel-SETTINGS", "aria-labelledby": "tab-SETTINGS", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+      activeTab === "SETTINGS" && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { role: "tabpanel", id: "tabpanel-SETTINGS", "aria-labelledby": "tab-SETTINGS", children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
         SettingsView,
         {
           onOpenDiagnostics: () => {
@@ -24618,7 +26427,7 @@ var ExtensionApp = () => {
         }
       ) })
     ] }),
-    pendingPlan && /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+    pendingPlan && /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
       PlanReviewModal,
       {
         isOpen: isPlanReviewOpen,
@@ -24628,7 +26437,7 @@ var ExtensionApp = () => {
         isSubmitting
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
       ResultDetailDrawer,
       {
         isOpen: isDetailDrawerOpen,
@@ -24636,7 +26445,7 @@ var ExtensionApp = () => {
         onClose: () => setIsDetailDrawerOpen(false)
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
       ExportModal,
       {
         isOpen: isExportModalOpen,
@@ -24646,7 +26455,7 @@ var ExtensionApp = () => {
         isExporting
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
       DiagnosticsDrawer,
       {
         isOpen: isDiagnosticsOpen,
@@ -24658,11 +26467,11 @@ var ExtensionApp = () => {
 };
 
 // src/extension/ui/index.tsx
-var import_jsx_runtime18 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime20 = __toESM(require_jsx_runtime(), 1);
 var rootElement = document.getElementById("root");
 if (rootElement) {
   import_client.default.createRoot(rootElement).render(
-    /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(import_react12.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(ExtensionApp, {}) })
+    /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(import_react13.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(ExtensionApp, {}) })
   );
 }
 /*! Bundled license information:

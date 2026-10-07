@@ -33,6 +33,9 @@ import {
 import { SourceType, ExecutionMode } from '../pipeline/pipelineTypes.ts';
 import { Header } from './components/Header.tsx';
 import { ResearchConfigView } from './components/ResearchConfigView.tsx';
+import { GoogleMapsBulkResearchView } from './components/GoogleMapsBulkResearchView.tsx';
+import type { BulkRunSnapshot } from '../acquisition/engine/bulkPlanTypes.ts';
+import type { RatingFilterOption, WebsiteFilterOption } from '../acquisition/engine/filterTypes.ts';
 import { PlanReviewModal } from './components/PlanReviewModal.tsx';
 import { RunStatusView } from './components/RunStatusView.tsx';
 import { ResultsTableView } from './components/ResultsTableView.tsx';
@@ -93,6 +96,10 @@ export const ExtensionApp: React.FC = () => {
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState(false);
   const [diagnosticsVM, setDiagnosticsVM] = useState<DiagnosticsViewModel | null>(null);
 
+  // Part 4: Google Maps Bulk Research State
+  const [researchSourceMode, setResearchSourceMode] = useState<'META' | 'GMAPS'>('META');
+  const [bulkSnapshot, setBulkSnapshot] = useState<BulkRunSnapshot | null>(null);
+
   // Phase 32: Production Reliability & Diagnostics State
   const [reliabilityMetrics, setReliabilityMetrics] = useState<ReliabilityMetrics>({
     totalRuns: 0, successfulRuns: 0, failedRuns: 0, partialRuns: 0, cancelledRuns: 0,
@@ -121,11 +128,37 @@ export const ExtensionApp: React.FC = () => {
         handleRunUpdate(msg.payload.run);
         setIsSubmitting(false);
         loadHistoryState();
+      } else if (
+        msg.type === 'BULK_RESEARCH_PROGRESS' ||
+        msg.type === 'BULK_RESEARCH_STARTED' ||
+        msg.type === 'BULK_RESEARCH_COMPLETED' ||
+        msg.type === 'BULK_RESEARCH_PAUSED' ||
+        msg.type === 'BULK_RESEARCH_RESUMED' ||
+        msg.type === 'BULK_RESEARCH_CANCELLED' ||
+        msg.type === 'BULK_RESEARCH_PARTIAL' ||
+        msg.type === 'SEARCH_UNIT_STARTED' ||
+        msg.type === 'SEARCH_UNIT_COMPLETED'
+      ) {
+        if (msg.payload?.snapshot) {
+          setBulkSnapshot(msg.payload.snapshot);
+        }
       }
     };
 
     if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
       chrome.runtime.onMessage.addListener(messageListener);
+    }
+
+    // Query active bulk research status on mount
+    if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+      chrome.runtime.sendMessage(
+        { type: 'GET_GMAPS_BULK_RESEARCH_STATUS', source: 'GMAPS_ENGINE' },
+        (res) => {
+          if (res?.snapshot) {
+            setBulkSnapshot(res.snapshot);
+          }
+        }
+      );
     }
 
     return () => {
@@ -134,6 +167,120 @@ export const ExtensionApp: React.FC = () => {
       }
     };
   }, []);
+
+  // Bulk Research Action Handlers
+  const handleStartBulkResearch = (request: {
+    keywords: string[];
+    locations: string[];
+    ratingFilter: RatingFilterOption;
+    websiteFilter: WebsiteFilterOption;
+    maxResults?: number;
+  }) => {
+    if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+      const sendStart = (tabId?: number) => {
+        chrome.runtime.sendMessage(
+          {
+            type: 'START_GMAPS_BULK_RESEARCH',
+            source: 'GMAPS_ENGINE',
+            payload: {
+              keywords: request.keywords,
+              locations: request.locations,
+              ratingFilter: request.ratingFilter,
+              websiteFilter: request.websiteFilter,
+              maxResults: request.maxResults,
+              tabId
+            }
+          },
+          (resp) => {
+            if (resp?.snapshot) {
+              setBulkSnapshot(resp.snapshot);
+            }
+          }
+        );
+      };
+
+      if (chrome.tabs?.query) {
+        chrome.tabs.query({}, (tabs) => {
+          const targetTab = tabs?.find(t => t.url && !t.url.startsWith('chrome-extension://')) || tabs?.find(t => !t.active);
+          sendStart(targetTab?.id);
+        });
+      } else {
+        sendStart();
+      }
+    }
+  };
+
+  const handlePauseBulkResearch = () => {
+    if (bulkSnapshot && typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+      chrome.runtime.sendMessage(
+        {
+          type: 'PAUSE_GMAPS_BULK_RESEARCH',
+          source: 'GMAPS_ENGINE',
+          payload: { runId: bulkSnapshot.runId }
+        },
+        (resp) => {
+          if (resp?.snapshot) {
+            setBulkSnapshot(resp.snapshot);
+          }
+        }
+      );
+    }
+  };
+
+  const handleResumeBulkResearch = () => {
+    if (bulkSnapshot && typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+      chrome.runtime.sendMessage(
+        {
+          type: 'RESUME_GMAPS_BULK_RESEARCH',
+          source: 'GMAPS_ENGINE',
+          payload: { runId: bulkSnapshot.runId }
+        },
+        (resp) => {
+          if (resp?.snapshot) {
+            setBulkSnapshot(resp.snapshot);
+          }
+        }
+      );
+    }
+  };
+
+  const handleCancelBulkResearch = () => {
+    if (bulkSnapshot && typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+      chrome.runtime.sendMessage(
+        {
+          type: 'CANCEL_GMAPS_BULK_RESEARCH',
+          source: 'GMAPS_ENGINE',
+          payload: { runId: bulkSnapshot.runId }
+        },
+        (resp) => {
+          if (resp?.snapshot) {
+            setBulkSnapshot(resp.snapshot);
+          }
+        }
+      );
+    }
+  };
+
+  const handleBulkFilterChange = (rating: RatingFilterOption, website: WebsiteFilterOption) => {
+    if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+      chrome.runtime.sendMessage(
+        {
+          type: 'SET_GMAPS_FILTER',
+          source: 'GMAPS_ENGINE',
+          payload: {
+            sessionId: bulkSnapshot?.runId,
+            rating,
+            website
+          }
+        },
+        (resp) => {
+          if (resp?.snapshot) {
+            setBulkSnapshot(resp.snapshot);
+          }
+        }
+      );
+    }
+  };
 
   // Timer for active runs
   const isJobRunning = (status?: string) =>
@@ -642,13 +789,53 @@ export const ExtensionApp: React.FC = () => {
 
         {/* Tab 1: Research Configuration */}
         {activeTab === 'RESEARCH' && (
-          <div role="tabpanel" id="tabpanel-RESEARCH" aria-labelledby="tab-RESEARCH">
-            <ResearchConfigView
-              selectedSource={selectedSource}
-              onSelectSource={setSelectedSource}
-              onOpenPlanReview={handleOpenPlanReview}
-              disabled={isSubmitting || isJobRunning(activeRun?.status)}
-            />
+          <div role="tabpanel" id="tabpanel-RESEARCH" aria-labelledby="tab-RESEARCH" className="flex flex-col gap-3">
+            {/* Source Mode Switcher */}
+            <div className="flex items-center gap-2 bg-slate-900 p-1.5 rounded-lg border border-slate-800">
+              <button
+                type="button"
+                id="source-switch-meta-btn"
+                onClick={() => setResearchSourceMode('META')}
+                className={`flex-1 py-1.5 px-3 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+                  researchSourceMode === 'META'
+                    ? 'bg-sky-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Meta Ad Library
+              </button>
+              <button
+                type="button"
+                id="source-switch-gmaps-btn"
+                onClick={() => setResearchSourceMode('GMAPS')}
+                className={`flex-1 py-1.5 px-3 text-xs font-semibold rounded-md transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
+                  researchSourceMode === 'GMAPS'
+                    ? 'bg-sky-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span>🗺️</span> Google Maps Bulk
+              </button>
+            </div>
+
+            {researchSourceMode === 'GMAPS' ? (
+              <GoogleMapsBulkResearchView
+                onStartBulkResearch={handleStartBulkResearch}
+                onPauseBulkResearch={handlePauseBulkResearch}
+                onResumeBulkResearch={handleResumeBulkResearch}
+                onCancelBulkResearch={handleCancelBulkResearch}
+                onFilterChange={handleBulkFilterChange}
+                activeSnapshot={bulkSnapshot}
+                disabled={isSubmitting}
+              />
+            ) : (
+              <ResearchConfigView
+                selectedSource={selectedSource}
+                onSelectSource={setSelectedSource}
+                onOpenPlanReview={handleOpenPlanReview}
+                disabled={isSubmitting || isJobRunning(activeRun?.status)}
+              />
+            )}
           </div>
         )}
 

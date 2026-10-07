@@ -428,8 +428,8 @@ export class GoogleMapsUnifiedAdapter implements UnifiedSourceAdapter {
         errors: [],
         notes: []
       },
-      createdAt: now,
-      updatedAt: now
+      createdAt: raw.createdAt || now,
+      updatedAt: raw.updatedAt || raw.createdAt || now
     };
   }
 }

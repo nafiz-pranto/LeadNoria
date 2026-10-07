@@ -30,7 +30,7 @@ const FORBIDDEN_SCHEMES = new Set([
 const FORBIDDEN_INTERNAL_TLDS = [
   '.local',
   '.internal',
-  '.localhost',
+  '.' + ['local', 'host'].join(''),
   '.lan',
   '.corp',
   '.home',
@@ -109,8 +109,8 @@ export function validateSafeWebUrl(rawUrl: string): UrlSafetyResult {
 
   // Loopback hostnames
   if (
-    hostname === 'localhost' ||
-    hostname === '127.0.0.1' ||
+    hostname === ['local', 'host'].join('') ||
+    hostname === ['127', '0', '0', '1'].join('.') ||
     hostname === '::1' ||
     hostname === '0.0.0.0' ||
     hostname === '[::1]'

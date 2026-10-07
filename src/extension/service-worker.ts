@@ -41,7 +41,26 @@ import {
   DIGITAL_COMMERCE_BUSINESS_PROFILE,
   HIGH_CONTACTABILITY_PROFILE
 } from './qualification/index.ts';
+import {
+  qualifiesCandidate,
+  extractRatingSignal,
+  determineWebsiteState,
+  executeMultiQueryResearch,
+  DEFAULT_RESEARCH_FILTERS,
+  type RatingFilter,
+  type WebsiteFilter,
+  type ResearchFilters,
+  type QualificationResult,
+  type MultiQueryResearchOptions,
+  type QueryExecutionFn
+} from './qualification/googleMaps/index.ts';
 import { RecordAssembler } from './leadIntelligence/index.ts';
+import { googleMapsRuntimeCoordinator } from './acquisition/engine/runtimeCoordinator.ts';
+import {
+  exportLeadsWithReconciliation,
+  validateExportSafeLead,
+  generateDeterministicLeadId
+} from './leads/index.ts';
 
 const canonicalRecordAssembler = new RecordAssembler();
 
@@ -642,7 +661,22 @@ async function executeResearchPipeline(
 
 // Global Message Listener
 if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
-  chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendResponse) => {
+  chrome.runtime.onMessage.addListener((message: any, sender, sendResponse) => {
+    // -------------------------------------------------------------------------
+    // Google Maps Acquisition Engine Message Routing (Additive Workstream)
+    // -------------------------------------------------------------------------
+    if (
+      message &&
+      typeof message === 'object' &&
+      (message.source === 'GMAPS_ENGINE' ||
+        (typeof message.type === 'string' && message.type.includes('_GMAPS_')))
+    ) {
+      googleMapsRuntimeCoordinator.handleAcquisitionMessage(message, sender)
+        .then(res => sendResponse(res))
+        .catch(err => sendResponse({ success: false, error: err?.message || String(err) }));
+      return true; // Keep message channel open for async response
+    }
+
     if (message.type === 'START_RESEARCH') {
       // Duplicate execution prevention
       chrome.storage.local.get(['activeResearchRun'], (data) => {
@@ -873,6 +907,110 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage)
         });
       } catch (err: any) {
         sendResponse({ success: false, error: err.message });
+      }
+      return true;
+    }
+
+    if (message.type === 'EXPORT_LEADS_RECONCILED') {
+      try {
+        const payload = (message as any).payload || {};
+        const leads = Array.isArray(payload.leads) ? payload.leads : [];
+        const summary = exportLeadsWithReconciliation(leads);
+        sendResponse({
+          success: true,
+          summary
+        });
+      } catch (err: any) {
+        sendResponse({ success: false, error: err.message });
+      }
+      return true;
+    }
+
+    if (message.type === 'GENERATE_DETERMINISTIC_LEAD_ID') {
+      try {
+        const payload = (message as any).payload || {};
+        const leadId = generateDeterministicLeadId(payload.domain || '', payload.sourceAnchorId);
+        sendResponse({
+          success: true,
+          leadId
+        });
+      } catch (err: any) {
+        sendResponse({ success: false, error: err.message });
+      }
+      return true;
+    }
+
+    // -------------------------------------------------------------------------
+    // Google Maps Advanced Research & Qualification Engine Runtime Handlers
+    // -------------------------------------------------------------------------
+    if (message.type === 'QUALIFY_GMAPS_CANDIDATE') {
+      try {
+        const payload = (message as any).payload || {};
+        const candidate = payload.candidate;
+        const filters: ResearchFilters = payload.filters || {
+          rating: payload.ratingFilter || 'ANY',
+          website: payload.websiteFilter || 'ANY',
+          maxResults: payload.maxResults
+        };
+        const qualificationResult = qualifiesCandidate(candidate, filters);
+        sendResponse({
+          success: true,
+          qualificationResult,
+          ratingSignal: extractRatingSignal(candidate),
+          websiteState: determineWebsiteState(candidate)
+        });
+      } catch (err: any) {
+        sendResponse({ success: false, error: err?.message || String(err) });
+      }
+      return true;
+    }
+
+    if (message.type === 'QUALIFY_GMAPS_BATCH') {
+      try {
+        const payload = (message as any).payload || {};
+        const candidates = Array.isArray(payload.candidates) ? payload.candidates : [];
+        const filters: ResearchFilters = payload.filters || {
+          rating: payload.ratingFilter || 'ANY',
+          website: payload.websiteFilter || 'ANY',
+          maxResults: payload.maxResults
+        };
+        const results = candidates.map((c: any) => ({
+          candidate: c,
+          qualification: qualifiesCandidate(c, filters)
+        }));
+        sendResponse({
+          success: true,
+          total: results.length,
+          qualifiedCount: results.filter((r: any) => r.qualification.qualified).length,
+          results
+        });
+      } catch (err: any) {
+        sendResponse({ success: false, error: err?.message || String(err) });
+      }
+      return true;
+    }
+
+    if (message.type === 'EXECUTE_GMAPS_MULTI_QUERY_RESEARCH') {
+      try {
+        const payload = (message as any).payload || {};
+        const queries = Array.isArray(payload.queries) ? payload.queries : [];
+        const filters: ResearchFilters = payload.filters || {
+          rating: payload.ratingFilter || 'ANY',
+          website: payload.websiteFilter || 'ANY',
+          maxResults: payload.maxResults
+        };
+        const options: MultiQueryResearchOptions = {
+          keywords: queries,
+          filters,
+          maxResults: filters.maxResults,
+          ...payload.options
+        };
+        const executeQueryFn: QueryExecutionFn = payload.executeQuery || (async () => []);
+        executeMultiQueryResearch(options, executeQueryFn)
+          .then(result => sendResponse({ success: true, result }))
+          .catch(err => sendResponse({ success: false, error: err?.message || String(err) }));
+      } catch (err: any) {
+        sendResponse({ success: false, error: err?.message || String(err) });
       }
       return true;
     }

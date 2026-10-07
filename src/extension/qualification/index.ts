@@ -20,3 +20,30 @@ export * from './qualificationEvaluator.ts';
 // Phase 23 Business Intelligence Exports
 export * from './businessIntelligence.ts';
 
+// Google Maps Advanced Research Qualification Domain
+export * as googleMapsQualification from './googleMaps/index.ts';
+export {
+  qualifiesCandidate,
+  extractRatingSignal,
+  determineWebsiteState as determineGoogleMapsWebsiteState,
+  createInitialCounters,
+  executeMultiQueryResearch,
+  DEFAULT_RESEARCH_FILTERS,
+  normalizeRatingFilter as normalizeGoogleMapsRatingFilter,
+  normalizeWebsiteFilter as normalizeGoogleMapsWebsiteFilter,
+  normalizeResearchFilters as normalizeGoogleMapsResearchFilters
+} from './googleMaps/index.ts';
+export type {
+  RatingFilter as GoogleMapsRatingFilter,
+  WebsiteFilter as GoogleMapsWebsiteFilter,
+  ResearchFilters,
+  QualificationRejectionReason as GoogleMapsQualificationRejectionReason,
+  QualificationResult as GoogleMapsQualificationResult,
+  WebsiteEvidenceState as GoogleMapsWebsiteEvidenceState,
+  ResearchCandidate,
+  ResearchCounters,
+  MultiQueryResearchOptions,
+  MultiQueryResearchResult,
+  QueryExecutionFn
+} from './googleMaps/index.ts';
+

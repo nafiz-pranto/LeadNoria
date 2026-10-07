@@ -76,6 +76,8 @@ export class WebsiteIntelligenceEngine {
   private isCancelled = false;
   private activeAbortController: AbortController | null = null;
   private observationCache: BoundedObservationCache;
+  private _lastFailedPages: string[] = [];
+  private _lastDiscoveredCount = 0;
 
   constructor(customCache?: BoundedObservationCache) {
     this.observationCache = customCache || defaultObservationCache;
@@ -239,6 +241,9 @@ export class WebsiteIntelligenceEngine {
       throw new Error('[WebsiteIntelligenceEngine] Exceeded maximum redirect hops (5)');
     };
 
+    this._lastFailedPages = [];
+    this._lastDiscoveredCount = 0;
+
     // 1. Fetch homepage first
     let homepageHtml = '';
     try {
@@ -255,6 +260,7 @@ export class WebsiteIntelligenceEngine {
     // 2. Discover priority candidate links
     const candidateLinks = extractCandidateLinksFromHtml(homepageHtml, rootUrl);
     const discoveryPlan = buildDiscoveryPlan(rootUrl, candidateLinks, maxPages);
+    this._lastDiscoveredCount = 1 + discoveryPlan.length;
 
     // 3. Crawl remaining discovery plan
     for (const pageUrl of discoveryPlan) {
@@ -270,7 +276,7 @@ export class WebsiteIntelligenceEngine {
         const pageRes = await safeFetchWithRedirects(pageUrl, pageTimeoutMs);
         fetchedPages.push({ url: pageRes.finalUrl, html: pageRes.html, status: pageRes.status });
       } catch {
-        // Individual page failure or unsafe redirect does NOT abort the whole crawl
+        this._lastFailedPages.push(pageUrl);
       }
     }
 
@@ -628,10 +634,10 @@ export class WebsiteIntelligenceEngine {
     const pages = await this.crawl(input, customFetch);
 
     const crawlStats: CrawlStats = {
-      pagesDiscovered: pages.length,
+      pagesDiscovered: Math.max(pages.length, this._lastDiscoveredCount),
       pagesVisited: pages.map(p => p.url),
       pagesSkipped: [],
-      pagesFailed: [],
+      pagesFailed: [...this._lastFailedPages],
       durationMs: Date.now() - startTime,
       fromCache: false
     };

@@ -833,6 +833,13 @@ test('P20-047: SessionDeduplicator caps capacity and evicts oldest entries witho
 });
 
 test('P20-048: Benchmark: 5,000 candidate normalizations complete in under 100ms', () => {
+  // JIT warm-up to ensure deterministic timing under multi-suite execution
+  for (let i = 0; i < 50; i++) {
+    normalizeGoogleMapsRecord(
+      { businessName: `Warmup ${i}` },
+      { acquisitionId: `acq_warm_${i}`, sessionId: 'sess_bench' }
+    );
+  }
   const start = performance.now();
   for (let i = 0; i < 5000; i++) {
     normalizeGoogleMapsRecord(
